@@ -25,83 +25,102 @@ class PermissionForMenuSoftwareSharingSeeder extends Seeder
 
         DB::beginTransaction();
         try {   
-            // $partnerDaashboard = ['dashboard','api'];
-            $software = ['index','create','store','edit','update','destroy','show','toggleActive',];
-            $partnerType = ['index','edit', 'create', 'update', 'show', 'destroy','toggleActive','store'];
-            $partnerTarget = ['index','create','store','edit','update','destroy'];
+            $softwareDashboard = ['index'];
+            $software = ['index','create','store','edit','update','destroy','show','toggleStatus','dashboard'];
+            $masterAccount = ['index','edit', 'create','store','update', 'show', 'destroy','toggleStatus','customers'];
+            $subscriptions = ['index','create','store','edit','update','destroy','show','toggleStatus'];
             $partnerMonthlyReport = ['manage','create','store','edit','update','destroy'];
             
-            // foreach ($partnerType as $method) 
-            // {
-            //     // create permision
-            //     $permission = Permission::firstOrCreate([
-            //         'name' => ucwords($method).' Partner Parameter Type (Jenis Parameter Mitra)',
-            //     ],[
-            //         'method' => $method,
-            //         'table' => 'partner_parameter_types',
-            //         'model' => 'PartnerParameterType',
-            //         'guard_name' => 'web'
-            //     ]);
+            foreach ($softwareDashboard as $method) 
+            {
+                // create permision
+                $permissionsoftwareDashboard = Permission::firstOrCreate([
+                    'name' => ucwords($method).' Dasboard Software (Akun Sharing)',
+                ],[
+                    'method' => $method,
+                    'table' => 'software_dashboards',
+                    'model' => 'SoftwareDashboard',
+                    'guard_name' => 'web'
+                ]);
 
-            //     foreach ($roles as $role) 
-            //     {
-            //         if($method == 'destroy' && in_array($role->name, [RoleSchema::DIRECTOR,RoleSchema::ROOT, RoleSchema::ADMIN, RoleSchema::SYSTEM, RoleSchema::FINANCE, RoleSchema::STAFF_FINANCE]))
-            //         {
-            //             PermissionRole::create(['role_id' => $role->id, 'permission_id' => $permission->id]);
-            //         }else
-            //         {
-            //             PermissionRole::create(['role_id' => $role->id, 'permission_id' => $permission->id]);
-            //         }
-            //     }
-            // }
+                foreach ($roles as $role) 
+                {
 
-            // foreach ($partnerTarget as $method) 
-            // {
-            //     // create permision
-            //     $permission = Permission::firstOrCreate([
-            //         'name' => ucwords($method).' Partner Target (Target Mitra)',
-            //     ],[
-            //         'method' => $method,
-            //         'table' => 'partner_targets',
-            //         'model' => 'PartnerTarget',
-            //         'guard_name' => 'web'
-            //     ]);
+                    PermissionRole::create(['role_id' => $role->id, 'permission_id' => $permissionsoftwareDashboard->id]);
+                }
+            }
 
-            //     foreach ($roles as $role) 
-            //     {
-            //         if($method == 'destroy' && in_array($role->name, [RoleSchema::DIRECTOR,RoleSchema::ROOT, RoleSchema::ADMIN, RoleSchema::SYSTEM, RoleSchema::FINANCE, RoleSchema::STAFF_FINANCE]))
-            //         {
-            //             PermissionRole::create(['role_id' => $role->id, 'permission_id' => $permission->id]);
-            //         }else
-            //         {
-            //             PermissionRole::create(['role_id' => $role->id, 'permission_id' => $permission->id]);
-            //         }
-            //     }
-            // }
+            foreach ($software as $method) 
+            {
+                // create permision
+                $permission = Permission::firstOrCreate([
+                    'name' => ucwords($method).' Sharing Account Software',
+                ],[
+                    'method' => $method,
+                    'table' => 'software',
+                    'model' => 'Software',
+                    'guard_name' => 'web'
+                ]);
 
-            // foreach ($partnerMonthlyReport as $method) 
-            // {
-            //     // create permision
-            //     $permission = Permission::firstOrCreate([
-            //         'name' => ucwords($method).' Partner Monthly Report (Laporan Bulanan Mitra)',
-            //     ],[
-            //         'method' => $method,
-            //         'table' => 'partner_monthly_reports',
-            //         'model' => 'PartnerMonthlyReport',
-            //         'guard_name' => 'web'
-            //     ]);
+                foreach ($roles as $role) 
+                {
+                    if($method == 'destroy' && in_array($role->name, [RoleSchema::DIRECTOR,RoleSchema::ROOT, RoleSchema::ADMIN, RoleSchema::SYSTEM, RoleSchema::FINANCE, RoleSchema::STAFF_FINANCE]))
+                    {
+                        PermissionRole::create(['role_id' => $role->id, 'permission_id' => $permission->id]);
+                    }else
+                    {
+                        PermissionRole::create(['role_id' => $role->id, 'permission_id' => $permission->id]);
+                    }
+                }
+            }
 
-            //     foreach ($roles as $role) 
-            //     {
-            //         if($method == 'destroy' && in_array($role->name, [RoleSchema::DIRECTOR,RoleSchema::ROOT, RoleSchema::ADMIN, RoleSchema::SYSTEM, RoleSchema::FINANCE, RoleSchema::STAFF_FINANCE]))
-            //         {
-            //             PermissionRole::create(['role_id' => $role->id, 'permission_id' => $permission->id]);
-            //         }else
-            //         {
-            //             PermissionRole::create(['role_id' => $role->id, 'permission_id' => $permission->id]);
-            //         }
-            //     }
-            // }
+            foreach ($masterAccount as $method) 
+            {
+                // create permision
+                $permissionmasterAccount = Permission::firstOrCreate([
+                    'name' => ucwords($method).' Master Account (Sharing)',
+                ],[
+                    'method' => $method,
+                    'table' => 'master_accounts',
+                    'model' => 'MasterAccount',
+                    'guard_name' => 'web'
+                ]);
+
+                foreach ($roles as $role) 
+                {
+                    if($method == 'destroy' && in_array($role->name, [RoleSchema::DIRECTOR,RoleSchema::ROOT, RoleSchema::ADMIN, RoleSchema::SYSTEM, RoleSchema::FINANCE, RoleSchema::STAFF_FINANCE, RoleSchema::PROCUREMENT, RoleSchema::MANAGER]))
+                    {
+                        PermissionRole::create(['role_id' => $role->id, 'permission_id' => $permissionmasterAccount->id]);
+                    }else
+                    {
+                        PermissionRole::create(['role_id' => $role->id, 'permission_id' => $permissionmasterAccount->id]);
+                    }
+                }
+            }
+
+            foreach ($softwarePackage as $method) 
+            {
+                // create permision
+                $permissionsoftwarePackage = Permission::firstOrCreate([
+                    'name' => ucwords($method).' Software Package (Paket Software)',
+                ],[
+                    'method' => $method,
+                    'table' => 'software_packages',
+                    'model' => 'SoftwarePackage',
+                    'guard_name' => 'web'
+                ]);
+
+                foreach ($roles as $role) 
+                {
+                    if($method == 'destroy' && in_array($role->name, [RoleSchema::DIRECTOR,RoleSchema::ROOT, RoleSchema::ADMIN, RoleSchema::SYSTEM, RoleSchema::FINANCE, RoleSchema::STAFF_FINANCE, RoleSchema::PROCUREMENT, RoleSchema::MANAGER]))
+                    {
+                        PermissionRole::create(['role_id' => $role->id, 'permission_id' => $permissionsoftwarePackage->id]);
+                    }else
+                    {
+                        PermissionRole::create(['role_id' => $role->id, 'permission_id' => $permissionsoftwarePackage->id]);
+                    }
+                }
+            }
 
             // foreach ($partnerDaashboard as $method) 
             // {

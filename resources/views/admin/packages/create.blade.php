@@ -5,14 +5,14 @@
 @section('content_header')
     <div class="row">
         <div class="col-sm-6">
-            <h1>Add Package: {{ $software->nama_software }}</h1>
+            <h1>Add Package: {{ $software->nama }}</h1>
         </div>
         <div class="col-sm-6">
             <ol class="breadcrumb float-sm-right">
-                <li class="breadcrumb-item"><a href="{{ route('admin.dashboard') }}">Dashboard</a></li>
-                <li class="breadcrumb-item"><a href="{{ route('admin.software.index') }}">Software</a></li>
-                <li class="breadcrumb-item"><a href="{{ route('admin.software.show', $software->id) }}">{{ $software->nama_software }}</a></li>
-                <li class="breadcrumb-item"><a href="{{ route('admin.software.packages.index', $software->id) }}">Packages</a></li>
+                <li class="breadcrumb-item"><a href="{{ route('software-dashboard.index') }}">Dashboard</a></li>
+                <li class="breadcrumb-item"><a href="{{ route('software.index') }}">Software</a></li>
+                <li class="breadcrumb-item"><a href="{{ route('software.show', $software->id) }}">{{ $software->nama }}</a></li>
+                <li class="breadcrumb-item"><a href="{{ route('software.packages.index', $software->id) }}">Packages</a></li>
                 <li class="breadcrumb-item active">Add</li>
             </ol>
         </div>
@@ -24,12 +24,12 @@
         <div class="card-header">
             <h3 class="card-title">Package Form</h3>
             <div class="card-tools">
-                <a href="{{ route('admin.software.packages.index', $software->id) }}" class="btn btn-secondary btn-sm">
+                <a href="{{ route('software.packages.index', $software->id) }}" class="btn btn-secondary btn-sm">
                     <i class="fas fa-arrow-left"></i> Back to List
                 </a>
             </div>
         </div>
-        <form action="{{ route('admin.software.packages.store', $software->id) }}" method="POST">
+        <form action="{{ route('software.packages.store', $software->id) }}" method="POST">
             @csrf
             <div class="card-body">
                 <div class="row">
@@ -150,10 +150,12 @@
             </div>
 
             <div class="card-footer">
+                @canAccess('store', 'software_packages')
                 <button type="submit" class="btn btn-success">
                     <i class="fas fa-save"></i> Save Package
                 </button>
-                <a href="{{ route('admin.software.packages.index', $software->id) }}" class="btn btn-secondary">
+                @endcanAccess
+                <a href="{{ route('software.packages.index', $software->id) }}" class="btn btn-secondary">
                     <i class="fas fa-times"></i> Cancel
                 </a>
             </div>

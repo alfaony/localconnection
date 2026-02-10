@@ -9,8 +9,8 @@
         </div>
         <div class="col-sm-6">
             <ol class="breadcrumb float-sm-right">
-                <li class="breadcrumb-item"><a href="{{ route('admin.dashboard') }}">Home</a></li>
-                <li class="breadcrumb-item"><a href="{{ route('admin.master-accounts.index') }}">Master Accounts</a></li>
+                <li class="breadcrumb-item"><a href="{{ route('software-dashboard.index') }}">Home</a></li>
+                <li class="breadcrumb-item"><a href="{{ route('master-account.index') }}">Master Accounts</a></li>
                 <li class="breadcrumb-item active">Tambah</li>
             </ol>
         </div>
@@ -19,7 +19,7 @@
 
 @section('content')
     <div class="card">
-        <form action="{{ route('admin.master-accounts.store') }}" method="POST" enctype="multipart/form-data">
+        <form action="{{ route('master-account.store') }}" method="POST" enctype="multipart/form-data">
             @csrf
             
             <div class="card-body">
@@ -193,7 +193,7 @@
                 <button type="submit" class="btn btn-primary">
                     <i class="fas fa-save"></i> Simpan
                 </button>
-                <a href="{{ route('admin.master-accounts.index') }}" class="btn btn-secondary">
+                <a href="{{ route('master-account.index') }}" class="btn btn-secondary">
                     <i class="fas fa-times"></i> Batal
                 </a>
             </div>

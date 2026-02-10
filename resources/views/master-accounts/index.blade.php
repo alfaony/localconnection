@@ -9,7 +9,7 @@
         </div>
         <div class="col-sm-6">
             <ol class="breadcrumb float-sm-right">
-                <li class="breadcrumb-item"><a href="{{ route('admin.dashboard') }}">Home</a></li>
+                <li class="breadcrumb-item"><a href="{{ route('software-dashboard.index') }}">Home</a></li>
                 <li class="breadcrumb-item active">Master Accounts</li>
             </ol>
         </div>
@@ -21,7 +21,7 @@
         <div class="card-header">
             <div class="d-flex justify-content-between align-items-center">
                 <h3 class="card-title">Daftar Master Account</h3>
-                <a href="{{ route('admin.master-accounts.create') }}" class="btn btn-primary btn-sm">
+                <a href="{{ route('master-account.create') }}" class="btn btn-primary btn-sm">
                     <i class="fas fa-plus"></i> Tambah Master Account
                 </a>
             </div>
@@ -56,7 +56,7 @@
                         </button>
                     </div>
                     <div class="col-md-2">
-                        <a href="{{ route('admin.master-accounts.index') }}" class="btn btn-secondary btn-block">
+                        <a href="{{ route('master-account.index') }}" class="btn btn-secondary btn-block">
                             <i class="fas fa-redo"></i> Reset
                         </a>
                     </div>
@@ -120,13 +120,13 @@
                             </td>
                             <td>
                                 <div class="btn-group btn-group-sm" role="group">
-                                    <a href="{{ route('admin.master-accounts.show', $account) }}" class="btn btn-info" title="Detail">
+                                    <a href="{{ route('master-account.show', $account) }}" class="btn btn-info" title="Detail">
                                         <i class="fas fa-eye"></i>
                                     </a>
-                                    <a href="{{ route('admin.master-accounts.customers', $account) }}" class="btn btn-success" title="Customers">
+                                    <a href="{{ route('master-account.customers', $account) }}" class="btn btn-success" title="Customers">
                                         <i class="fas fa-users"></i>
                                     </a>
-                                    <a href="{{ route('admin.master-accounts.edit', $account) }}" class="btn btn-warning" title="Edit">
+                                    <a href="{{ route('master-account.edit', $account) }}" class="btn btn-warning" title="Edit">
                                         <i class="fas fa-edit"></i>
                                     </a>
                                     <button type="button" class="btn btn-danger btn-delete" 

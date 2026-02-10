@@ -9,7 +9,7 @@
         </div>
         <div class="col-sm-6">
             <ol class="breadcrumb float-sm-right">
-                <li class="breadcrumb-item"><a href="{{ route('admin.dashboard') }}">Home</a></li>
+                <li class="breadcrumb-item"><a href="{{ route('software-dashboard.index') }}">Home</a></li>
                 <li class="breadcrumb-item active">Master Accounts</li>
             </ol>
         </div>
@@ -21,9 +21,11 @@
         <div class="card-header">
             <div class="d-flex justify-content-between align-items-center">
                 <h3 class="card-title">Daftar Master Account</h3>
-                <a href="{{ route('admin.master-accounts.create') }}" class="btn btn-primary btn-sm">
+                @canAccess('create', 'master_accounts')
+                <a href="{{ route('master-account.create') }}" class="btn btn-primary btn-sm">
                     <i class="fas fa-plus"></i> Tambah Master Account
                 </a>
+                @endcanAccess
             </div>
         </div>
         <div class="card-body">
@@ -56,7 +58,7 @@
                         </button>
                     </div>
                     <div class="col-md-2">
-                        <a href="{{ route('admin.master-accounts.index') }}" class="btn btn-secondary btn-block">
+                        <a href="{{ route('master-account.index') }}" class="btn btn-secondary btn-block">
                             <i class="fas fa-redo"></i> Reset
                         </a>
                     </div>
@@ -120,20 +122,28 @@
                             </td>
                             <td>
                                 <div class="btn-group btn-group-sm" role="group">
-                                    <a href="{{ route('admin.master-accounts.show', $account) }}" class="btn btn-info mr-1 mb-1" title="Detail ">
+                                    @canAccess('show', 'master_accounts')
+                                    <a href="{{ route('master-account.show', $account) }}" class="btn btn-info mr-1 mb-1" title="Detail ">
                                         <i class="fas fa-eye"></i>
                                     </a>
-                                    <a href="{{ route('admin.master-accounts.customers', $account) }}" class="btn btn-success mr-1 mb-1" title="Customers">
+                                    @endcanAccess
+                                    @canAccess('customers', 'master_accounts')
+                                    <a href="{{ route('master-account.customers', $account) }}" class="btn btn-success mr-1 mb-1" title="Customers">
                                         <i class="fas fa-users"></i>
                                     </a>
-                                    <a href="{{ route('admin.master-accounts.edit', $account) }}" class="btn btn-warning mr-1 mb-1" title="Edit">
+                                    @endcanAccess
+                                    @canAccess('edit', 'master_accounts')
+                                    <a href="{{ route('master-account.edit', $account) }}" class="btn btn-warning mr-1 mb-1" title="Edit">
                                         <i class="fas fa-edit"></i>
                                     </a>
+                                    @endcanAccess
+                                    @canAccess('destroy', 'master_accounts')
                                     <button type="button" class="btn btn-danger btn-delete mr-1 mb-1" 
                                             data-id="{{ $account->id }}"
                                             data-name="{{ $account->nama_akun }}" title="Hapus">
                                         <i class="fas fa-trash"></i>
                                     </button>
+                                    @endcanAccess
                                 </div>
                             </td>
                         </tr>

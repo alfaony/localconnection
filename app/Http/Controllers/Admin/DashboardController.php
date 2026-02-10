@@ -18,6 +18,8 @@ class DashboardController extends Controller
      */
     public function index()
     {
+        $this->access('dashboard', 'software');
+
         $companyId = Auth::user()->company_id;
 
         // Stats cards
@@ -182,5 +184,10 @@ class DashboardController extends Controller
                     'usage_percentage' => $totalSlots > 0 ? round(($usedSlots / $totalSlots) * 100, 2) : 0,
                 ];
             });
+    }
+
+    private function access($permssion, $methode)
+    {
+        return \App\Helpers\Access::can($permssion, $methode) ? true : abort(403);
     }
 }

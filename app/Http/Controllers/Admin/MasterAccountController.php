@@ -101,7 +101,7 @@ class MasterAccountController extends Controller
         $masterAccount = MasterAccount::create($validated);
 
         return redirect()
-            ->route('admin.master-accounts.index')
+            ->route('master-account.index')
             ->with('success', 'Master Account berhasil ditambahkan');
     }
 
@@ -188,7 +188,7 @@ class MasterAccountController extends Controller
         $masterAccount->update($validated);
 
         return redirect()
-            ->route('admin.master-accounts.index')
+            ->route('master-account.index')
             ->with('success', 'Master Account berhasil diupdate');
     }
 
@@ -216,7 +216,7 @@ class MasterAccountController extends Controller
         $masterAccount->delete();
 
         return redirect()
-            ->route('admin.master-accounts.index')
+            ->route('master-account.index')
             ->with('success', 'Master Account berhasil dihapus');
     }
 

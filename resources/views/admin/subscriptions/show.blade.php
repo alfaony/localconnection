@@ -9,8 +9,8 @@
         </div>
         <div class="col-sm-6">
             <ol class="breadcrumb float-sm-right">
-                <li class="breadcrumb-item"><a href="{{ route('admin.dashboard') }}">Home</a></li>
-                <li class="breadcrumb-item"><a href="{{ route('admin.subscriptions.index') }}">Subscriptions</a></li>
+                <li class="breadcrumb-item"><a href="{{ route('software-dashboard.index') }}">Home</a></li>
+                <li class="breadcrumb-item"><a href="{{ route('subscription.index') }}">Subscriptions</a></li>
                 <li class="breadcrumb-item active">Detail</li>
             </ol>
         </div>
@@ -156,22 +156,22 @@
                 </div>
                 <div class="card-body">
                     @if($subscription->status == 'active')
-                        <a href="{{ route('admin.subscriptions.edit-expiry', $subscription) }}" class="btn btn-warning btn-block">
+                        <a href="{{ route('subscription.edit-expiry', $subscription) }}" class="btn btn-warning btn-block">
                             <i class="fas fa-calendar"></i> Ubah Tanggal Expired
                         </a>
                         
-                        <a href="{{ route('admin.subscriptions.edit-master-account', $subscription) }}" class="btn btn-info btn-block">
+                        <a href="{{ route('subscription.edit-master-account', $subscription) }}" class="btn btn-info btn-block">
                             <i class="fas fa-exchange-alt"></i> Ganti Master Account
                         </a>
                         
-                        <form action="{{ route('admin.subscriptions.suspend', $subscription) }}" method="POST">
+                        <form action="{{ route('subscription.suspend', $subscription) }}" method="POST">
                             @csrf
                             <button type="submit" class="btn btn-danger btn-block" onclick="return confirm('Yakin ingin suspend subscription ini?')">
                                 <i class="fas fa-ban"></i> Suspend Subscription
                             </button>
                         </form>
                     @elseif($subscription->status == 'suspended')
-                        <form action="{{ route('admin.subscriptions.activate', $subscription) }}" method="POST">
+                        <form action="{{ route('subscription.activate', $subscription) }}" method="POST">
                             @csrf
                             <button type="submit" class="btn btn-success btn-block" onclick="return confirm('Yakin ingin activate subscription ini?')">
                                 <i class="fas fa-check"></i> Activate Subscription
@@ -181,11 +181,11 @@
                     
                     <hr>
                     
-                    <a href="{{ route('admin.subscriptions.payments', $subscription) }}" class="btn btn-secondary btn-block">
+                    <a href="{{ route('subscription.payments', $subscription) }}" class="btn btn-secondary btn-block">
                         <i class="fas fa-money-bill"></i> Lihat Semua Payments
                     </a>
                     
-                    <a href="{{ route('admin.subscriptions.index') }}" class="btn btn-outline-secondary btn-block">
+                    <a href="{{ route('subscription.index') }}" class="btn btn-outline-secondary btn-block">
                         <i class="fas fa-arrow-left"></i> Kembali ke List
                     </a>
                 </div>

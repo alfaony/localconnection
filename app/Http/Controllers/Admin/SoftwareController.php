@@ -89,7 +89,7 @@ class SoftwareController extends Controller
         $software = Software::create($validated);
 
         return redirect()
-            ->route('admin.software.index')
+            ->route('software.index')
             ->with('success', 'Software berhasil ditambahkan');
     }
 
@@ -164,7 +164,7 @@ class SoftwareController extends Controller
         $software->update($validated);
 
         return redirect()
-            ->route('admin.software.index')
+            ->route('software.index')
             ->with('success', 'Software berhasil diupdate');
     }
 
@@ -194,7 +194,7 @@ class SoftwareController extends Controller
         $software->delete();
 
         return redirect()
-            ->route('admin.software.index')
+            ->route('software.index')
             ->with('success', 'Software berhasil dihapus');
     }
 

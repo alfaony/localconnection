@@ -9,8 +9,8 @@
         </div>
         <div class="col-sm-6">
             <ol class="breadcrumb float-sm-right">
-                <li class="breadcrumb-item"><a href="{{ route('admin.dashboard') }}">Dashboard</a></li>
-                <li class="breadcrumb-item"><a href="{{ route('admin.software.index') }}">Software</a></li>
+                <li class="breadcrumb-item"><a href="{{ route('software-dashboard.index') }}">Dashboard</a></li>
+                <li class="breadcrumb-item"><a href="{{ route('software.index') }}">Software</a></li>
                 <li class="breadcrumb-item active">Detail</li>
             </ol>
         </div>
@@ -94,12 +94,15 @@
 
                     <div class="row">
                         <div class="col-6">
-                            <a href="{{ route('admin.software.edit', $software->id) }}" class="btn btn-primary btn-block">
+                            @canAccess('edit', 'softwares')
+                            <a href="{{ route('software.edit', $software->id) }}" class="btn btn-primary btn-block">
                                 <i class="fas fa-edit"></i> Edit
                             </a>
+                            @endcanAccess
                         </div>
                         <div class="col-6">
-                            <form action="{{ route('admin.software.destroy', $software->id) }}" 
+                            @canAccess('destroy', 'softwares')
+                            <form action="{{ route('software.destroy', $software->id) }}" 
                                   method="POST" 
                                   class="delete-form">
                                 @csrf
@@ -108,6 +111,7 @@
                                     <i class="fas fa-trash"></i> Delete
                                 </button>
                             </form>
+                            @endcanAccess
                         </div>
                     </div>
                 </div>
@@ -148,10 +152,12 @@
                         <i class="fas fa-box"></i> Packages
                     </h3>
                     <div class="card-tools">
-                        <a href="{{ route('admin.software.packages.create', $software->id) }}" 
+                        @canAccess('create', 'software_packages')
+                        <a href="{{ route('software.packages.create', $software->id) }}" 
                            class="btn btn-sm btn-primary">
                             <i class="fas fa-plus"></i> Add Package
                         </a>
+                        @endcanAccess
                     </div>
                 </div>
                 <div class="card-body p-0">
@@ -186,11 +192,14 @@
                                             </td>
                                             <td class="text-center">
                                                 <div class="btn-group">
-                                                    <a href="{{ route('admin.software.packages.edit', [$software->id, $package->id]) }}" 
+                                                    @canAccess('edit', 'software_packages')
+                                                    <a href="{{ route('software.packages.edit', [$software->id, $package->id]) }}" 
                                                        class="btn btn-sm btn-info mb-1 mr-1" 
                                                        title="Edit">
                                                         <i class="fas fa-edit"></i>
                                                     </a>
+                                                    @endcanAccess
+                                                    @canAccess('update', 'software_packages')
                                                     <button type="button" 
                                                             class="btn btn-sm btn-{{ $package->status == 'active' ? 'warning' : 'success' }} toggle-status mb-1 mr-1" 
                                                             data-id="{{ $package->id }}"
@@ -198,7 +207,9 @@
                                                             title="Toggle Status">
                                                         <i class="fas fa-{{ $package->status == 'active' ? 'ban' : 'check' }}"></i>
                                                     </button>
-                                                    <form action="{{ route('admin.software.packages.destroy', [$software->id, $package->id]) }}" 
+                                                    @endcanAccess
+                                                    @canAccess('destroy', 'software_packages')
+                                                    <form action="{{ route('software.packages.destroy', [$software->id, $package->id]) }}" 
                                                           method="POST" 
                                                           class="delete-form"
                                                           style="display: inline;">
@@ -210,6 +221,7 @@
                                                             <i class="fas fa-trash"></i>
                                                         </button>
                                                     </form>
+                                                    @endcanAccess
                                                 </div>
                                             </td>
                                         </tr>
@@ -221,10 +233,12 @@
                         <div class="text-center py-4">
                             <i class="fas fa-box fa-3x text-muted mb-3"></i>
                             <p class="text-muted">Belum ada package.</p>
-                            <a href="{{ route('admin.software.packages.create', $software->id) }}" 
+                            @canAccess('create', 'software_packages')
+                            <a href="{{ route('software.packages.create', $software->id) }}" 
                                class="btn btn-success">
                                 <i class="fas fa-plus"></i> Add First Package
                             </a>
+                            @endcanAccess
                         </div>
                     @endif
                 </div>
@@ -237,10 +251,12 @@
                         <i class="fas fa-key"></i> Master Accounts
                     </h3>
                     <div class="card-tools">
-                        <a href="{{ route('admin.master-accounts.create', ['software_id' => $software->id]) }}" 
+                        @canAccess('create', 'master_accounts')
+                        <a href="{{ route('master-account.create', ['software_id' => $software->id]) }}" 
                            class="btn btn-sm btn-light ">
                             <i class="fas fa-plus"></i> Add Account
                         </a>
+                        @endcanAccess
                     </div>
                 </div>
                 <div class="card-body p-0">
@@ -285,16 +301,20 @@
                                             </td>
                                             <td class="text-center">
                                                 <div class="btn-group">
-                                                    <a href="{{ route('admin.master-accounts.show', $account->id) }}" 
+                                                    @canAccess('show', 'master_accounts')
+                                                    <a href="{{ route('master-account.show', $account->id) }}" 
                                                        class="btn btn-sm btn-primary mr-1 mb-1"
                                                        title="View">
                                                         <i class="fas fa-eye"></i>
                                                     </a>
-                                                    <a href="{{ route('admin.master-accounts.edit', $account->id) }}" 
+                                                    @endcanAccess
+                                                    @canAccess('edit', 'master_accounts')
+                                                    <a href="{{ route('master-account.edit', $account->id) }}" 
                                                        class="btn btn-sm btn-info mr-1 mb-1"
                                                        title="Edit">
                                                         <i class="fas fa-edit"></i>
                                                     </a>
+                                                    @endcanAccess
                                                 </div>
                                             </td>
                                         </tr>
@@ -306,10 +326,12 @@
                         <div class="text-center py-4">
                             <i class="fas fa-key fa-3x text-muted mb-3"></i>
                             <p class="text-muted">Belum ada master account.</p>
-                            <a href="{{ route('admin.master-accounts.create', ['software_id' => $software->id]) }}" 
+                            @canAccess('create', 'master_accounts')
+                            <a href="{{ route('master-account.create', ['software_id' => $software->id]) }}" 
                                class="btn btn-warning">
                                 <i class="fas fa-plus"></i> Add First Account
                             </a>
+                            @endcanAccess
                         </div>
                     @endif
                 </div>
@@ -348,7 +370,7 @@
                                     @foreach($activeSubscriptions as $subscription)
                                         <tr>
                                             <td>
-                                                <a href="{{ route('admin.subscriptions.show', $subscription->id) }}">
+                                                <a href="{{ route('subscription.show', $subscription->id) }}">
                                                     {{ $subscription->order_number }}
                                                 </a>
                                             </td>
@@ -366,7 +388,7 @@
                         </div>
                         @if($software->subscriptions()->where('status', 'active')->count() > 10)
                             <div class="text-center mt-2">
-                                <a href="{{ route('admin.subscriptions.index', ['software_id' => $software->id]) }}" 
+                                <a href="{{ route('subscription.index', ['software_id' => $software->id]) }}" 
                                    class="btn btn-sm btn-outline-info">
                                     View All Subscriptions
                                 </a>
@@ -420,9 +442,10 @@ $(document).ready(function() {
         const packageId = $(this).data('id');
         const softwareId = $(this).data('software-id');
         const button = $(this);
+        const url = "{{ route('software.packages.toggleStatus', ['software' => ':softwareId', 'package' => ':packageId']) }}".replace(':softwareId', softwareId).replace(':packageId', packageId);
         
         $.ajax({
-            url: `/admin/softwares/${softwareId}/packages/${packageId}/toggle-status`,
+            url: url,
             type: 'POST',
             data: {
                 _token: '{{ csrf_token() }}'

@@ -121,7 +121,7 @@ class SubscriptionController extends Controller
         ]);
 
         return redirect()
-            ->route('admin.subscriptions.show', $subscription)
+            ->route('subscription.show', $subscription)
             ->with('success', 'Tanggal expired berhasil diupdate');
     }
 
@@ -178,7 +178,7 @@ class SubscriptionController extends Controller
         ]);
 
         return redirect()
-            ->route('admin.subscriptions.show', $subscription)
+            ->route('subscription.show', $subscription)
             ->with('success', 'Master Account berhasil diubah');
     }
 

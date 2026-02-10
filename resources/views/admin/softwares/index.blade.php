@@ -9,20 +9,21 @@
         </div>
         <div class="col-sm-6">
             <ol class="breadcrumb float-sm-right">
-                <li class="breadcrumb-item"><a href="{{ route('admin.dashboard') }}">Home</a></li>
+                <li class="breadcrumb-item"><a href="{{ route('software-dashboard.index') }}">Home</a></li>
                 <li class="breadcrumb-item active">Software</li>
             </ol>
         </div>
     </div>
-@stop
-
+    @stop
+    
 @section('content')
+@include('components.alert')
     <div class="card">
         <div class="card-header">
             <div class="d-flex justify-content-between align-items-center">
                 <h3 class="card-title">Daftar Software</h3>
                 @canAccess('create', 'softwares')
-                <a href="{{ route('admin.software.create') }}" class="btn btn-primary btn-sm">
+                <a href="{{ route('software.create') }}" class="btn btn-primary btn-sm">
                     <i class="fas fa-plus"></i> Tambah Software
                 </a>
                 @endcanAccess
@@ -48,7 +49,7 @@
                         </button>
                     </div>
                     <div class="col-md-2">
-                        <a href="{{ route('admin.software.index') }}" class="btn btn-secondary btn-block">
+                        <a href="{{ route('software.index') }}" class="btn btn-secondary btn-block">
                             <i class="fas fa-redo"></i> Reset
                         </a>
                     </div>
@@ -65,7 +66,9 @@
                             <th>Tipe Paket</th>
                             <th>Packages</th>
                             <th>Master Accounts</th>
+                            @canAccess('toggleStatus', 'software')
                             <th>Status</th>
+                            @endcanAccess
                             <th width="200">Aksi</th>
                         </tr>
                     </thead>
@@ -90,7 +93,7 @@
                                 <span class="badge badge-info">{{ $software->tipe_paket }}</span>
                             </td>
                             <td class="text-center">
-                                <a href="{{ route('admin.software.packages.index', $software) }}" class="badge badge-primary">
+                                <a href="{{ route('software.packages.index', $software) }}" class="badge badge-primary">
                                     {{ $software->packages->count() }} packages
                                 </a>
                             </td>
@@ -99,6 +102,7 @@
                                     {{ $software->masterAccounts->count() }} accounts
                                 </span>
                             </td>
+                            @canAccess('toggleStatus', 'software')
                             <td>
                                 <div class="custom-control custom-switch">
                                     <input type="checkbox" 
@@ -113,19 +117,26 @@
                                     </label>
                                 </div>
                             </td>
+                            @endcanAccess
                             <td>
                                 <div class="btn-group btn-group-sm" role="group">
-                                    <a href="{{ route('admin.software.show', $software) }}" class="btn btn-info mb-1 mr-1" title="Detail">
+                                    @canAccess('show', 'softwares')
+                                    <a href="{{ route('software.show', $software) }}" class="btn btn-info mb-1 mr-1" title="Detail">
                                         <i class="fas fa-eye"></i>
                                     </a>
-                                    <a href="{{ route('admin.software.edit', $software) }}" class="btn btn-warning mb-1 mr-1" title="Edit">
+                                    @endcanAccess
+                                    @canAccess('edit', 'softwares')
+                                    <a href="{{ route('software.edit', $software) }}" class="btn btn-warning mb-1 mr-1" title="Edit">
                                         <i class="fas fa-edit"></i>
                                     </a>
+                                    @endcanAccess
+                                    @canAccess('destroy', 'softwares')
                                     <button type="button" class="btn btn-danger btn-delete mb-1 mr-1" 
                                             data-id="{{ $software->id }}"
                                             data-name="{{ $software->nama }}" title="Hapus">
                                         <i class="fas fa-trash"></i>
                                     </button>
+                                    @endcanAccess
                                 </div>
                             </td>
                         </tr>
@@ -165,9 +176,10 @@ $(document).ready(function() {
     $('.toggle-status').on('change', function() {
         const id = $(this).data('id');
         const isChecked = $(this).is(':checked');
+        let url = "{{ route('software.toggleStatus', ':id') }}".replace(':id', id);
         
         $.ajax({
-            url: `/admin/softwares/${id}/toggle-status`,
+            url: url,
             type: 'POST',
             data: {
                 _token: '{{ csrf_token() }}'

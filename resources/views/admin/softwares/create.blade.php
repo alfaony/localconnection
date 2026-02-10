@@ -9,8 +9,8 @@
         </div>
         <div class="col-sm-6">
             <ol class="breadcrumb float-sm-right">
-                <li class="breadcrumb-item"><a href="{{ route('admin.dashboard') }}">Home</a></li>
-                <li class="breadcrumb-item"><a href="{{ route('admin.software.index') }}">Software</a></li>
+                <li class="breadcrumb-item"><a href="{{ route('software-dashboard.index') }}">Home</a></li>
+                <li class="breadcrumb-item"><a href="{{ route('software.index') }}">Software</a></li>
                 <li class="breadcrumb-item active">Tambah</li>
             </ol>
         </div>
@@ -19,7 +19,7 @@
 
 @section('content')
     <div class="card">
-        <form action="{{ route('admin.software.store') }}" method="POST" enctype="multipart/form-data">
+        <form action="{{ route('software.store') }}" method="POST" enctype="multipart/form-data">
             @csrf
             
             <div class="card-body">
@@ -109,7 +109,7 @@
                 <button type="submit" class="btn btn-primary">
                     <i class="fas fa-save"></i> Simpan
                 </button>
-                <a href="{{ route('admin.software.index') }}" class="btn btn-secondary">
+                <a href="{{ route('software.index') }}" class="btn btn-secondary">
                     <i class="fas fa-times"></i> Batal
                 </a>
             </div>

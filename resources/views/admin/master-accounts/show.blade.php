@@ -9,8 +9,8 @@
         </div>
         <div class="col-sm-6">
             <ol class="breadcrumb float-sm-right">
-                <li class="breadcrumb-item"><a href="{{ route('admin.dashboard') }}">Dashboard</a></li>
-                <li class="breadcrumb-item"><a href="{{ route('admin.master-accounts.index') }}">Master Accounts</a></li>
+                <li class="breadcrumb-item"><a href="{{ route('software-dashboard.index') }}">Dashboard</a></li>
+                <li class="breadcrumb-item"><a href="{{ route('master-account.index') }}">Master Accounts</a></li>
                 <li class="breadcrumb-item active">Detail</li>
             </ol>
         </div>
@@ -43,7 +43,7 @@
                     <h3 class="profile-username text-center">{{ $masterAccount->nama_akun }}</h3>
 
                     <p class="text-muted text-center">
-                        <a href="{{ route('admin.software.show', $masterAccount->software->id) }}">
+                        <a href="{{ route('software.show', $masterAccount->software->id) }}">
                             {{ $masterAccount->software->nama_software }}
                         </a>
                     </p>
@@ -100,13 +100,13 @@
 
                     <div class="row">
                         <div class="col-6">
-                            <a href="{{ route('admin.master-accounts.edit', $masterAccount->id) }}" 
+                            <a href="{{ route('master-account.edit', $masterAccount->id) }}" 
                                class="btn btn-primary btn-block">
                                 <i class="fas fa-edit"></i> Edit
                             </a>
                         </div>
                         <div class="col-6">
-                            <form action="{{ route('admin.master-accounts.destroy', $masterAccount->id) }}" 
+                            <form action="{{ route('master-account.destroy', $masterAccount->id) }}" 
                                   method="POST" 
                                   class="delete-form">
                                 @csrf
@@ -307,7 +307,7 @@
                                     @foreach($activeCustomers as $subscription)
                                         <tr>
                                             <td>
-                                                <a href="{{ route('admin.subscriptions.show', $subscription->id) }}">
+                                                <a href="{{ route('subscription.show', $subscription->id) }}">
                                                     {{ $subscription->order_number }}
                                                 </a>
                                             </td>
@@ -331,7 +331,7 @@
                                                 @endif
                                             </td>
                                             <td class="text-center">
-                                                <a href="{{ route('admin.subscriptions.show', $subscription->id) }}" 
+                                                <a href="{{ route('subscription.show', $subscription->id) }}" 
                                                    class="btn btn-sm btn-info"
                                                    title="View Detail">
                                                     <i class="fas fa-eye"></i>
@@ -383,7 +383,7 @@
                                     @foreach($allSubscriptions as $subscription)
                                         <tr>
                                             <td>
-                                                <a href="{{ route('admin.subscriptions.show', $subscription->id) }}">
+                                                <a href="{{ route('subscription.show', $subscription->id) }}">
                                                     <small>{{ $subscription->order_number }}</small>
                                                 </a>
                                             </td>

@@ -5,14 +5,14 @@
 @section('content_header')
     <div class="row">
         <div class="col-sm-6">
-            <h1>Packages: {{ $software->nama_software }}</h1>
+            <h1>Paket: {{ $software->nama_software }}</h1>
         </div>
         <div class="col-sm-6">
             <ol class="breadcrumb float-sm-right">
-                <li class="breadcrumb-item"><a href="{{ route('admin.dashboard') }}">Dashboard</a></li>
-                <li class="breadcrumb-item"><a href="{{ route('admin.software.index') }}">Software</a></li>
-                <li class="breadcrumb-item"><a href="{{ route('admin.software.show', $software->id) }}">{{ $software->nama_software }}</a></li>
-                <li class="breadcrumb-item active">Packages</li>
+                <li class="breadcrumb-item"><a href="{{ route('software-dashboard.index') }}">Dashboard</a></li>
+                <li class="breadcrumb-item"><a href="{{ route('software.index') }}">Software</a></li>
+                <li class="breadcrumb-item"><a href="{{ route('software.show', $software->id) }}">{{ $software->nama }}</a></li>
+                <li class="breadcrumb-item active">Paket</li>
             </ol>
         </div>
     </div>
@@ -23,10 +23,12 @@
         <div class="card-header">
             <h3 class="card-title">Package List</h3>
             <div class="card-tools">
-                <a href="{{ route('admin.software.packages.create', $software->id) }}" class="btn btn-success btn-sm">
+                @canAccess('create', 'software_packages')
+                <a href="{{ route('software.packages.create', $software->id) }}" class="btn btn-success btn-sm">
                     <i class="fas fa-plus"></i> Add Package
                 </a>
-                <a href="{{ route('admin.software.show', $software->id) }}" class="btn btn-secondary btn-sm">
+                @endcanAccess
+                <a href="{{ route('software.show', $software->id) }}" class="btn btn-secondary btn-sm">
                     <i class="fas fa-arrow-left"></i> Back to Software
                 </a>
             </div>
@@ -74,18 +76,23 @@
                                 </td>
                                 <td class="text-center">
                                     <div class="btn-group">
-                                        <a href="{{ route('admin.software.packages.edit', [$software->id, $package->id]) }}" 
+                                        @canAccess('update', 'software_packages')
+                                        <a href="{{ route('software.packages.edit', [$software->id, $package->id]) }}" 
                                            class="btn btn-sm btn-info mr-1 mb-1"
                                            title="Edit">
                                             <i class="fas fa-edit"></i>
                                         </a>
+                                        @endcanAccess
+                                        @canAccess('update', 'software_packages')
                                         <button type="button" 
                                                 class="btn btn-sm btn-{{ $package->status == 'active' ? 'warning' : 'success' }} toggle-status mr-1 mb-1" 
                                                 data-id="{{ $package->id }}"
                                                 title="Toggle Status">
                                             <i class="fas fa-{{ $package->status == 'active' ? 'ban' : 'check' }}"></i>
                                         </button>
-                                        <form action="{{ route('admin.software.packages.destroy', [$software->id, $package->id]) }}" 
+                                        @endcanAccess
+                                        @canAccess('destroy', 'software_packages')
+                                        <form action="{{ route('software.packages.destroy', [$software->id, $package->id]) }}" 
                                               method="POST" 
                                               class="delete-form"
                                               style="display: inline;">
@@ -97,6 +104,7 @@
                                                 <i class="fas fa-trash"></i>
                                             </button>
                                         </form>
+                                        @endcanAccess
                                     </div>
                                 </td>
                             </tr>
@@ -106,7 +114,7 @@
                                     <div class="py-4">
                                         <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
                                         <p class="text-muted">No packages yet.</p>
-                                        <a href="{{ route('admin.software.packages.create', $software->id) }}" 
+                                        <a href="{{ route('software.packages.create', $software->id) }}" 
                                            class="btn btn-success">
                                             <i class="fas fa-plus"></i> Add First Package
                                         </a>

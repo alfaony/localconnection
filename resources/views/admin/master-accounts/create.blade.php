@@ -9,8 +9,8 @@
         </div>
         <div class="col-sm-6">
             <ol class="breadcrumb float-sm-right">
-                <li class="breadcrumb-item"><a href="{{ route('admin.dashboard') }}">Home</a></li>
-                <li class="breadcrumb-item"><a href="{{ route('admin.master-accounts.index') }}">Master Accounts</a></li>
+                <li class="breadcrumb-item"><a href="{{ route('software-dashboard.index') }}">Home</a></li>
+                <li class="breadcrumb-item"><a href="{{ route('master-account.index') }}">Master Accounts</a></li>
                 <li class="breadcrumb-item active">Tambah</li>
             </ol>
         </div>
@@ -19,7 +19,7 @@
 
 @section('content')
     <div class="card">
-        <form action="{{ route('admin.master-accounts.store') }}" method="POST" enctype="multipart/form-data">
+        <form action="{{ route('master-account.store') }}" method="POST" enctype="multipart/form-data">
             @csrf
             
             <div class="card-body">
@@ -179,9 +179,7 @@
 
                 <div class="form-group">
                     <label for="instruksi_akses">Instruksi Akses</label>
-                    <textarea class="form-control @error('instruksi_akses') is-invalid @enderror" 
-                              id="instruksi_akses" 
-                              name="instruksi_akses">{{ old('instruksi_akses') }}</textarea>
+                    <input type="text" class="thriveEditor form-control" id="description_instruksi_akses" data-ids="instruksi_akses"  name="instruksi_akses" value="{{ $masterAccount->instruksi_akses ?? '' }}">
                     @error('instruksi_akses')
                         <span class="invalid-feedback">{{ $message }}</span>
                     @enderror
@@ -193,7 +191,7 @@
                 <button type="submit" class="btn btn-primary">
                     <i class="fas fa-save"></i> Simpan
                 </button>
-                <a href="{{ route('admin.master-accounts.index') }}" class="btn btn-secondary">
+                <a href="{{ route('master-account.index') }}" class="btn btn-secondary">
                     <i class="fas fa-times"></i> Batal
                 </a>
             </div>
@@ -201,27 +199,14 @@
     </div>
 @stop
 
-@section('css')
-@stop
 
 @section('js')
-<script src="https://cdn.ckeditor.com/4.20.1/standard/ckeditor.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+<script src="https://cdn.quilljs.com/1.0.0/quill.js"></script>
+<script src="{{ asset('js/thriveEditor.js') }}"></script>
 <script>
 $(document).ready(function() {
-    // Initialize CKEditor for instruksi_akses
-    CKEDITOR.replace('instruksi_akses', {
-        height: 300,
-        toolbar: [
-            { name: 'document', items: [ 'Source' ] },
-            { name: 'clipboard', items: [ 'Undo', 'Redo' ] },
-            { name: 'basicstyles', items: [ 'Bold', 'Italic', 'Underline', 'Strike' ] },
-            { name: 'paragraph', items: [ 'NumberedList', 'BulletedList', '-', 'Outdent', 'Indent' ] },
-            { name: 'insert', items: [ 'Link', 'Image', 'Table' ] },
-            { name: 'styles', items: [ 'Format' ] },
-            { name: 'colors', items: [ 'TextColor', 'BGColor' ] }
-        ]
-    });
-
     // Toggle password visibility
     $('#toggle-password').on('click', function() {
         const passwordInput = $('#password_akun');
@@ -243,4 +228,24 @@ $(document).ready(function() {
     });
 });
 </script>
+@stop
+
+@section('css')
+<!-- Select2 CSS -->
+<link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css" rel="stylesheet" />
+<link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+
+<style>
+   body {
+            font-family: Arial, sans-serif;
+            /* padding: 20px; */
+            background-color: #f4f4f4;
+        }
+        .container {
+            background-color: #fff;
+            border-radius: 5px;
+        }
+        
+
+</style>
 @stop

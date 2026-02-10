@@ -277,104 +277,6 @@ Route::put('partnership-agreement/signatureShare/{id}',[PartnershipAgreementCont
 
 Route::get('used-laptop/showQr/{slug}', [UsedLaptopController::class,'showQr'])->name('used-laptop.show-qr');
 Route::get('used-item/showQr/{slug}', [UsedItemController::class,'showQr'])->name('used-item.show-qr');
-
-
-  
-// AJAX routes for role permission management (to avoid max_input_vars limit)
-// Additional routes untuk per-accordion functionality
-Route::post('role/updateName/{role}', [RoleController::class, 'updateName'])
-    ->name('role.update-name');
-
-Route::post('role/updateMenuPermissions/{role}', [RoleController::class, 'updateMenuPermissions'])
-    ->name('role.update-menu-permissions');
-
-Route::post('role/selectAll/{role}', [RoleController::class, 'selectAll'])
-    ->name('role.select-all');
-
-Route::post('role/deselectAll/{role}', [RoleController::class, 'deselectAll'])
-    ->name('role.deselect-all');
-
-
-    // ========================================================================
-    // SOFTWARE MANAGEMENT
-    // ========================================================================
-    Route::resource('software', SoftwareController::class);
-    
-    // Toggle software status (AJAX)
-    Route::post('/software/{software}/toggle-status', [SoftwareController::class, 'toggleStatus'])
-        ->name('software.toggle-status');
-    
-    // ========================================================================
-    // SOFTWARE PACKAGES MANAGEMENT
-    // ========================================================================
-    Route::resource('software.packages', SoftwarePackageController::class)
-        ->except(['create', 'edit']);
-    
-    // Alternative routes with better naming
-    Route::get('/software/{software}/packages/create', [SoftwarePackageController::class, 'create'])
-        ->name('software.packages.create');
-    
-    Route::get('/software/{software}/packages/{package}/edit', [SoftwarePackageController::class, 'edit'])
-        ->name('software.packages.edit');
-    
-    // Toggle package status (AJAX)
-    Route::post('/software/{software}/packages/{package}/toggle-status', [SoftwarePackageController::class, 'toggleStatus'])
-        ->name('software.packages.toggle-status');
-
-
-// Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () {
-    
-    // Dashboard
-    Route::get('/dashboard', [DashboardController::class, 'index'])
-        ->name('dashboard');
-    
-    
-    // ========================================================================
-    // MASTER ACCOUNTS MANAGEMENT
-    // ========================================================================
-    Route::resource('master-accounts', MasterAccountController::class);
-    
-    // Toggle master account status (AJAX)
-    Route::post('/master-accounts/{masterAccount}/toggle-status', [MasterAccountController::class, 'toggleStatus'])
-        ->name('master-accounts.toggle-status');
-    
-    // View customers assigned to master account
-    Route::get('/master-accounts/{masterAccount}/customers', [MasterAccountController::class, 'customers'])
-        ->name('master-accounts.customers');
-    
-    // ========================================================================
-    // SUBSCRIPTIONS MANAGEMENT
-    // ========================================================================
-    Route::get('/subscriptions', [AdminSubscriptionController::class, 'index'])
-        ->name('subscriptions.index');
-    
-    Route::get('/subscriptions/{subscription}', [AdminSubscriptionController::class, 'show'])
-        ->name('subscriptions.show');
-    
-    // Edit expiry date
-    Route::get('/subscriptions/{subscription}/edit-expiry', [AdminSubscriptionController::class, 'editExpiry'])
-        ->name('subscriptions.edit-expiry');
-    
-    Route::put('/subscriptions/{subscription}/update-expiry', [AdminSubscriptionController::class, 'updateExpiry'])
-        ->name('subscriptions.update-expiry');
-    
-    // Change master account
-    Route::get('/subscriptions/{subscription}/edit-master-account', [AdminSubscriptionController::class, 'editMasterAccount'])
-        ->name('subscriptions.edit-master-account');
-    
-    Route::put('/subscriptions/{subscription}/update-master-account', [AdminSubscriptionController::class, 'updateMasterAccount'])
-        ->name('subscriptions.update-master-account');
-    
-    // Suspend/Activate subscription
-    Route::post('/subscriptions/{subscription}/suspend', [AdminSubscriptionController::class, 'suspend'])
-        ->name('subscriptions.suspend');
-    
-    Route::post('/subscriptions/{subscription}/activate', [AdminSubscriptionController::class, 'activate'])
-        ->name('subscriptions.activate');
-    
-    // View payment history
-    Route::get('/subscriptions/{subscription}/payments', [AdminSubscriptionController::class, 'payments'])
-        ->name('subscriptions.payments');
     
     // ========================================================================
     // SUBSCRIPTION CUSTOMERS MANAGEMENT
@@ -396,9 +298,9 @@ Route::post('role/deselectAll/{role}', [RoleController::class, 'deselectAll'])
     Route::get('/subscription-customers/{user}', [SubscriptionCustomerController::class, 'show'])
         ->name('subscription-customers.show');
     
-    // Customer's subscriptions
-    Route::get('/subscription-customers/{user}/subscriptions', [SubscriptionCustomerController::class, 'subscriptions'])
-        ->name('subscription-customers.subscriptions');
+    // Customer's subscription
+    Route::get('/subscription-customers/{user}/subscription', [SubscriptionCustomerController::class, 'subscription'])
+        ->name('subscription-customers.subscription');
     
     // Customer's payments
     Route::get('/subscription-customers/{user}/payments', [SubscriptionCustomerController::class, 'payments'])
@@ -415,17 +317,16 @@ Route::post('role/deselectAll/{role}', [RoleController::class, 'deselectAll'])
 // ============================================================================
 
 Route::middleware(['auth', 'verified'])->prefix('customer')->name('customer.')->group(function () {
-    
     // ========================================================================
     // SOFTWARE CATALOG
     // ========================================================================
     
     // Browse software catalog
-    Route::get('/software', [CustomerSoftwareController::class, 'index'])
+    Route::get('software', [CustomerSoftwareController::class, 'index'])
         ->name('software.index');
     
     // View software detail with packages
-    Route::get('/software/{slug}', [CustomerSoftwareController::class, 'show'])
+    Route::get('software/{slug}', [CustomerSoftwareController::class, 'show'])
         ->name('software.show');
     
     // ========================================================================
@@ -441,28 +342,28 @@ Route::middleware(['auth', 'verified'])->prefix('customer')->name('customer.')->
         ->name('checkout.process');
     
     // ========================================================================
-    // MY SUBSCRIPTIONS
+    // MY subscription
     // ========================================================================
     
-    // List my subscriptions
-    Route::get('/subscriptions', [CustomerSubscriptionController::class, 'index'])
-        ->name('subscriptions.index');
+    // List my subscription
+    Route::get('/subscription', [CustomerSubscriptionController::class, 'index'])
+        ->name('subscription.index');
     
     // View subscription detail (with credentials if active+paid)
-    Route::get('/subscriptions/{subscription}', [CustomerSubscriptionController::class, 'show'])
-        ->name('subscriptions.show');
+    Route::get('/subscription/{subscription}', [CustomerSubscriptionController::class, 'show'])
+        ->name('subscription.show');
     
     // Show renewal form
-    Route::get('/subscriptions/{subscription}/renew', [CustomerSubscriptionController::class, 'renew'])
-        ->name('subscriptions.renew');
+    Route::get('/subscription/{subscription}/renew', [CustomerSubscriptionController::class, 'renew'])
+        ->name('subscription.renew');
     
     // Process renewal
-    Route::post('/subscriptions/{subscription}/renew', [CustomerSubscriptionController::class, 'processRenewal'])
-        ->name('subscriptions.process-renewal');
+    Route::post('/subscription/{subscription}/renew', [CustomerSubscriptionController::class, 'processRenewal'])
+        ->name('subscription.process-renewal');
     
     // View payment history for subscription
-    Route::get('/subscriptions/{subscription}/payments', [CustomerSubscriptionController::class, 'payments'])
-        ->name('subscriptions.payments');
+    Route::get('/subscription/{subscription}/payments', [CustomerSubscriptionController::class, 'payments'])
+        ->name('subscription.payments');
     
     // ========================================================================
     // PAYMENT HANDLING
@@ -955,6 +856,64 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
   Route::post('direct-point/{directPoint}/approve', [App\Http\Controllers\DirectPointController::class, 'approve'])->name('direct-point.approve');
   Route::post('direct-point/{directPoint}/reject', [App\Http\Controllers\DirectPointController::class, 'reject'])->name('direct-point.reject');
   Route::resource('direct-point', App\Http\Controllers\DirectPointController::class);
+
+    // ========================================================================
+    // SOFTWARE MANAGEMENT
+    // ========================================================================
+    // Dashboard
+    Route::get('software-dashboard', [DashboardController::class, 'index'])->name('software-dashboard.index');
+
+    // Alternative routes with better naming
+    Route::get('software/{software}/packages/create', [SoftwarePackageController::class, 'create'])->name('software.packages.create');
+    
+    Route::get('software/{software}/packages/{package}/edit', [SoftwarePackageController::class, 'edit'])->name('software.packages.edit');
+    
+    Route::resource('software', SoftwareController::class);
+    
+    // Toggle software status (AJAX)
+    Route::post('software/{software}/toggleStatus', [SoftwareController::class, 'toggleStatus'])->name('software.toggleStatus');
+    
+    // ========================================================================
+    // SOFTWARE PACKAGES MANAGEMENT
+    // ========================================================================
+    Route::resource('software.packages', SoftwarePackageController::class)->except(['create', 'edit']);
+    
+    
+    // Toggle package status (AJAX)
+    Route::post('software/{software}/packages/{package}/toggleStatus', [SoftwarePackageController::class, 'toggleStatus'])->name('software.packages.toggleStatus');
+
+
+    // ========================================================================
+    // MASTER ACCOUNTS MANAGEMENT
+    // ========================================================================
+    Route::resource('master-account', MasterAccountController::class);
+    
+    // Toggle master account status (AJAX)
+    Route::post('master-account/{masterAccount}/toggle-status', [MasterAccountController::class, 'toggleStatus'])->name('master-account.toggle-status');
+    
+    // View customers assigned to master account
+    Route::get('master-account/{masterAccount}/customers', [MasterAccountController::class, 'customers'])->name('master-account.customers');
+
+    // ========================================================================
+    // subscription MANAGEMENT
+    // ========================================================================
+    Route::get('subscription', [AdminSubscriptionController::class, 'index'])->name('subscription.index');
+    Route::get('subscription/{subscription}', [AdminSubscriptionController::class, 'show'])->name('subscription.show');
+    
+    // Edit expiry date
+    Route::get('subscription/{subscription}/edit-expiry', [AdminSubscriptionController::class, 'editExpiry'])->name('subscription.edit-expiry');
+    Route::put('subscription/{subscription}/update-expiry', [AdminSubscriptionController::class, 'updateExpiry'])->name('subscription.update-expiry');
+    
+    // Change master account
+    Route::get('subscription/{subscription}/edit-master-account', [AdminSubscriptionController::class, 'editMasterAccount'])->name('subscription.edit-master-account');
+    Route::put('subscription/{subscription}/update-master-account', [AdminSubscriptionController::class, 'updateMasterAccount'])->name('subscription.update-master-account');
+    
+    // Suspend/Activate subscription
+    Route::post('subscription/{subscription}/suspend', [AdminSubscriptionController::class, 'suspend'])->name('subscription.suspend');
+    Route::post('subscription/{subscription}/activate', [AdminSubscriptionController::class, 'activate'])->name('subscription.activate');
+    
+    // View payment history
+    Route::get('subscription/{subscription}/payments', [AdminSubscriptionController::class, 'payments'])->name('subscription.payments');
 });
 
 
@@ -967,85 +926,6 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
 // ============================================================================
 
 Route::middleware(['auth', 'verified'])->prefix('admin')->name('admin.')->group(function () {
-    
-    // Dashboard
-    Route::get('/dashboard', [DashboardController::class, 'index'])
-        ->name('dashboard');
-    
-    // ========================================================================
-    // SOFTWARE MANAGEMENT
-    // ========================================================================
-    Route::resource('software', SoftwareController::class);
-    
-    // Toggle software status (AJAX)
-    Route::post('/software/{software}/toggle-status', [SoftwareController::class, 'toggleStatus'])
-        ->name('software.toggle-status');
-    
-    // ========================================================================
-    // SOFTWARE PACKAGES MANAGEMENT
-    // ========================================================================
-    // Alternative routes with better naming
-    Route::get('/software/{software}/packages/create', [SoftwarePackageController::class, 'create'])
-        ->name('software.packages.create');
-    
-    Route::get('/software/{software}/packages/{package}/edit', [SoftwarePackageController::class, 'edit'])
-        ->name('software.packages.edit');
-    
-    // Toggle package status (AJAX)
-    Route::post('/software/{software}/packages/{package}/toggle-status', [SoftwarePackageController::class, 'toggleStatus'])
-        ->name('software.packages.toggle-status');
-        
-    Route::resource('software.packages', SoftwarePackageController::class)
-        ->except(['create', 'edit']);
-    
-    
-    // ========================================================================
-    // MASTER ACCOUNTS MANAGEMENT
-    // ========================================================================
-    Route::resource('master-accounts', MasterAccountController::class);
-    
-    // Toggle master account status (AJAX)
-    Route::post('/master-accounts/{masterAccount}/toggle-status', [MasterAccountController::class, 'toggleStatus'])
-        ->name('master-accounts.toggle-status');
-    
-    // View customers assigned to master account
-    Route::get('/master-accounts/{masterAccount}/customers', [MasterAccountController::class, 'customers'])
-        ->name('master-accounts.customers');
-    
-    // ========================================================================
-    // SUBSCRIPTIONS MANAGEMENT
-    // ========================================================================
-    Route::get('/subscriptions', [AdminSubscriptionController::class, 'index'])
-        ->name('subscriptions.index');
-    
-    Route::get('/subscriptions/{subscription}', [AdminSubscriptionController::class, 'show'])
-        ->name('subscriptions.show');
-    
-    // Edit expiry date
-    Route::get('/subscriptions/{subscription}/edit-expiry', [AdminSubscriptionController::class, 'editExpiry'])
-        ->name('subscriptions.edit-expiry');
-    
-    Route::put('/subscriptions/{subscription}/update-expiry', [AdminSubscriptionController::class, 'updateExpiry'])
-        ->name('subscriptions.update-expiry');
-    
-    // Change master account
-    Route::get('/subscriptions/{subscription}/edit-master-account', [AdminSubscriptionController::class, 'editMasterAccount'])
-        ->name('subscriptions.edit-master-account');
-    
-    Route::put('/subscriptions/{subscription}/update-master-account', [AdminSubscriptionController::class, 'updateMasterAccount'])
-        ->name('subscriptions.update-master-account');
-    
-    // Suspend/Activate subscription
-    Route::post('/subscriptions/{subscription}/suspend', [AdminSubscriptionController::class, 'suspend'])
-        ->name('subscriptions.suspend');
-    
-    Route::post('/subscriptions/{subscription}/activate', [AdminSubscriptionController::class, 'activate'])
-        ->name('subscriptions.activate');
-    
-    // View payment history
-    Route::get('/subscriptions/{subscription}/payments', [AdminSubscriptionController::class, 'payments'])
-        ->name('subscriptions.payments');
-    
     // ========================================================================
     // SUBSCRIPTION CUSTOMERS MANAGEMENT
     // ========================================================================
@@ -1066,9 +946,9 @@ Route::middleware(['auth', 'verified'])->prefix('admin')->name('admin.')->group(
     Route::get('/subscription-customers/{user}', [SubscriptionCustomerController::class, 'show'])
         ->name('subscription-customers.show');
     
-    // Customer's subscriptions
-    Route::get('/subscription-customers/{user}/subscriptions', [SubscriptionCustomerController::class, 'subscriptions'])
-        ->name('subscription-customers.subscriptions');
+    // Customer's subscription
+    Route::get('/subscription-customers/{user}/subscription', [SubscriptionCustomerController::class, 'subscription'])
+        ->name('subscription-customers.subscription');
     
     // Customer's payments
     Route::get('/subscription-customers/{user}/payments', [SubscriptionCustomerController::class, 'payments'])

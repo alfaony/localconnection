@@ -9,7 +9,7 @@
         </div>
         <div class="col-sm-6">
             <ol class="breadcrumb float-sm-right">
-                <li class="breadcrumb-item"><a href="{{ route('admin.dashboard') }}">Home</a></li>
+                <li class="breadcrumb-item"><a href="{{ route('software-dashboard.index') }}">Home</a></li>
                 <li class="breadcrumb-item active">Subscriptions</li>
             </ol>
         </div>
@@ -59,7 +59,7 @@
                         </button>
                     </div>
                     <div class="col-md-2">
-                        <a href="{{ route('admin.subscriptions.index') }}" class="btn btn-secondary btn-block">
+                        <a href="{{ route('subscription.index') }}" class="btn btn-secondary btn-block">
                             <i class="fas fa-redo"></i> Reset
                         </a>
                     </div>
@@ -125,7 +125,7 @@
                             </td>
                             <td>
                                 <div class="btn-group btn-group-sm">
-                                    <a href="{{ route('admin.subscriptions.show', $subscription) }}" class="btn btn-info" title="Detail">
+                                    <a href="{{ route('subscription.show', $subscription) }}" class="btn btn-info" title="Detail">
                                         <i class="fas fa-eye"></i>
                                     </a>
                                 </div>

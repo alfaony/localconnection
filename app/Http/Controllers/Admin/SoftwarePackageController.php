@@ -15,7 +15,7 @@ class SoftwarePackageController extends Controller
      */
     public function index(Request $request, Software $software)
     {
-        // $this->authorize('view', $software);
+        $this->access('index', 'software_packages');
 
         $query = $software->packages();
 
@@ -34,7 +34,7 @@ class SoftwarePackageController extends Controller
      */
     public function create(Software $software)
     {
-        // $this->authorize('view', $software);
+        $this->access('create', 'software_packages');
 
         return view('admin.packages.create', compact('software'));
     }
@@ -44,6 +44,8 @@ class SoftwarePackageController extends Controller
      */
     public function store(Request $request, Software $software)
     {
+        $this->access('create', 'software_packages');
+
         $validated = $request->validate([
             'nama_paket' => 'required|string|max:255',
             'durasi_hari' => 'required|integer|min:1',
@@ -56,7 +58,7 @@ class SoftwarePackageController extends Controller
         $package = SoftwarePackage::create($validated);
 
         return redirect()
-            ->route('admin.software.packages.index', $software)
+            ->route('software.packages.index', $software)
             ->with('success', 'Package berhasil ditambahkan');
     }
 
@@ -65,7 +67,7 @@ class SoftwarePackageController extends Controller
      */
     public function show(Software $software, SoftwarePackage $package)
     {
-        // $this->authorize('view', $software);
+        $this->access('show', 'software_packages');
 
         $package->load(['subscriptions' => function($query) {
             $query->latest()->limit(10);
@@ -79,7 +81,7 @@ class SoftwarePackageController extends Controller
      */
     public function edit(Software $software, SoftwarePackage $package)
     {
-        // $this->authorize('view', $software);
+        $this->access('edit', 'software_packages');
 
         return view('admin.packages.edit', compact('software', 'package'));
     }
@@ -89,7 +91,7 @@ class SoftwarePackageController extends Controller
      */
     public function update(Request $request, Software $software, SoftwarePackage $package)
     {
-        // $this->authorize('view', $software);
+        $this->access('update', 'software_packages');
 
         $validated = $request->validate([
             'nama_paket' => 'required|string|max:255',
@@ -101,7 +103,7 @@ class SoftwarePackageController extends Controller
         $package->update($validated);
 
         return redirect()
-            ->route('admin.software.packages.index', $software)
+            ->route('software.packages.index', $software)
             ->with('success', 'Package berhasil diupdate');
     }
 
@@ -110,7 +112,7 @@ class SoftwarePackageController extends Controller
      */
     public function destroy(Software $software, SoftwarePackage $package)
     {
-        // $this->authorize('view', $software);
+        $this->access('destroy', 'software_packages');
 
         // Check if package has active subscriptions
         $activeSubscriptions = $package->subscriptions()
@@ -126,7 +128,7 @@ class SoftwarePackageController extends Controller
         $package->delete();
 
         return redirect()
-            ->route('admin.software.packages.index', $software)
+            ->route('software.packages.index', $software)
             ->with('success', 'Package berhasil dihapus');
     }
 
@@ -135,7 +137,7 @@ class SoftwarePackageController extends Controller
      */
     public function toggleStatus(Software $software, SoftwarePackage $package)
     {
-        // $this->authorize('view', $software);
+        $this->access('toggleStatus', 'software_packages');
 
         $newStatus = $package->status === 'active' ? 'inactive' : 'active';
         $package->update(['status' => $newStatus]);
@@ -145,5 +147,10 @@ class SoftwarePackageController extends Controller
             'status' => $newStatus,
             'message' => 'Status package berhasil diupdate'
         ]);
+    }
+
+    private function access($permssion, $methode)
+    {
+        return \App\Helpers\Access::can($permssion, $methode) ? true : abort(403);
     }
 }
