@@ -10,7 +10,9 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use App\Services\GoogleService;
-use App\Enums\ParamSchema; 
+use App\Schemas\ParamSchema;
+use App\Models\SettingCompany;
+use Google\Service\Calendar;
 
 class MeetingApiController extends Controller
 {
@@ -40,6 +42,7 @@ class MeetingApiController extends Controller
             'meeting_name' => 'required|string',
             'meeting_type' => 'required|string',
             'meeting_link' => 'nullable|url',
+            'google_event_id' => 'nullable|string',
             'meeting_agenda' => 'required|string',
             'meeting_location' => 'nullable|string',
             'start_date' => 'required|date',
@@ -68,29 +71,36 @@ class MeetingApiController extends Controller
 
             $meeting = Meeting::create($validated);
 
-            /**
-             * Create Google Meet
-             */
-            if (in_array($request->meeting_type, ['google_meet', 'online']) && empty($request->meeting_link)) {
+            $participantIds[] = Auth::user()->id;
+
+            $meeting->participants()->sync($participantIds);
+
+            if($this->validateGoogleMeet(Auth::user()->company_id) && ($request->meeting_type == ParamSchema::GOOGLE_MEET || $request->meeting_type == "online"))
+            {
+                $maxDescriptionLength = config('services.google.max_description_length'); // safe limit
+
+                if (Str::length(strip_tags($request->meeting_agenda)) > $maxDescriptionLength) {
+                    return back()->with('error', 'Agenda rapat terlalu panjang untuk disimpan ke Google Calendar. Maksimal ' . $maxDescriptionLength . ' karakter tanpa HTML.');
+                }
+
                 $googleService = new GoogleService(Auth::user()->company_id);
                 $googleMeet = $googleService->createGoogleMeet($meeting);
                 $googleMeetData = $googleMeet->getData();
-
-                if ($googleMeetData->success) {
+                if($googleMeetData->success)
+                {
                     $meeting->update([
                         'google_meet_link' => $googleMeetData->link,
                         'google_event_id' => $googleMeetData->event_id
                     ]);
                 }
+
+                $this->generatePublic($meeting);
             }
 
             $participantIds = User::whereIn('email', $request->participant)
                 ->orWhereIn('email_gmail', $request->participant)
                 ->pluck('id')
                 ->toArray();
-
-            $participantIds[] = Auth::id();
-            $meeting->participants()->sync($participantIds);
 
             DB::commit();
 
@@ -110,6 +120,23 @@ class MeetingApiController extends Controller
         }
     }
 
+    protected function validateGoogleMeet($companyId)
+    {
+        $settings = SettingCompany::byCompany($companyId)
+            ->where('menu', 'google')
+            ->get()
+            ->pluck('field_value', 'field_title');
+        return !empty($settings['google_client_id']) && !empty($settings['google_client_secret']) ?? !empty($settings['google_access_token']) && !empty($settings['google_refresh_token']) ?? false;
+    }
+
+    protected function generatePublic($meeting)
+    {
+        $meeting->update([
+            'public_token' => Str::random(10),
+            'public_code' => Str::random(5),
+            'public_token_generated_at' => now()
+        ]);
+    }
 
 
     /**
