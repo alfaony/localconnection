@@ -45,7 +45,7 @@ class ProductSupplierImportJob implements ShouldQueue
                 foreach ($categories as $categoryName) 
                 {
                     if ($categoryName) {
-                        $category = SupplierCategory::byCompany($this->companyId)->firstOrCreate(['name' => $categoryName], ['company_id' => $this->companyId]);
+                        $category = SupplierCategory::byCompanyJob($this->companyId)->firstOrCreate(['name' => $categoryName], ['company_id' => $this->companyId]);
                         $categoryIds[] = $category->id;
                     }
                 }

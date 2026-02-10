@@ -70,7 +70,7 @@
                     </div>
 
                     <div class="mt-4">
-                        {{ $productSupplierTypes->links() }}
+                        {{ $productSupplierTypes->withQueryString()->links('vendor.pagination.bootstrap-4') }}
                     </div>
                 </div>
             </div>

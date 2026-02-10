@@ -569,6 +569,7 @@ class UsedLaptopController extends Controller
 
                 $payload = (new UsedLaptopResource($laptop))->resolve();
 
+
                 WebhookHelper::sendWebhook(Auth::user()->company_id, $this->appName, 'update', $payload);                
             }
 
