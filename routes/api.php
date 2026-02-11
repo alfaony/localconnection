@@ -22,8 +22,10 @@ use App\Http\Controllers\API\ItemPurchaseMobileController;
 use App\Http\Controllers\API\FlowChartController;
 use App\Http\Controllers\API\RegionController;
 use App\Http\Controllers\API\InternetCustomerController;
+use App\Http\Controllers\API\UserApiController;
 
 use App\Http\Controllers\API\ProductStoreController;
+use App\Http\Controllers\API\MeetingApiController;
 use App\Http\Controllers\UserController;
 
 
@@ -64,6 +66,11 @@ Route::group(['middleware' => ['auth:api','role.permission.api']], function()
     //Mobile
     Route::get('users/division/{divisionId}', [DailyTaskMobileController::class, 'getUsersByDivision'])
         ->name('users.division.mobile');
+    Route::get('users', [UserApiController::class, 'indexUsers']);
+    Route::get('main-projects', [UserApiController::class, 'indexMainProjects']);
+    Route::get('projects', [UserApiController::class, 'indexProjects']);
+
+
     
     Route::get('tasks/user/{userId}', [DailyTaskMobileController::class, 'indexTaskByUser'])
         ->name('tasks.user.mobile');
@@ -129,6 +136,9 @@ Route::group(['middleware' => ['auth:api','role.permission.api']], function()
     Route::get('product-stores/search', [ProductStoreController::class, 'search'])->name('api.product-stores.search');
     
     Route::apiResource('flowcharts', FlowChartController::class);
+
+    // CRUD Meeting
+    Route::apiResource('meeting', MeetingApiController::class);
 
     // SKAM Import API
     Route::post('internet-customer/import', [InternetCustomerController::class, 'import']);
