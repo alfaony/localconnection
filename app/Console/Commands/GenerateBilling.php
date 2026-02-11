@@ -57,12 +57,11 @@ class GenerateBilling extends Command
         if (in_array($type, ['isolir', 'all'])) {
             $this->info("Processing ISOLIR for customers with end_billing_date = {$today->toDateString()}...");
 
-            $isolirCustomers = UserCustomer::whereDate('end_billing_date', $today)
+            $isolirCustomers = UserCustomer::whereDate('end_billing_date','<=',$today)
                 ->whereHas('internetCustomer', function ($query) {
-                    $query->where('status', ParamSchema::WAITING_PAYMENT_CONFIRMATION);
+                    $query->where('status', ParamSchema::WAITING_PAYMENT_SUBSCRIPTION);
                 })
                 ->get();
-
             $delayStep = 0;
             foreach ($isolirCustomers as $customer)
             {
