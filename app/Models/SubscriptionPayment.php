@@ -52,6 +52,8 @@ class SubscriptionPayment extends Model
         'manual_transfer_account_name',
         'manual_transfer_account_number',
         'manual_transfer_proof',
+        'manual_transfer_sender_name',
+        'manual_transfer_sender_bank',
         'midtrans_snap_token',
         'midtrans_order_id',
     ];

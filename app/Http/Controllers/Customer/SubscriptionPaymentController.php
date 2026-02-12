@@ -4,8 +4,11 @@ namespace App\Http\Controllers\Customer;
 
 use App\Http\Controllers\Controller;
 use App\Models\CustomerSubscription;
+use App\Models\SubscriptionPayment;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Log;
 
 class SubscriptionPaymentController extends Controller
 {
@@ -85,5 +88,77 @@ class SubscriptionPaymentController extends Controller
             'payment_status' => $subscription->payment_status,
             'is_paid' => $subscription->payment_status === 'paid',
         ]);
+    }
+
+    /**
+     * Upload proof of transfer for manual payment
+     */
+    public function uploadProof(Request $request, $paymentId)
+    {
+        $request->validate([
+            'transfer_proof' => 'required|image|mimes:jpeg,png,jpg|max:2048',
+            'sender_name' => 'required|string|max:255',
+            'sender_bank' => 'required|string|max:255',
+        ]);
+
+        // Find payment and verify ownership
+        $payment = SubscriptionPayment::findOrFail($paymentId);
+        
+        $subscription = $payment->subscription;
+        
+        if ($subscription->user_id !== Auth::id()) {
+            abort(403, 'Unauthorized access');
+        }
+
+        // Verify it's a manual transfer payment
+        if (!$payment->isManualTransfer()) {
+            return back()->with('error', 'Upload bukti transfer hanya untuk pembayaran manual');
+        }
+
+        // Verify payment is still pending
+        if (!$payment->isPending()) {
+            return back()->with('error', 'Pembayaran sudah diproses');
+        }
+
+        try {
+            // Delete old proof if exists
+            if ($payment->manual_transfer_proof) {
+                Storage::disk('s3')->delete($payment->manual_transfer_proof);
+            }
+
+            // Store new proof to S3
+            $file = $request->file('transfer_proof');
+            $filename = 'transfer_proof_' . $payment->id . '_' . time() . '.' . $file->getClientOriginalExtension();
+            $path = 'subscription_payments/transfer_proofs/' . $filename;
+            
+            // Upload to S3
+            Storage::disk('s3')->put($path, file_get_contents($file), 'public');
+
+            // Update payment record
+            $payment->update([
+                'manual_transfer_proof' => $path,
+                'manual_transfer_sender_name' => $request->sender_name,
+                'manual_transfer_sender_bank' => $request->sender_bank,
+            ]);
+
+            Log::info('Transfer proof uploaded', [
+                'payment_id' => $payment->id,
+                'subscription_id' => $subscription->id,
+                'user_id' => Auth::id(),
+                'file_path' => $path,
+                'sender_name' => $request->sender_name,
+                'sender_bank' => $request->sender_bank,
+            ]);
+
+            return back()->with('success', 'Bukti transfer berhasil diupload. Menunggu verifikasi admin.');
+
+        } catch (\Exception $e) {
+            Log::error('Failed to upload transfer proof', [
+                'payment_id' => $paymentId,
+                'error' => $e->getMessage(),
+            ]);
+
+            return back()->with('error', 'Gagal mengupload bukti transfer. Silakan coba lagi.');
+        }
     }
 }

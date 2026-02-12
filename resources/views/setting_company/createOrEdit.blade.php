@@ -1004,32 +1004,25 @@
                                         </div>
                                         
                                         <div class="form-group">
-                                            <label for="nama_bank_software_sharing">Nama Bank</label>
-                                            <input type="text" name="nama_bank_software_sharing" class="form-control" value="{{ old('nama_bank_software_sharing', isset($data['nama_bank_software_sharing']) ? $data['nama_bank_software_sharing'] : '') }}">
-                                            @error('nama_bank_software_sharing')
+                                            <label for="software_sharing_nama_bank">Nama Bank</label>
+                                            <input type="text" name="software_sharing_nama_bank" class="form-control" value="{{ old('software_sharing_nama_bank', isset($data['software_sharing_nama_bank']) ? $data['software_sharing_nama_bank'] : '') }}">
+                                            @error('software_sharing_nama_bank')
                                             <span class="text-danger text-sm">{{ $message }}</span>
                                             @enderror
                                         </div>
 
                                         <div class="form-group">
-                                            <label for="atas_nama_software_sharing">Nama Pemilik Rekening (opsional)</label>
-                                            <input type="text" name="atas_nama_software_sharing" class="form-control" placeholder="opsional, kosongkan jika nama atas nama sama dengan nama perusahaan" value="{{ old('atas_nama_software_sharing', isset($data['atas_nama_software_sharing']) ? $data['atas_nama_software_sharing'] : '') }}">
-                                            @error('atas_nama_software_sharing')
+                                            <label for="software_sharing_atas_nama">Nama Pemilik Rekening (opsional)</label>
+                                            <input type="text" name="software_sharing_atas_nama" class="form-control" placeholder="opsional, kosongkan jika nama atas nama sama dengan nama perusahaan" value="{{ old('software_sharing_atas_nama', isset($data['software_sharing_atas_nama']) ? $data['software_sharing_atas_nama'] : '') }}">
+                                            @error('software_sharing_atas_nama')
                                             <span class="text-danger text-sm">{{ $message }}</span>
                                             @enderror
                                         </div>
 
                                         <div class="form-group">
-                                            <small class="form-text text-muted">
-                                                <i class="fas fa-info-circle"></i> 
-                                                <strong>Enabled:</strong> Manual Payment Status<br>
-                                            </small>
-                                        </div>
-
-                                        <div class="form-group">
-                                            <label for="cabang_bank_software_sharing">Cabang Bank</label>
-                                            <input type="text" name="cabang_bank_software_sharing" class="form-control" value="{{ old('cabang_bank_software_sharing', isset($data['cabang_bank_software_sharing']) ? $data['cabang_bank_software_sharing'] : '') }}">
-                                            @error('cabang_bank_software_sharing')
+                                            <   label for="software_sharing_cabang_bank">Cabang Bank</label>
+                                            <input type="text" name="software_sharing_cabang_bank" class="form-control" value="{{ old('software_sharing_cabang_bank', isset($data['software_sharing_cabang_bank']) ? $data['software_sharing_cabang_bank'] : '') }}">
+                                            @error('software_sharing_cabang_bank')
                                             <span class="text-danger text-sm">{{ $message }}</span>
                                             @enderror
                                         </div>
@@ -1046,7 +1039,6 @@
 
         </div>
     </div>
-                                            {{ dd($data)}}
 </div>
 
 @endsection

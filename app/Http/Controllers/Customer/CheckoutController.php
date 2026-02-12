@@ -206,4 +206,49 @@ class CheckoutController extends Controller
                 throw new \Exception('Invalid payment gateway');
         }
     }
+    /**
+     * Show payment pending page (for manual transfer)
+     */
+    public function paymentPending($order)
+    {
+        $subscription = CustomerSubscription::where('order_number', $order)
+            ->with(['package', 'masterAccount.software', 'payments' => function($query) {
+                $query->latest();
+            }])
+            ->firstOrFail();
+
+        // Get latest payment
+        $payment = $subscription->payments->first();
+
+        if (!$payment || !$payment->isManualTransfer()) {
+            return redirect()->route('customer.software.index')
+                ->with('error', 'Payment not found or invalid payment method');
+        }
+
+        return view('customer.payment.pending', compact('subscription', 'payment'));
+    }
+
+    /**
+     * Show payment success page
+     */
+    public function paymentSuccess($order)
+    {
+        $subscription = CustomerSubscription::where('order_number', $order)
+            ->with(['package', 'masterAccount.software'])
+            ->firstOrFail();
+
+        return view('customer.payment.success', compact('subscription'));
+    }
+
+    /**
+     * Show payment failed page
+     */
+    public function paymentFailed($order)
+    {
+        $subscription = CustomerSubscription::where('order_number', $order)
+            ->with(['package', 'masterAccount.software'])
+            ->firstOrFail();
+
+        return view('customer.payment.failed', compact('subscription'));
+    }
 }

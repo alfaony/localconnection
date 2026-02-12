@@ -96,10 +96,10 @@
                                     @if($key === 'manual' && isset($method['banks']))
                                         <div class="manual-transfer-details ml-4 mb-3" id="manual_details" style="{{ $loop->first ? '' : 'display:none;' }}">
                                             <div class="card bg-light">
-                                                <div class="card-body">
-                                                    <h6 class="card-title">Pilih Bank Tujuan:</h6>
+                                                <div class="card-body row">
+                                                    <h6 class="card-title col-md-12">Pilih Bank Tujuan:</h6>
                                                     @foreach($method['banks'] as $index => $bank)
-                                                        <div class="custom-control custom-radio mb-2">
+                                                        <div class="custom-control custom-radio mb-2 col-md-6">
                                                             <input type="radio" 
                                                                    id="bank_{{ $index }}" 
                                                                    name="selected_bank" 

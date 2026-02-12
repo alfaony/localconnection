@@ -389,11 +389,6 @@ Route::middleware(['auth', 'verified'])->prefix('customer')->name('customer.')->
     // Payment failed (redirect from Xendit)
     Route::get('/payment/failed', [SubscriptionPaymentController::class, 'failed'])
         ->name('payment.failed');
-
-    // Upload proof of transfer
-    Route::post('/payment/{payment}/upload-proof', [SubscriptionPaymentController::class, 'uploadProof'])
-        ->middleware('auth')
-        ->name('payment.upload-proof');
     
     // Check payment status (AJAX)
     Route::get('/payment/check-status/{orderNumber}', [SubscriptionPaymentController::class, 'checkStatus'])

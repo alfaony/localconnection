@@ -99,7 +99,6 @@ class SubscriptionPaymentService
     {
         $banks = [];
 
-        dd($this->settings['manual']);
         // Bank 1
         if (!empty($this->settings['manual']['bank_name_software_subscription'])) {
             $banks[] = [
@@ -110,11 +109,11 @@ class SubscriptionPaymentService
         }
 
         // Bank 2 (optional)
-        if (!empty($this->settings['manual']['bank_name_2_software_subscription'])) {
+        if (!empty($this->settings['manual']['software_sharing_atas_nama'])) {
             $banks[] = [
-                'bank_name' => $this->settings['manual']['bank_name_2_software_subscription'],
-                'account_name' => $this->settings['manual']['account_name_2_software_subscription'] ?? '',
-                'account_number' => $this->settings['manual']['account_number_2_software_subscription'] ?? '',
+                'bank_name' => $this->settings['manual']['software_sharing_nama_bank'],
+                'account_name' => $this->settings['manual']['software_sharing_atas_nama'] ?? '',
+                'account_number' => $this->settings['manual']['software_sharing_nama_bank'] ?? '',
             ];
         }
 
