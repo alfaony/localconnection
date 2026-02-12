@@ -44,6 +44,15 @@ Route::post('login', [LoginController::class, 'login']);
 
 Route::post('login_flutter', [LoginController::class, 'login_flutter']);
 
+Route::middleware('auth:sanctum')->prefix('internet-customers')->group(function () {
+    Route::get('/', [InternetCustomerApiController::class, 'index']);
+    Route::get('/{id}', [InternetCustomerApiController::class, 'show']);
+    Route::post('/{id}/approve', [InternetCustomerApiController::class, 'approve']);
+    Route::post('/{id}/close', [InternetCustomerApiController::class, 'close']);
+    Route::post('/{id}/complete-installation', [InternetCustomerApiController::class, 'completeInstallation']);
+});
+
+
 Route::group(['middleware' => ['auth:api','role.permission.api']], function() 
 {
 
