@@ -83,6 +83,8 @@
     </div>
 </div>
 
+<div wire:poll.3000ms="checkKtpScanResult"></div>
+
 <div class="d-flex justify-content-between mt-4">
      <button wire:click="prevStep" class="btn btn-outline-secondary px-4">
         <i class="fas fa-arrow-left me-2"></i> Kembali
@@ -108,3 +110,11 @@
         </span>
     </button>
 </div>
+
+@push('scripts')
+<script>
+window.addEventListener('ktp-autofill-success', () => {
+    alert('Data KTP berhasil dipindai & diisi otomatis. Silakan cek kembali.');
+});
+</script>
+@endpush

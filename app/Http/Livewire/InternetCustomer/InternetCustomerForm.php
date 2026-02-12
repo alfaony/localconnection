@@ -32,6 +32,8 @@ use App\Helpers\InboxHelper;
 use App\Services\XenditService;
 use App\Services\MidtransService;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Http;
 
 
 class InternetCustomerForm extends Component
@@ -146,7 +148,62 @@ class InternetCustomerForm extends Component
         $this->validateOnly('ktp_photo', [
             'ktp_photo' => 'required|file|mimes:jpg,jpeg,png,pdf|max:2048'
         ]);
+
+        try {
+            $sessionId = Str::uuid()->toString();
+            session(['ktp_session_id' => $sessionId]);
+
+            $token = SettingCompany::where('menu', 'n8n')
+                ->where('field_title', 'n8n_webhook_token')
+                ->value('field_value');
+            
+            $baseUrl = rtrim(config('services.n8n.base_url'), '/');
+            $path    = ltrim(config('services.n8n.ktp_webhook_path'), '/');
+            $webhookUrl = $baseUrl . '/' . $path;
+
+            // $webhookUrl = config('services.n8n.n8n_webhook_url');
+
+            if ($token && $webhookUrl) {
+                Http::timeout(10)
+                    ->attach(
+                        'file',
+                        file_get_contents($this->ktp_photo->getRealPath()),
+                        $this->ktp_photo->getClientOriginalName()
+                    )
+                    ->post($webhookUrl, [
+                        'api_key'    => $token,
+                        'session_id' => $sessionId,
+                    ]);
+            }
+
+        } catch (\Throwable $e) {
+            Log::warning('Gagal kirim KTP ke N8N', [
+                'error' => $e->getMessage()
+            ]);
+        }
     }
+
+    public function checkKtpScanResult()
+    {
+        $sessionId = session('ktp_session_id');
+
+        logger('SESSION ID WEB:', ['session' => $sessionId]);
+
+        if (!$sessionId) return;
+
+        $data = Cache::pull('ktp_scan_result_'.$sessionId);
+
+        logger('CACHE RESULT:', ['data' => $data]);
+
+        if ($data) {
+            $this->name       = $data['name'] ?? $this->name;
+            $this->ktp_number = $data['ktp_number'] ?? $this->ktp_number;
+            $this->address    = $data['address'] ?? $this->address;
+
+            $this->dispatchBrowserEvent('ktp-autofill-success');
+        }
+    }
+
 
     public function updatedPaymentProof($value)
     {
