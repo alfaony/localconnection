@@ -162,6 +162,13 @@ class InternetCustomerForm extends Component
             $webhookUrl = $baseUrl . '/' . $path;
 
             // $webhookUrl = config('services.n8n.n8n_webhook_url');
+            // logger('SESSION ID WEB KIRIM:', ['session' => $sessionId]);
+            // logger('N8N URL FINAL RAW:', [
+            //     'url' => $webhookUrl,
+            //     'length' => strlen($webhookUrl),
+            //     'base_raw' => config('services.n8n.base_url'),
+            //     'path_raw' => config('services.n8n.ktp_webhook_path'),
+            // ]);
 
             if ($token && $webhookUrl) {
                 Http::timeout(10)
@@ -187,13 +194,13 @@ class InternetCustomerForm extends Component
     {
         $sessionId = session('ktp_session_id');
 
-        logger('SESSION ID WEB:', ['session' => $sessionId]);
+        // logger('SESSION ID WEB:', ['session' => $sessionId]);
 
         if (!$sessionId) return;
 
         $data = Cache::pull('ktp_scan_result_'.$sessionId);
 
-        logger('CACHE RESULT:', ['data' => $data]);
+        // logger('CACHE RESULT:', ['data' => $data]);
 
         if ($data) {
             $this->name       = $data['name'] ?? $this->name;
