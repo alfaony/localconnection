@@ -1020,7 +1020,7 @@ class InternetCustomerForm extends Component
 
     protected function notifyMarketingTeamSuccess($internetCustomer)
     {
-        $userFinance = User::byCompany($internetCustomer->company_id)->whereHas('role', function ($q) {
+        $userFinance = User::byCompanyPublic($internetCustomer->company_id)->whereHas('role', function ($q) {
         $q->whereIn('name', [RoleSchema::SYSTEM_ADMIN, RoleSchema::ROOT, RoleSchema::SALES]);
         })->get();
 
