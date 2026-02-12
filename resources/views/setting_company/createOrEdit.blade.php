@@ -878,40 +878,162 @@
                         <div class="card-header" id="judulPayment">
                             <h2 class="mb-0">
                                 <button class="btn btn-link btn-block text-left" type="button" data-toggle="collapse" data-target="#collapsePaymentSoftwareSubscription" aria-expanded="false" aria-controls="collapsePaymentSoftwareSubscription">
-                                    Setting Payment Xendit Software Subscription
+                                    Setting Software Sharing
                                 </button>
                             </h2>
                         </div>
 
                         <div id="collapsePaymentSoftwareSubscription" class="collapse" aria-labelledby="judulPayment" data-parent="#accordion">
                             <div class="card-body">
-                                <div class="form-group">
-                                    <label for="public_key_software_subscription">Public Key</label>
-                                    <input type="text" name="public_key_software_subscription" class="form-control" value="{{ old('public_key_software_subscription', $data['public_key_software_subscription'] ?? '') }}">
-                                </div>
-
-                                <div class="form-group">
-                                    <label for="secret_key_software_subscription">Secret Key</label>
-                                    <input type="text" name="secret_key_software_subscription" class="form-control" value="{{ old('secret_key_software_subscription', $data['secret_key_software_subscription'] ?? '') }}">
-                                </div>
-
-                                <div class="form-group">
-                                    <label for="webhook_token_software_subscription">Webhook Token</label>
-                                    <input type="text" name="webhook_token_software_subscription" class="form-control" value="{{ old('webhook_token_software_subscription', $data['webhook_token_software_subscription'] ?? '') }}">
-                                </div>
-                                
-                                <div class="form-group">
-                                    <div class="custom-control custom-switch">
-                                        <input type="checkbox" class="custom-control-input" id="xendit_pay_with_ppn_software_subscription" name="xendit_pay_with_ppn_software_subscription" value="1" {{ old('xendit_pay_with_ppn_software_subscription', $data['xendit_pay_with_ppn_software_subscription'] ?? '0') == '1' ? 'checked' : '' }}>
-                                        <label class="custom-control-label" for="xendit_pay_with_ppn_software_subscription">
-                                            <strong>Gateway Auto-Calculate PPN</strong>
-                                        </label>
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h5>
+                                            Setting Software Sharing
+                                        </h5>
                                     </div>
-                                    <small class="form-text text-muted">
-                                        <i class="fas fa-info-circle"></i> 
-                                        <strong>Enabled:</strong> Kirim net price (price_nett), gateway akan tambahkan PPN<br>
-                                        <strong>Disabled:</strong> Kirim gross price (price) yang sudah termasuk PPN
-                                    </small>
+                                    <div class="card-body">
+                                        <div class="alert alert-info">
+                                            <i class="fas fa-info-circle"></i> <strong>Info:</strong> Pengaturan ini khusus untuk invoice Software. Kosongkan field untuk menggun akan setting default perusahaan.
+                                        </div>
+                                        <!-- Logo/Icon -->
+                                        <div class="form-group">
+                                            <label for="software_sharing_icon">Logo/Icon Invoice</label>
+                                            @if(isset($data['software_sharing_icon']) && $data['software_sharing_icon'])
+                                                <div class="mb-2">
+                                                    <img src="{{ s3_asset(true, 10, $data['software_sharing_icon']) }}" style="max-width: 200px; max-height: 100px;" class="img-thumbnail">
+                                                </div>
+                                            @endif
+                                            <input type="file" name="software_sharing_icon" class="form-control-file" accept="image/*">
+                                            <small class="form-text text-muted">Logo akan tampil di header invoice</small>
+                                            @error('software_sharing_icon')
+                                            <span class="text-danger text-sm">{{ $message }}</span>
+                                            @enderror
+                                        </div>
+
+                                        <!-- Company Name -->
+                                        <div class="form-group">
+                                            <label for="software_sharing_company_name">Nama Perusahaan untuk Invoice</label>
+                                            <input type="text" name="software_sharing_company_name" class="form-control" value="{{ old('software_sharing_company_name', $data['software_sharing_company_name'] ?? '') }}" placeholder="Kosongkan untuk menggunakan nama perusahaan default">
+                                            <small class="form-text text-muted">Nama perusahaan yang tertera di invoice</small>
+                                            @error('software_sharing_company_name')
+                                            <span class="text-danger text-sm">{{ $message }}</span>
+                                            @enderror
+                                        </div>
+
+                                        <!-- Address -->
+                                        <div class="form-group">
+                                            <label for="software_sharing_company_address">Alamat untuk Invoice</label>
+                                            <textarea name="software_sharing_company_address" class="form-control" rows="2" placeholder="Alamat lengkap perusahaan">{{ old('software_sharing_company_address', $data['software_sharing_company_address'] ?? '') }}</textarea>
+                                            <small class="form-text text-muted">Alamat lengkap yang tertera di invoice</small>
+                                            @error('software_sharing_company_address')
+                                            <span class="text-danger text-sm">{{ $message }}</span>
+                                            @enderror
+                                        </div>
+
+                                        <!-- Phone -->
+                                        <div class="form-group">
+                                            <label for="software_sharing_phone">Telepon untuk Invoice</label>
+                                            <input type="text" name="software_sharing_phone" class="form-control" value="{{ old('software_sharing_phone', $data['software_sharing_phone'] ?? '') }}" placeholder="Nomor telepon">
+                                            <small class="form-text text-muted">Nomor telepon yang tertera di invoice</small>
+                                            @error('software_sharing_phone')
+                                            <span class="text-danger text-sm">{{ $message }}</span>
+                                            @enderror
+                                        </div>
+
+                                        <!-- Footer Message -->
+                                        <div class="form-group">
+                                            <label for="software_sharing_footer_message">Pesan Footer Invoice</label>
+                                            <textarea name="software_sharing_footer_message" class="form-control" rows="3" placeholder="Terima kasih atas kepercayaan Anda...">{{ old('software_sharing_footer_message', $data['software_sharing_footer_message'] ?? '') }}</textarea>
+                                            <small class="form-text text-muted">Pesan terima kasih atau catatan yang tertera di footer invoice</small>
+                                            @error('software_sharing_footer_message')
+                                            <span class="text-danger text-sm">{{ $message }}</span>
+                                            @enderror
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h5>
+                                            Xendit Software Sharing
+                                        </h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="form-group">
+                                            <label for="secret_key_software_subscription">Secret Key</label>
+                                            <input type="text" name="secret_key_software_subscription" class="form-control" value="{{ old('secret_key_software_subscription', $data['secret_key_software_subscription'] ?? '') }}">
+                                        </div>
+        
+                                        <div class="form-group">
+                                            <label for="webhook_token_software_subscription">Webhook Token</label>
+                                            <input type="text" name="webhook_token_software_subscription" class="form-control" value="{{ old('webhook_token_software_subscription', $data['webhook_token_software_subscription'] ?? '') }}">
+                                        </div>
+                                        
+                                        <div class="form-group">
+                                            <div class="custom-control custom-switch">
+                                                <input type="checkbox" class="custom-control-input" id="xendit_pay_with_ppn_software_subscription" name="xendit_pay_with_ppn_software_subscription" value="1" {{ old('xendit_pay_with_ppn_software_subscription', $data['xendit_pay_with_ppn_software_subscription'] ?? '0') == '1' ? 'checked' : '' }}>
+                                                <label class="custom-control-label" for="xendit_pay_with_ppn_software_subscription">
+                                                    <strong>Gateway Auto-Calculate PPN</strong>
+                                                </label>
+                                            </div>
+                                            <small class="form-text text-muted">
+                                                <i class="fas fa-info-circle"></i> 
+                                                <strong>Enabled:</strong> Kirim net price (price_nett), gateway akan tambahkan PPN<br>
+                                                <strong>Disabled:</strong> Kirim gross price (price) yang sudah termasuk PPN
+                                            </small>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h5>
+                                            Rekening Software Sharing
+                                        </h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="form-group">
+                                            <div class="custom-control custom-switch">
+                                                <input type="checkbox" class="custom-control-input" id="software_sharing_manual_payment_status" name="software_sharing_manual_payment_status" value="1" {{ old('software_sharing_manual_payment_status', $data['software_sharing_manual_payment_status'] ?? '0') == '1' ? 'checked' : '' }}>
+                                                <label class="custom-control-label" for="software_sharing_manual_payment_status">
+                                                    <strong>Manual Payment Status</strong>
+                                                </label>
+                                            </div>
+                                            <small class="form-text text-muted">
+                                                <i class="fas fa-info-circle"></i> 
+                                                <strong>Enabled:</strong> Manual Payment Status<br>
+                                            </small>
+                                        </div>
+                                        
+                                        <div class="form-group">
+                                            <label for="nama_bank_software_sharing">Nama Bank</label>
+                                            <input type="text" name="nama_bank_software_sharing" class="form-control" value="{{ old('nama_bank_software_sharing', isset($data['nama_bank_software_sharing']) ? $data['nama_bank_software_sharing'] : '') }}">
+                                            @error('nama_bank_software_sharing')
+                                            <span class="text-danger text-sm">{{ $message }}</span>
+                                            @enderror
+                                        </div>
+
+                                        <div class="form-group">
+                                            <label for="atas_nama_software_sharing">Nama Pemilik Rekening (opsional)</label>
+                                            <input type="text" name="atas_nama_software_sharing" class="form-control" placeholder="opsional, kosongkan jika nama atas nama sama dengan nama perusahaan" value="{{ old('atas_nama_software_sharing', isset($data['atas_nama_software_sharing']) ? $data['atas_nama_software_sharing'] : '') }}">
+                                            @error('atas_nama_software_sharing')
+                                            <span class="text-danger text-sm">{{ $message }}</span>
+                                            @enderror
+                                        </div>
+
+                                        <div class="form-group">
+                                            <small class="form-text text-muted">
+                                                <i class="fas fa-info-circle"></i> 
+                                                <strong>Enabled:</strong> Manual Payment Status<br>
+                                            </small>
+                                        </div>
+
+                                        <div class="form-group">
+                                            <label for="cabang_bank_software_sharing">Cabang Bank</label>
+                                            <input type="text" name="cabang_bank_software_sharing" class="form-control" value="{{ old('cabang_bank_software_sharing', isset($data['cabang_bank_software_sharing']) ? $data['cabang_bank_software_sharing'] : '') }}">
+                                            @error('cabang_bank_software_sharing')
+                                            <span class="text-danger text-sm">{{ $message }}</span>
+                                            @enderror
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -924,6 +1046,7 @@
 
         </div>
     </div>
+                                            {{ dd($data)}}
 </div>
 
 @endsection
