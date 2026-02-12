@@ -18,7 +18,7 @@
             <div class="card">
                 <div class="card-body text-center">
                     @if($software->logo)
-                    <img src="{{ Storage::url($software->logo) }}" alt="{{ $software->nama }}" class="img-fluid mb-3" style="max-height: 200px;">
+                    <img src="{{ s3_asset(true,10,$software->logo) }}" alt="{{ $software->nama }}" class="img-fluid mb-3" style="max-height: 200px;">
                     @else
                     <div class="bg-light mb-3" style="height: 200px; display: flex; align-items: center; justify-content: center;">
                         <i class="fas fa-desktop fa-4x text-muted"></i>

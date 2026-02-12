@@ -2,13 +2,7 @@
 
 namespace App\Services;
 
-use Xendit\Configuration;
-use Xendit\Invoice\InvoiceApi;
-use Xendit\Invoice\CreateInvoiceRequest;
-use Xendit\Invoice\InvoiceItem;
-use Xendit\Invoice\CustomerObject;
-use Xendit\Invoice\NotificationPreference;
-use Xendit\Invoice\NotificationChannel;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Cache;
 use App\Models\SettingCompany;
@@ -77,7 +71,7 @@ class SubscriptionXenditService
     }
 
     /**
-     * Create invoice for subscription payment
+     * Create invoice for subscription payment using Keloola Pay API
      */
     public function createInvoice($subscription, $package, $customer)
     {
@@ -95,86 +89,78 @@ class SubscriptionXenditService
             $description = "Pembayaran {$software->nama} - {$software->tipe_paket}";
             $description .= " untuk {$package->nama_paket}";
 
-            // Setup customer object
-            $customerObject = new CustomerObject([
-                'given_names' => $customer->name,
-                'email' => $customer->email ?? 'noreply@example.com',
-                'mobile_number' => $customer->phone ?? '',
-            ]);
-
-            // Build items array
+            // Build items array (plain array for Keloola Pay API)
             $items = [
-                new InvoiceItem([
+                [
                     'name' => "{$software->nama} - {$package->nama_paket}",
-                    'quantity' => 1,
+                    'qty' => 1,
                     'price' => $package->harga,
                     'category' => 'Subscription'
-                ])
+                ]
             ];
 
-            // Setup notification preferences
-            $notificationPreference = new NotificationPreference([
-                'invoice_created' => [
-                    NotificationChannel::EMAIL
-                ],
-                'invoice_reminder' => [
-                    NotificationChannel::EMAIL
-                ],
-                'invoice_paid' => [
-                    NotificationChannel::EMAIL
-                ],
-            ]);
-
-            // Get success and failure redirect URLs
-            $successUrl = route('customer.payment.success', ['order' => $subscription->order_number]);
-            $failureUrl = route('customer.payment.failed', ['order' => $subscription->order_number]);
-
-            // Create invoice request
-            $createInvoiceRequest = new CreateInvoiceRequest([
-                'external_id' => $subscription->order_number,
+            // Create invoice request payload
+            $createInvoiceRequestPayload = [
+                'external_id' => $subscription->order_number . '_softwareSharing',
                 'amount' => $package->harga,
                 'description' => $description,
-                'invoice_duration' => 86400, // 24 hours
-                'customer' => $customerObject,
-                'customer_notification_preference' => $notificationPreference,
-                'success_redirect_url' => $successUrl,
-                'failure_redirect_url' => $failureUrl,
-                'currency' => 'IDR',
                 'items' => $items,
-            ]);
+            ];
 
-            // Create invoice using API
-            $invoice = $this->invoiceApi->createInvoice($createInvoiceRequest);
-            
-            Log::info('Xendit subscription invoice created', [
-                'company_id' => $this->companyId,
-                'subscription_id' => $subscription->id,
-                'order_number' => $subscription->order_number,
-                'invoice_id' => $invoice['id'],
+            // Get Keloola Pay settings
+            $baseUrlKeloolaPay = config('services.keloola_pay.base_url');
+            $apiKey = $this->settings['secret_key_software_subscription'] ?? null;
+
+            if (!$apiKey) {
+                throw new \Exception('Keloola Pay API key not configured');
+            }
+
+            // Create invoice using Keloola Pay API
+            $url = rtrim($baseUrlKeloolaPay, '/') . '/api/v1/transactions';
+
+            $response = Http::withHeaders([
+                'X-API-KEY' => $apiKey,
+                'Accept' => 'application/json',
+                'Content-Type' => 'application/json',
+            ])
+            ->asJson()
+            ->post($url, $createInvoiceRequestPayload);
+                
+            // Handle non-success response
+            if ($response->failed() || $response->status() !== 201) {
+                $errorBody = $response->json();
+                $errorMessage = $errorBody['message'] ?? $response->body() ?? 'Unknown error';
+
+                Log::error('KeloolaPay subscription invoice creation failed', [
+                    'status' => $response->status(),
+                    'body' => $errorBody,
+                ]);
+
+                throw new \Exception("Failed to create invoice: {$errorMessage}");
+            }
+
+            // Extract JSON response safely
+            $invoiceData = $response->json();
+
+            // Logging success
+            Log::info('KeloolaPay subscription invoice created', [
+                'company_id' => $this->companyId ?? null,
+                'subscription_id' => $subscription->id ?? null,
+                'invoice_id' => $invoiceData['data']['id'] ?? null,
+                'external_id' => $subscription->order_number . '_softwareSharing',
                 'amount' => $package->harga,
             ]);
 
+            // Return consistent structure
             return [
                 'success' => true,
-                'invoice' => $invoice
-            ];
-
-        } catch (\Xendit\XenditSdkException $e) {
-            Log::error('Xendit SDK exception', [
-                'company_id' => $this->companyId,
-                'subscription_id' => $subscription->id,
-                'error' => $e->getMessage(),
-                'full_error' => $e->getFullError()
-            ]);
-
-            return [
-                'success' => false,
-                'message' => 'Xendit Error: ' . $e->getMessage()
+                'invoice' => $invoiceData['data'] ?? $invoiceData,
+                'payment_url' => $invoiceData['data']['url_payment'] ? $invoiceData['data']['url_payment'].$apiKey : null,
             ];
 
         } catch (\Exception $e) {
-            dd($e);
-            Log::error('Xendit invoice creation failed', [
+
+            Log::error('Xendit subscription invoice creation failed', [
                 'company_id' => $this->companyId,
                 'subscription_id' => $subscription->id,
                 'error' => $e->getMessage(),

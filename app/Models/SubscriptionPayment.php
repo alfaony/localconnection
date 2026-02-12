@@ -40,6 +40,7 @@ class SubscriptionPayment extends Model
         'company_id',
         'subscription_id',
         'amount',
+        'payment_gateway',
         'xendit_invoice_id',
         'xendit_external_id',
         'payment_method',
@@ -47,6 +48,12 @@ class SubscriptionPayment extends Model
         'status',
         'paid_at',
         'expired_at',
+        'manual_transfer_bank',
+        'manual_transfer_account_name',
+        'manual_transfer_account_number',
+        'manual_transfer_proof',
+        'midtrans_snap_token',
+        'midtrans_order_id',
     ];
 
     /**
@@ -184,5 +191,51 @@ class SubscriptionPayment extends Model
         ];
 
         return $methods[$this->payment_method] ?? $this->payment_method;
+    }
+
+    /**
+     * Get payment gateway display name.
+     */
+    public function getPaymentGatewayDisplayAttribute()
+    {
+        $gateways = [
+            'manual' => 'Manual Transfer',
+            'xendit' => 'Xendit',
+            'midtrans' => 'Midtrans',
+        ];
+
+        return $gateways[$this->payment_gateway] ?? $this->payment_gateway;
+    }
+
+    /**
+     * Scope a query to filter by payment gateway.
+     */
+    public function scopeByPaymentGateway($query, $gateway)
+    {
+        return $query->where('payment_gateway', $gateway);
+    }
+
+    /**
+     * Check if payment is manual transfer.
+     */
+    public function isManualTransfer()
+    {
+        return $this->payment_gateway === 'manual';
+    }
+
+    /**
+     * Check if payment is Xendit.
+     */
+    public function isXendit()
+    {
+        return $this->payment_gateway === 'xendit';
+    }
+
+    /**
+     * Check if payment is Midtrans.
+     */
+    public function isMidtrans()
+    {
+        return $this->payment_gateway === 'midtrans';
     }
 }

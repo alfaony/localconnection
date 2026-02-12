@@ -5,7 +5,7 @@
 @section('content_header')
     <div class="row mb-2">
         <div class="col-sm-12">
-            <a href="{{ route('customer.subscriptions.index') }}" class="btn btn-secondary btn-sm">
+            <a href="{{ route('customer.subscription.index') }}" class="btn btn-secondary btn-sm">
                 <i class="fas fa-arrow-left"></i> Kembali ke My Subscriptions
             </a>
         </div>
@@ -29,7 +29,7 @@
                     <div class="row mb-3">
                         <div class="col-md-3 text-center">
                             @if($subscription->masterAccount->software->logo)
-                            <img src="{{ Storage::url($subscription->masterAccount->software->logo) }}" 
+                            <img src="{{ s3_asset(true,10,$subscription->masterAccount->software->logo) }}" 
                                  alt="{{ $subscription->masterAccount->software->nama }}" 
                                  class="img-fluid"
                                  style="max-height: 120px;">
@@ -258,12 +258,12 @@
                 </div>
                 <div class="card-body">
                     @if($subscription->status == 'expired' || $subscription->isExpiringSoon(7))
-                    <a href="{{ route('customer.subscriptions.renew', $subscription) }}" class="btn btn-success btn-block">
+                    <a href="{{ route('customer.subscription.renew', $subscription) }}" class="btn btn-success btn-block">
                         <i class="fas fa-sync"></i> Perpanjang Langganan
                     </a>
                     @endif
                     
-                    <a href="{{ route('customer.subscriptions.payments', $subscription) }}" class="btn btn-info btn-block">
+                    <a href="{{ route('customer.subscription.payments', $subscription) }}" class="btn btn-info btn-block">
                         <i class="fas fa-money-bill"></i> Riwayat Pembayaran
                     </a>
                 </div>

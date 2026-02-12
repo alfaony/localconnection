@@ -8,7 +8,7 @@ use App\Models\SoftwarePackage;
 use App\Models\CustomerSubscription;
 use App\Models\SubscriptionPayment;
 use App\Services\SubscriptionService;
-use App\Services\SubscriptionXenditService;
+use App\Services\SubscriptionPaymentService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -17,6 +17,7 @@ use Illuminate\Support\Facades\Log;
 class CheckoutController extends Controller
 {
     protected $subscriptionService;
+    protected $paymentService;
 
     public function __construct(SubscriptionService $subscriptionService)
     {
@@ -47,7 +48,18 @@ class CheckoutController extends Controller
                 ->with('error', 'Maaf, slot untuk software ini sudah penuh. Silakan hubungi admin atau coba lagi nanti.');
         }
 
-        return view('customer.checkout.show', compact('software', 'package'));
+        // Get available payment methods
+        $this->paymentService = new SubscriptionPaymentService($software->company_id);
+        $paymentMethods = $this->paymentService->getAvailablePaymentMethods();
+
+
+        if (empty($paymentMethods)) {
+            return redirect()
+                ->route('customer.software.show', $slug)
+                ->with('error', 'Tidak ada metode pembayaran yang tersedia. Silakan hubungi admin.');
+        }
+
+        return view('customer.checkout.show', compact('software', 'package', 'paymentMethods'));
     }
 
     /**
@@ -57,6 +69,8 @@ class CheckoutController extends Controller
     {
         $validated = $request->validate([
             'agree_terms' => 'required|accepted',
+            'payment_gateway' => 'required|in:manual,xendit,midtrans',
+            'selected_bank' => 'required_if:payment_gateway,manual|integer',
         ]);
 
         $user = Auth::user();
@@ -64,6 +78,17 @@ class CheckoutController extends Controller
         // Get software and package
         $software = Software::where('slug', $slug)->active()->firstOrFail();
         $package = SoftwarePackage::findOrFail($packageId);
+
+        // Initialize payment service
+        $this->paymentService = new SubscriptionPaymentService($software->company_id);
+
+        // Verify payment method is available
+        $availableMethods = $this->paymentService->getAvailablePaymentMethods();
+        if (!isset($availableMethods[$validated['payment_gateway']])) {
+            return redirect()
+                ->route('customer.software.show', $slug)
+                ->with('error', 'Metode pembayaran yang dipilih tidak tersedia.');
+        }
 
         DB::beginTransaction();
 
@@ -83,36 +108,42 @@ class CheckoutController extends Controller
 
             $subscription = $result['subscription'];
 
-            // Create payment record
-            $payment = SubscriptionPayment::create([
-                'company_id' => $software->company_id,
-                'software_id' => $software->id,
-                'subscription_id' => $subscription->id,
-                'amount' => $package->harga,
-                'xendit_external_id' => $subscription->order_number,
-                'status' => 'pending',
-                'expired_at' => now()->addHours(24),
-            ]);
-
-            // Create Xendit invoice
-            $xenditService = new SubscriptionXenditService($software->company_id);
+            // Process payment based on selected gateway
+            $paymentGateway = $validated['payment_gateway'];
             
-            if (!$xenditService->isActive()) {
-                throw new \Exception('Payment gateway is not configured for this service');
+            switch ($paymentGateway) {
+                case 'manual':
+                    $paymentResult = $this->paymentService->processManualTransfer(
+                        $subscription,
+                        $package,
+                        $validated['selected_bank']
+                    );
+                    break;
+
+                case 'xendit':
+                    $paymentResult = $this->paymentService->processXenditPayment(
+                        $subscription,
+                        $package,
+                        $user
+                    );
+
+                    break;
+
+                case 'midtrans':
+                    $paymentResult = $this->paymentService->processMidtransPayment(
+                        $subscription,
+                        $package,
+                        $user
+                    );
+                    break;
+
+                default:
+                    throw new \Exception('Invalid payment gateway');
             }
 
-            $invoiceResult = $xenditService->createInvoice($subscription, $package, $user);
-
-            if (!$invoiceResult['success']) {
-                throw new \Exception($invoiceResult['message']);
+            if (!$paymentResult['success']) {
+                throw new \Exception($paymentResult['message']);
             }
-
-            $invoice = $invoiceResult['invoice'];
-
-            // Update payment with Xendit invoice ID
-            $payment->update([
-                'xendit_invoice_id' => $invoice['id'],
-            ]);
 
             DB::commit();
 
@@ -120,26 +151,59 @@ class CheckoutController extends Controller
                 'user_id' => $user->id,
                 'subscription_id' => $subscription->id,
                 'order_number' => $subscription->order_number,
-                'invoice_id' => $invoice['id'],
+                'payment_gateway' => $paymentGateway,
             ]);
 
-            // Redirect to Xendit payment page
-            return redirect($invoice['invoice_url']);
+            // Redirect based on payment gateway
+            return $this->redirectAfterPayment($paymentGateway, $paymentResult, $subscription);
 
         } catch (\Exception $e) {
+            dd($e);
             DB::rollBack();
 
-            dd($e);
+            // dd($e);
             Log::error('Checkout failed', [
                 'user_id' => $user->id,
                 'software_slug' => $slug,
                 'package_id' => $packageId,
+                'payment_gateway' => $validated['payment_gateway'] ?? null,
                 'error' => $e->getMessage(),
             ]);
 
             return redirect()
                 ->route('customer.software.show', $slug)
                 ->with('error', 'Checkout gagal: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Redirect after payment based on gateway
+     */
+    protected function redirectAfterPayment($gateway, $paymentResult, $subscription)
+    {
+        switch ($gateway) {
+            case 'manual':
+                // Redirect to payment pending page
+                return redirect()
+                    ->route('customer.payment.pending', ['order' => $subscription->order_number])
+                    ->with('success', 'Pesanan berhasil dibuat. Silakan lakukan pembayaran.');
+
+            case 'xendit':
+                // Redirect to Keloola Pay payment page
+                $paymentUrl = $paymentResult['invoice']['payment_url'] ?? null;
+                if (!$paymentUrl) {
+                    throw new \Exception('Payment URL not found');
+                }
+
+
+                return redirect($paymentUrl);
+
+            case 'midtrans':
+                // Redirect to Midtrans SNAP page
+                return redirect($paymentResult['transaction']['redirect_url']);
+
+            default:
+                throw new \Exception('Invalid payment gateway');
         }
     }
 }

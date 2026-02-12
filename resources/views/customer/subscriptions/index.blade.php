@@ -40,7 +40,7 @@
                         </button>
                     </div>
                     <div class="col-md-2">
-                        <a href="{{ route('customer.subscriptions.index') }}" class="btn btn-secondary btn-block">
+                        <a href="{{ route('customer.subscription.index') }}" class="btn btn-secondary btn-block">
                             <i class="fas fa-redo"></i> Reset
                         </a>
                     </div>
@@ -56,7 +56,7 @@
                             <div class="row">
                                 <div class="col-md-3 text-center">
                                     @if($subscription->masterAccount->software->logo)
-                                    <img src="{{ Storage::url($subscription->masterAccount->software->logo) }}" 
+                                    <img src="{{ s3_asset(true,10,$subscription->masterAccount->software->logo) }}" 
                                          alt="{{ $subscription->masterAccount->software->nama }}" 
                                          class="img-fluid"
                                          style="max-height: 80px;">
@@ -90,12 +90,12 @@
                                     @endif
                                     
                                     <div class="mt-2">
-                                        <a href="{{ route('customer.subscriptions.show', $subscription) }}" class="btn btn-info btn-sm">
+                                        <a href="{{ route('customer.subscription.show', $subscription) }}" class="btn btn-info btn-sm">
                                             <i class="fas fa-eye"></i> Detail
                                         </a>
                                         
                                         @if($subscription->status == 'expired' || $subscription->isExpiringSoon(7))
-                                        <a href="{{ route('customer.subscriptions.renew', $subscription) }}" class="btn btn-success btn-sm">
+                                        <a href="{{ route('customer.subscription.renew', $subscription) }}" class="btn btn-success btn-sm">
                                             <i class="fas fa-sync"></i> Perpanjang
                                         </a>
                                         @endif
@@ -121,7 +121,7 @@
             {{-- Pagination --}}
             @if($subscriptions->hasPages())
             <div class="mt-3">
-                {{ $subscriptions->links() }}
+                {{ $subscriptions->withQueryString()->links('vendor.pagination.bootstrap-4') }}
             </div>
             @endif
         </div>
