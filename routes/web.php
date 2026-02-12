@@ -340,19 +340,6 @@ Route::middleware(['auth', 'verified'])->prefix('customer')->name('customer.')->
     // Process checkout (create subscription + payment)
     Route::post('/checkout/{slug}/{package}', [CheckoutController::class, 'process'])
         ->name('checkout.process');
-
-    // Payment status routes
-    Route::get('/payment/pending/{order}', [CheckoutController::class, 'paymentPending'])
-        ->middleware('auth')
-        ->name('payment.pending');
-
-    Route::get('/payment/success/{order}', [CheckoutController::class, 'paymentSuccess'])
-        ->middleware('auth')
-        ->name('payment.success');
-
-    Route::get('/payment/failed/{order}', [CheckoutController::class, 'paymentFailed'])
-        ->middleware('auth')
-        ->name('payment.failed');
     
     // ========================================================================
     // MY subscription
@@ -381,6 +368,10 @@ Route::middleware(['auth', 'verified'])->prefix('customer')->name('customer.')->
     // ========================================================================
     // PAYMENT HANDLING
     // ========================================================================
+    
+    // Payment pending page (for manual transfer)
+    Route::get('/payment/pending/{order}', [CheckoutController::class, 'paymentPending'])
+        ->name('payment.pending');
     
     // Payment success (redirect from Xendit)
     Route::get('/payment/success', [SubscriptionPaymentController::class, 'success'])
