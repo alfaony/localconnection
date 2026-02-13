@@ -58,6 +58,9 @@ class InternetCustomerForm extends Component
     public $isAvailableArea = false;
     
     // Step 2: Data Pribadi
+    public $ktp_input_mode = 'manual';  
+    public $ktpReadingStartedAt = null;
+    public $isReadingKtp = false;
     public $name;
     public $phone_number;
     public $email;
@@ -141,13 +144,18 @@ class InternetCustomerForm extends Component
     ];
 
     public function updatedKtpPhoto($value)
-    {
-        $this->ktpPhotoUploaded = false;
-        
-        // Validate immediately
+    {   
+        // Validate
         $this->validateOnly('ktp_photo', [
             'ktp_photo' => 'required|file|mimes:jpg,jpeg,png,pdf|max:2048'
         ]);
+
+        if ($this->ktp_input_mode === 'manual') {
+            return;
+        }
+
+        $this->isReadingKtp = true;
+        $this->ktpReadingStartedAt = now();
 
         try {
             $sessionId = Str::uuid()->toString();
@@ -187,6 +195,7 @@ class InternetCustomerForm extends Component
             Log::warning('Gagal kirim KTP ke N8N', [
                 'error' => $e->getMessage()
             ]);
+            $this->isReadingKtp = false;
         }
     }
 
@@ -202,10 +211,27 @@ class InternetCustomerForm extends Component
 
         // logger('CACHE RESULT:', ['data' => $data]);
 
+        if ($this->isReadingKtp && $this->ktpReadingStartedAt) {
+            if (now()->diffInSeconds($this->ktpReadingStartedAt) > 30) {
+                $this->isReadingKtp = false;
+                $this->ktpReadingStartedAt = null;
+
+                session()->flash(
+                    'warning',
+                    'Proses membaca KTP terdapat gangguan. Silakan coba upload ulang atau lakukan secara manual.'
+                );
+
+                return;
+            }
+        }
+
         if ($data) {
             $this->name       = $data['name'] ?? $this->name;
             $this->ktp_number = $data['ktp_number'] ?? $this->ktp_number;
             $this->address    = $data['address'] ?? $this->address;
+
+            $this->isReadingKtp = false;
+            $this->ktpReadingStartedAt = null;
 
             $this->dispatchBrowserEvent('ktp-autofill-success');
         }
@@ -521,7 +547,7 @@ class InternetCustomerForm extends Component
 
     public function nextStep()
     {
-        $this->generateAgreementPreviewJson();
+        // $this->generateAgreementPreviewJson();
 
         if ($this->step === 1) {
             $this->validateStep1();
@@ -533,6 +559,10 @@ class InternetCustomerForm extends Component
             $this->handleSaveSignature();
         } elseif ($this->step === 4) {
             $this->validateStep4();
+        }
+
+        if ($this->step === 3) {
+            $this->generateAgreementPreviewJson();
         }
     }
 
