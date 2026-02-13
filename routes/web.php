@@ -282,33 +282,33 @@ Route::get('used-item/showQr/{slug}', [UsedItemController::class,'showQr'])->nam
     // SUBSCRIPTION CUSTOMERS MANAGEMENT
     // ========================================================================
     
-    // Customer list
-    Route::get('/subscription-customers', [SubscriptionCustomerController::class, 'index'])
-        ->name('subscription-customers.index');
+    // // Customer list
+    // Route::get('/subscription-customers', [SubscriptionCustomerController::class, 'index'])
+    //     ->name('subscription-customers.index');
     
-    // Statistics dashboard
-    Route::get('/subscription-customers/statistics', [SubscriptionCustomerController::class, 'statistics'])
-        ->name('subscription-customers.statistics');
+    // // Statistics dashboard
+    // Route::get('/subscription-customers/statistics', [SubscriptionCustomerController::class, 'statistics'])
+    //     ->name('subscription-customers.statistics');
     
-    // Export to CSV
-    Route::get('/subscription-customers/export', [SubscriptionCustomerController::class, 'export'])
-        ->name('subscription-customers.export');
+    // // Export to CSV
+    // Route::get('/subscription-customers/export', [SubscriptionCustomerController::class, 'export'])
+    //     ->name('subscription-customers.export');
     
-    // Customer detail
-    Route::get('/subscription-customers/{user}', [SubscriptionCustomerController::class, 'show'])
-        ->name('subscription-customers.show');
+    // // Customer detail
+    // Route::get('/subscription-customers/{user}', [SubscriptionCustomerController::class, 'show'])
+    //     ->name('subscription-customers.show');
     
-    // Customer's subscription
-    Route::get('/subscription-customers/{user}/subscription', [SubscriptionCustomerController::class, 'subscription'])
-        ->name('subscription-customers.subscription');
+    // // Customer's subscription
+    // Route::get('/subscription-customers/{user}/subscription', [SubscriptionCustomerController::class, 'subscription'])
+    //     ->name('subscription-customers.subscription');
     
-    // Customer's payments
-    Route::get('/subscription-customers/{user}/payments', [SubscriptionCustomerController::class, 'payments'])
-        ->name('subscription-customers.payments');
+    // // Customer's payments
+    // Route::get('/subscription-customers/{user}/payments', [SubscriptionCustomerController::class, 'payments'])
+    //     ->name('subscription-customers.payments');
     
-    // Send notification to customer
-    Route::post('/subscription-customers/{user}/send-notification', [SubscriptionCustomerController::class, 'sendNotification'])
-        ->name('subscription-customers.send-notification');
+    // // Send notification to customer
+    // Route::post('/subscription-customers/{user}/send-notification', [SubscriptionCustomerController::class, 'sendNotification'])
+    //     ->name('subscription-customers.send-notification');
 // });
 
 
@@ -391,6 +391,27 @@ Route::middleware(['auth', 'verified'])->prefix('customer')->name('customer.')->
         ->name('payment.check-status');
 });
 
+
+// ========================================================================
+    // subscription MANAGEMENT
+    // ========================================================================
+    Route::get('subscription', [AdminSubscriptionController::class, 'index'])->name('subscription.index');
+    Route::get('subscription/{subscription}', [AdminSubscriptionController::class, 'show'])->name('subscription.show');
+    
+    // Edit expiry date
+    Route::get('subscription/{subscription}/edit-expiry', [AdminSubscriptionController::class, 'editExpiry'])->name('subscription.edit-expiry');
+    Route::put('subscription/{subscription}/update-expiry', [AdminSubscriptionController::class, 'updateExpiry'])->name('subscription.update-expiry');
+    
+    // Change master account
+    Route::get('subscription/{subscription}/edit-master-account', [AdminSubscriptionController::class, 'editMasterAccount'])->name('subscription.edit-master-account');
+    Route::put('subscription/{subscription}/update-master-account', [AdminSubscriptionController::class, 'updateMasterAccount'])->name('subscription.update-master-account');
+    
+    // Suspend/Activate subscription
+    Route::post('subscription/{subscription}/suspend', [AdminSubscriptionController::class, 'suspend'])->name('subscription.suspend');
+    Route::post('subscription/{subscription}/activate', [AdminSubscriptionController::class, 'activate'])->name('subscription.activate');
+    
+    // View payment history
+    Route::get('subscription/{subscription}/payments', [AdminSubscriptionController::class, 'payments'])->name('subscription.payments');
 
 Route::group(['middleware' => ['auth','role.permission','ip.restriction']], function()
 {
@@ -902,71 +923,11 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
     
     // View customers assigned to master account
     Route::get('master-account/{masterAccount}/customers', [MasterAccountController::class, 'customers'])->name('master-account.customers');
-
-    // ========================================================================
-    // subscription MANAGEMENT
-    // ========================================================================
-    Route::get('subscription', [AdminSubscriptionController::class, 'index'])->name('subscription.index');
-    Route::get('subscription/{subscription}', [AdminSubscriptionController::class, 'show'])->name('subscription.show');
-    
-    // Edit expiry date
-    Route::get('subscription/{subscription}/edit-expiry', [AdminSubscriptionController::class, 'editExpiry'])->name('subscription.edit-expiry');
-    Route::put('subscription/{subscription}/update-expiry', [AdminSubscriptionController::class, 'updateExpiry'])->name('subscription.update-expiry');
-    
-    // Change master account
-    Route::get('subscription/{subscription}/edit-master-account', [AdminSubscriptionController::class, 'editMasterAccount'])->name('subscription.edit-master-account');
-    Route::put('subscription/{subscription}/update-master-account', [AdminSubscriptionController::class, 'updateMasterAccount'])->name('subscription.update-master-account');
-    
-    // Suspend/Activate subscription
-    Route::post('subscription/{subscription}/suspend', [AdminSubscriptionController::class, 'suspend'])->name('subscription.suspend');
-    Route::post('subscription/{subscription}/activate', [AdminSubscriptionController::class, 'activate'])->name('subscription.activate');
-    
-    // View payment history
-    Route::get('subscription/{subscription}/payments', [AdminSubscriptionController::class, 'payments'])->name('subscription.payments');
 });
 
 
   Route::get('internet-customer/registration/{companyId}', InternetCustomerForm::class)->name('internet-customer.create');
   Route::get('internet-customer/customer-active/{code}', CustomerShow::class)->name('internet-customer.customer.show');
-  
-// DEVELOPMENT
-// ============================================================================
-// ADMIN ROUTES (Auth + Admin Role Required)
-// ============================================================================
-
-Route::middleware(['auth', 'verified'])->prefix('admin')->name('admin.')->group(function () {
-    // ========================================================================
-    // SUBSCRIPTION CUSTOMERS MANAGEMENT
-    // ========================================================================
-    
-    // Customer list
-    Route::get('/subscription-customers', [SubscriptionCustomerController::class, 'index'])
-        ->name('subscription-customers.index');
-    
-    // Statistics dashboard
-    Route::get('/subscription-customers/statistics', [SubscriptionCustomerController::class, 'statistics'])
-        ->name('subscription-customers.statistics');
-    
-    // Export to CSV
-    Route::get('/subscription-customers/export', [SubscriptionCustomerController::class, 'export'])
-        ->name('subscription-customers.export');
-    
-    // Customer detail
-    Route::get('/subscription-customers/{user}', [SubscriptionCustomerController::class, 'show'])
-        ->name('subscription-customers.show');
-    
-    // Customer's subscription
-    Route::get('/subscription-customers/{user}/subscription', [SubscriptionCustomerController::class, 'subscription'])
-        ->name('subscription-customers.subscription');
-    
-    // Customer's payments
-    Route::get('/subscription-customers/{user}/payments', [SubscriptionCustomerController::class, 'payments'])
-        ->name('subscription-customers.payments');
-    
-    // Send notification to customer
-    Route::post('/subscription-customers/{user}/send-notification', [SubscriptionCustomerController::class, 'sendNotification'])
-        ->name('subscription-customers.send-notification');
-});
 
 
 Route::get('error/{code?}', function ($code = 500) {

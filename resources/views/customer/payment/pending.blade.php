@@ -1,4 +1,4 @@
-@extends('layouts.customer')
+@extends('adminlte::page')
 
 @section('title', 'Menunggu Pembayaran')
 
@@ -151,91 +151,92 @@
                                 </div>
                                 @endif
 
-                                <p class="text-muted text-center small mb-3">
-                                    Ingin mengupload ulang? Gunakan form di bawah.
-                                </p>
+                                <div class="alert alert-info border-0 text-center">
+                                    <i class="fas fa-hourglass-half me-2"></i>
+                                    <small>Pembayaran Anda sedang dalam proses verifikasi. Kami akan menghubungi Anda segera.</small>
+                                </div>
                             @else
                                 <!-- No Proof Yet -->
                                 <div class="alert alert-info border-0 mb-3">
                                     <i class="fas fa-info-circle me-2"></i>
                                     <small>Upload bukti transfer untuk mempercepat proses verifikasi pembayaran Anda.</small>
                                 </div>
+
+                                <!-- Upload Form -->
+                                <form action="{{ route('customer.payment.upload-proof', $payment->id) }}" 
+                                      method="POST" 
+                                      enctype="multipart/form-data"
+                                      id="uploadProofForm">
+                                    @csrf
+                                    
+                                    <div class="mb-3">
+                                        <label for="sender_name" class="form-label fw-semibold">
+                                            Nama Pengirim <span class="text-danger">*</span>
+                                        </label>
+                                        <div class="input-group">
+                                            <span class="input-group-text"><i class="fas fa-user"></i></span>
+                                            <input type="text" 
+                                                   class="form-control @error('sender_name') is-invalid @enderror" 
+                                                   id="sender_name" 
+                                                   name="sender_name" 
+                                                   value="{{ old('sender_name', $payment->manual_transfer_sender_name) }}"
+                                                   placeholder="Nama sesuai rekening"
+                                                   required>
+                                        </div>
+                                        <small class="form-text text-muted">Sesuai dengan nama di rekening bank</small>
+                                        @error('sender_name')
+                                            <div class="text-danger small mt-1">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label for="sender_bank" class="form-label fw-semibold">
+                                            Bank Pengirim <span class="text-danger">*</span>
+                                        </label>
+                                        <div class="input-group">
+                                            <span class="input-group-text"><i class="fas fa-university"></i></span>
+                                            <input type="text" 
+                                                   class="form-control @error('sender_bank') is-invalid @enderror" 
+                                                   id="sender_bank" 
+                                                   name="sender_bank" 
+                                                   value="{{ old('sender_bank', $payment->manual_transfer_sender_bank) }}"
+                                                   placeholder="Contoh: BCA, Mandiri"
+                                                   required>
+                                        </div>
+                                        <small class="form-text text-muted">Bank yang digunakan untuk transfer</small>
+                                        @error('sender_bank')
+                                            <div class="text-danger small mt-1">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label for="transfer_proof" class="form-label fw-semibold">
+                                            Bukti Transfer <span class="text-danger">*</span>
+                                        </label>
+                                        <input type="file" 
+                                               class="form-control @error('transfer_proof') is-invalid @enderror" 
+                                               id="transfer_proof" 
+                                               name="transfer_proof" 
+                                               accept="image/jpeg,image/png,image/jpg"
+                                               required>
+                                        <small class="form-text text-muted">JPG, PNG (Max: 2MB)</small>
+                                        @error('transfer_proof')
+                                            <div class="text-danger small mt-1">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+
+                                    <!-- Image Preview -->
+                                    <div id="imagePreview" class="mb-3 text-center" style="display: none;">
+                                        <img id="previewImg" src="" alt="Preview" class="img-fluid rounded border shadow-sm" style="max-height: 250px;">
+                                    </div>
+
+                                    <div class="d-grid">
+                                        <button type="submit" class="btn btn-success btn-md">
+                                            <i class="fas fa-upload me-2"></i>Upload Bukti Transfer
+                                        </button>
+                                    </div>
+                                </form>
                             @endif
-
-                            <!-- Upload Form -->
-                            <form action="{{ route('customer.payment.upload-proof', $payment->id) }}" 
-                                  method="POST" 
-                                  enctype="multipart/form-data"
-                                  id="uploadProofForm">
-                                @csrf
-                                
-                                <div class="mb-3">
-                                    <label for="sender_name" class="form-label fw-semibold">
-                                        Nama Pengirim <span class="text-danger">*</span>
-                                    </label>
-                                    <div class="input-group">
-                                        <span class="input-group-text"><i class="fas fa-user"></i></span>
-                                        <input type="text" 
-                                               class="form-control @error('sender_name') is-invalid @enderror" 
-                                               id="sender_name" 
-                                               name="sender_name" 
-                                               value="{{ old('sender_name', $payment->manual_transfer_sender_name) }}"
-                                               placeholder="Nama sesuai rekening"
-                                               required>
-                                    </div>
-                                    <small class="form-text text-muted">Sesuai dengan nama di rekening bank</small>
-                                    @error('sender_name')
-                                        <div class="text-danger small mt-1">{{ $message }}</div>
-                                    @enderror
-                                </div>
-
-                                <div class="mb-3">
-                                    <label for="sender_bank" class="form-label fw-semibold">
-                                        Bank Pengirim <span class="text-danger">*</span>
-                                    </label>
-                                    <div class="input-group">
-                                        <span class="input-group-text"><i class="fas fa-university"></i></span>
-                                        <input type="text" 
-                                               class="form-control @error('sender_bank') is-invalid @enderror" 
-                                               id="sender_bank" 
-                                               name="sender_bank" 
-                                               value="{{ old('sender_bank', $payment->manual_transfer_sender_bank) }}"
-                                               placeholder="Contoh: BCA, Mandiri"
-                                               required>
-                                    </div>
-                                    <small class="form-text text-muted">Bank yang digunakan untuk transfer</small>
-                                    @error('sender_bank')
-                                        <div class="text-danger small mt-1">{{ $message }}</div>
-                                    @enderror
-                                </div>
-
-                                <div class="mb-3">
-                                    <label for="transfer_proof" class="form-label fw-semibold">
-                                        Bukti Transfer <span class="text-danger">*</span>
-                                    </label>
-                                    <input type="file" 
-                                           class="form-control @error('transfer_proof') is-invalid @enderror" 
-                                           id="transfer_proof" 
-                                           name="transfer_proof" 
-                                           accept="image/jpeg,image/png,image/jpg"
-                                           required>
-                                    <small class="form-text text-muted">JPG, PNG (Max: 2MB)</small>
-                                    @error('transfer_proof')
-                                        <div class="text-danger small mt-1">{{ $message }}</div>
-                                    @enderror
-                                </div>
-
-                                <!-- Image Preview -->
-                                <div id="imagePreview" class="mb-3 text-center" style="display: none;">
-                                    <img id="previewImg" src="" alt="Preview" class="img-fluid rounded border shadow-sm" style="max-height: 250px;">
-                                </div>
-
-                                <div class="d-grid">
-                                    <button type="submit" class="btn btn-success btn-lg">
-                                        <i class="fas fa-upload me-2"></i>Upload Bukti Transfer
-                                    </button>
-                                </div>
-                            </form>
                         </div>
                     </div>
                 </div>
@@ -243,23 +244,14 @@
 
             <!-- Action Buttons -->
             <div class="text-center mt-5">
-                <a href="{{ route('customer.subscription.index') }}" class="btn btn-primary btn-lg me-2">
+                <a href="{{ route('customer.subscription.index') }}" class="btn btn-primary btn-md me-2">
                     <i class="fas fa-list me-2"></i>Lihat Langganan Saya
                 </a>
-                <a href="{{ route('customer.software.index') }}" class="btn btn-outline-secondary btn-lg">
+                <a href="{{ route('customer.software.index') }}" class="btn btn-outline-secondary btn-md">
                     <i class="fas fa-home me-2"></i>Kembali ke Beranda
                 </a>
             </div>
 
-            <!-- Help Section -->
-            <div class="card border-0 bg-light mt-4">
-                <div class="card-body text-center">
-                    <p class="mb-0 text-muted">
-                        <i class="fas fa-question-circle me-1"></i>
-                        Butuh bantuan? <a href="mailto:support@example.com" class="text-decoration-none">Hubungi Support</a>
-                    </p>
-                </div>
-            </div>
         </div>
     </div>
 </div>
