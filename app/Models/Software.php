@@ -143,6 +143,11 @@ class Software extends Model
         return $query->where('company_id', $companyId);
     }
 
+    public function getNamaSoftwareAttribute()
+    {
+        return $this->nama;
+    }
+
     // /**
     //  * Get the route key for the model.
     //  */

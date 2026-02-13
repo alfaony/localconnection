@@ -18,6 +18,7 @@
 @stop
 
 @section('content')
+    @include('components.alert')
     <div class="row">
         {{-- Subscription Info --}}
         <div class="col-md-8">

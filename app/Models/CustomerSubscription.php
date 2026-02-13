@@ -126,6 +126,11 @@ class CustomerSubscription extends Model
         return $this->hasOne(SubscriptionPayment::class, 'subscription_id')->latestOfMany();
     }
 
+    public function software()
+    {
+        return $this->belongsTo(Software::class, 'software_id')->withTrashed();
+    }
+
     /**
      * Scope a query to only include active subscriptions.
      */
