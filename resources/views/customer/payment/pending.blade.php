@@ -76,25 +76,26 @@
                                 <i class="fas fa-info-circle text-info me-2"></i>Instruksi Pembayaran
                             </h5>
                             <p class="mb-3">Silakan transfer ke rekening berikut:</p>
-                            
+
                             <div class="bg-light rounded p-3 mb-3">
                                 <div class="row g-2">
                                     <div class="col-12">
                                         <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
                                             <span class="text-muted">Bank</span>
-                                            <strong>{{ $payment->bank_name ?? 'BCA' }}</strong>
+                                            <strong>{{ $payment->manual_transfer_bank_name ?? '' }}</strong>
                                         </div>
                                     </div>
+                                    
                                     <div class="col-12">
                                         <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
                                             <span class="text-muted">Nomor Rekening</span>
-                                            <strong class="text-primary">{{ $payment->account_number ?? '-' }}</strong>
+                                            <strong class="text-primary">{{ $payment->manual_transfer_account_number ?? '-' }}</strong>
                                         </div>
                                     </div>
                                     <div class="col-12">
                                         <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
                                             <span class="text-muted">Atas Nama</span>
-                                            <strong>{{ $payment->account_holder ?? '-' }}</strong>
+                                            <strong>{{ $payment->manual_transfer_account_name ?? '-' }}</strong>
                                         </div>
                                     </div>
                                     <div class="col-12">

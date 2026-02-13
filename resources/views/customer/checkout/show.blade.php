@@ -52,11 +52,25 @@
                             <th>Durasi</th>
                             <td>{{ $package->durasi_hari }} hari ({{ $package->duration_in_months }} bulan)</td>
                         </tr>
+                        <tr>
+                            <th>Subtotal</th>
+                            <td>
+                                <strong>Rp {{ number_format($ppnCalculation['subtotal'], 0, ',', '.') }}</strong>
+                            </td>
+                        </tr>
+                        @if($ppnCalculation['ppn_rate'] > 0)
+                        <tr>
+                            <th>PPN ({{ number_format($ppnCalculation['ppn_rate'], 0) }}%)</th>
+                            <td>
+                                <strong>Rp {{ number_format($ppnCalculation['ppn_amount'], 0, ',', '.') }}</strong>
+                            </td>
+                        </tr>
+                        @endif
                         <tr class="table-active">
                             <th>Total Pembayaran</th>
                             <td>
                                 <h4 class="text-success mb-0">
-                                    Rp {{ number_format($package->harga, 0, ',', '.') }}
+                                    Rp {{ number_format($ppnCalculation['total'], 0, ',', '.') }}
                                 </h4>
                             </td>
                         </tr>

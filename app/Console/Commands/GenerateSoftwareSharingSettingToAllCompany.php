@@ -51,6 +51,7 @@ class GenerateSoftwareSharingSettingToAllCompany extends Command
         ,'software_sharing_atas_nama' => ''
         ,'software_sharing_cabang_bank' => ''
         ,'software_sharing_rekening_number' => ''
+        ,'ppn_default_software_sharing' => '11',
     ];
         
         foreach ($companies as $company) 

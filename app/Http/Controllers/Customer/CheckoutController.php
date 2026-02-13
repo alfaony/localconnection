@@ -59,7 +59,10 @@ class CheckoutController extends Controller
                 ->with('error', 'Tidak ada metode pembayaran yang tersedia. Silakan hubungi admin.');
         }
 
-        return view('customer.checkout.show', compact('software', 'package', 'paymentMethods'));
+        // Calculate PPN for price display
+        $ppnCalculation = $this->paymentService->calculatePpn($package->harga);
+
+        return view('customer.checkout.show', compact('software', 'package', 'paymentMethods', 'ppnCalculation'));
     }
 
     /**

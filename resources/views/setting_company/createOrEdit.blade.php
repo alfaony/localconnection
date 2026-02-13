@@ -910,6 +910,16 @@
                                             @enderror
                                         </div>
 
+                                         <!-- PPN Default Software Sharing -->
+                                        <div class="form-group">
+                                            <label for="ppn_default_software_sharing">PPN Default Software Sharing (%)</label>
+                                            <input type="number" name="ppn_default_software_sharing" class="form-control" value="{{ old('ppn_default_software_sharing', $data['ppn_default_software_sharing'] ?? '11') }}" min="0" max="100" step="0.1" placeholder="Contoh: 11">
+                                            <small class="form-text text-muted">Persentase PPN default untuk software sharing (11% = Rp 11.000 untuk setiap Rp 100.000)</small>
+                                            @error('ppn_default_software_sharing')
+                                            <span class="text-danger text-sm">{{ $message }}</span>
+                                            @enderror
+                                        </div>
+
                                         <!-- Company Name -->
                                         <div class="form-group">
                                             <label for="software_sharing_company_name">Nama Perusahaan untuk Invoice</label>

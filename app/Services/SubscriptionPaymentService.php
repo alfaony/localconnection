@@ -121,6 +121,31 @@ class SubscriptionPaymentService
     }
 
     /**
+     * Calculate PPN (tax) for given amount
+     * 
+     * @param float $baseAmount The base amount before PPN
+     * @return array Array with subtotal, ppn_rate, ppn_amount, and total
+     */
+    public function calculatePpn($baseAmount)
+    {
+        // Get PPN rate from settings, default to 0 if not set
+        $ppnRate = floatval($this->settings['manual']['ppn_default_software_sharing'] ?? 0);
+        
+        // Calculate PPN amount
+        $ppnAmount = $baseAmount * ($ppnRate / 100);
+        
+        // Calculate total
+        $total = $baseAmount + $ppnAmount;
+        
+        return [
+            'subtotal' => $baseAmount,
+            'ppn_rate' => $ppnRate,
+            'ppn_amount' => $ppnAmount,
+            'total' => $total,
+        ];
+    }
+
+    /**
      * Create payment record
      */
     public function createPaymentRecord($data)
@@ -130,7 +155,11 @@ class SubscriptionPaymentService
             'software_id' => $data['software_id'],
             'subscription_id' => $data['subscription_id'],
             'amount' => $data['amount'],
+            'subtotal' => $data['subtotal'] ?? null,
+            'ppn_rate' => $data['ppn_rate'] ?? null,
+            'ppn_amount' => $data['ppn_amount'] ?? null,
             'payment_gateway' => $data['payment_gateway'],
+            'payment_method' => $data['payment_method'] ?? null,
             'xendit_external_id' => $data['xendit_external_id'],
             'status' => $data['status'] ?? 'pending',
             'expired_at' => $data['expired_at'] ?? now()->addHours(24),
@@ -154,13 +183,20 @@ class SubscriptionPaymentService
 
             $bankInfo = $banks[$selectedBank];
 
+            // Calculate PPN
+            $ppnCalculation = $this->calculatePpn($package->harga);
+
             // Create payment record
             $payment = $this->createPaymentRecord([
                 'company_id' => $subscription->company_id,
                 'software_id' => $subscription->software_id,
                 'subscription_id' => $subscription->id,
-                'amount' => $package->harga,
+                'amount' => $ppnCalculation['total'],
+                'subtotal' => $ppnCalculation['subtotal'],
+                'ppn_rate' => $ppnCalculation['ppn_rate'],
+                'ppn_amount' => $ppnCalculation['ppn_amount'],
                 'payment_gateway' => 'manual',
+                'payment_method' => 'MANUAL_TRANSFER',
                 'xendit_external_id' => $subscription->order_number,
                 'status' => 'pending',
                 'expired_at' => now()->addDays(3), // 3 days for manual transfer
@@ -178,12 +214,16 @@ class SubscriptionPaymentService
                 'subscription_id' => $subscription->id,
                 'payment_id' => $payment->id,
                 'bank' => $bankInfo['bank_name'],
+                'subtotal' => $ppnCalculation['subtotal'],
+                'ppn_amount' => $ppnCalculation['ppn_amount'],
+                'total' => $ppnCalculation['total'],
             ]);
 
             return [
                 'success' => true,
                 'payment' => $payment,
                 'bank_info' => $bankInfo,
+                'ppn_calculation' => $ppnCalculation,
             ];
 
         } catch (\Exception $e) {
@@ -206,13 +246,20 @@ class SubscriptionPaymentService
     public function processXenditPayment($subscription, $package, $user)
     {
         try {
+            // Calculate PPN
+            $ppnCalculation = $this->calculatePpn($package->harga);
+
             // Create payment record first
             $payment = $this->createPaymentRecord([
                 'company_id' => $subscription->company_id,
                 'software_id' => $subscription->software_id,
                 'subscription_id' => $subscription->id,
-                'amount' => $package->harga,
+                'amount' => $ppnCalculation['total'],
+                'subtotal' => $ppnCalculation['subtotal'],
+                'ppn_rate' => $ppnCalculation['ppn_rate'],
+                'ppn_amount' => $ppnCalculation['ppn_amount'],
                 'payment_gateway' => 'xendit',
+                'payment_method' => 'XENDIT', // Will be updated by webhook with specific method
                 'xendit_external_id' => $subscription->order_number,
                 'status' => 'pending',
                 'expired_at' => now()->addHours(24),
@@ -241,12 +288,16 @@ class SubscriptionPaymentService
                 'subscription_id' => $subscription->id,
                 'payment_id' => $payment->id,
                 'invoice_id' => $invoiceResult['invoice']['id'] ?? null,
+                'subtotal' => $ppnCalculation['subtotal'],
+                'ppn_amount' => $ppnCalculation['ppn_amount'],
+                'total' => $ppnCalculation['total'],
             ]);
 
             return [
                 'success' => true,
                 'payment' => $payment,
                 'invoice' => $invoiceResult,
+                'ppn_calculation' => $ppnCalculation,
             ];
 
         } catch (\Exception $e) {
@@ -271,13 +322,20 @@ class SubscriptionPaymentService
     public function processMidtransPayment($subscription, $package, $user)
     {
         try {
+            // Calculate PPN
+            $ppnCalculation = $this->calculatePpn($package->harga);
+
             // Create payment record first
             $payment = $this->createPaymentRecord([
                 'company_id' => $subscription->company_id,
                 'software_id' => $subscription->software_id,
                 'subscription_id' => $subscription->id,
-                'amount' => $package->harga,
+                'amount' => $ppnCalculation['total'],
+                'subtotal' => $ppnCalculation['subtotal'],
+                'ppn_rate' => $ppnCalculation['ppn_rate'],
+                'ppn_amount' => $ppnCalculation['ppn_amount'],
                 'payment_gateway' => 'midtrans',
+                'payment_method' => 'MIDTRANS', // Will be updated by callback with specific method
                 'xendit_external_id' => $subscription->order_number,
                 'status' => 'pending',
                 'expired_at' => now()->addHours(24),
@@ -308,12 +366,16 @@ class SubscriptionPaymentService
                 'subscription_id' => $subscription->id,
                 'payment_id' => $payment->id,
                 'order_id' => $transactionResult['order_id'],
+                'subtotal' => $ppnCalculation['subtotal'],
+                'ppn_amount' => $ppnCalculation['ppn_amount'],
+                'total' => $ppnCalculation['total'],
             ]);
 
             return [
                 'success' => true,
                 'payment' => $payment,
                 'transaction' => $transactionResult,
+                'ppn_calculation' => $ppnCalculation,
             ];
 
         } catch (\Exception $e) {

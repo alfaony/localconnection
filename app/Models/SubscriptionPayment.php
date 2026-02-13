@@ -40,6 +40,9 @@ class SubscriptionPayment extends Model
         'company_id',
         'subscription_id',
         'amount',
+        'subtotal',
+        'ppn_rate',
+        'ppn_amount',
         'payment_gateway',
         'xendit_invoice_id',
         'xendit_external_id',
@@ -65,6 +68,9 @@ class SubscriptionPayment extends Model
      */
     protected $casts = [
         'amount' => 'decimal:2',
+        'subtotal' => 'decimal:2',
+        'ppn_rate' => 'decimal:2',
+        'ppn_amount' => 'decimal:2',
         'paid_at' => 'datetime',
         'expired_at' => 'datetime',
         'created_at' => 'datetime',
@@ -239,5 +245,29 @@ class SubscriptionPayment extends Model
     public function isMidtrans()
     {
         return $this->payment_gateway === 'midtrans';
+    }
+
+    /**
+     * Get formatted subtotal.
+     */
+    public function getSubtotalFormattedAttribute()
+    {
+        return $this->subtotal ? 'Rp ' . number_format($this->subtotal, 0, ',', '.') : null;
+    }
+
+    /**
+     * Get formatted PPN amount.
+     */
+    public function getPpnAmountFormattedAttribute()
+    {
+        return $this->ppn_amount ? 'Rp ' . number_format($this->ppn_amount, 0, ',', '.') : null;
+    }
+
+    /**
+     * Check if payment has PPN.
+     */
+    public function hasPpn()
+    {
+        return $this->ppn_rate > 0 && $this->ppn_amount > 0;
     }
 }
