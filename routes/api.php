@@ -26,7 +26,9 @@ use App\Http\Controllers\API\UserApiController;
 
 use App\Http\Controllers\API\ProductStoreController;
 use App\Http\Controllers\API\MeetingApiController;
+use App\Http\Controllers\API\InternetCustomerApiController;
 use App\Http\Controllers\UserController;
+
 
 
 /*
@@ -148,6 +150,15 @@ Route::group(['middleware' => ['auth:api','role.permission.api']], function()
 
     // CRUD Meeting
     Route::apiResource('meeting', MeetingApiController::class);
+
+    // Internet Customer
+    Route::prefix('internet-customers')->controller(InternetCustomerApiController::class)->group(function () {
+        Route::get('/', 'index');                          
+        Route::get('/{id}', 'show');                       
+        Route::post('/{id}/approve', 'approve');           
+        Route::post('/{id}/close', 'close');               
+        Route::post('/{id}/complete-installation', 'completeInstallation');
+    });
 
     // SKAM Import API
     Route::post('internet-customer/import', [InternetCustomerController::class, 'import']);
