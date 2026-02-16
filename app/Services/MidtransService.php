@@ -128,7 +128,7 @@ class MidtransService
 
 
             // Build order ID (unique)
-            $orderId = 'INT-' . $purchase->id . '-' . time();
+            $orderId = 'INT-' . $purchase->id . '-' . $customer->code .'-' . time();
 
             // Build item details FIRST
             $items = [];
