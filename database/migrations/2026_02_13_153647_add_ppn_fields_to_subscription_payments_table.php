@@ -19,7 +19,8 @@ return new class extends Migration
             $table->decimal('ppn_rate', 5, 2)->nullable()->after('subtotal')->comment('PPN percentage (e.g., 11.00 for 11%)');
             $table->decimal('ppn_amount', 15, 2)->nullable()->after('ppn_rate')->comment('Calculated PPN amount');
             
-            // Note: 'amount' field already exists and will store the total (subtotal + PPN)
+            $table->foreignUuid('finance_user_id')->nullable()->constrained('users')->onDelete('cascade')->onUpdate('cascade')->comment('Finance user ID');
+            $table->timestamp('finance_user_at')->nullable()->after('finance_user_id')->comment('Finance user at');
         });
     }
 
@@ -32,6 +33,8 @@ return new class extends Migration
     {
         Schema::table('subscription_payments', function (Blueprint $table) {
             $table->dropColumn(['subtotal', 'ppn_rate', 'ppn_amount']);
+            $table->dropForeign(['finance_user_id']);
+            $table->dropColumn(['finance_user_id', 'finance_user_at']);
         });
     }
 };

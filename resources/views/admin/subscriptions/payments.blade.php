@@ -147,7 +147,7 @@
                                     @foreach($payments as $payment)
                                         <tr>
                                             <td>
-                                                <strong>{{ $payment }}</strong>
+                                                <strong>{{ $payment->invoice_number }}</strong>
                                                 @if($payment->xendit_invoice_id)
                                                     <br>
                                                     <small class="text-muted" title="Xendit ID">
@@ -339,20 +339,35 @@ $(document).ready(function() {
                         _token: '{{ csrf_token() }}'
                     },
                     success: function(response) {
-                        Swal.fire(
-                            'Approved!',
-                            'Payment has been manually approved.',
-                            'success'
-                        ).then(() => {
-                            location.reload();
-                        });
+                        if (response.success) {
+                            Swal.fire({
+                                title: 'Approved!',
+                                text: response.message,
+                                icon: 'success',
+                                confirmButtonColor: '#28a745'
+                            }).then(() => {
+                                location.reload();
+                            });
+                        } else {
+                            Swal.fire({
+                                title: 'Error!',
+                                text: response.message,
+                                icon: 'error',
+                                confirmButtonColor: '#dc3545'
+                            });
+                        }
                     },
                     error: function(xhr) {
-                        Swal.fire(
-                            'Error!',
-                            xhr.responseJSON?.message || 'Failed to approve payment.',
-                            'error'
-                        );
+                        let message = 'Failed to approve payment';
+                        if (xhr.responseJSON && xhr.responseJSON.message) {
+                            message = xhr.responseJSON.message;
+                        }
+                        Swal.fire({
+                            title: 'Error!',
+                            text: message,
+                            icon: 'error',
+                            confirmButtonColor: '#dc3545'
+                        });
                     }
                 });
             }

@@ -412,6 +412,10 @@ Route::middleware(['auth', 'verified'])->prefix('customer')->name('customer.')->
     
     // View payment history
     Route::get('subscription/{subscription}/payments', [AdminSubscriptionController::class, 'payments'])->name('subscription.payments');
+    
+    // Manual approve payment
+    Route::post('admin/payments/{payment}/manual-approve', [AdminSubscriptionController::class, 'manualApprovePayment'])->name('admin.payments.manual-approve');
+
 
 Route::group(['middleware' => ['auth','role.permission','ip.restriction']], function()
 {

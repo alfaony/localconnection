@@ -256,6 +256,85 @@ class SubscriptionController extends Controller
         return view('admin.subscriptions.payments', compact('subscription', 'payments'));
     }
 
+    /**
+     * Manual approve payment
+     */
+    public function manualApprovePayment($paymentId)
+    {
+        try {
+            $payment = \App\Models\SubscriptionPayment::findOrFail($paymentId);
+            
+            // Check access
+            $subscription = $payment->subscription;
+            $this->access('update', $subscription);
+
+            // Check if payment is pending
+            if ($payment->status !== 'pending') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Payment is not pending'
+                ], 400);
+            }
+
+            // Update payment status to paid
+            $payment->update([
+                'status' => 'paid',
+                'paid_at' => now(),
+            ]);
+
+            // Always update payment_status to paid
+            $updateData = [
+                'payment_status' => 'paid',
+            ];
+
+            // Activate subscription if not active
+            if ($subscription->status !== 'active') {
+                $updateData['status'] = 'active';
+                
+                // Set start and end dates if not set
+                if (!$subscription->tanggal_mulai) {
+                    $updateData['tanggal_mulai'] = now();
+                }
+                
+                if (!$subscription->tanggal_expired && $subscription->package) {
+                    $updateData['tanggal_expired'] = now()->addDays($subscription->package->durasi_hari);
+                }
+            }
+
+            $subscription->update($updateData);
+
+            // Reserve slot in master account if needed
+            if ($subscription->masterAccount && $subscription->masterAccount->hasSlotsAvailable()) {
+                $subscription->masterAccount->reserveSlot();
+            }
+
+            \Log::info('Payment manually approved', [
+                'payment_id' => $payment->id,
+                'subscription_id' => $subscription->id,
+                'subscription_status' => $subscription->status,
+                'payment_status' => $subscription->payment_status,
+                'approved_by' => \Auth::id(),
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Payment approved successfully'
+            ]);
+
+        } catch (\Exception $e) {
+            \Log::error('Manual approve payment failed', [
+                'payment_id' => $paymentId,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to approve payment: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
     private function access($action, $subscription)
     {
         return true;
