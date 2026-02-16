@@ -106,8 +106,9 @@ class DayoffController extends Controller
         $type = DayoffType::where('id', $request->dayoff_type_id)->firstOrFail();
         $daysRequested = Carbon::parse($request->date_start)->diffInDays(Carbon::parse($request->date_end)) + 1;
 
-        // Cek tumpang tindih
+        // Cek tumpang tindih (hanya cuti yang tidak direject)
         $hasOverlap = Dayoff::where('user_id', $user->id)
+            ->whereNull('rejected_at')
             ->where(function ($query) use ($request) {
                 $query->whereBetween('date_start', [$request->date_start, $request->date_end])
                     ->orWhereBetween('date_end', [$request->date_start, $request->date_end])
@@ -324,6 +325,7 @@ class DayoffController extends Controller
         $sisaAfter = $sisa === 'Unlimited' ? 'Unlimited' : $sisa - $durasi;
 
         $hasOverlap = Dayoff::where('user_id', $user->id)
+            ->whereNull('rejected_at')
             ->when($excludeId, fn($q) => $q->where('id', '!=', $excludeId))
             ->where(function ($query) use ($dateStart, $dateEnd) {
                 $query->whereBetween('date_start', [$dateStart, $dateEnd])
@@ -350,6 +352,7 @@ class DayoffController extends Controller
         try {
             $request->validate([
                 'action_type' => 'required|in:reject,approve',
+                'reason_reject' => 'required_if:action_type,reject|string|max:500',
             ]);
 
             $actionType = $request->input('action_type');
@@ -385,6 +388,7 @@ class DayoffController extends Controller
                 {
                     $cuti->update([
                         'rejected_at' => now(),
+                        'reason_reject' => $request->input('reason_reject'),
                     ]);
                 }
                 
@@ -413,6 +417,12 @@ class DayoffController extends Controller
     {
         DB::beginTransaction();
         try {
+            $request->validate([
+                'action_type' => 'required|in:reject,approve',
+                'reason_reject' => 'required_if:action_type,reject|string|max:500',
+            ]);
+
+            $actionType = $request->input('action_type');
             $ids = json_decode($request->input('cuti_ids'), true) ?? [];
     
             if (empty($ids)) {
@@ -434,12 +444,23 @@ class DayoffController extends Controller
     
             foreach ($cutis as $cuti) 
             {
-                $cuti->update([
-                    'approval_hr_user_id' => auth()->id(),
-                    'approved_hr_at' => now(),
-                ]);
+                if ($actionType === 'approve')
+                {
+                    $cuti->update([
+                        'approval_hr_user_id' => auth()->id(),
+                        'approved_hr_at' => now(),
+                    ]);
+                }
+
+                if ($actionType === 'reject')
+                {
+                    $cuti->update([
+                        'rejected_at' => now(),
+                        'reason_reject' => $request->input('reason_reject'),
+                    ]);
+                }
     
-                if(!$this->approve($cuti))
+                if(!$this->approve($cuti) && $actionType === 'approve')
                 {
                     DB::rollback();
                     return back()->withErrors(['msg' => 'Terjadi Kesalahan Saat Menyetujui']);
@@ -567,6 +588,7 @@ class DayoffController extends Controller
             ->whereNull('approved_hr_at')
             ->whereNull('approval_hr_user_id')
             ->whereNull('rejected_at')
+            ->whereYear('created_at', now()->year)
             ->whereHas('user.divisions', function ($query) use ($divisionIds) {
                 $query->whereIn('divisions.id', $divisionIds);
             })
@@ -577,9 +599,11 @@ class DayoffController extends Controller
 
     public function infoApprovementFinance()
     {
-        $total = Dayoff::byCompany(Auth::user()->company_id)->whereNull('approved_finance_at')
+        $total = Dayoff::byCompany(Auth::user()->company_id)
+            ->whereNull('approved_finance_at')
             ->whereNull('approval_finance_user_id')
             ->whereNull('rejected_at')
+            ->whereYear('created_at', now()->year)
             ->count();
 
         return response()->json(['total' => $total]);
