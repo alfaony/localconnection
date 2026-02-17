@@ -748,6 +748,62 @@ class InternetCustomerShow extends Component
         }
     }
 
+    /**
+     * Mark payment as expired
+     */
+    public function expirePayment($purchaseId)
+    {
+        try {
+            $purchase = InternetCustomerPurchase::findOrFail($purchaseId);
+            
+            // Validate payment is not confirmed
+            if ($purchase->isConfirmed()) {
+                $this->dispatchBrowserEvent('show-notification', [
+                    'type' => 'error',
+                    'message' => 'Pembayaran yang sudah lunas tidak dapat di-expire'
+                ]);
+                return;
+            }
+
+            // Validate payment is not already expired
+            if ($purchase->payment_method == ParamSchema::EXPIRED) {
+                $this->dispatchBrowserEvent('show-notification', [
+                    'type' => 'warning',
+                    'message' => 'Pembayaran sudah di-mark sebagai expired'
+                ]);
+                return;
+            }
+
+            // Mark as expired
+            $purchase->markAsExpired();
+
+            Log::info('Payment marked as expired', [
+                'purchase_id' => $purchaseId,
+                'customer_id' => $purchase->internet_customer_id,
+                'expired_by' => Auth::id(),
+            ]);
+
+            $this->dispatchBrowserEvent('show-notification', [
+                'type' => 'success',
+                'message' => 'Pembayaran berhasil ditandai sebagai expired'
+            ]);
+
+            // Refresh the page
+            $this->mount($this->customer->id);
+
+        } catch (\Exception $e) {
+            Log::error('Failed to expire payment', [
+                'error' => $e->getMessage(),
+                'purchase_id' => $purchaseId
+            ]);
+
+            $this->dispatchBrowserEvent('show-notification', [
+                'type' => 'error',
+                'message' => 'Gagal menandai pembayaran sebagai expired: ' . $e->getMessage()
+            ]);
+        }
+    }
+
     private function sentInbox($to,$message,$directUrl)
     {
         $inboxHelper = new InboxHelper();
