@@ -203,11 +203,28 @@ class InternetCustomerPurchase extends Model
      */
     public function isExpired()
     {
+        // Check if manually marked as expired
+        if ($this->payment_method == \App\Schemas\ParamSchema::EXPIRED) {
+            return true;
+        }
+
+        // Check if period has ended
         if (!$this->period_end) {
             return false;
         }
 
         return now()->greaterThan($this->period_end);
+    }
+
+    /**
+     * Mark this payment as expired
+     */
+    public function markAsExpired()
+    {
+        $this->payment_method = \App\Schemas\ParamSchema::EXPIRED;
+        $this->save();
+        
+        return $this;
     }
 
     /**
@@ -228,7 +245,9 @@ class InternetCustomerPurchase extends Model
      */
     public function getStatusBadgeAttribute()
     {
-        if ($this->payment_method == 'xendit') {
+        if ($this->payment_method == \App\Schemas\ParamSchema::EXPIRED) {
+            return '<span class="badge badge-danger"><i class="fas fa-times-circle mr-1"></i>Expired</span>';
+        } elseif ($this->payment_method == 'xendit') {
             return '<span class="badge badge-success"><i class="fas fa-credit-card mr-1"></i>Xendit</span>';
         } elseif ($this->payment_method == 'midtrans') {
             return '<span class="badge badge-warning"><i class="fas fa-credit-card mr-1"></i>Midtrans</span>';
