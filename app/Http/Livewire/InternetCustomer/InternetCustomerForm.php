@@ -185,7 +185,7 @@ class InternetCustomerForm extends Component
             // $webhookUrl = config('services.n8n.n8n_webhook_url');
 
             if ($token && $webhookUrl) {
-                $response = Http::timeout(10)
+                $response = Http::timeout(15)
                     ->attach(
                         'file',
                         file_get_contents($this->ktp_photo->getRealPath()),
