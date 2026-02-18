@@ -172,7 +172,7 @@
                                 <div class="input-group">
                                     <input type="password" 
                                            class="form-control password-field" 
-                                           value="{{ Crypt::decryptString($masterAccount->password_akun) }}" 
+                                           value="{{ Crypt::decryptString($masterAccount->password_akun) ?? ''}}" 
                                            readonly>
                                     <div class="input-group-append">
                                         <button class="btn btn-outline-secondary toggle-password" 
@@ -181,7 +181,7 @@
                                         </button>
                                         <button class="btn btn-outline-secondary copy-btn" 
                                                 type="button"
-                                                data-text="{{ Crypt::decryptString($masterAccount->password_akun) }}">
+                                                data-text="{{ Crypt::decryptString($masterAccount->password_akun) ?? ''}}">
                                             <i class="fas fa-copy"></i>
                                         </button>
                                     </div>

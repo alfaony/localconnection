@@ -147,6 +147,67 @@
                     </div>
                 </div>
             </div>
+
+            {{-- Chat Section --}}
+            <div class="card" id="chat-card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-comments"></i> Chat Instalasi
+                        @if(!$subscription->canChat())
+                            <span class="badge badge-secondary ml-2">Read-only</span>
+                        @endif
+                    </h5>
+                </div>
+                <div class="card-body p-0">
+                    @if(!$subscription->canChat())
+                    <div class="alert alert-warning m-3 mb-0">
+                        <i class="fas fa-lock"></i>
+                        @if($subscription->payment_status != 'paid')
+                            Belum ada pembayaran. Chat akan aktif setelah pembayaran berhasil.
+                        @elseif($subscription->status == 'expired')
+                            Subscription sudah <strong>expired</strong>. Chat hanya bisa dibaca.
+                        @elseif($subscription->status == 'suspended')
+                            Subscription sedang <strong>suspended</strong>. Chat hanya bisa dibaca.
+                        @else
+                            Chat tidak tersedia.
+                        @endif
+                    </div>
+                    @endif
+
+                    <div id="chat-messages" style="height: 350px; overflow-y: auto; padding: 15px; background: #f8f9fa;">
+                        <div class="text-center text-muted py-4">
+                            <i class="fas fa-spinner fa-spin"></i> Memuat pesan...
+                        </div>
+                    </div>
+
+                    @if($subscription->canChat())
+                    <div class="card-footer p-2">
+                        <form id="chat-form" enctype="multipart/form-data">
+                            @csrf
+                            <div class="input-group">
+                                <input type="text" id="chat-input" name="message" class="form-control"
+                                       placeholder="Tulis pesan ke customer..." autocomplete="off">
+                                <div class="input-group-append">
+                                    <label class="btn btn-outline-secondary mb-0" title="Lampirkan file">
+                                        <i class="fas fa-paperclip"></i>
+                                        <input type="file" id="chat-file" name="attachment" style="display:none"
+                                               accept=".jpg,.jpeg,.png,.pdf">
+                                    </label>
+                                    <button type="submit" class="btn btn-primary" id="chat-send">
+                                        <i class="fas fa-paper-plane"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div id="file-preview" class="mt-1" style="display:none;">
+                                <small class="text-muted"><i class="fas fa-file"></i> <span id="file-name"></span>
+                                    <a href="#" id="remove-file" class="text-danger ml-1"><i class="fas fa-times"></i></a>
+                                </small>
+                            </div>
+                        </form>
+                    </div>
+                    @endif
+                </div>
+            </div>
         </div>
 
         {{-- Actions --}}
@@ -253,15 +314,85 @@
 @stop
 
 @section('css')
+<style>
+.chat-bubble { max-width: 75%; word-break: break-word; }
+.chat-bubble .bubble { padding: 8px 12px; border-radius: 12px; font-size: 13px; }
+.chat-bubble.me { margin-left: auto; text-align: right; }
+.chat-bubble.me .bubble { background: #007bff; color: #fff; border-bottom-right-radius: 2px; }
+.chat-bubble.other .bubble { background: #fff; border: 1px solid #dee2e6; border-bottom-left-radius: 2px; }
+.chat-bubble .meta { font-size: 10px; color: #6c757d; margin-top: 2px; }
+.chat-bubble.me .meta { text-align: right; }
+.chat-attachment img { max-width: 200px; border-radius: 8px; margin-top: 4px; cursor: pointer; }
+</style>
 @stop
 
 @section('js')
 <script>
 $(document).ready(function() {
+    const chatUrl  = '{{ route("subscription.chat.index", $subscription) }}';
+    const storeUrl = '{{ route("subscription.chat.store", $subscription) }}';
+
+    function loadMessages() {
+        $.get(chatUrl, function(data) {
+            const $box = $('#chat-messages');
+            $box.empty();
+            if (data.messages.length === 0) {
+                $box.html('<div class="text-center text-muted py-4"><i class="fas fa-comments fa-2x mb-2"></i><br>Belum ada pesan.</div>');
+                return;
+            }
+            data.messages.forEach(function(msg) { $box.append(buildBubble(msg)); });
+            $box.scrollTop($box[0].scrollHeight);
+        });
+    }
+
+    function buildBubble(msg) {
+        const side = msg.is_me ? 'me' : 'other';
+        let content = '';
+        if (msg.message) content += `<div class="bubble">${escapeHtml(msg.message)}</div>`;
+        if (msg.attachment_url) {
+            const isImg = /\.(jpg|jpeg|png)$/i.test(msg.attachment_url);
+            content += isImg
+                ? `<div class="chat-attachment"><img src="${msg.attachment_url}" onclick="window.open(this.src)"></div>`
+                : `<div class="chat-attachment mt-1"><a href="${msg.attachment_url}" target="_blank" class="btn btn-sm btn-outline-secondary"><i class="fas fa-file-download"></i> Download</a></div>`;
+        }
+        return `<div class="d-flex mb-2"><div class="chat-bubble ${side}"><div class="meta">${escapeHtml(msg.sender_name)} · ${msg.created_at}</div>${content}</div></div>`;
+    }
+
+    function escapeHtml(str) {
+        if (!str) return '';
+        return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    $('#chat-form').on('submit', function(e) {
+        e.preventDefault();
+        const formData = new FormData(this);
+        const $btn = $('#chat-send').prop('disabled', true);
+        $.ajax({
+            url: storeUrl, type: 'POST', data: formData, processData: false, contentType: false,
+            headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
+            success: function(res) {
+                if (res.success) {
+                    $('#chat-input').val(''); $('#chat-file').val(''); $('#file-preview').hide();
+                    const $box = $('#chat-messages');
+                    $box.append(buildBubble(res.message));
+                    $box.scrollTop($box[0].scrollHeight);
+                }
+            },
+            error: function(xhr) { toastr.error(xhr.responseJSON?.error || 'Gagal mengirim pesan.'); },
+            complete: function() { $btn.prop('disabled', false); }
+        });
+    });
+
+    $('#chat-file').on('change', function() {
+        if (this.files[0]) { $('#file-name').text(this.files[0].name); $('#file-preview').show(); }
+    });
+    $('#remove-file').on('click', function(e) {
+        e.preventDefault(); $('#chat-file').val(''); $('#file-preview').hide();
+    });
+
     $('#toggle-password').on('click', function() {
         const passwordField = $('#password-field');
         const icon = $(this).find('i');
-        
         if (passwordField.attr('type') === 'password') {
             passwordField.attr('type', 'text');
             icon.removeClass('fa-eye').addClass('fa-eye-slash');
@@ -270,6 +401,8 @@ $(document).ready(function() {
             icon.removeClass('fa-eye-slash').addClass('fa-eye');
         }
     });
+
+    loadMessages();
 });
 </script>
 @stop

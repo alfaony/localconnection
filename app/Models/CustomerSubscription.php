@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Str;
 use Carbon\Carbon;
+use App\Models\SubscriptionChat;
 
 class CustomerSubscription extends Model
 {
@@ -129,6 +130,24 @@ class CustomerSubscription extends Model
     public function software()
     {
         return $this->belongsTo(Software::class, 'software_id')->withTrashed();
+    }
+
+    /**
+     * Get chats for this subscription.
+     */
+    public function chats()
+    {
+        return $this->hasMany(SubscriptionChat::class, 'subscription_id');
+    }
+
+    /**
+     * Check if chat is allowed (active + paid + not expired).
+     */
+    public function canChat(): bool
+    {
+        return $this->status === 'active'
+            && $this->payment_status === 'paid'
+            && ($this->tanggal_expired === null || $this->tanggal_expired->isFuture());
     }
 
     /**

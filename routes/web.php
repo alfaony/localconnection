@@ -126,7 +126,8 @@ use App\Http\Controllers\Admin\{
     SoftwarePackageController,
     MasterAccountController,
     SubscriptionController as AdminSubscriptionController,
-    SubscriptionCustomerController
+    SubscriptionCustomerController,
+    SubscriptionChatController as AdminSubscriptionChatController
 };
 
 // Customer Controllers
@@ -134,7 +135,8 @@ use App\Http\Controllers\Customer\{
     SoftwareController as CustomerSoftwareController,
     CheckoutController,
     SubscriptionController as CustomerSubscriptionController,
-    SubscriptionPaymentController
+    SubscriptionPaymentController,
+    SubscriptionChatController as CustomerSubscriptionChatController
 };
 
 // LiveWired
@@ -356,6 +358,14 @@ Route::middleware(['auth', 'verified'])->prefix('customer-software')->name('cust
     // Check payment status (AJAX)
     Route::get('/payment/check-status/{orderNumber}', [SubscriptionPaymentController::class, 'checkStatus'])
         ->name('payment.check-status');
+
+    // ========================================================================
+    // SUBSCRIPTION CHAT
+    // ========================================================================
+    Route::get('/subscription/{subscription}/chat', [CustomerSubscriptionChatController::class, 'index'])
+        ->name('subscription.chat.index');
+    Route::post('/subscription/{subscription}/chat', [CustomerSubscriptionChatController::class, 'store'])
+        ->name('subscription.chat.store');
 });
 
 
@@ -872,6 +882,14 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
     Route::post('subscription/{subscription}/activate', [AdminSubscriptionController::class, 'activate'])->name('subscription.activate');
     Route::get('subscription/{subscription}/payments', [AdminSubscriptionController::class, 'payments'])->name('subscription.payments');
     Route::post('subscription/manual-approve/{payment}/manual-approve', [AdminSubscriptionController::class, 'manualApprove'])->name('subscription.payments.manual-approve');
+
+    // ========================================================================
+    // SUBSCRIPTION CHAT (Admin)
+    // ========================================================================
+    Route::get('subscription/{subscription}/chat', [AdminSubscriptionChatController::class, 'index'])
+        ->name('subscription.chat.index');
+    Route::post('subscription/{subscription}/chat', [AdminSubscriptionChatController::class, 'store'])
+        ->name('subscription.chat.store');
 
 });
 
