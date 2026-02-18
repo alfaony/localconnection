@@ -217,6 +217,20 @@
                                                             <i class="fas fa-external-link-alt"></i>
                                                         </a>
                                                     @endif
+
+                                                    @if($payment->manual_transfer_proof)
+                                                        <button type="button" 
+                                                                class="btn btn-primary btn-lihat-bukti"
+                                                                title="Lihat Bukti Transfer"
+                                                                data-foto="{{ s3_asset(10,true,$payment->manual_transfer_proof) }}"
+                                                                data-nama="{{ $payment->manual_transfer_sender_name ?? '-' }}"
+                                                                data-bank-pengirim="{{ $payment->manual_transfer_sender_bank ?? '-' }}"
+                                                                data-nama-rekening="{{ $payment->manual_transfer_account_name ?? '-' }}"
+                                                                data-no-rekening="{{ $payment->manual_transfer_account_number ?? '-' }}"
+                                                                data-bank-tujuan="{{ $payment->manual_transfer_bank ?? '-' }}">
+                                                            <i class="fas fa-file-image"></i>
+                                                        </button>
+                                                    @endif
                                                     
                                                     @if($payment->status == 'pending')
                                                         @canAccess('manual-approve','subscriptions')
@@ -304,6 +318,81 @@
         </div>
     </div>
     @endif
+
+    <!-- Modal Bukti Transfer -->
+    <div class="modal fade" id="modalBuktiTransfer" tabindex="-1" role="dialog" aria-labelledby="modalBuktiTransferLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header bg-primary">
+                    <h5 class="modal-title" id="modalBuktiTransferLabel">
+                        <i class="fas fa-file-image"></i> Bukti Transfer
+                    </h5>
+                    <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <!-- Foto Bukti -->
+                        <div class="col-md-7 text-center">
+                            <p class="font-weight-bold text-muted mb-2">Foto Bukti Transfer</p>
+                            <a id="linkFotoBukti" href="#" target="_blank">
+                                <img id="fotoBuktiTransfer" src="" alt="Bukti Transfer"
+                                     class="img-fluid rounded border"
+                                     style="max-height: 450px; object-fit: contain; cursor: zoom-in;">
+                            </a>
+                            <br>
+                            <small class="text-muted">Klik foto untuk membuka di tab baru</small>
+                        </div>
+                        <!-- Info Transfer -->
+                        <div class="col-md-5">
+                            <p class="font-weight-bold text-muted mb-3">Informasi Transfer</p>
+                            <table class="table table-sm table-bordered">
+                                <tbody>
+                                    <tr class="table-light">
+                                        <th colspan="2" class="text-center">Pengirim</th>
+                                    </tr>
+                                    <tr>
+                                        <th width="45%">Nama</th>
+                                        <td id="modalNamaPengirim">-</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Bank</th>
+                                        <td id="modalBankPengirim">-</td>
+                                    </tr>
+                                    <tr class="table-light">
+                                        <th colspan="2" class="text-center">Rekening Tujuan</th>
+                                    </tr>
+                                    <tr>
+                                        <th>Bank</th>
+                                        <td id="modalBankTujuan">-</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Nama</th>
+                                        <td id="modalNamaRekening">-</td>
+                                    </tr>
+                                    <tr>
+                                        <th>No. Rekening</th>
+                                        <td>
+                                            <strong id="modalNoRekening">-</strong>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                        <i class="fas fa-times"></i> Tutup
+                    </button>
+                    <a id="btnDownloadBukti" href="#" target="_blank" class="btn btn-primary">
+                        <i class="fas fa-download"></i> Buka / Download
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
 @stop
 
 @section('css')
@@ -315,10 +404,45 @@
 @stop
 
 @section('js')
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.6.2/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.6.2/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
 <script>
 $(document).ready(function() {
+    // Lihat Bukti Transfer - Modal
+    $('.btn-lihat-bukti').on('click', function() {
+        const foto        = $(this).data('foto');
+        const nama        = $(this).data('nama');
+        const bankPengirim= $(this).data('bank-pengirim');
+        const namaRek     = $(this).data('nama-rekening');
+        const noRek       = $(this).data('no-rekening');
+        const bankTujuan  = $(this).data('bank-tujuan');
+
+        $('#fotoBuktiTransfer').attr('src', foto);
+        $('#linkFotoBukti').attr('href', foto);
+        $('#btnDownloadBukti').attr('href', foto);
+        $('#modalNamaPengirim').text(nama);
+        $('#modalBankPengirim').text(bankPengirim);
+        $('#modalNamaRekening').text(namaRek);
+        $('#modalNoRekening').text(noRek);
+        $('#modalBankTujuan').text(bankTujuan);
+        
+        // $('#modalBuktiTransfer').modal('show');
+        // Tampilkan modal
+        const modalElement = document.getElementById('modalBuktiTransfer');
+        if (modalElement) {
+            const modal = new bootstrap.Modal(modalElement);
+            modal.show();
+        } else {
+            console.error('Modal #modalBuktiTransfer not found in DOM');
+        }
+    });
+
     // Manual approve payment
     $('.manual-approve').on('click', function() {
         const paymentId = $(this).data('id');
