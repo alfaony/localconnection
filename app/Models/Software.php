@@ -45,6 +45,7 @@ class Software extends Model
         'description',
         'logo',
         'status',
+        'pic_user_id',
     ];
 
     /**
@@ -78,6 +79,14 @@ class Software extends Model
     public function company()
     {
         return $this->belongsTo(Company::class);
+    }
+
+    /**
+     * Get the PIC (Person In Charge) of the software.
+     */
+    public function pic()
+    {
+        return $this->belongsTo(User::class, 'pic_user_id')->withTrashed();
     }
 
     /**

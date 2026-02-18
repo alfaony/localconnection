@@ -161,7 +161,7 @@
 
             {{-- Pagination --}}
             <div class="mt-3">
-                {{ $masterAccounts->links() }}
+                {{ $masterAccounts->withQueryString()->links('vendor.pagination.bootstrap-4') }}
             </div>
         </div>
     </div>

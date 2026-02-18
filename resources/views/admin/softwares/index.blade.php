@@ -88,6 +88,9 @@
                                 <strong>{{ $software->nama }}</strong>
                                 <br>
                                 <small class="text-muted">{{ $software->slug }}</small>
+                                <br>
+                                <small class="text-muted">{{ $software->pic->name ?? "" }}</small>
+                                
                             </td>
                             <td>
                                 <span class="badge badge-info">{{ $software->tipe_paket }}</span>
@@ -154,7 +157,7 @@
 
             {{-- Pagination --}}
             <div class="mt-3">
-                {{ $softwares->links() }}
+                {{ $softwares->withQueryString()->links('vendor.pagination.bootstrap-4') }}
             </div>
         </div>
     </div>

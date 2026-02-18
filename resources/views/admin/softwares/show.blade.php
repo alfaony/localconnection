@@ -53,6 +53,18 @@
                             <span class="float-right">{!! $software->status_badge !!}</span>
                         </li>
                         <li class="list-group-item">
+                            <b>PIC</b>
+                            <span class="float-right">
+                                @if($software->pic)
+                                    <span class="badge badge-info">
+                                        <i class="fas fa-user mr-1"></i>{{ $software->pic->name }}
+                                    </span>
+                                @else
+                                    <span class="text-muted">Belum ada PIC</span>
+                                @endif
+                            </span>
+                        </li>
+                        <li class="list-group-item">
                             <b>Total Packages</b> 
                             <span class="float-right">
                                 <span class="badge badge-info">{{ $software->packages->count() }}</span>
@@ -378,7 +390,7 @@
                                             <td>{{ $subscription->package->nama_paket }}</td>
                                             <td>
                                                 <small class="text-muted">
-                                                    {{ $subscription->tanggal_expired->format('d M Y') }}
+                                                    {{ Carbon\Carbon::parse($subscription->tanggal_expired)->format('d M Y') }}
                                                 </small>
                                             </td>
                                         </tr>

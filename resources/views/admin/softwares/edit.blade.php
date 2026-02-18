@@ -66,6 +66,26 @@
                                 <span class="invalid-feedback">{{ $message }}</span>
                             @enderror
                         </div>
+
+                        <div class="form-group">
+                            <label for="pic_user_id">PIC (Person In Charge)</label>
+                            <select class="form-control select2 @error('pic_user_id') is-invalid @enderror"
+                                    id="pic_user_id"
+                                    name="pic_user_id"
+                                    style="width: 100%;">
+                                <option value="">-- Pilih PIC --</option>
+                                @foreach($users as $user)
+                                    <option value="{{ $user->id }}" 
+                                        {{ old('pic_user_id', $software->pic_user_id) == $user->id ? 'selected' : '' }}>
+                                        {{ $user->name }}
+                                    </option>
+                                @endforeach
+                            </select>
+                            @error('pic_user_id')
+                                <span class="invalid-feedback">{{ $message }}</span>
+                            @enderror
+                            <small class="form-text text-muted">PIC yang bertanggung jawab atas software ini dan akan menerima notifikasi pembayaran.</small>
+                        </div>
                     </div>
 
                     <div class="col-md-4">
@@ -127,11 +147,33 @@
 @stop
 
 @section('css')
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css">
+<style>
+    .select2-selection__rendered 
+    {
+        line-height: 31px !important;
+    }
+    .select2-container .select2-selection--single 
+    {
+        height: 35px !important;
+    }
+    .select2-selection__arrow {
+        height: 34px !important;
+    }
+</style>
 @stop
 
 @section('js')
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
 <script>
 $(document).ready(function() {
+    // Select2 for PIC
+    $('.select2').select2({
+        placeholder: '-- Pilih PIC --',
+        allowClear: true,
+    });
+
     // Custom file input label
     $('.custom-file-input').on('change', function() {
         let fileName = $(this).val().split('\\').pop();

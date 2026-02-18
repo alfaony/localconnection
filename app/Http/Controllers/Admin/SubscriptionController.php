@@ -269,59 +269,58 @@ class SubscriptionController extends Controller
         try {
             $payment = \App\Models\SubscriptionPayment::findOrFail($paymentId);
             
-            // Check access
             $subscription = $payment->subscription;
-            // $this->access('update', $subscription);
 
-            // // Check if payment is pending
-            // if ($payment->status !== 'pending') {
-            //     return response()->json([
-            //         'success' => false,
-            //         'message' => 'Payment is not pending'
-            //     ], 400);
-            // }
+            // Check if payment is pending
+            if ($payment->status !== 'pending') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Payment is not pending'
+                ], 400);
+            }
 
-            // // Update payment status to paid
-            // $payment->update([
-            //     'status' => 'paid',
-            //     'paid_at' => now(),
-            // ]);
+            // Update payment status to paid
+            $payment->update([
+                'status' => 'paid',
+                'paid_at' => now(),
+            ]);
 
-            // // Always update payment_status to paid
-            // $updateData = [
-            //     'payment_status' => 'paid',
-            // ];
+            // Always update payment_status to paid
+            $updateData = [
+                'payment_status' => 'paid',
+            ];
 
-            // // Activate subscription if not active
-            // if ($subscription->status !== 'active') {
-            //     $updateData['status'] = 'active';
+            // Activate subscription if not active
+            if ($subscription->status !== 'active') {
+                $updateData['status'] = 'active';
                 
-            //     // Set start and end dates if not set
-            //     if (!$subscription->tanggal_mulai) {
-            //         $updateData['tanggal_mulai'] = now();
-            //     }
+                // Set start and end dates if not set
+                if (!$subscription->tanggal_mulai) {
+                    $updateData['tanggal_mulai'] = now();
+                }
                 
-            //     if (!$subscription->tanggal_expired && $subscription->package) {
-            //         $updateData['tanggal_expired'] = now()->addDays($subscription->package->durasi_hari);
-            //     }
-            // }
+                if (!$subscription->tanggal_expired && $subscription->package) {
+                    $updateData['tanggal_expired'] = now()->addDays($subscription->package->durasi_hari);
+                }
+            }
 
-            // $subscription->update($updateData);
+            $subscription->update($updateData);
 
-            // // Reserve slot in master account if needed
-            // if ($subscription->masterAccount && $subscription->masterAccount->hasSlotsAvailable()) {
-            //     $subscription->masterAccount->reserveSlot();
-            // }
+            // Reserve slot in master account if needed
+            if ($subscription->masterAccount && $subscription->masterAccount->hasSlotsAvailable()) {
+                $subscription->masterAccount->reserveSlot();
+            }
 
-            $this->notifyTeamSuccess($subscription);
+            \Log::info('Payment manually approved', [
+                'payment_id' => $payment->id,
+                'subscription_id' => $subscription->id,
+                'subscription_status' => $subscription->fresh()->status,
+                'payment_status' => $subscription->fresh()->payment_status,
+                'approved_by' => \Auth::id(),
+            ]);
 
-            // \Log::info('Payment manually approved', [
-            //     'payment_id' => $payment->id,
-            //     'subscription_id' => $subscription->id,
-            //     'subscription_status' => $subscription->status,
-            //     'payment_status' => $subscription->payment_status,
-            //     'approved_by' => \Auth::id(),
-            // ]);
+            // Send inbox notifications
+            $this->notifyTeamSuccess($subscription->fresh());
 
             return response()->json([
                 'success' => true,
@@ -329,6 +328,8 @@ class SubscriptionController extends Controller
             ]);
 
         } catch (\Exception $e) {
+            // dd($e); 
+
             \Log::error('Manual approve payment failed', [
                 'payment_id' => $paymentId,
                 'error' => $e->getMessage(),
@@ -347,15 +348,58 @@ class SubscriptionController extends Controller
         return true;
     }
 
+    /**
+     * Send inbox notifications after manual approve:
+     * 1. To the customer: payment approved
+     * 2. To PIC software (from software.pic relation): please follow up
+     */
     protected function notifyTeamSuccess($subscription)
     {
-        $messageToUser = "Pembayaran ".$subscription->package->name."telah disetujui oleh Finance";
-        $url = route('customer-software.subscription.show', $subscription);
+        $subscription->load(['user', 'package.software.pic', 'masterAccount.software.pic']);
 
-        dd($messageToUser, $url, $subscription->package);
+        $approvedBy = Auth::id();
+        $customer   = $subscription->user;
+        $paket      = $subscription->package->nama_paket ?? 'Langganan';
+
+        // Resolve software object (prefer from masterAccount, fallback to package)
+        $softwareModel = $subscription->masterAccount->software
+                      ?? $subscription->package->software
+                      ?? null;
+        $softwareName  = $softwareModel->nama ?? 'Software';
+
+        // ── 1. Notifikasi ke Pelanggan ──────────────────────────────────────
+        $urlCustomer = route('customer-software.subscription.show', $subscription->id);
+        $msgCustomer = "🎉 Selamat! Pembayaran Anda untuk paket *{$paket}* ({$softwareName}) "
+                     . "telah berhasil dikonfirmasi. Langganan Anda kini sudah aktif. "
+                     . "Silakan akses dashboard untuk melihat detail akses Anda.";
+
+        $this->sentInbox($customer->id, $approvedBy, $msgCustomer, $urlCustomer);
+
+        // ── 2. Notifikasi ke PIC Software ──────────────────────────────────
+        $pic = $softwareModel ? $softwareModel->pic : null;
+
+        if ($pic && $pic->id !== $approvedBy) {
+            $urlAdmin = route('subscription.payments', $subscription->id);
+            $msgAdmin = "📋 Member *{$customer->name}* telah berhasil melakukan pembayaran "
+                      . "untuk paket *{$paket}* ({$softwareName}). "
+                      . "Pembayaran sudah disetujui. Silakan segera tindak lanjuti dan pastikan akses member sudah aktif.";
+
+            $this->sentInbox($pic->id, $approvedBy, $msgAdmin, $urlAdmin);
+
+            \Log::info('Inbox notification sent to PIC', [
+                'subscription_id' => $subscription->id,
+                'customer_id'     => $customer->id,
+                'pic_id'          => $pic->id,
+            ]);
+        } else {
+            \Log::info('No PIC found for software, skipping PIC notification', [
+                'subscription_id' => $subscription->id,
+                'software'        => $softwareName,
+            ]);
+        }
     }
 
-    private function sentInbox($to,$from, $message,$directUrl)
+    private function sentInbox($to, $from, $message, $directUrl)
     {
         $inboxHelper = new InboxHelper();
         $inboxHelper->sent($to, $from, $message, $directUrl);

@@ -29,7 +29,7 @@
                     <div class="col-md-6">
                         <div class="form-group">
                             <label for="software_id">Software <span class="text-danger">*</span></label>
-                            <select class="form-control @error('software_id') is-invalid @enderror" 
+                            <select class="form-control @error('software_id') is-invalid @enderror select2" 
                                     id="software_id" 
                                     name="software_id" 
                                     required>
@@ -201,12 +201,18 @@
 
 
 @section('js')
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
 <script src="https://cdn.quilljs.com/1.0.0/quill.js"></script>
 <script src="{{ asset('js/thriveEditor.js') }}"></script>
 <script>
 $(document).ready(function() {
+    $('.select2').select2({
+        placeholder: '-- Pilih --',
+        allowClear: true,
+    });
+
     // Toggle password visibility
     $('#toggle-password').on('click', function() {
         const passwordInput = $('#password_akun');
@@ -230,11 +236,25 @@ $(document).ready(function() {
 </script>
 @stop
 
+
 @section('css')
 <!-- Select2 CSS -->
 <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css" rel="stylesheet" />
 <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
-
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css">
+<style>
+    .select2-selection__rendered 
+    {
+        line-height: 31px !important;
+    }
+    .select2-container .select2-selection--single 
+    {
+        height: 35px !important;
+    }
+    .select2-selection__arrow {
+        height: 34px !important;
+    }
+</style>
 <style>
    body {
             font-family: Arial, sans-serif;

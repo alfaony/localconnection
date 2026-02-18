@@ -80,7 +80,7 @@
                                     @if($subscription->tanggal_expired)
                                     <small class="text-muted">
                                         <i class="far fa-calendar"></i> 
-                                        Expired: {{ $subscription->tanggal_expired->format('d M Y') }}
+                                        Expired: {{ carbon\carbon::parse($subscription->tanggal_expired)->format('d m y') }}
                                         @if($subscription->isExpiringSoon(7) && $subscription->status == 'active')
                                             <span class="text-danger">
                                                 ({{ $subscription->days_until_expiry }} hari lagi)

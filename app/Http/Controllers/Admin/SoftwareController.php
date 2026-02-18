@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Software;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
@@ -45,7 +46,8 @@ class SoftwareController extends Controller
      */
     public function create()
     {
-        return view('admin.softwares.create');
+        $users = User::byCompany(Auth::user()->company_id)->isActive()->orderBy('name')->get();
+        return view('admin.softwares.create', compact('users'));
     }
 
     /**
@@ -61,6 +63,7 @@ class SoftwareController extends Controller
             'description' => 'nullable|string',
             'logo' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
             'status' => 'required|in:active,inactive',
+            'pic_user_id' => 'nullable|exists:users,id',
         ]);
 
         // Generate slug
@@ -98,9 +101,7 @@ class SoftwareController extends Controller
      */
     public function show(Software $software)
     {
-
-        $software->load(['packages', 'masterAccounts.activeSubscriptions']);
-
+        $software->load(['packages', 'masterAccounts.activeSubscriptions', 'pic']);
         return view('admin.softwares.show', compact('software'));
     }
 
@@ -109,8 +110,8 @@ class SoftwareController extends Controller
      */
     public function edit(Software $software)
     {
-
-        return view('admin.softwares.edit', compact('software'));
+        $users = User::byCompany(Auth::user()->company_id)->isActive()->orderBy('name')->get();
+        return view('admin.softwares.edit', compact('software', 'users'));
     }
 
     /**
@@ -125,6 +126,7 @@ class SoftwareController extends Controller
             'description' => 'nullable|string',
             'logo' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
             'status' => 'required|in:active,inactive',
+            'pic_user_id' => 'nullable|exists:users,id',
         ]);
 
         // Update slug if nama or tipe_paket changed

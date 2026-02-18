@@ -102,7 +102,7 @@
                             <td>Rp {{ number_format($subscription->harga_bayar, 0, ',', '.') }}</td>
                             <td>
                                 @if($subscription->tanggal_expired)
-                                    {{ $subscription->tanggal_expired->format('d M Y') }}
+                                    {{ carbon\carbon::parse($subscription->tanggal_expired)->format('d m y') }}
                                     <br>
                                     @if($subscription->isExpiringSoon(7) && $subscription->status == 'active')
                                         <small class="text-danger">
