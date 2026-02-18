@@ -74,7 +74,7 @@
                             <th>Tanggal Mulai</th>
                             <td>
                                 @if($subscription->tanggal_mulai)
-                                    {{ $subscription->tanggal_mulai->format('d M Y') }}
+                                    {{ \Carbon\Carbon::parse($subscription->tanggal_mulai)->format('d M Y') }}
                                 @else
                                     <small class="text-muted">Belum aktif</small>
                                 @endif
@@ -156,28 +156,36 @@
                     <h3 class="card-title">Aksi</h3>
                 </div>
                 <div class="card-body">
-                    @if($subscription->status == 'active')
+                    @if($subscription->status == \App\Schemas\ParamSchema::ACTIVE)
+                        @canAccess('editExpiry', 'subscriptions')
                         <a href="{{ route('subscription.edit-expiry', $subscription) }}" class="btn btn-warning btn-block">
                             <i class="fas fa-calendar"></i> Ubah Tanggal Expired
                         </a>
+                        @endcanAccess
                         
-                        <a href="{{ route('subscription.edit-master-account', $subscription) }}" class="btn btn-info btn-block">
+                        @canAccess('editMasterAccount', 'subscriptions')
+                        <a href="{{ route('subscription.edit-master-account', $subscription) }}" class="btn btn-info btn-block mb-2">
                             <i class="fas fa-exchange-alt"></i> Ganti Master Account
                         </a>
+                        @endcanAccess
                         
+                        @canAccess('suspend', 'subscriptions')
                         <form action="{{ route('subscription.suspend', $subscription) }}" method="POST">
                             @csrf
                             <button type="submit" class="btn btn-danger btn-block" onclick="return confirm('Yakin ingin suspend subscription ini?')">
                                 <i class="fas fa-ban"></i> Suspend Subscription
                             </button>
                         </form>
-                    @elseif($subscription->status == 'suspended')
+                        @endcanAccess
+                    @elseif($subscription->status == \App\Schemas\ParamSchema::SUSPENDED)
+                        @canAccess('activate', 'subscriptions')
                         <form action="{{ route('subscription.activate', $subscription) }}" method="POST">
                             @csrf
                             <button type="submit" class="btn btn-success btn-block" onclick="return confirm('Yakin ingin activate subscription ini?')">
                                 <i class="fas fa-check"></i> Activate Subscription
                             </button>
                         </form>
+                        @endcanAccess
                     @endif
                     
                     <hr>

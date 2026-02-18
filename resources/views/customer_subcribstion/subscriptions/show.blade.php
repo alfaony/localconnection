@@ -63,7 +63,7 @@
                             <th>Tanggal Mulai</th>
                             <td>
                                 @if($subscription->tanggal_mulai)
-                                    {{ $subscription->tanggal_mulai->format('d M Y') }}
+                                    {{ \Carbon\Carbon::parse($subscription->tanggal_mulai)->format('d M Y') }}
                                 @else
                                     <small class="text-muted">Menunggu pembayaran</small>
                                 @endif

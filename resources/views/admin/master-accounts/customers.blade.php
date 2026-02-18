@@ -68,9 +68,9 @@
                                                 <br>
                                                 <small class="text-muted">{{ $subscription->package->durasi_hari }} hari</small>
                                             </td>
-                                            <td>{{ $subscription->tanggal_mulai->format('d M Y') }}</td>
+                                            <td>{{ \Carbon\Carbon::parse($subscription->tanggal_mulai)->format('d M Y') }}</td>
                                             <td>
-                                                {{ $subscription->tanggal_expired->format('d M Y') }}
+                                                {{ \Carbon\Carbon::parse($subscription->tanggal_expired)->format('d M Y') }}
                                                 @if($subscription->isExpiringSoon(7))
                                                     <br><span class="badge badge-warning">Expiring Soon</span>
                                                 @endif

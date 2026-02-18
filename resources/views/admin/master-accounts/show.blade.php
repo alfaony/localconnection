@@ -322,10 +322,10 @@
                                                 </span>
                                             </td>
                                             <td>
-                                                <small>{{ $subscription->tanggal_mulai->format('d M Y') }}</small>
+                                                <small>{{ \Carbon\Carbon::parse($subscription->tanggal_mulai)->format('d M Y') }}</small>
                                             </td>
                                             <td>
-                                                <small>{{ $subscription->tanggal_expired->format('d M Y') }}</small>
+                                                <small>{{ \Carbon\Carbon::parse($subscription->tanggal_expired)->format('d M Y') }}</small>
                                                 @if($subscription->isExpiringSoon(7))
                                                     <br><span class="badge badge-warning">Expiring Soon</span>
                                                 @endif

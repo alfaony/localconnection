@@ -392,31 +392,6 @@ Route::middleware(['auth', 'verified'])->prefix('customer')->name('customer.')->
 });
 
 
-// ========================================================================
-    // subscription MANAGEMENT
-    // ========================================================================
-    Route::get('subscription', [AdminSubscriptionController::class, 'index'])->name('subscription.index');
-    Route::get('subscription/{subscription}', [AdminSubscriptionController::class, 'show'])->name('subscription.show');
-    
-    // Edit expiry date
-    Route::get('subscription/{subscription}/edit-expiry', [AdminSubscriptionController::class, 'editExpiry'])->name('subscription.edit-expiry');
-    Route::put('subscription/{subscription}/update-expiry', [AdminSubscriptionController::class, 'updateExpiry'])->name('subscription.update-expiry');
-    
-    // Change master account
-    Route::get('subscription/{subscription}/edit-master-account', [AdminSubscriptionController::class, 'editMasterAccount'])->name('subscription.edit-master-account');
-    Route::put('subscription/{subscription}/update-master-account', [AdminSubscriptionController::class, 'updateMasterAccount'])->name('subscription.update-master-account');
-    
-    // Suspend/Activate subscription
-    Route::post('subscription/{subscription}/suspend', [AdminSubscriptionController::class, 'suspend'])->name('subscription.suspend');
-    Route::post('subscription/{subscription}/activate', [AdminSubscriptionController::class, 'activate'])->name('subscription.activate');
-    
-    // View payment history
-    Route::get('subscription/{subscription}/payments', [AdminSubscriptionController::class, 'payments'])->name('subscription.payments');
-    
-    // Manual approve payment
-    Route::post('admin/payments/{payment}/manual-approve', [AdminSubscriptionController::class, 'manualApprovePayment'])->name('admin.payments.manual-approve');
-
-
 Route::group(['middleware' => ['auth','role.permission','ip.restriction']], function()
 {
   Route::get('home/meetingAgenda', [App\Http\Controllers\HomeController::class, 'meetingAgenda'])->name('home.meetingAgenda');
@@ -894,17 +869,10 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
     // ========================================================================
     // SOFTWARE MANAGEMENT
     // ========================================================================
-    // Dashboard
     Route::get('software-dashboard', [DashboardController::class, 'index'])->name('software-dashboard.index');
-
-    // Alternative routes with better naming
     Route::get('software/{software}/packages/create', [SoftwarePackageController::class, 'create'])->name('software.packages.create');
-    
     Route::get('software/{software}/packages/{package}/edit', [SoftwarePackageController::class, 'edit'])->name('software.packages.edit');
-    
     Route::resource('software', SoftwareController::class);
-    
-    // Toggle software status (AJAX)
     Route::post('software/{software}/toggleStatus', [SoftwareController::class, 'toggleStatus'])->name('software.toggleStatus');
     
     // ========================================================================
@@ -921,14 +889,26 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
     // MASTER ACCOUNTS MANAGEMENT
     // ========================================================================
     Route::resource('master-account', MasterAccountController::class);
-    
-    // Toggle master account status (AJAX)
     Route::post('master-account/{masterAccount}/toggle-status', [MasterAccountController::class, 'toggleStatus'])->name('master-account.toggle-status');
-    
-    // View customers assigned to master account
     Route::get('master-account/{masterAccount}/customers', [MasterAccountController::class, 'customers'])->name('master-account.customers');
+
+    // ========================================================================
+    // subscription MANAGEMENT
+    // ========================================================================
+    Route::get('subscription', [AdminSubscriptionController::class, 'index'])->name('subscription.index');
+    Route::get('subscription/{subscription}', [AdminSubscriptionController::class, 'show'])->name('subscription.show');
+    Route::get('subscription/{subscription}/edit-expiry', [AdminSubscriptionController::class, 'editExpiry'])->name('subscription.edit-expiry');
+    Route::put('subscription/{subscription}/update-expiry', [AdminSubscriptionController::class, 'updateExpiry'])->name('subscription.update-expiry');
+    Route::get('subscription/{subscription}/edit-master-account', [AdminSubscriptionController::class, 'editMasterAccount'])->name('subscription.edit-master-account');
+    Route::put('subscription/{subscription}/update-master-account', [AdminSubscriptionController::class, 'updateMasterAccount'])->name('subscription.update-master-account');
+    Route::post('subscription/{subscription}/suspend', [AdminSubscriptionController::class, 'suspend'])->name('subscription.suspend');
+    Route::post('subscription/{subscription}/activate', [AdminSubscriptionController::class, 'activate'])->name('subscription.activate');
+    Route::get('subscription/{subscription}/payments', [AdminSubscriptionController::class, 'payments'])->name('subscription.payments');
+    Route::post('subscription/manual-approve/{payment}/manual-approve', [AdminSubscriptionController::class, 'manualApprove'])->name('subscription.payments.manual-approve');
+
 });
 
+    
 
   Route::get('internet-customer/registration/{companyId}', InternetCustomerForm::class)->name('internet-customer.create');
   Route::get('internet-customer/customer-active/{code}', CustomerShow::class)->name('internet-customer.customer.show');

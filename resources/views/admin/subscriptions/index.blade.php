@@ -125,9 +125,11 @@
                             </td>
                             <td>
                                 <div class="btn-group btn-group-sm">
+                                    @canAccess('show','subscriptions')
                                     <a href="{{ route('subscription.show', $subscription) }}" class="btn btn-info" title="Detail">
                                         <i class="fas fa-eye"></i>
                                     </a>
+                                    @endcanAccess
                                 </div>
                             </td>
                         </tr>

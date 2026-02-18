@@ -219,12 +219,14 @@
                                                     @endif
                                                     
                                                     @if($payment->status == 'pending')
+                                                        @canAccess('manual-approve','subscriptions')
                                                         <button type="button" 
                                                                 class="btn btn-success manual-approve"
                                                                 data-id="{{ $payment->id }}"
                                                                 title="Manual Approve">
                                                             <i class="fas fa-check"></i>
                                                         </button>
+                                                        @endcanAccess
                                                     @endif
                                                 </div>
                                             </td>
@@ -320,6 +322,7 @@ $(document).ready(function() {
     // Manual approve payment
     $('.manual-approve').on('click', function() {
         const paymentId = $(this).data('id');
+        const url = `{{ route('subscription.payments.manual-approve', ':id') }}`.replace(':id', paymentId);
         
         Swal.fire({
             title: 'Manual Approve Payment?',
@@ -333,7 +336,7 @@ $(document).ready(function() {
         }).then((result) => {
             if (result.isConfirmed) {
                 $.ajax({
-                    url: `/admin/payments/${paymentId}/manual-approve`,
+                    url: url,
                     type: 'POST',
                     data: {
                         _token: '{{ csrf_token() }}'

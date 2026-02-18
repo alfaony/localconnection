@@ -126,7 +126,9 @@ class SubscriptionController extends Controller
                 ->with('success', 'Tanggal expired berhasil diupdate');
         } catch (\Throwable $th) {
             //throw $th;
-            dd($th);
+            // dd($th);
+            \Log::error($th);
+            return redirect()->back()->with('error', "Gagal update tanggal expired");
         }
     }
 
@@ -170,7 +172,7 @@ class SubscriptionController extends Controller
                     ->back()
                     ->with('error', 'Master Account yang dipilih tidak memiliki slot tersedia');
             }
-    
+    // 
             // Release slot from old master account
             $oldMasterAccount = $subscription->masterAccount;
             $oldMasterAccount->releaseSlot();
@@ -188,7 +190,7 @@ class SubscriptionController extends Controller
                 ->with('success', 'Master Account berhasil diubah');
         } catch (\Throwable $th) {
             //throw $th;
-            dd($th);
+            // dd($th);
 
             \Log::error($th);
             return redirect()->back()>with('error', 'Master Account gagal diubah');
@@ -259,7 +261,7 @@ class SubscriptionController extends Controller
     /**
      * Manual approve payment
      */
-    public function manualApprovePayment($paymentId)
+    public function manualApprove($paymentId)
     {
         try {
             $payment = \App\Models\SubscriptionPayment::findOrFail($paymentId);

@@ -28,8 +28,7 @@ class PermissionForMenuSoftwareSharingSeeder extends Seeder
             $softwareDashboard = ['index'];
             $software = ['index','create','store','edit','update','destroy','show','toggleStatus','dashboard'];
             $masterAccount = ['index','edit', 'create','store','update', 'show', 'destroy','toggleStatus','customers'];
-            $subscriptions = ['index','create','store','edit','update','destroy','show','toggleStatus'];
-            $partnerMonthlyReport = ['manage','create','store','edit','update','destroy'];
+            $subscriptions = ['index','create','store','edit','update','destroy','show','toggleStatus','editExpiry','updateExpiry','editMasterAccount','updateMasterAccount','suspend','activate','payments','manual-approve'];
             
             foreach ($softwareDashboard as $method) 
             {
@@ -64,7 +63,7 @@ class PermissionForMenuSoftwareSharingSeeder extends Seeder
 
                 foreach ($roles as $role) 
                 {
-                    if($method == 'destroy' && in_array($role->name, [RoleSchema::DIRECTOR,RoleSchema::ROOT, RoleSchema::ADMIN, RoleSchema::SYSTEM, RoleSchema::FINANCE, RoleSchema::STAFF_FINANCE]))
+                    if(($method == 'destroy' || $method == 'manual-approve' || $method == 'suspend' || $method == 'activate') && in_array($role->name, [RoleSchema::DIRECTOR,RoleSchema::ROOT, RoleSchema::ADMIN, RoleSchema::SYSTEM, RoleSchema::FINANCE, RoleSchema::STAFF_FINANCE]))
                     {
                         PermissionRole::create(['role_id' => $role->id, 'permission_id' => $permission->id]);
                     }else
@@ -98,26 +97,27 @@ class PermissionForMenuSoftwareSharingSeeder extends Seeder
                 }
             }
 
-            foreach ($softwarePackage as $method) 
+            foreach ($subscriptions as $method) 
             {
                 // create permision
-                $permissionsoftwarePackage = Permission::firstOrCreate([
-                    'name' => ucwords($method).' Software Package (Paket Software)',
+                $permissionsubscriptions = Permission::firstOrCreate([
+                    'name' => ucwords($method).' Subscriptions (Software Sharing)',
                 ],[
                     'method' => $method,
-                    'table' => 'software_packages',
-                    'model' => 'SoftwarePackage',
+                    'table' => 'subscriptions',
+                    'model' => 'Subscription',
                     'guard_name' => 'web'
                 ]);
+
 
                 foreach ($roles as $role) 
                 {
                     if($method == 'destroy' && in_array($role->name, [RoleSchema::DIRECTOR,RoleSchema::ROOT, RoleSchema::ADMIN, RoleSchema::SYSTEM, RoleSchema::FINANCE, RoleSchema::STAFF_FINANCE, RoleSchema::PROCUREMENT, RoleSchema::MANAGER]))
                     {
-                        PermissionRole::create(['role_id' => $role->id, 'permission_id' => $permissionsoftwarePackage->id]);
+                        PermissionRole::create(['role_id' => $role->id, 'permission_id' => $permissionsubscriptions->id]);
                     }else
                     {
-                        PermissionRole::create(['role_id' => $role->id, 'permission_id' => $permissionsoftwarePackage->id]);
+                        PermissionRole::create(['role_id' => $role->id, 'permission_id' => $permissionsubscriptions->id]);
                     }
                 }
             }
