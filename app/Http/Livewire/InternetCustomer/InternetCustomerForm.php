@@ -161,6 +161,12 @@ class InternetCustomerForm extends Component
             $sessionId = Str::uuid()->toString();
             session(['ktp_session_id' => $sessionId]);
 
+            logger('KTP N8N - SEND', [
+                'session_id' => $sessionId,
+                'file_name'  => $this->ktp_photo->getClientOriginalName(),
+                'file_size'  => $this->ktp_photo->getSize(),
+            ]);
+
             $token = SettingCompany::where('menu', 'n8n')
                 ->where('field_title', 'n8n_webhook_token')
                 ->value('field_value');
@@ -168,15 +174,14 @@ class InternetCustomerForm extends Component
             $baseUrl = rtrim(config('services.n8n.base_url'), '/');
             $path    = ltrim(config('services.n8n.ktp_webhook_path'), '/');
             $webhookUrl = $baseUrl . '/' . $path;
+            logger('KTP N8N - CONFIG', [
+                'base_url' => $baseUrl,
+                'path'     => $path,
+                'final_url'=> $webhookUrl,
+                'token_exists' => $token ? true : false,
+            ]);
 
             // $webhookUrl = config('services.n8n.n8n_webhook_url');
-            // logger('SESSION ID WEB KIRIM:', ['session' => $sessionId]);
-            // logger('N8N URL FINAL RAW:', [
-            //     'url' => $webhookUrl,
-            //     'length' => strlen($webhookUrl),
-            //     'base_raw' => config('services.n8n.base_url'),
-            //     'path_raw' => config('services.n8n.ktp_webhook_path'),
-            // ]);
 
             if ($token && $webhookUrl) {
                 Http::timeout(10)
@@ -189,6 +194,14 @@ class InternetCustomerForm extends Component
                         'api_key'    => $token,
                         'session_id' => $sessionId,
                     ]);
+                    logger('KTP N8N - RESPONSE', [
+                        'status' => $response->status(),
+                        'body'   => $response->body(),
+                    ]);
+            } else {
+                logger('KTP N8N - SKIPPED', [
+                'reason' => 'Token or URL missing'
+            ]);
             }
 
         } catch (\Throwable $e) {
