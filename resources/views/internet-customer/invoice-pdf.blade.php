@@ -271,6 +271,12 @@
             color: #92400e;
             border: 1px solid #fcd34d;
         }
+
+        .badge-danger {
+            background: #ea2c06ff;
+            color: #ffffffff;
+            border: 1px solid #ea2c06ff;
+        }
         
         /* Footer */
         .footer {
@@ -334,8 +340,10 @@
                 <td colspan="3" class="meta-value">
                     @if($purchase->confirmation_finance_at || $purchase->xendit_paid_at || $purchase->midtrans_paid_at)
                         <span class="badge badge-success">Lunas</span>
+                    @elseif($purchase->payment_method != \App\Schemas\ParamSchema::EXPIRED)
+                    <span class="badge badge-warning">Menunggu Konfirmasi</span>
                     @else
-                        <span class="badge badge-warning">Menunggu Konfirmasi</span>
+                    <span class="badge badge-danger">Kadaluarsa</span>
                     @endif
                 </td>
             </tr>
