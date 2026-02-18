@@ -167,7 +167,8 @@ class InternetCustomerForm extends Component
                 'file_size'  => $this->ktp_photo->getSize(),
             ]);
 
-            $token = SettingCompany::where('menu', 'n8n')
+            $token = SettingCompany::byCompany($this->company_id)
+                ->where('menu', 'n8n')
                 ->where('field_title', 'n8n_webhook_token')
                 ->value('field_value');
             
@@ -184,7 +185,7 @@ class InternetCustomerForm extends Component
             // $webhookUrl = config('services.n8n.n8n_webhook_url');
 
             if ($token && $webhookUrl) {
-                Http::timeout(10)
+                $response = Http::timeout(10)
                     ->attach(
                         'file',
                         file_get_contents($this->ktp_photo->getRealPath()),
@@ -194,10 +195,11 @@ class InternetCustomerForm extends Component
                         'api_key'    => $token,
                         'session_id' => $sessionId,
                     ]);
-                    logger('KTP N8N - RESPONSE', [
-                        'status' => $response->status(),
-                        'body'   => $response->body(),
-                    ]);
+
+                logger('KTP N8N - RESPONSE', [
+                    'status' => $response->status(),
+                    'body'   => $response->body(),
+                ]);
             } else {
                 logger('KTP N8N - SKIPPED', [
                 'reason' => 'Token or URL missing'
