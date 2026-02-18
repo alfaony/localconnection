@@ -44,7 +44,7 @@ class CheckoutController extends Controller
 
         if (!$hasAvailableSlots) {
             return redirect()
-                ->route('customer.software.show', $slug)
+                ->route('customer-software.software.show', $slug)
                 ->with('error', 'Maaf, slot untuk software ini sudah penuh. Silakan hubungi admin atau coba lagi nanti.');
         }
 
@@ -55,7 +55,7 @@ class CheckoutController extends Controller
 
         if (empty($paymentMethods)) {
             return redirect()
-                ->route('customer.software.show', $slug)
+                ->route('customer-software.software.show', $slug)
                 ->with('error', 'Tidak ada metode pembayaran yang tersedia. Silakan hubungi admin.');
         }
 
@@ -89,7 +89,7 @@ class CheckoutController extends Controller
         $availableMethods = $this->paymentService->getAvailablePaymentMethods();
         if (!isset($availableMethods[$validated['payment_gateway']])) {
             return redirect()
-                ->route('customer.software.show', $slug)
+                ->route('customer-software.software.show', $slug)
                 ->with('error', 'Metode pembayaran yang dipilih tidak tersedia.');
         }
 
@@ -161,7 +161,7 @@ class CheckoutController extends Controller
             return $this->redirectAfterPayment($paymentGateway, $paymentResult, $subscription);
 
         } catch (\Exception $e) {
-            dd($e);
+            // dd($e);
             DB::rollBack();
 
             // dd($e);
@@ -174,7 +174,7 @@ class CheckoutController extends Controller
             ]);
 
             return redirect()
-                ->route('customer.software.show', $slug)
+                ->route('customer-software.software.show', $slug)
                 ->with('error', 'Checkout gagal: ' . $e->getMessage());
         }
     }
@@ -188,7 +188,7 @@ class CheckoutController extends Controller
             case 'manual':
                 // Redirect to payment pending page
                 return redirect()
-                    ->route('customer.payment.pending', ['order' => $subscription->order_number])
+                    ->route('customer-software.payment.pending', ['order' => $subscription->order_number])
                     ->with('success', 'Pesanan berhasil dibuat. Silakan lakukan pembayaran.');
 
             case 'xendit':
@@ -224,7 +224,7 @@ class CheckoutController extends Controller
         $payment = $subscription->payments->first();
 
         if (!$payment || !$payment->isManualTransfer()) {
-            return redirect()->route('customer.software.index')
+            return redirect()->route('customer-software.software.index')
                 ->with('error', 'Payment not found or invalid payment method');
         }
 

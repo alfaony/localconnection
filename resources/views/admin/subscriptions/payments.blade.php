@@ -133,7 +133,6 @@
                             <table class="table table-striped table-hover">
                                 <thead>
                                     <tr>
-                                        <th>Invoice Number</th>
                                         <th>Created At</th>
                                         <th>Paid At</th>
                                         <th>Method</th>
@@ -146,15 +145,6 @@
                                 <tbody>
                                     @foreach($payments as $payment)
                                         <tr>
-                                            <td>
-                                                <strong>{{ $payment->invoice_number }}</strong>
-                                                @if($payment->xendit_invoice_id)
-                                                    <br>
-                                                    <small class="text-muted" title="Xendit ID">
-                                                        {{ Str::limit($payment->xendit_invoice_id, 20) }}
-                                                    </small>
-                                                @endif
-                                            </td>
                                             <td>
                                                 {{ $payment->created_at->format('d M Y') }}
                                                 <br>
@@ -220,7 +210,7 @@
 
                                                     @if($payment->manual_transfer_proof)
                                                         <button type="button" 
-                                                                class="btn btn-primary btn-lihat-bukti"
+                                                                class="btn btn-primary btn-lihat-bukti mr-1 mb-1"
                                                                 title="Lihat Bukti Transfer"
                                                                 data-foto="{{ s3_asset(10,true,$payment->manual_transfer_proof) }}"
                                                                 data-nama="{{ $payment->manual_transfer_sender_name ?? '-' }}"
@@ -235,7 +225,7 @@
                                                     @if($payment->status == 'pending')
                                                         @canAccess('manual-approve','subscriptions')
                                                         <button type="button" 
-                                                                class="btn btn-success manual-approve"
+                                                                class="btn btn-success manual-approve mb-1"
                                                                 data-id="{{ $payment->id }}"
                                                                 title="Manual Approve">
                                                             <i class="fas fa-check"></i>
@@ -270,6 +260,7 @@
     </div>
 
     <!-- Payment Timeline -->
+    {{--
     @if($payments->count() > 0)
     <div class="row">
         <div class="col-md-12">
@@ -318,6 +309,7 @@
         </div>
     </div>
     @endif
+    --}}
 
     <!-- Modal Bukti Transfer -->
     <div class="modal fade" id="modalBuktiTransfer" tabindex="-1" role="dialog" aria-labelledby="modalBuktiTransferLabel" aria-hidden="true">

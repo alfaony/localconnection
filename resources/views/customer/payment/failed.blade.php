@@ -53,10 +53,10 @@
                     </div>
 
                     <div class="mt-4">
-                        <a href="{{ route('customer.subscription.show', $subscription) }}" class="btn btn-primary btn-lg mr-2">
+                        <a href="{{ route('customer-software.subscription.show', $subscription) }}" class="btn btn-primary btn-lg mr-2">
                             <i class="fas fa-redo"></i> Coba Lagi
                         </a>
-                        <a href="{{ route('customer.subscription.index') }}" class="btn btn-outline-secondary btn-lg">
+                        <a href="{{ route('customer-software.subscription.index') }}" class="btn btn-outline-secondary btn-lg">
                             <i class="fas fa-list"></i> My Subscriptions
                         </a>
                     </div>
@@ -65,7 +65,7 @@
                         <i class="fas fa-info-circle"></i> Pesanan tidak ditemukan. Silakan hubungi admin jika ada masalah.
                     </div>
                     <div class="mt-4">
-                        <a href="{{ route('customer.software.index') }}" class="btn btn-primary btn-lg">
+                        <a href="{{ route('customer-software.software.index') }}" class="btn btn-primary btn-lg">
                             <i class="fas fa-shopping-cart"></i> Coba Berlangganan Lagi
                         </a>
                     </div>

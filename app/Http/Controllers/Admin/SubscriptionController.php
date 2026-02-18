@@ -10,6 +10,9 @@ use App\Services\SubscriptionService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
+use App\Helpers\InboxHelper;
+use App\Schemas\RoleSchema;
+use App\Models\User;
 
 class SubscriptionController extends Controller
 {
@@ -268,55 +271,57 @@ class SubscriptionController extends Controller
             
             // Check access
             $subscription = $payment->subscription;
-            $this->access('update', $subscription);
+            // $this->access('update', $subscription);
 
-            // Check if payment is pending
-            if ($payment->status !== 'pending') {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Payment is not pending'
-                ], 400);
-            }
+            // // Check if payment is pending
+            // if ($payment->status !== 'pending') {
+            //     return response()->json([
+            //         'success' => false,
+            //         'message' => 'Payment is not pending'
+            //     ], 400);
+            // }
 
-            // Update payment status to paid
-            $payment->update([
-                'status' => 'paid',
-                'paid_at' => now(),
-            ]);
+            // // Update payment status to paid
+            // $payment->update([
+            //     'status' => 'paid',
+            //     'paid_at' => now(),
+            // ]);
 
-            // Always update payment_status to paid
-            $updateData = [
-                'payment_status' => 'paid',
-            ];
+            // // Always update payment_status to paid
+            // $updateData = [
+            //     'payment_status' => 'paid',
+            // ];
 
-            // Activate subscription if not active
-            if ($subscription->status !== 'active') {
-                $updateData['status'] = 'active';
+            // // Activate subscription if not active
+            // if ($subscription->status !== 'active') {
+            //     $updateData['status'] = 'active';
                 
-                // Set start and end dates if not set
-                if (!$subscription->tanggal_mulai) {
-                    $updateData['tanggal_mulai'] = now();
-                }
+            //     // Set start and end dates if not set
+            //     if (!$subscription->tanggal_mulai) {
+            //         $updateData['tanggal_mulai'] = now();
+            //     }
                 
-                if (!$subscription->tanggal_expired && $subscription->package) {
-                    $updateData['tanggal_expired'] = now()->addDays($subscription->package->durasi_hari);
-                }
-            }
+            //     if (!$subscription->tanggal_expired && $subscription->package) {
+            //         $updateData['tanggal_expired'] = now()->addDays($subscription->package->durasi_hari);
+            //     }
+            // }
 
-            $subscription->update($updateData);
+            // $subscription->update($updateData);
 
-            // Reserve slot in master account if needed
-            if ($subscription->masterAccount && $subscription->masterAccount->hasSlotsAvailable()) {
-                $subscription->masterAccount->reserveSlot();
-            }
+            // // Reserve slot in master account if needed
+            // if ($subscription->masterAccount && $subscription->masterAccount->hasSlotsAvailable()) {
+            //     $subscription->masterAccount->reserveSlot();
+            // }
 
-            \Log::info('Payment manually approved', [
-                'payment_id' => $payment->id,
-                'subscription_id' => $subscription->id,
-                'subscription_status' => $subscription->status,
-                'payment_status' => $subscription->payment_status,
-                'approved_by' => \Auth::id(),
-            ]);
+            $this->notifyTeamSuccess($subscription);
+
+            // \Log::info('Payment manually approved', [
+            //     'payment_id' => $payment->id,
+            //     'subscription_id' => $subscription->id,
+            //     'subscription_status' => $subscription->status,
+            //     'payment_status' => $subscription->payment_status,
+            //     'approved_by' => \Auth::id(),
+            // ]);
 
             return response()->json([
                 'success' => true,
@@ -339,6 +344,21 @@ class SubscriptionController extends Controller
 
     private function access($action, $subscription)
     {
+        return true;
+    }
+
+    protected function notifyTeamSuccess($subscription)
+    {
+        $messageToUser = "Pembayaran ".$subscription->package->name."telah disetujui oleh Finance";
+        $url = route('customer-software.subscription.show', $subscription);
+
+        dd($messageToUser, $url, $subscription->package);
+    }
+
+    private function sentInbox($to,$from, $message,$directUrl)
+    {
+        $inboxHelper = new InboxHelper();
+        $inboxHelper->sent($to, $from, $message, $directUrl);
         return true;
     }
 }

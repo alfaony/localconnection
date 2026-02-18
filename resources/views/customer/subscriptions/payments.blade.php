@@ -12,8 +12,8 @@
                 {{-- 
                     <li class="breadcrumb-item"><a href="{{ route('customer.dashboard') }}">Dashboard</a></li>
                     --}}
-                <li class="breadcrumb-item"><a href="{{ route('customer.subscription.index') }}">My Subscriptions</a></li>
-                <li class="breadcrumb-item"><a href="{{ route('customer.subscription.show', $subscription->id) }}">{{ $subscription->order_number }}</a></li>
+                <li class="breadcrumb-item"><a href="{{ route('customer-software.subscription.index') }}">My Subscriptions</a></li>
+                <li class="breadcrumb-item"><a href="{{ route('customer-software.subscription.show', $subscription->id) }}">{{ $subscription->order_number }}</a></li>
                 <li class="breadcrumb-item active">Payments</li>
             </ol>
         </div>
@@ -63,7 +63,7 @@
                         <i class="fas fa-receipt"></i> Payment History
                     </h3>
                     <div class="card-tools">
-                        <a href="{{ route('customer.subscription.show', $subscription->id) }}" 
+                        <a href="{{ route('customer-software.subscription.show', $subscription->id) }}" 
                            class="btn btn-sm btn-default">
                             <i class="fas fa-arrow-left"></i> Back
                         </a>

@@ -277,46 +277,13 @@ Route::put('partnership-agreement/signatureShare/{id}',[PartnershipAgreementCont
 
 Route::get('used-laptop/showQr/{slug}', [UsedLaptopController::class,'showQr'])->name('used-laptop.show-qr');
 Route::get('used-item/showQr/{slug}', [UsedItemController::class,'showQr'])->name('used-item.show-qr');
-    
-    // ========================================================================
-    // SUBSCRIPTION CUSTOMERS MANAGEMENT
-    // ========================================================================
-    
-    // // Customer list
-    // Route::get('/subscription-customers', [SubscriptionCustomerController::class, 'index'])
-    //     ->name('subscription-customers.index');
-    
-    // // Statistics dashboard
-    // Route::get('/subscription-customers/statistics', [SubscriptionCustomerController::class, 'statistics'])
-    //     ->name('subscription-customers.statistics');
-    
-    // // Export to CSV
-    // Route::get('/subscription-customers/export', [SubscriptionCustomerController::class, 'export'])
-    //     ->name('subscription-customers.export');
-    
-    // // Customer detail
-    // Route::get('/subscription-customers/{user}', [SubscriptionCustomerController::class, 'show'])
-    //     ->name('subscription-customers.show');
-    
-    // // Customer's subscription
-    // Route::get('/subscription-customers/{user}/subscription', [SubscriptionCustomerController::class, 'subscription'])
-    //     ->name('subscription-customers.subscription');
-    
-    // // Customer's payments
-    // Route::get('/subscription-customers/{user}/payments', [SubscriptionCustomerController::class, 'payments'])
-    //     ->name('subscription-customers.payments');
-    
-    // // Send notification to customer
-    // Route::post('/subscription-customers/{user}/send-notification', [SubscriptionCustomerController::class, 'sendNotification'])
-    //     ->name('subscription-customers.send-notification');
-// });
 
 
 // ============================================================================
 // CUSTOMER ROUTES (Auth + Verified Required)
 // ============================================================================
 
-Route::middleware(['auth', 'verified'])->prefix('customer')->name('customer.')->group(function () {
+Route::middleware(['auth', 'verified'])->prefix('customer-software')->name('customer-software.')->group(function () {
     // ========================================================================
     // SOFTWARE CATALOG
     // ========================================================================

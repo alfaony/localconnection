@@ -5,6 +5,12 @@ namespace App\Http\Controllers\Customer;
 use App\Http\Controllers\Controller;
 use App\Models\CustomerSubscription;
 use App\Models\SubscriptionPayment;
+use App\Models\User;
+use App\Schemas\RoleSchema;
+use App\Models\Subscription;
+
+use App\Helpers\InboxHelper;
+
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
@@ -21,7 +27,7 @@ class SubscriptionPaymentController extends Controller
 
         if (!$orderNumber) {
             return redirect()
-                ->route('customer.subscription.index')
+                ->route('customer-software.subscription.index')
                 ->with('info', 'Order number tidak ditemukan');
         }
 
@@ -32,7 +38,7 @@ class SubscriptionPaymentController extends Controller
 
         if (!$subscription) {
             return redirect()
-                ->route('customer.subscription.index')
+                ->route('customer-software.subscription.index')
                 ->with('error', 'Subscription tidak ditemukan');
         }
 
@@ -56,7 +62,7 @@ class SubscriptionPaymentController extends Controller
 
         if (!$orderNumber) {
             return redirect()
-                ->route('customer.subscription.index')
+                ->route('customer-software.subscription.index')
                 ->with('error', 'Order number tidak ditemukan');
         }
 
@@ -67,7 +73,7 @@ class SubscriptionPaymentController extends Controller
 
         if (!$subscription) {
             return redirect()
-                ->route('customer.subscription.index')
+                ->route('customer-software.subscription.index')
                 ->with('error', 'Subscription tidak ditemukan');
         }
 
@@ -150,6 +156,8 @@ class SubscriptionPaymentController extends Controller
                 'sender_bank' => $request->sender_bank,
             ]);
 
+            $this->notifyFinanceTeamSuccess($subscription);
+
             return back()->with('success', 'Bukti transfer berhasil diupload. Menunggu verifikasi admin.');
 
         } catch (\Exception $e) {
@@ -161,4 +169,43 @@ class SubscriptionPaymentController extends Controller
             return back()->with('error', 'Gagal mengupload bukti transfer. Silakan coba lagi.');
         }
     }
+
+    protected function notifyFinanceTeamSuccess($subscription)
+    {
+        $userFinance = User::whereHas('role.permissions', function ($q) {
+            $q->where('method', 'manual-approve')->where('table', 'subscriptions');
+        })
+        ->where(function ($q) use ($subscription) {
+            $q->where('company_id', $subscription->company_id)
+            ->orWhereHas('accessibleCompanies', function ($sub) use ($subscription) {
+                $sub->where('companies.id', $subscription->company_id);
+            });
+        })
+        ->get();
+
+        if($userFinance->isNotEmpty()) {
+            $userFinance = $userFinance->pluck('id')->unique();
+
+            $from = User::where('company_id', $subscription->company_id)
+                ->whereHas('role', function ($q) {
+                    $q->whereIn('name', [RoleSchema::SYSTEM_BOS, RoleSchema::ROOT, RoleSchema::ADMIN]);
+                })
+                ->first();
+
+            $message = "Pelanggan ".$subscription->user->name." telah berhasil melakukan pembayaran, Silahkan ditindaklanjuti.";
+            $directUrl = route('subscription.payments', $subscription->id);
+            
+            foreach($userFinance as $finance) {
+                $this->sentInbox($finance, Auth::id(), $message, $directUrl);
+            }   
+        }
+    }
+
+    private function sentInbox($to,$from, $message,$directUrl)
+    {
+        $inboxHelper = new InboxHelper();
+        $inboxHelper->sent($to, $from, $message, $directUrl);
+        return true;
+    }
+
 }

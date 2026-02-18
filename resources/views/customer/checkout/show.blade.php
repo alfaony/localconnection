@@ -86,7 +86,7 @@
                             <i class="fas fa-exclamation-triangle"></i> Tidak ada metode pembayaran yang tersedia.
                         </div>
                     @else
-                        <form action="{{ route('customer.checkout.process', [$software->slug, $package->id]) }}" method="POST" id="checkout-form">
+                        <form action="{{ route('customer-software.checkout.process', [$software->slug, $package->id]) }}" method="POST" id="checkout-form">
                             @csrf
                             
                             <div class="payment-methods mb-4">
@@ -165,7 +165,7 @@
 
                             <div class="row">
                                 <div class="col-md-6">
-                                    <a href="{{ route('customer.software.show', $software->slug) }}" class="btn btn-secondary btn-block btn-lg">
+                                    <a href="{{ route('customer-software.software.show', $software->slug) }}" class="btn btn-secondary btn-block btn-lg">
                                         <i class="fas fa-arrow-left"></i> Kembali
                                     </a>
                                 </div>
