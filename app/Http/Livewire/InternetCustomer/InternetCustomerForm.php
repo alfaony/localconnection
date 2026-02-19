@@ -61,6 +61,7 @@ class InternetCustomerForm extends Component
     public $ktp_input_mode = 'manual';  
     public $ktpReadingStartedAt = null;
     public $isReadingKtp = false;
+    public $tempKtpPath;
     public $name;
     public $phone_number;
     public $email;
@@ -167,6 +168,13 @@ class InternetCustomerForm extends Component
                 'file_size'  => $this->ktp_photo->getSize(),
             ]);
 
+            $tempPath = $this->ktp_photo->store('n8n-temp', 'local');
+            $fullPath = storage_path('app/' . $tempPath);
+
+            if (!file_exists($fullPath)) {
+                throw new \Exception('File gagal disalin ke storage.');
+            }
+
             $token = SettingCompany::byCompany($this->company_id)
                 ->where('menu', 'n8n')
                 ->where('field_title', 'n8n_webhook_token')
@@ -175,6 +183,7 @@ class InternetCustomerForm extends Component
             $baseUrl = rtrim(config('services.n8n.base_url'), '/');
             $path    = ltrim(config('services.n8n.ktp_webhook_path'), '/');
             $webhookUrl = $baseUrl . '/' . $path;
+
             logger('KTP N8N - CONFIG', [
                 'base_url' => $baseUrl,
                 'path'     => $path,
@@ -182,14 +191,13 @@ class InternetCustomerForm extends Component
                 'token_exists' => $token ? true : false,
             ]);
 
-            // $webhookUrl = config('services.n8n.n8n_webhook_url');
-
             if ($token && $webhookUrl) {
-                $response = Http::timeout(15)
+
+                $response = Http::timeout(20)
                     ->attach(
                         'file',
-                        file_get_contents($this->ktp_photo->getRealPath()),
-                        $this->ktp_photo->getClientOriginalName()
+                        fopen($fullPath, 'r'),
+                        basename($tempPath)
                     )
                     ->post($webhookUrl, [
                         'api_key'    => $token,
@@ -206,6 +214,9 @@ class InternetCustomerForm extends Component
             ]);
             }
 
+            if (Storage::exists($tempPath)) {
+                Storage::delete($tempPath);
+            }
         } catch (\Throwable $e) {
             Log::warning('Gagal kirim KTP ke N8N', [
                 'error' => $e->getMessage()
