@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use App\Models\SettingCompany;
 use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Log;
 
 class EkycController extends Controller
 {
@@ -13,8 +14,11 @@ class EkycController extends Controller
     {
         try {
             $companyId = Cache::get('ktp_company_'.$request->session_id);
+            logger('Company Id tersimpan : ', [
+                'ktp_company' => $companyId,
+            ]);
             
-            $tokenDb = SettingCompany::byCompany($this->company_id)
+            $tokenDb = SettingCompany::byCompany($companyId)
                 ->where('menu', 'n8n')
                 ->where('field_title', 'n8n_webhook_token')
                 ->value('field_value');
