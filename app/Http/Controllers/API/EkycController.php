@@ -12,7 +12,10 @@ class EkycController extends Controller
     public function receiveKtpResult(Request $request)
     {
         try {
-            $tokenDb = SettingCompany::where('menu', 'n8n')
+            $companyId = Cache::get('ktp_company_'.$request->session_id);
+            
+            $tokenDb = SettingCompany::byCompany($this->company_id)
+                ->where('menu', 'n8n')
                 ->where('field_title', 'n8n_webhook_token')
                 ->value('field_value');
 

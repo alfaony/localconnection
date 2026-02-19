@@ -161,6 +161,7 @@ class InternetCustomerForm extends Component
         try {
             $sessionId = Str::uuid()->toString();
             session(['ktp_session_id' => $sessionId]);
+            Cache::put('ktp_company_'.$sessionId, $this->company_id, now()->addMinutes(10));
 
             logger('KTP N8N - SEND', [
                 'session_id' => $sessionId,
