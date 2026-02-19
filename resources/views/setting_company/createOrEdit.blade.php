@@ -1030,7 +1030,7 @@
                                         </div>
 
                                         <div class="form-group">
-                                            <   label for="software_sharing_cabang_bank">Cabang Bank</label>
+                                            <label for="software_sharing_cabang_bank">Cabang Bank</label>
                                             <input type="text" name="software_sharing_cabang_bank" class="form-control" value="{{ old('software_sharing_cabang_bank', isset($data['software_sharing_cabang_bank']) ? $data['software_sharing_cabang_bank'] : '') }}">
                                             @error('software_sharing_cabang_bank')
                                             <span class="text-danger text-sm">{{ $message }}</span>
