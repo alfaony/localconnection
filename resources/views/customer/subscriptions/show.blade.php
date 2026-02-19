@@ -355,10 +355,10 @@ $(document).ready(function() {
     const subscriptionId = '{{ $subscription->id }}';
     const chatUrl        = '{{ route("customer-software.subscription.chat.index", $subscription) }}';
     const storeUrl       = '{{ route("customer-software.subscription.chat.store", $subscription) }}';
-    const myId           = '{{ auth()->id() }}';
+    const myId           = parseInt('{{ auth()->id() }}');
     let canChat          = false;
 
-    // ── Load messages ──────────────────────────────────────────────────────
+    // ── Load messages (initial load) ───────────────────────────────────────
     function loadMessages() {
         $.get(chatUrl, function(data) {
             canChat = data.can_chat;
@@ -378,7 +378,8 @@ $(document).ready(function() {
     }
 
     function buildBubble(msg) {
-        const side = msg.is_me ? 'me' : 'other';
+        const isMe = (parseInt(msg.sender_id) === myId) || msg.is_me === true;
+        const side = isMe ? 'me' : 'other';
         let content = '';
         if (msg.message) content += `<div class="bubble">${escapeHtml(msg.message)}</div>`;
         if (msg.attachment_url) {
@@ -400,6 +401,15 @@ $(document).ready(function() {
         return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
     }
 
+    function appendMessage(msg) {
+        const $box = $('#chat-messages');
+        // Hapus placeholder "belum ada pesan" jika ada
+        $box.find('.text-center.text-muted').remove();
+        $box.append(buildBubble(msg));
+        $box.scrollTop($box[0].scrollHeight);
+    }
+
+
     // ── Send message ───────────────────────────────────────────────────────
     $('#chat-form').on('submit', function(e) {
         e.preventDefault();
@@ -418,9 +428,7 @@ $(document).ready(function() {
                     $('#chat-input').val('');
                     $('#chat-file').val('');
                     $('#file-preview').hide();
-                    const $box = $('#chat-messages');
-                    $box.append(buildBubble(res.message));
-                    $box.scrollTop($box[0].scrollHeight);
+                    appendMessage(res.message);
                 }
             },
             error: function(xhr) {
@@ -469,10 +477,64 @@ $(document).ready(function() {
         }).catch(function() { toastr.error('Gagal menyalin'); });
     });
 
-    // ── Init ───────────────────────────────────────────────────────────────
+    // ── Broadcast: Dengarkan pesan baru via Echo (Reverb) ─────────────────
     @if($subscription->payment_status == 'paid')
     loadMessages();
     @endif
 });
 </script>
+
+{{-- Reverb Echo: Setup sesuai pola item_request/show.blade.php --}}
+@if($subscription->payment_status == 'paid')
+<script>
+    const _subId      = '{{ $subscription->id }}';
+    const _myId       = parseInt('{{ auth()->id() }}');
+    const _reverbHost = '{{ config('services.connection_reverb.host') }}';
+    const _reverbKey  = '{{ config('services.connection_reverb.key') }}';
+    const _reverbPort = '{{ config('services.connection_reverb.port') }}';
+
+    window.Pusher = Pusher;
+
+    window.Echo = new Echo.default({
+        broadcaster: 'reverb',
+        key: _reverbKey,
+        wsHost: _reverbHost,
+        wsPort: 8080,
+        wssPort: _reverbPort,
+        forceTLS: true,
+        enabledTransports: ['ws', 'wss'],
+        authEndpoint: '/broadcasting/authorize',
+        disableStats: true,
+    });
+
+    window.Echo.private('subscription.chat.' + _subId)
+        .listen('SubscriptionChatSent', function(e) {
+            // Hanya append jika bukan pesan sendiri (pengirim sudah dapat via AJAX response)
+            if (parseInt(e.sender_id) !== _myId) {
+                const $box = $('#chat-messages');
+                $box.find('.text-center.text-muted').remove();
+
+                const isImg = e.attachment_url && /\.(jpg|jpeg|png)$/i.test(e.attachment_url);
+                let content = '';
+                if (e.message) {
+                    const safeMsg = e.message.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+                    content += `<div class="bubble">${safeMsg}</div>`;
+                }
+                if (e.attachment_url) {
+                    content += isImg
+                        ? `<div class="chat-attachment"><img src="${e.attachment_url}" onclick="window.open(this.src)"></div>`
+                        : `<div class="chat-attachment mt-1"><a href="${e.attachment_url}" target="_blank" class="btn btn-sm btn-outline-secondary"><i class="fas fa-file-download"></i> Download</a></div>`;
+                }
+
+                $box.append(`<div class="d-flex mb-2">
+                    <div class="chat-bubble other">
+                        <div class="meta">${e.sender_name} · ${e.created_at}</div>
+                        ${content}
+                    </div>
+                </div>`);
+                $box.scrollTop($box[0].scrollHeight);
+            }
+        });
+</script>
+@endif
 @stop

@@ -1,6 +1,6 @@
 <?php
-
 namespace App\Http\Controllers\Customer;
+
 
 use App\Http\Controllers\Controller;
 use App\Models\Software;
@@ -14,7 +14,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
-class CheckoutController extends Controller
+class CustomerCheckoutController extends Controller
 {
     protected $subscriptionService;
     protected $paymentService;
@@ -255,3 +255,4 @@ class CheckoutController extends Controller
         return view('customer.payment.failed', compact('subscription'));
     }
 }
+

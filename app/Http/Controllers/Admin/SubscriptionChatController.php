@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Events\SubscriptionChatSent;
 use App\Http\Controllers\Controller;
 use App\Models\CustomerSubscription;
 use App\Models\SubscriptionChat;
@@ -72,14 +73,40 @@ class SubscriptionChatController extends Controller
                 'attachment'      => $path,
             ]);
 
-            // Kirim inbox ke customer
+            // Broadcast ke channel private subscription
+            broadcast(new SubscriptionChatSent(
+                $chat->id,
+                Auth::user()->name,
+                $chat->message ?? '',
+                $chat->attachment_url,
+                $chat->created_at->format('d M Y H:i'),
+                $subscription->id,
+                Auth::id()
+            ))->toOthers();
+
+            // Kirim inbox ke semua user yang pernah terlibat dalam chat + customer
             $subscription->load('user', 'software');
             $customer = $subscription->user;
 
-            if ($customer && $customer->id !== Auth::id()) {
-                $url     = route('customer-software.subscription.show', $subscription->id);
-                $message = "💬 Ada pesan baru dari admin untuk subscription *{$subscription->software->nama}*: \"{$request->message}\"";
-                SentInbox::dispatch(Auth::id(), $customer->id, $message, $url);
+            $userIds = SubscriptionChat::where('subscription_id', $subscription->id)
+                ->where('user_id', '!=', Auth::id())
+                ->distinct()
+                ->pluck('user_id');
+
+            // Tambahkan customer jika ada dan bukan pengirim
+            if ($customer) {
+                $userIds->push($customer->id);
+            }
+
+            $userIds = $userIds->unique()->filter();
+
+            $url     = route('customer-software.subscription.show', $subscription->id);
+            $message = "💬 Ada pesan baru dari admin untuk subscription *{$subscription->software->nama}*: \"{$request->message}\"";
+
+            foreach ($userIds as $userId) {
+                if ($userId != Auth::id()) {
+                    SentInbox::dispatch(Auth::id(), $userId, $message, $url);
+                }
             }
 
             return response()->json([
@@ -95,6 +122,7 @@ class SubscriptionChatController extends Controller
                 ],
             ]);
         } catch (\Throwable $th) {
+            dd($th);
             Log::error('Admin SubscriptionChat store error: ' . $th->getMessage());
             return response()->json(['error' => 'Gagal mengirim pesan.'], 500);
         }

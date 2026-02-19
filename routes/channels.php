@@ -39,3 +39,20 @@ Broadcast::channel('office.scan.{userId}', function ($user, $userId) {
     // return (int) $user->id === (int) $userId;
     return true;
 });
+
+// Subscription Chat – hanya user yang authenticated bisa join
+// (validasi lebih ketat: cek apakah user adalah pemilik atau admin)
+Broadcast::channel('subscription.chat.{subscriptionId}', function ($user, $subscriptionId) {
+    if (!$user) return false;
+
+    // Admin (has role/permission) atau customer pemilik subscription
+    $subscription = \App\Models\CustomerSubscription::find($subscriptionId);
+    if (!$subscription) return false;
+
+    // Customer pemilik
+    if ((int) $subscription->user_id === (int) $user->id) return true;
+
+    // User lain yang authenticated (admin/PIC)
+    // Bisa ditambah validasi role jika diperlukan
+    return $user->can('admin') || $user->hasAnyRole(['admin', 'super-admin', 'staff']);
+});

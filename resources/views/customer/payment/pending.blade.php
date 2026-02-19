@@ -248,7 +248,7 @@
                 <a href="{{ route('customer-software.subscription.index') }}" class="btn btn-primary btn-md me-2">
                     <i class="fas fa-list me-2"></i>Lihat Langganan Saya
                 </a>
-                <a href="{{ route('customer-software.software.index') }}" class="btn btn-outline-secondary btn-md">
+                <a href="{{ route('customer-software.index') }}" class="btn btn-outline-secondary btn-md">
                     <i class="fas fa-home me-2"></i>Kembali ke Beranda
                 </a>
             </div>

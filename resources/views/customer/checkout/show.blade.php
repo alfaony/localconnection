@@ -165,7 +165,7 @@
 
                             <div class="row">
                                 <div class="col-md-6">
-                                    <a href="{{ route('customer-software.software.show', $software->slug) }}" class="btn btn-secondary btn-block btn-lg">
+                                    <a href="{{ route('customer-software.show', $software->slug) }}" class="btn btn-secondary btn-block btn-lg">
                                         <i class="fas fa-arrow-left"></i> Kembali
                                     </a>
                                 </div>

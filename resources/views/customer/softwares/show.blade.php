@@ -5,7 +5,7 @@
 @section('content_header')
     <div class="row mb-2">
         <div class="col-sm-12">
-            <a href="{{ route('customer-software.software.index') }}" class="btn btn-secondary btn-sm">
+            <a href="{{ route('customer-software.index') }}" class="btn btn-secondary btn-sm">
                 <i class="fas fa-arrow-left"></i> Kembali ke Catalog
             </a>
         </div>

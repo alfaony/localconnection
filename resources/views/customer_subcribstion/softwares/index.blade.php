@@ -74,7 +74,7 @@
                     
                     <br>
                     
-                    <a href="{{ route('customer-software.software.show', $software->slug) }}" class="btn {{ $software->has_available_slots ? 'btn-primary' : 'btn-secondary' }} btn-block">
+                    <a href="{{ route('customer-software.show', $software->slug) }}" class="btn {{ $software->has_available_slots ? 'btn-primary' : 'btn-secondary' }} btn-block">
                         <i class="fas fa-info-circle"></i> Lihat Detail
                     </a>
                 </div>

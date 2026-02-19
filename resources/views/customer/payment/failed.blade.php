@@ -65,7 +65,7 @@
                         <i class="fas fa-info-circle"></i> Pesanan tidak ditemukan. Silakan hubungi admin jika ada masalah.
                     </div>
                     <div class="mt-4">
-                        <a href="{{ route('customer-software.software.index') }}" class="btn btn-primary btn-lg">
+                        <a href="{{ route('customer-software.index') }}" class="btn btn-primary btn-lg">
                             <i class="fas fa-shopping-cart"></i> Coba Berlangganan Lagi
                         </a>
                     </div>

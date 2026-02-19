@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Customer;
 
+use App\Events\SubscriptionChatSent;
 use App\Http\Controllers\Controller;
 use App\Models\CustomerSubscription;
 use App\Models\SubscriptionChat;
@@ -81,14 +82,40 @@ class SubscriptionChatController extends Controller
                 'attachment'      => $path,
             ]);
 
-            // Kirim inbox ke PIC software
-            $subscription->load('software.pic');
-            $pic = $subscription->software->pic ?? null;
+            // Broadcast ke channel private subscription
+            broadcast(new SubscriptionChatSent(
+                $chat->id,
+                Auth::user()->name,
+                $chat->message ?? '',
+                $chat->attachment_url,
+                $chat->created_at->format('d M Y H:i'),
+                (int) $subscription->id,
+                Auth::id()
+            ))->toOthers();
 
-            if ($pic && $pic->id !== Auth::id()) {
-                $url     = route('subscription.show', $subscription->id);
-                $message = "💬 Customer *{$subscription->user->name}* mengirim pesan baru di subscription *{$subscription->software->nama}*: \"{$request->message}\"";
-                SentInbox::dispatch(Auth::id(), $pic->id, $message, $url);
+            // Kirim inbox ke semua user yang pernah terlibat dalam chat + PIC software
+            $subscription->load('software.pic', 'user');
+
+            $userIds = SubscriptionChat::where('subscription_id', $subscription->id)
+                ->where('user_id', '!=', Auth::id())
+                ->distinct()
+                ->pluck('user_id');
+
+            // Tambahkan PIC software jika ada dan bukan pengirim
+            $pic = $subscription->software->pic ?? null;
+            if ($pic) {
+                $userIds->push($pic->id);
+            }
+
+            $userIds = $userIds->unique()->filter();
+
+            $url     = route('subscription.show', $subscription->id);
+            $message = "💬 Customer *{$subscription->user->name}* mengirim pesan baru di subscription *{$subscription->software->nama}*: \"{$request->message}\"";
+
+            foreach ($userIds as $userId) {
+                if ($userId != Auth::id()) {
+                    SentInbox::dispatch(Auth::id(), $userId, $message, $url);
+                }
             }
 
             return response()->json([

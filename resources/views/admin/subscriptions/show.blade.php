@@ -329,9 +329,39 @@
 @section('js')
 <script>
 $(document).ready(function() {
-    const chatUrl  = '{{ route("subscription.chat.index", $subscription) }}';
-    const storeUrl = '{{ route("subscription.chat.store", $subscription) }}';
+    const chatUrl        = '{{ route("subscription.chat.index", $subscription) }}';
+    const storeUrl       = '{{ route("subscription.chat.store", $subscription) }}';
+    const subscriptionId = '{{ $subscription->id }}';
+    const myId           = parseInt('{{ auth()->id() }}');
 
+    // ── Helpers ────────────────────────────────────────────────────────────
+    function escapeHtml(str) {
+        if (!str) return '';
+        return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    function buildBubble(msg) {
+        const isMe = (parseInt(msg.sender_id) === myId) || msg.is_me === true;
+        const side = isMe ? 'me' : 'other';
+        let content = '';
+        if (msg.message) content += `<div class="bubble">${escapeHtml(msg.message)}</div>`;
+        if (msg.attachment_url) {
+            const isImg = /\.(jpg|jpeg|png)$/i.test(msg.attachment_url);
+            content += isImg
+                ? `<div class="chat-attachment"><img src="${msg.attachment_url}" onclick="window.open(this.src)"></div>`
+                : `<div class="chat-attachment mt-1"><a href="${msg.attachment_url}" target="_blank" class="btn btn-sm btn-outline-secondary"><i class="fas fa-file-download"></i> Download</a></div>`;
+        }
+        return `<div class="d-flex mb-2"><div class="chat-bubble ${side}"><div class="meta">${escapeHtml(msg.sender_name)} · ${msg.created_at}</div>${content}</div></div>`;
+    }
+
+    function appendMessage(msg) {
+        const $box = $('#chat-messages');
+        $box.find('.text-center.text-muted').remove();
+        $box.append(buildBubble(msg));
+        $box.scrollTop($box[0].scrollHeight);
+    }
+
+    // ── Load messages ──────────────────────────────────────────────────────
     function loadMessages() {
         $.get(chatUrl, function(data) {
             const $box = $('#chat-messages');
@@ -345,24 +375,7 @@ $(document).ready(function() {
         });
     }
 
-    function buildBubble(msg) {
-        const side = msg.is_me ? 'me' : 'other';
-        let content = '';
-        if (msg.message) content += `<div class="bubble">${escapeHtml(msg.message)}</div>`;
-        if (msg.attachment_url) {
-            const isImg = /\.(jpg|jpeg|png)$/i.test(msg.attachment_url);
-            content += isImg
-                ? `<div class="chat-attachment"><img src="${msg.attachment_url}" onclick="window.open(this.src)"></div>`
-                : `<div class="chat-attachment mt-1"><a href="${msg.attachment_url}" target="_blank" class="btn btn-sm btn-outline-secondary"><i class="fas fa-file-download"></i> Download</a></div>`;
-        }
-        return `<div class="d-flex mb-2"><div class="chat-bubble ${side}"><div class="meta">${escapeHtml(msg.sender_name)} · ${msg.created_at}</div>${content}</div></div>`;
-    }
-
-    function escapeHtml(str) {
-        if (!str) return '';
-        return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-    }
-
+    // ── Send message ───────────────────────────────────────────────────────
     $('#chat-form').on('submit', function(e) {
         e.preventDefault();
         const formData = new FormData(this);
@@ -372,10 +385,10 @@ $(document).ready(function() {
             headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
             success: function(res) {
                 if (res.success) {
-                    $('#chat-input').val(''); $('#chat-file').val(''); $('#file-preview').hide();
-                    const $box = $('#chat-messages');
-                    $box.append(buildBubble(res.message));
-                    $box.scrollTop($box[0].scrollHeight);
+                    $('#chat-input').val('');
+                    $('#chat-file').val('');
+                    $('#file-preview').hide();
+                    appendMessage(res.message);
                 }
             },
             error: function(xhr) { toastr.error(xhr.responseJSON?.error || 'Gagal mengirim pesan.'); },
@@ -383,6 +396,7 @@ $(document).ready(function() {
         });
     });
 
+    // ── File preview ───────────────────────────────────────────────────────
     $('#chat-file').on('change', function() {
         if (this.files[0]) { $('#file-name').text(this.files[0].name); $('#file-preview').show(); }
     });
@@ -390,6 +404,7 @@ $(document).ready(function() {
         e.preventDefault(); $('#chat-file').val(''); $('#file-preview').hide();
     });
 
+    // ── Toggle password ────────────────────────────────────────────────────
     $('#toggle-password').on('click', function() {
         const passwordField = $('#password-field');
         const icon = $(this).find('i');
@@ -402,7 +417,54 @@ $(document).ready(function() {
         }
     });
 
+    // ── Init ───────────────────────────────────────────────────────────────
     loadMessages();
 });
 </script>
+
+{{-- Reverb Echo: Setup sesuai pola item_request/show.blade.php --}}
+<script>
+    const subscriptionId = '{{ $subscription->id }}';
+    const currentClientId = parseInt('{{ auth()->id() }}');
+
+    const reverbHost = '{{ config('services.connection_reverb.host') }}';
+    const reverbKey  = '{{ config('services.connection_reverb.key') }}';
+    const reverbPort = '{{ config('services.connection_reverb.port') }}';
+
+    window.Pusher = Pusher;
+
+    window.Echo = new Echo.default({
+        broadcaster: 'reverb',
+        key: reverbKey,
+        wsHost: reverbHost,
+        wsPort: 8080,
+        wssPort: reverbPort,
+        forceTLS: true,
+        enabledTransports: ['ws', 'wss'],
+        authEndpoint: '/broadcasting/authorize',
+        disableStats: true,
+    });
+
+    window.Echo.private('subscription.chat.' + subscriptionId)
+        .listen('SubscriptionChatSent', function(e) {
+            if (parseInt(e.sender_id) !== currentClientId) {
+                const side = 'other';
+                const $box = $('#chat-messages');
+                $box.find('.text-center.text-muted').remove();
+
+                let content = '';
+                if (e.message) content += `<div class="bubble">${e.message.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>`;
+                if (e.attachment_url) {
+                    const isImg = /\.(jpg|jpeg|png)$/i.test(e.attachment_url);
+                    content += isImg
+                        ? `<div class="chat-attachment"><img src="${e.attachment_url}" onclick="window.open(this.src)"></div>`
+                        : `<div class="chat-attachment mt-1"><a href="${e.attachment_url}" target="_blank" class="btn btn-sm btn-outline-secondary"><i class="fas fa-file-download"></i> Download</a></div>`;
+                }
+
+                $box.append(`<div class="d-flex mb-2"><div class="chat-bubble ${side}"><div class="meta">${e.sender_name} · ${e.created_at}</div>${content}</div></div>`);
+                $box.scrollTop($box[0].scrollHeight);
+            }
+        });
+</script>
 @stop
+

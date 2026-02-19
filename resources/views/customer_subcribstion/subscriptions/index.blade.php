@@ -9,7 +9,7 @@
         </div>
         <div class="col-sm-6">
             <div class="float-sm-right">
-                <a href="{{ route('customer-software.software.index') }}" class="btn btn-primary">
+                <a href="{{ route('customer-software.index') }}" class="btn btn-primary">
                     <i class="fas fa-plus"></i> Langganan Baru
                 </a>
             </div>
@@ -110,7 +110,7 @@
                     <div class="callout callout-info text-center">
                         <h5><i class="fas fa-info-circle"></i> Belum ada langganan</h5>
                         <p>Anda belum memiliki langganan aktif. Mulai langganan sekarang!</p>
-                        <a href="{{ route('customer-software.software.index') }}" class="btn btn-primary">
+                        <a href="{{ route('customer-software.index') }}" class="btn btn-primary">
                             <i class="fas fa-plus"></i> Pilih Software
                         </a>
                     </div>
