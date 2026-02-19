@@ -7,9 +7,10 @@ use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
 use Maatwebsite\Excel\Concerns\WithStyles;
 use Maatwebsite\Excel\Concerns\WithTitle;
+use Maatwebsite\Excel\Concerns\WithMultipleSheets;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
-class ReportPointProductivityExport implements FromCollection, WithHeadings, WithMapping, WithStyles, WithTitle
+class ReportPointProductivityExport implements WithMultipleSheets
 {
     protected $reports;
     protected $startDate;
@@ -17,55 +18,16 @@ class ReportPointProductivityExport implements FromCollection, WithHeadings, Wit
 
     public function __construct($reports, $startDate, $endDate)
     {
-        $this->reports = $reports;
+        $this->reports   = $reports;
         $this->startDate = $startDate;
-        $this->endDate = $endDate;
+        $this->endDate   = $endDate;
     }
 
-    public function collection()
-    {
-        return collect($this->reports);
-    }
-
-    public function headings(): array
+    public function sheets(): array
     {
         return [
-            'Perusahaan',
-            'Divisi',
-            'Name',
-            'Poin Training',
-            'Poin Hak Cipta',
-            'Poin Pencapaian Penjualan',
-            'Point Tugas',
-            'Point Punishment',
-            'Total Poin'
+            new ReportPointProductivitySummarySheet($this->reports, $this->startDate, $this->endDate),
+            new ReportPointProductivityDetailSheet($this->reports, $this->startDate, $this->endDate),
         ];
-    }
-
-    public function map($report): array
-    {
-        return [
-            $report['company'],
-            $report['division'],
-            $report['name'],
-            $report['training_points'],
-            $report['ip_right_points'],
-            $report['sales_achievement_points'],
-            $report['daily_task_points'],
-            $report['punishment_points'],
-            $report['total_points'],
-        ];
-    }
-
-    public function styles(Worksheet $sheet)
-    {
-        return [
-            1 => ['font' => ['bold' => true]],
-        ];
-    }
-
-    public function title(): string
-    {
-        return 'Report Productivity';
     }
 }
