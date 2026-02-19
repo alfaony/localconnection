@@ -82,16 +82,16 @@ class SubscriptionChatController extends Controller
                 'attachment'      => $path,
             ]);
 
-            // Broadcast ke channel private subscription
+            // Broadcast ke channel private subscription (kirim ke semua subscriber termasuk admin)
             broadcast(new SubscriptionChatSent(
                 $chat->id,
                 Auth::user()->name,
                 $chat->message ?? '',
                 $chat->attachment_url,
                 $chat->created_at->format('d M Y H:i'),
-                (int) $subscription->id,
+                (string) $subscription->id,
                 Auth::id()
-            ))->toOthers();
+            ));
 
             // Kirim inbox ke semua user yang pernah terlibat dalam chat + PIC software
             $subscription->load('software.pic', 'user');
@@ -112,11 +112,11 @@ class SubscriptionChatController extends Controller
             $url     = route('subscription.show', $subscription->id);
             $message = "💬 Customer *{$subscription->user->name}* mengirim pesan baru di subscription *{$subscription->software->nama}*: \"{$request->message}\"";
 
-            foreach ($userIds as $userId) {
-                if ($userId != Auth::id()) {
-                    SentInbox::dispatch(Auth::id(), $userId, $message, $url);
-                }
-            }
+            // foreach ($userIds as $userId) {
+            //     if ($userId != Auth::id()) {
+            //         SentInbox::dispatch(Auth::id(), $userId, $message, $url);
+            //     }
+            // }
 
             return response()->json([
                 'success' => true,

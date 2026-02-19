@@ -350,149 +350,165 @@
 @stop
 
 @section('js')
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.0/js/all.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/js/adminlte.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-smooth-scroll/2.2.0/jquery.smooth-scroll.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
+
+<!-- 🎵 Notifikasi Suara -->
+ 
+<audio id="notification-sound-update" src="/audio/notification-chat.mp3" preload="auto"></audio>
+<!-- Tambahkan ini di <head> atau sebelum penutup </body> -->
+<script src="https://cdn.jsdelivr.net/npm/pusher-js@7.2.0/dist/web/pusher.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/laravel-echo/dist/echo.iife.js"></script>
 <script>
-$(document).ready(function() {
-    const subscriptionId = '{{ $subscription->id }}';
-    const chatUrl        = '{{ route("customer-software.subscription.chat.index", $subscription) }}';
-    const storeUrl       = '{{ route("customer-software.subscription.chat.store", $subscription) }}';
-    const myId           = parseInt('{{ auth()->id() }}');
-    let canChat          = false;
+    $(document).ready(function() {
+        const subscriptionId = '{{ $subscription->id }}';
+        const chatUrl        = '{{ route("customer-software.subscription.chat.index", $subscription) }}';
+        const storeUrl       = '{{ route("customer-software.subscription.chat.store", $subscription) }}';
+        const myId           = parseInt('{{ auth()->id() }}');
+        let canChat          = false;
 
-    // ── Load messages (initial load) ───────────────────────────────────────
-    function loadMessages() {
-        $.get(chatUrl, function(data) {
-            canChat = data.can_chat;
-            const $box = $('#chat-messages');
-            $box.empty();
+        // ── Load messages (initial load) ───────────────────────────────────────
+        function loadMessages() {
+            $.get(chatUrl, function(data) {
+                canChat = data.can_chat;
+                const $box = $('#chat-messages');
+                $box.empty();
 
-            if (data.messages.length === 0) {
-                $box.html('<div class="text-center text-muted py-4"><i class="fas fa-comments fa-2x mb-2"></i><br>Belum ada pesan. Mulai percakapan!</div>');
-                return;
-            }
-
-            data.messages.forEach(function(msg) {
-                $box.append(buildBubble(msg));
-            });
-            $box.scrollTop($box[0].scrollHeight);
-        });
-    }
-
-    function buildBubble(msg) {
-        const isMe = (parseInt(msg.sender_id) === myId) || msg.is_me === true;
-        const side = isMe ? 'me' : 'other';
-        let content = '';
-        if (msg.message) content += `<div class="bubble">${escapeHtml(msg.message)}</div>`;
-        if (msg.attachment_url) {
-            const isImg = /\.(jpg|jpeg|png)$/i.test(msg.attachment_url);
-            content += isImg
-                ? `<div class="chat-attachment"><img src="${msg.attachment_url}" onclick="window.open(this.src)"></div>`
-                : `<div class="chat-attachment mt-1"><a href="${msg.attachment_url}" target="_blank" class="btn btn-sm btn-outline-secondary"><i class="fas fa-file-download"></i> Download</a></div>`;
-        }
-        return `<div class="d-flex mb-2">
-            <div class="chat-bubble ${side}">
-                <div class="meta">${escapeHtml(msg.sender_name)} · ${msg.created_at}</div>
-                ${content}
-            </div>
-        </div>`;
-    }
-
-    function escapeHtml(str) {
-        if (!str) return '';
-        return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-    }
-
-    function appendMessage(msg) {
-        const $box = $('#chat-messages');
-        // Hapus placeholder "belum ada pesan" jika ada
-        $box.find('.text-center.text-muted').remove();
-        $box.append(buildBubble(msg));
-        $box.scrollTop($box[0].scrollHeight);
-    }
-
-
-    // ── Send message ───────────────────────────────────────────────────────
-    $('#chat-form').on('submit', function(e) {
-        e.preventDefault();
-        const formData = new FormData(this);
-        const $btn = $('#chat-send').prop('disabled', true);
-
-        $.ajax({
-            url: storeUrl,
-            type: 'POST',
-            data: formData,
-            processData: false,
-            contentType: false,
-            headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
-            success: function(res) {
-                if (res.success) {
-                    $('#chat-input').val('');
-                    $('#chat-file').val('');
-                    $('#file-preview').hide();
-                    appendMessage(res.message);
+                if (data.messages.length === 0) {
+                    $box.html('<div class="text-center text-muted py-4"><i class="fas fa-comments fa-2x mb-2"></i><br>Belum ada pesan. Mulai percakapan!</div>');
+                    return;
                 }
-            },
-            error: function(xhr) {
-                const err = xhr.responseJSON?.error || 'Gagal mengirim pesan.';
-                toastr.error(err);
-            },
-            complete: function() { $btn.prop('disabled', false); }
+
+                data.messages.forEach(function(msg) {
+                    $box.append(buildBubble(msg));
+                });
+                $box.scrollTop($box[0].scrollHeight);
+            });
+        }
+
+        function buildBubble(msg) {
+            const isMe = (parseInt(msg.sender_id) === myId) || msg.is_me === true;
+            const side = isMe ? 'me' : 'other';
+            let content = '';
+            if (msg.message) content += `<div class="bubble">${escapeHtml(msg.message)}</div>`;
+            if (msg.attachment_url) {
+                const isImg = /\.(jpg|jpeg|png)$/i.test(msg.attachment_url);
+                content += isImg
+                    ? `<div class="chat-attachment"><img src="${msg.attachment_url}" onclick="window.open(this.src)"></div>`
+                    : `<div class="chat-attachment mt-1"><a href="${msg.attachment_url}" target="_blank" class="btn btn-sm btn-outline-secondary"><i class="fas fa-file-download"></i> Download</a></div>`;
+            }
+            return `<div class="d-flex mb-2">
+                <div class="chat-bubble ${side}">
+                    <div class="meta">${escapeHtml(msg.sender_name)} · ${msg.created_at}</div>
+                    ${content}
+                </div>
+            </div>`;
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+        }
+
+        function appendMessage(msg) {
+            const $box = $('#chat-messages');
+            // Hapus placeholder "belum ada pesan" jika ada
+            $box.find('.text-center.text-muted').remove();
+            $box.append(buildBubble(msg));
+            $box.scrollTop($box[0].scrollHeight);
+        }
+
+
+        // ── Send message ───────────────────────────────────────────────────────
+        $('#chat-form').on('submit', function(e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+            const $btn = $('#chat-send').prop('disabled', true);
+
+            $.ajax({
+                url: storeUrl,
+                type: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
+                success: function(res) {
+                    if (res.success) {
+                        $('#chat-input').val('');
+                        $('#chat-file').val('');
+                        $('#file-preview').hide();
+                        // appendMessage(res.message);
+                        loadMessages();
+                    }
+                },
+                error: function(xhr) {
+                    const err = xhr.responseJSON?.error || 'Gagal mengirim pesan.';
+                    toastr.error(err);
+                },
+                complete: function() { $btn.prop('disabled', false); }
+            });
         });
-    });
 
-    // ── File preview ───────────────────────────────────────────────────────
-    $('#chat-file').on('change', function() {
-        if (this.files[0]) {
-            $('#file-name').text(this.files[0].name);
-            $('#file-preview').show();
-        }
-    });
-    $('#remove-file').on('click', function(e) {
-        e.preventDefault();
-        $('#chat-file').val('');
-        $('#file-preview').hide();
-    });
+        // ── File preview ───────────────────────────────────────────────────────
+        $('#chat-file').on('change', function() {
+            if (this.files[0]) {
+                $('#file-name').text(this.files[0].name);
+                $('#file-preview').show();
+            }
+        });
+        $('#remove-file').on('click', function(e) {
+            e.preventDefault();
+            $('#chat-file').val('');
+            $('#file-preview').hide();
+        });
 
-    // ── Toggle password ────────────────────────────────────────────────────
-    $('#toggle-password').on('click', function() {
-        const passwordField = $('#password-field');
-        const icon = $(this).find('i');
-        if (passwordField.attr('type') === 'password') {
-            passwordField.attr('type', 'text');
-            icon.removeClass('fa-eye').addClass('fa-eye-slash');
-        } else {
-            passwordField.attr('type', 'password');
-            icon.removeClass('fa-eye-slash').addClass('fa-eye');
-        }
-    });
+        // ── Toggle password ────────────────────────────────────────────────────
+        $('#toggle-password').on('click', function() {
+            const passwordField = $('#password-field');
+            const icon = $(this).find('i');
+            if (passwordField.attr('type') === 'password') {
+                passwordField.attr('type', 'text');
+                icon.removeClass('fa-eye').addClass('fa-eye-slash');
+            } else {
+                passwordField.attr('type', 'password');
+                icon.removeClass('fa-eye-slash').addClass('fa-eye');
+            }
+        });
 
-    // ── Copy to clipboard ──────────────────────────────────────────────────
-    $('.copy-btn').on('click', function() {
-        const text = $(this).data('copy');
-        const btn = $(this);
-        navigator.clipboard.writeText(text).then(function() {
-            const originalHtml = btn.html();
-            btn.html('<i class="fas fa-check"></i>');
-            toastr.success('Berhasil disalin!');
-            setTimeout(function() { btn.html(originalHtml); }, 2000);
-        }).catch(function() { toastr.error('Gagal menyalin'); });
-    });
+        // ── Copy to clipboard ──────────────────────────────────────────────────
+        $('.copy-btn').on('click', function() {
+            const text = $(this).data('copy');
+            const btn = $(this);
+            navigator.clipboard.writeText(text).then(function() {
+                const originalHtml = btn.html();
+                btn.html('<i class="fas fa-check"></i>');
+                toastr.success('Berhasil disalin!');
+                setTimeout(function() { btn.html(originalHtml); }, 2000);
+            }).catch(function() { toastr.error('Gagal menyalin'); });
+        });
 
-    // ── Broadcast: Dengarkan pesan baru via Echo (Reverb) ─────────────────
-    @if($subscription->payment_status == 'paid')
-    loadMessages();
-    @endif
-});
+        // ── Broadcast: Dengarkan pesan baru via Echo (Reverb) ─────────────────
+        @if($subscription->payment_status == 'paid')
+        loadMessages();
+        @endif
+    });
 </script>
 
-{{-- Reverb Echo: Setup sesuai pola item_request/show.blade.php --}}
 @if($subscription->payment_status == 'paid')
 <script>
     const _subId      = '{{ $subscription->id }}';
-    const _myId       = parseInt('{{ auth()->id() }}');
+    const _myId       = '{{ auth()->id() }}';
     const _reverbHost = '{{ config('services.connection_reverb.host') }}';
     const _reverbKey  = '{{ config('services.connection_reverb.key') }}';
     const _reverbPort = '{{ config('services.connection_reverb.port') }}';
+    const notifSound = document.getElementById('notification-sound-update');
 
+    console.log('Customer Echo ready for subscription:', _subId);
+    
     window.Pusher = Pusher;
 
     window.Echo = new Echo.default({
@@ -509,8 +525,9 @@ $(document).ready(function() {
 
     window.Echo.private('subscription.chat.' + _subId)
         .listen('SubscriptionChatSent', function(e) {
+            
             // Hanya append jika bukan pesan sendiri (pengirim sudah dapat via AJAX response)
-            if (parseInt(e.sender_id) !== _myId) {
+            if (e.sender_id !== _myId) {
                 const $box = $('#chat-messages');
                 $box.find('.text-center.text-muted').remove();
 
@@ -533,6 +550,8 @@ $(document).ready(function() {
                     </div>
                 </div>`);
                 $box.scrollTop($box[0].scrollHeight);
+
+                notifSound?.play();
             }
         });
 </script>

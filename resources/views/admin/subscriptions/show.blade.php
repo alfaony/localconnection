@@ -327,6 +327,19 @@
 @stop
 
 @section('js')
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.0/js/all.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/js/adminlte.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-smooth-scroll/2.2.0/jquery.smooth-scroll.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
+
+<!-- 🎵 Notifikasi Suara -->
+ 
+<audio id="notification-sound-update" src="/audio/notification-update-item-request.mp3" preload="auto"></audio>
+<!-- Tambahkan ini di <head> atau sebelum penutup </body> -->
+<script src="https://cdn.jsdelivr.net/npm/pusher-js@7.2.0/dist/web/pusher.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/laravel-echo/dist/echo.iife.js"></script>
 <script>
 $(document).ready(function() {
     const chatUrl        = '{{ route("subscription.chat.index", $subscription) }}';
@@ -422,14 +435,13 @@ $(document).ready(function() {
 });
 </script>
 
-{{-- Reverb Echo: Setup sesuai pola item_request/show.blade.php --}}
 <script>
-    const subscriptionId = '{{ $subscription->id }}';
-    const currentClientId = parseInt('{{ auth()->id() }}');
-
     const reverbHost = '{{ config('services.connection_reverb.host') }}';
     const reverbKey  = '{{ config('services.connection_reverb.key') }}';
     const reverbPort = '{{ config('services.connection_reverb.port') }}';
+    const adminSubscriptionId = '{{ $subscription->id }}';
+    const adminCurrentId = '{{ auth()->id() }}';
+    const notifSound = document.getElementById('notification-sound-update');
 
     window.Pusher = Pusher;
 
@@ -445,10 +457,11 @@ $(document).ready(function() {
         disableStats: true,
     });
 
-    window.Echo.private('subscription.chat.' + subscriptionId)
+    window.Echo.private('subscription.chat.' + adminSubscriptionId)
         .listen('SubscriptionChatSent', function(e) {
-            if (parseInt(e.sender_id) !== currentClientId) {
-                const side = 'other';
+            console.log('ADMIN received:', e.sender_id, adminCurrentId);
+
+            if (e.sender_id !== adminCurrentId) {
                 const $box = $('#chat-messages');
                 $box.find('.text-center.text-muted').remove();
 
@@ -461,10 +474,11 @@ $(document).ready(function() {
                         : `<div class="chat-attachment mt-1"><a href="${e.attachment_url}" target="_blank" class="btn btn-sm btn-outline-secondary"><i class="fas fa-file-download"></i> Download</a></div>`;
                 }
 
-                $box.append(`<div class="d-flex mb-2"><div class="chat-bubble ${side}"><div class="meta">${e.sender_name} · ${e.created_at}</div>${content}</div></div>`);
+                $box.append(`<div class="d-flex mb-2"><div class="chat-bubble other"><div class="meta">${e.sender_name} · ${e.created_at}</div>${content}</div></div>`);
                 $box.scrollTop($box[0].scrollHeight);
+
+                notifSound?.play();
             }
         });
 </script>
 @stop
-
