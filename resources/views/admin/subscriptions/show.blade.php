@@ -486,7 +486,5 @@
             }
         });
 </script>
-@endcanAccess
-@endcanAccess
         
 @stop

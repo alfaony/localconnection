@@ -92,7 +92,7 @@
                                     @endif
                                     
                                     <div class="mt-2">
-                                        @canAccess('show','software_customers')
+                                        @canAccess('show','customer_subscriptions')
                                         <a href="{{ route('customer-subscription.show', $subscription) }}" class="btn btn-info btn-sm">
                                             <i class="fas fa-eye"></i> Detail
                                         </a>
