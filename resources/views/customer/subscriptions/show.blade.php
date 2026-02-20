@@ -5,7 +5,7 @@
 @section('content_header')
     <div class="row mb-2">
         <div class="col-sm-12">
-            <a href="{{ route('customer-software.subscription.index') }}" class="btn btn-secondary btn-sm">
+            <a href="{{ route('customer-subscription.index') }}" class="btn btn-secondary btn-sm">
                 <i class="fas fa-arrow-left"></i> Kembali ke My Subscriptions
             </a>
         </div>
@@ -143,6 +143,9 @@
 
             {{-- Chat Section --}}
             @if($subscription->payment_status == 'paid')
+            @canAccess('index','customer_subscriptions')
+            @canAccess('store','customer_subscriptions')
+
             <div class="card" id="chat-card">
                 <div class="card-header">
                     <h5 class="card-title mb-0">
@@ -203,6 +206,9 @@
                     @endif
                 </div>
             </div>
+            
+            @endcanAccess
+            @endcanAccess
             @endif
         </div>
 
@@ -322,14 +328,16 @@
                 </div>
                 <div class="card-body">
                     @if($subscription->status == 'expired' || $subscription->isExpiringSoon(7))
-                    <a href="{{ route('customer-software.subscription.renew', $subscription) }}" class="btn btn-success btn-block">
+                    <a href="{{ route('customer-subscription.renew', $subscription) }}" class="btn btn-success btn-block">
                         <i class="fas fa-sync"></i> Perpanjang Langganan
                     </a>
                     @endif
                     
-                    <a href="{{ route('customer-software.subscription.payments', $subscription) }}" class="btn btn-info btn-block">
+                    @canAccess('payments','customer_subscriptions')
+                    <a href="{{ route('customer-subscription.payments', $subscription) }}" class="btn btn-info btn-block">
                         <i class="fas fa-money-bill"></i> Riwayat Pembayaran
                     </a>
+                    @endcanAccess
                 </div>
             </div>
         </div>
@@ -363,11 +371,14 @@
 <!-- Tambahkan ini di <head> atau sebelum penutup </body> -->
 <script src="https://cdn.jsdelivr.net/npm/pusher-js@7.2.0/dist/web/pusher.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/laravel-echo/dist/echo.iife.js"></script>
+
+@canAccess('index','customer_subscriptions')
+@canAccess('store','customer_subscriptions')
 <script>
     $(document).ready(function() {
         const subscriptionId = '{{ $subscription->id }}';
-        const chatUrl        = '{{ route("customer-software.subscription.chat.index", $subscription) }}';
-        const storeUrl       = '{{ route("customer-software.subscription.chat.store", $subscription) }}';
+        const chatUrl        = '{{ route("subscription.chat.index", $subscription) }}';
+        const storeUrl       = '{{ route("subscription.chat.store", $subscription) }}';
         const myId           = parseInt('{{ auth()->id() }}');
         let canChat          = false;
 
@@ -556,4 +567,7 @@
         });
 </script>
 @endif
+@endcanAccess
+@endcanAccess
+
 @stop

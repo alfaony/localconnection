@@ -86,8 +86,9 @@
                                         <small class="text-muted">{{ $package->durasi_hari }} hari ({{ $package->duration_in_months }} bulan)</small>
                                     </div>
                                     
+                                    @canAccess('show','customer_checkouts')
                                     @if($hasAvailableSlots)
-                                    <a href="{{ route('customer-software.checkout.show', [$software->slug, $package->id]) }}" 
+                                    <a href="{{ route('customer-checkout.show', [$software->slug, $package->id]) }}" 
                                        class="btn btn-success btn-block btn-lg">
                                         <i class="fas fa-shopping-cart"></i> Beli Sekarang
                                     </a>
@@ -96,6 +97,7 @@
                                         <i class="fas fa-ban"></i> Slot Penuh
                                     </button>
                                     @endif
+                                    @endcanAccess
                                 </div>
                             </div>
                         </div>

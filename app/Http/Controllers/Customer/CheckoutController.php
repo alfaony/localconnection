@@ -188,7 +188,7 @@ class CheckoutController extends Controller
             case 'manual':
                 // Redirect to payment pending page
                 return redirect()
-                    ->route('customer-software.payment.pending', ['order' => $subscription->order_number])
+                    ->route('customer-checkout.payment.pending', ['order' => $subscription->order_number])
                     ->with('success', 'Pesanan berhasil dibuat. Silakan lakukan pembayaran.');
 
             case 'xendit':

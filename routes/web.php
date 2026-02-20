@@ -797,97 +797,53 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
     // ========================================================================
     // SUBSCRIPTION CHAT (Admin)
     // ========================================================================
-    Route::get('subscription/{subscription}/chat', [AdminSubscriptionChatController::class, 'index'])
-        ->name('subscription.chat.index');
-    Route::post('subscription/{subscription}/chat', [AdminSubscriptionChatController::class, 'store'])
-        ->name('subscription.chat.store');
+    Route::get('subscription/{subscription}/chat', [AdminSubscriptionChatController::class, 'index'])->name('subscription.chat.index');
+    Route::post('subscription/{subscription}/chat', [AdminSubscriptionChatController::class, 'store'])->name('subscription.chat.store');
 
-});
+      // ========================================================================
+      // SOFTWARE CATALOG
+      // ========================================================================
+      Route::get('customer-software', [CustomerSoftwareController::class, 'index'])->name('customer-software.index');
+      Route::get('customer-software/{slug}', [CustomerSoftwareController::class, 'show'])->name('customer-software.show');
 
+      // ========================================================================
+      // CHECKOUT PROCESS
+      // ========================================================================   
+      Route::post('customer-checkout/{slug}/{package}', [CustomerCheckoutController::class, 'process'])->name('customer-checkout.process');
+      Route::get('customer-checkout/{slug}/{package}', [CustomerCheckoutController::class, 'show'])->name('customer-checkout.show');
+      Route::get('customer-checkout/payment/pending/{order}', [CustomerCheckoutController::class, 'paymentPending'])->name('customer-checkout.payment.pending');
 
-// ============================================================================
-// CUSTOMER ROUTES (Auth + Verified Required)
-// ============================================================================
-Route::middleware(['auth', 'verified'])->prefix('customer-software')->name('customer-software.')->group(function () {
-    
-    // ========================================================================
-    // CHECKOUT PROCESS
-    // ========================================================================
-    
-    // Show checkout page
-    Route::get('/checkout/{slug}/{package}', [CustomerCheckoutController::class, 'show'])
-        ->name('checkout.show');
-    
-    // Process checkout (create subscription + payment)
-    Route::post('/checkout/{slug}/{package}', [CustomerCheckoutController::class, 'process'])
-        ->name('checkout.process');
-    
-    // ========================================================================
-    // MY subscription
-    // ========================================================================
-    
-    // List my subscription
-    Route::get('/subscription', [CustomerSubscriptionController::class, 'index'])
-        ->name('subscription.index');
-    
-    // View subscription detail (with credentials if active+paid)
-    Route::get('/subscription/{subscription}', [CustomerSubscriptionController::class, 'show'])
-        ->name('subscription.show');
-    
-    // Show renewal form
-    Route::get('/subscription/{subscription}/renew', [CustomerSubscriptionController::class, 'renew'])
-        ->name('subscription.renew');
-    
-    // Process renewal
-    Route::post('/subscription/{subscription}/renew', [CustomerSubscriptionController::class, 'processRenewal'])
-        ->name('subscription.process-renewal');
-    
-    // View payment history for subscription
-    Route::get('/subscription/{subscription}/payments', [CustomerSubscriptionController::class, 'payments'])
-        ->name('subscription.payments');
-    
-    // ========================================================================
-    // PAYMENT HANDLING
-    // ========================================================================
-    
-    // Payment pending page (for manual transfer)
-    Route::get('/payment/pending/{order}', [CustomerCheckoutController::class, 'paymentPending'])
-        ->name('payment.pending');
-    
-    // Payment success (redirect from Xendit)
-    Route::get('/payment/success', [SubscriptionPaymentController::class, 'success'])
-        ->name('payment.success');
-    
-    // Payment failed (redirect from Xendit)
-    Route::get('/payment/failed', [SubscriptionPaymentController::class, 'failed'])
-        ->name('payment.failed');
+      // ========================================================================
+      // MY subscription
+      // ========================================================================
+      Route::get('customer-subscription', [CustomerSubscriptionController::class, 'index'])->name('customer-subscription.index');
+      // View subscription detail (with credentials if active+paid)
+      Route::get('customer-subscription/{subscription}', [CustomerSubscriptionController::class, 'show'])->name('customer-subscription.show');
+      // Show renewal form
+      Route::get('customer-subscription/{subscription}/renew', [CustomerSubscriptionController::class, 'renew'])->name('customer-subscription.renew');
+      // Process renewal
+      Route::post('customer-subscription/{subscription}/renew', [CustomerSubscriptionController::class, 'processRenewal'])->name('customer-subscription.process-renewal');
+      // View payment history for subscription
+      Route::get('customer-subscription/{subscription}/payments', [CustomerSubscriptionController::class, 'payments'])->name('customer-subscription.payments');
 
-    // Upload proof of transfer
-    Route::post('/payment/{payment}/upload-proof', [SubscriptionPaymentController::class, 'uploadProof'])
-        ->middleware('auth')
-        ->name('payment.upload-proof');
-    
-    // Check payment status (AJAX)
-    Route::get('/payment/check-status/{orderNumber}', [SubscriptionPaymentController::class, 'checkStatus'])
-        ->name('payment.check-status');
+      // ========================================================================
+      // PAYMENT HANDLING
+      // ========================================================================    
+      Route::get('subscription-payment/success', [SubscriptionPaymentController::class, 'success'])->name('subscription-payment.success');
+      // Payment failed (redirect from Xendit)
+      Route::get('subscription-payment/failed', [SubscriptionPaymentController::class, 'failed'])->name('subscription-payment.failed');
+      // Upload proof of transfer
+      Route::post('subscription-payment/{payment}/upload-proof', [SubscriptionPaymentController::class, 'uploadProof'])->name('subscription-payment.upload-proof');
+      // Check payment status (AJAX)
+      Route::get('subscription-payment/check-status/{orderNumber}', [SubscriptionPaymentController::class, 'checkStatus'])->name('subscription-payment.check-status');
 
-    // ========================================================================
-    // SUBSCRIPTION CHAT
-    // ========================================================================
-    Route::get('/subscription/{subscription}/chat', [CustomerSubscriptionChatController::class, 'index'])
-        ->name('subscription.chat.index');
-    Route::post('/subscription/{subscription}/chat', [CustomerSubscriptionChatController::class, 'store'])
-        ->name('subscription.chat.store');
-});
+      // ========================================================================
+      // SUBSCRIPTION CHAT
+      // ========================================================================
+      Route::get('customer-subscription/{subscription}/chat', [CustomerSubscriptionChatController::class, 'index'])->name('subscription.chat.index');
+      Route::post('customer-subscription/{subscription}/chat', [CustomerSubscriptionChatController::class, 'store'])->name('subscription.chat.store');
+    });
 
-// ========================================================================
-// SOFTWARE CATALOG
-// ========================================================================
-Route::get('customer-software', [CustomerSoftwareController::class, 'index'])->name('customer-software.index');
-Route::get('customer-software/{slug}', [CustomerSoftwareController::class, 'show'])->name('customer-software.show');
-
-
-    
 
   Route::get('internet-customer/registration/{companyId}', InternetCustomerForm::class)->name('internet-customer.create');
   Route::get('internet-customer/customer-active/{code}', CustomerShow::class)->name('internet-customer.customer.show');

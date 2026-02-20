@@ -52,10 +52,10 @@
                     @endif
 
                     <div class="mt-4">
-                        <a href="{{ route('customer-software.subscription.show', $subscription) }}" class="btn btn-success btn-lg mr-2">
+                        <a href="{{ route('customer-subscription.show', $subscription) }}" class="btn btn-success btn-lg mr-2">
                             <i class="fas fa-eye"></i> Lihat Detail Subscription
                         </a>
-                        <a href="{{ route('customer-software.subscription.index') }}" class="btn btn-outline-success btn-lg">
+                        <a href="{{ route('customer-subscription.index') }}" class="btn btn-outline-success btn-lg">
                             <i class="fas fa-list"></i> My Subscriptions
                         </a>
                     </div>
@@ -64,7 +64,7 @@
                         <i class="fas fa-info-circle"></i> Silakan cek email Anda untuk detail lebih lanjut.
                     </div>
                     <div class="mt-4">
-                        <a href="{{ route('customer-software.subscription.index') }}" class="btn btn-success btn-lg">
+                        <a href="{{ route('customer-subscription.index') }}" class="btn btn-success btn-lg">
                             <i class="fas fa-list"></i> My Subscriptions
                         </a>
                     </div>

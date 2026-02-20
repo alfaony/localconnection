@@ -100,14 +100,14 @@ class SubscriptionChatController extends Controller
 
             $userIds = $userIds->unique()->filter();
 
-            $url     = route('customer-software.subscription.show', $subscription->id);
+            $url     = route('customer-subscription.show', $subscription->id);
             $message = "💬 Ada pesan baru dari admin untuk subscription *{$subscription->software->nama}*: \"{$request->message}\"";
 
-            // foreach ($userIds as $userId) {
-            //     if ($userId != Auth::id()) {
-            //         SentInbox::dispatch(Auth::id(), $userId, $message, $url);
-            //     }
-            // }
+            foreach ($userIds as $userId) {
+                if ($userId != Auth::id()) {
+                    SentInbox::dispatch(Auth::id(), $userId, $message, $url);
+                }
+            }
 
             return response()->json([
                 'success' => true,

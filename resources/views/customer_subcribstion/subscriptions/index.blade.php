@@ -40,7 +40,7 @@
                         </button>
                     </div>
                     <div class="col-md-2">
-                        <a href="{{ route('customer-software.subscription.index') }}" class="btn btn-secondary btn-block">
+                        <a href="{{ route('customer-subscription.index') }}" class="btn btn-secondary btn-block">
                             <i class="fas fa-redo"></i> Reset
                         </a>
                     </div>
@@ -90,12 +90,12 @@
                                     @endif
                                     
                                     <div class="mt-2">
-                                        <a href="{{ route('customer-software.subscription.show', $subscription) }}" class="btn btn-info btn-sm">
+                                        <a href="{{ route('customer-subscription.show', $subscription) }}" class="btn btn-info btn-sm">
                                             <i class="fas fa-eye"></i> Detail
                                         </a>
                                         
                                         @if($subscription->status == 'expired' || $subscription->isExpiringSoon(7))
-                                        <a href="{{ route('customer-software.subscription.renew', $subscription) }}" class="btn btn-success btn-sm">
+                                        <a href="{{ route('customer-subscription.renew', $subscription) }}" class="btn btn-success btn-sm">
                                             <i class="fas fa-sync"></i> Perpanjang
                                         </a>
                                         @endif

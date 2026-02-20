@@ -116,6 +116,7 @@
                 </div>
 
                 <!-- Right Column - Upload Form -->
+                @canAccess('uploadProof','subscription_payments')
                 <div class="col-lg-5">
                     <div class="card shadow-sm border-0 sticky-top" style="top: 20px;">
                         <div class="card-header bg-success text-white">
@@ -164,7 +165,7 @@
                                 </div>
 
                                 <!-- Upload Form -->
-                                <form action="{{ route('customer-software.payment.upload-proof', $payment->id) }}" 
+                                <form action="{{ route('subscription-payment.upload-proof', $payment->id) }}" 
                                       method="POST" 
                                       enctype="multipart/form-data"
                                       id="uploadProofForm">
@@ -241,11 +242,12 @@
                         </div>
                     </div>
                 </div>
+                @endcanAccess
             </div>
 
             <!-- Action Buttons -->
             <div class="text-center mt-5">
-                <a href="{{ route('customer-software.subscription.index') }}" class="btn btn-primary btn-md me-2">
+                <a href="{{ route('customer-subscription.index') }}" class="btn btn-primary btn-md me-2">
                     <i class="fas fa-list me-2"></i>Lihat Langganan Saya
                 </a>
                 <a href="{{ route('customer-software.index') }}" class="btn btn-outline-secondary btn-md">

@@ -74,9 +74,11 @@
                     
                     <br>
                     
+                    @canAccess('show','customer_softwares')
                     <a href="{{ route('customer-software.show', $software->slug) }}" class="btn {{ $software->has_available_slots ? 'btn-primary' : 'btn-secondary' }} btn-block">
                         <i class="fas fa-info-circle"></i> Lihat Detail
                     </a>
+                    @endcanAccess
                 </div>
             </div>
         </div>
@@ -94,7 +96,7 @@
     @if($softwares->hasPages())
     <div class="row">
         <div class="col-12 d-flex justify-content-center">
-            {{ $softwares->links() }}
+            {{ $softwares->withQueryString()->links('vendor.pagination.bootstrap-4') }}
         </div>
     </div>
     @endif

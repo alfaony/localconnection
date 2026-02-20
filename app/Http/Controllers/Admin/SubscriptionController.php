@@ -368,7 +368,7 @@ class SubscriptionController extends Controller
         $softwareName  = $softwareModel->nama ?? 'Software';
 
         // ── 1. Notifikasi ke Pelanggan ──────────────────────────────────────
-        $urlCustomer = route('customer-software.subscription.show', $subscription->id);
+        $urlCustomer = route('customer-subscription.show', $subscription->id);
         $msgCustomer = "🎉 Selamat! Pembayaran Anda untuk paket *{$paket}* ({$softwareName}) "
                      . "telah berhasil dikonfirmasi. Langganan Anda kini sudah aktif. "
                      . "Silakan akses dashboard untuk melihat detail akses Anda.";

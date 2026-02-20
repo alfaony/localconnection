@@ -5,7 +5,7 @@
 @section('content_header')
     <div class="row mb-2">
         <div class="col-sm-12">
-            <a href="{{ route('customer-software.subscription.index') }}" class="btn btn-secondary btn-sm">
+            <a href="{{ route('customer-subscription.index') }}" class="btn btn-secondary btn-sm">
                 <i class="fas fa-arrow-left"></i> Kembali ke My Subscriptions
             </a>
         </div>
@@ -258,12 +258,12 @@
                 </div>
                 <div class="card-body">
                     @if($subscription->status == 'expired' || $subscription->isExpiringSoon(7))
-                    <a href="{{ route('customer-software.subscription.renew', $subscription) }}" class="btn btn-success btn-block">
+                    <a href="{{ route('customer-subscription.renew', $subscription) }}" class="btn btn-success btn-block">
                         <i class="fas fa-sync"></i> Perpanjang Langganan
                     </a>
                     @endif
                     
-                    <a href="{{ route('customer-software.subscription.payments', $subscription) }}" class="btn btn-info btn-block">
+                    <a href="{{ route('customer-subscription.payments', $subscription) }}" class="btn btn-info btn-block">
                         <i class="fas fa-money-bill"></i> Riwayat Pembayaran
                     </a>
                 </div>

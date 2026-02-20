@@ -86,7 +86,7 @@
                             <i class="fas fa-exclamation-triangle"></i> Tidak ada metode pembayaran yang tersedia.
                         </div>
                     @else
-                        <form action="{{ route('customer-software.checkout.process', [$software->slug, $package->id]) }}" method="POST" id="checkout-form">
+                        <form action="{{ route('customer-checkout.process', [$software->slug, $package->id]) }}" method="POST" id="checkout-form">
                             @csrf
                             
                             <div class="payment-methods mb-4">
@@ -107,6 +107,7 @@
                                     </div>
 
                                     {{-- Manual Transfer Bank Details --}}
+                                    @canAccess('paymentPending','customer_checkouts')
                                     @if($key === 'manual' && isset($method['banks']))
                                         <div class="manual-transfer-details ml-4 mb-3" id="manual_details" style="{{ $loop->first ? '' : 'display:none;' }}">
                                             <div class="card bg-light">
@@ -137,6 +138,7 @@
                                             </div>
                                         </div>
                                     @endif
+                                    @endcanAccess
                                 @endforeach
                             </div>
 
@@ -153,6 +155,7 @@
                                 </ul>
                             </div>
 
+                            @canAccess('process','customer_checkouts')
                             {{-- Terms Agreement --}}
                             <div class="form-group">
                                 <div class="custom-control custom-checkbox">
@@ -162,7 +165,6 @@
                                     </label>
                                 </div>
                             </div>
-
                             <div class="row">
                                 <div class="col-md-6">
                                     <a href="{{ route('customer-software.show', $software->slug) }}" class="btn btn-secondary btn-block btn-lg">
@@ -175,6 +177,7 @@
                                     </button>
                                 </div>
                             </div>
+                            @endcanAccess
                         </form>
                     @endif
                 </div>

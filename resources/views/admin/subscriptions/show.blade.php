@@ -149,6 +149,8 @@
             </div>
 
             {{-- Chat Section --}}
+            @canAccess('index','customer_subscriptions')
+            @canAccess('store','customer_subscriptions')
             <div class="card" id="chat-card">
                 <div class="card-header">
                     <h5 class="card-title mb-0">
@@ -208,6 +210,9 @@
                     @endif
                 </div>
             </div>
+            @endcanAccess
+            @endcanAccess
+            
         </div>
 
         {{-- Actions --}}
@@ -341,98 +346,98 @@
 <script src="https://cdn.jsdelivr.net/npm/pusher-js@7.2.0/dist/web/pusher.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/laravel-echo/dist/echo.iife.js"></script>
 <script>
-$(document).ready(function() {
-    const chatUrl        = '{{ route("subscription.chat.index", $subscription) }}';
-    const storeUrl       = '{{ route("subscription.chat.store", $subscription) }}';
-    const subscriptionId = '{{ $subscription->id }}';
-    const myId           = parseInt('{{ auth()->id() }}');
+    $(document).ready(function() {
+        const chatUrl        = '{{ route("subscription.chat.index", $subscription) }}';
+        const storeUrl       = '{{ route("subscription.chat.store", $subscription) }}';
+        const subscriptionId = '{{ $subscription->id }}';
+        const myId           = parseInt('{{ auth()->id() }}');
 
-    // ── Helpers ────────────────────────────────────────────────────────────
-    function escapeHtml(str) {
-        if (!str) return '';
-        return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-    }
-
-    function buildBubble(msg) {
-        const isMe = (parseInt(msg.sender_id) === myId) || msg.is_me === true;
-        const side = isMe ? 'me' : 'other';
-        let content = '';
-        if (msg.message) content += `<div class="bubble">${escapeHtml(msg.message)}</div>`;
-        if (msg.attachment_url) {
-            const isImg = /\.(jpg|jpeg|png)$/i.test(msg.attachment_url);
-            content += isImg
-                ? `<div class="chat-attachment"><img src="${msg.attachment_url}" onclick="window.open(this.src)"></div>`
-                : `<div class="chat-attachment mt-1"><a href="${msg.attachment_url}" target="_blank" class="btn btn-sm btn-outline-secondary"><i class="fas fa-file-download"></i> Download</a></div>`;
+        // ── Helpers ────────────────────────────────────────────────────────────
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
         }
-        return `<div class="d-flex mb-2"><div class="chat-bubble ${side}"><div class="meta">${escapeHtml(msg.sender_name)} · ${msg.created_at}</div>${content}</div></div>`;
-    }
 
-    function appendMessage(msg) {
-        const $box = $('#chat-messages');
-        $box.find('.text-center.text-muted').remove();
-        $box.append(buildBubble(msg));
-        $box.scrollTop($box[0].scrollHeight);
-    }
-
-    // ── Load messages ──────────────────────────────────────────────────────
-    function loadMessages() {
-        $.get(chatUrl, function(data) {
-            const $box = $('#chat-messages');
-            $box.empty();
-            if (data.messages.length === 0) {
-                $box.html('<div class="text-center text-muted py-4"><i class="fas fa-comments fa-2x mb-2"></i><br>Belum ada pesan.</div>');
-                return;
+        function buildBubble(msg) {
+            const isMe = (parseInt(msg.sender_id) === myId) || msg.is_me === true;
+            const side = isMe ? 'me' : 'other';
+            let content = '';
+            if (msg.message) content += `<div class="bubble">${escapeHtml(msg.message)}</div>`;
+            if (msg.attachment_url) {
+                const isImg = /\.(jpg|jpeg|png)$/i.test(msg.attachment_url);
+                content += isImg
+                    ? `<div class="chat-attachment"><img src="${msg.attachment_url}" onclick="window.open(this.src)"></div>`
+                    : `<div class="chat-attachment mt-1"><a href="${msg.attachment_url}" target="_blank" class="btn btn-sm btn-outline-secondary"><i class="fas fa-file-download"></i> Download</a></div>`;
             }
-            data.messages.forEach(function(msg) { $box.append(buildBubble(msg)); });
-            $box.scrollTop($box[0].scrollHeight);
-        });
-    }
-
-    // ── Send message ───────────────────────────────────────────────────────
-    $('#chat-form').on('submit', function(e) {
-        e.preventDefault();
-        const formData = new FormData(this);
-        const $btn = $('#chat-send').prop('disabled', true);
-        $.ajax({
-            url: storeUrl, type: 'POST', data: formData, processData: false, contentType: false,
-            headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
-            success: function(res) {
-                if (res.success) {
-                    $('#chat-input').val('');
-                    $('#chat-file').val('');
-                    $('#file-preview').hide();
-                    appendMessage(res.message);
-                }
-            },
-            error: function(xhr) { toastr.error(xhr.responseJSON?.error || 'Gagal mengirim pesan.'); },
-            complete: function() { $btn.prop('disabled', false); }
-        });
-    });
-
-    // ── File preview ───────────────────────────────────────────────────────
-    $('#chat-file').on('change', function() {
-        if (this.files[0]) { $('#file-name').text(this.files[0].name); $('#file-preview').show(); }
-    });
-    $('#remove-file').on('click', function(e) {
-        e.preventDefault(); $('#chat-file').val(''); $('#file-preview').hide();
-    });
-
-    // ── Toggle password ────────────────────────────────────────────────────
-    $('#toggle-password').on('click', function() {
-        const passwordField = $('#password-field');
-        const icon = $(this).find('i');
-        if (passwordField.attr('type') === 'password') {
-            passwordField.attr('type', 'text');
-            icon.removeClass('fa-eye').addClass('fa-eye-slash');
-        } else {
-            passwordField.attr('type', 'password');
-            icon.removeClass('fa-eye-slash').addClass('fa-eye');
+            return `<div class="d-flex mb-2"><div class="chat-bubble ${side}"><div class="meta">${escapeHtml(msg.sender_name)} · ${msg.created_at}</div>${content}</div></div>`;
         }
-    });
 
-    // ── Init ───────────────────────────────────────────────────────────────
-    loadMessages();
-});
+        function appendMessage(msg) {
+            const $box = $('#chat-messages');
+            $box.find('.text-center.text-muted').remove();
+            $box.append(buildBubble(msg));
+            $box.scrollTop($box[0].scrollHeight);
+        }
+
+        // ── Load messages ──────────────────────────────────────────────────────
+        function loadMessages() {
+            $.get(chatUrl, function(data) {
+                const $box = $('#chat-messages');
+                $box.empty();
+                if (data.messages.length === 0) {
+                    $box.html('<div class="text-center text-muted py-4"><i class="fas fa-comments fa-2x mb-2"></i><br>Belum ada pesan.</div>');
+                    return;
+                }
+                data.messages.forEach(function(msg) { $box.append(buildBubble(msg)); });
+                $box.scrollTop($box[0].scrollHeight);
+            });
+        }
+
+        // ── Send message ───────────────────────────────────────────────────────
+        $('#chat-form').on('submit', function(e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+            const $btn = $('#chat-send').prop('disabled', true);
+            $.ajax({
+                url: storeUrl, type: 'POST', data: formData, processData: false, contentType: false,
+                headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
+                success: function(res) {
+                    if (res.success) {
+                        $('#chat-input').val('');
+                        $('#chat-file').val('');
+                        $('#file-preview').hide();
+                        appendMessage(res.message);
+                    }
+                },
+                error: function(xhr) { toastr.error(xhr.responseJSON?.error || 'Gagal mengirim pesan.'); },
+                complete: function() { $btn.prop('disabled', false); }
+            });
+        });
+
+        // ── File preview ───────────────────────────────────────────────────────
+        $('#chat-file').on('change', function() {
+            if (this.files[0]) { $('#file-name').text(this.files[0].name); $('#file-preview').show(); }
+        });
+        $('#remove-file').on('click', function(e) {
+            e.preventDefault(); $('#chat-file').val(''); $('#file-preview').hide();
+        });
+
+        // ── Toggle password ────────────────────────────────────────────────────
+        $('#toggle-password').on('click', function() {
+            const passwordField = $('#password-field');
+            const icon = $(this).find('i');
+            if (passwordField.attr('type') === 'password') {
+                passwordField.attr('type', 'text');
+                icon.removeClass('fa-eye').addClass('fa-eye-slash');
+            } else {
+                passwordField.attr('type', 'password');
+                icon.removeClass('fa-eye-slash').addClass('fa-eye');
+            }
+        });
+
+        // ── Init ───────────────────────────────────────────────────────────────
+        loadMessages();
+    });
 </script>
 
 <script>
@@ -481,4 +486,7 @@ $(document).ready(function() {
             }
         });
 </script>
+@endcanAccess
+@endcanAccess
+        
 @stop

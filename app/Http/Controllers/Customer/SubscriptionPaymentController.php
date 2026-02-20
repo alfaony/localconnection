@@ -27,7 +27,7 @@ class SubscriptionPaymentController extends Controller
 
         if (!$orderNumber) {
             return redirect()
-                ->route('customer-software.subscription.index')
+                ->route('customer-subscription.index')
                 ->with('info', 'Order number tidak ditemukan');
         }
 
@@ -38,7 +38,7 @@ class SubscriptionPaymentController extends Controller
 
         if (!$subscription) {
             return redirect()
-                ->route('customer-software.subscription.index')
+                ->route('customer-subscription.index')
                 ->with('error', 'Subscription tidak ditemukan');
         }
 
@@ -62,7 +62,7 @@ class SubscriptionPaymentController extends Controller
 
         if (!$orderNumber) {
             return redirect()
-                ->route('customer-software.subscription.index')
+                ->route('customer-subscription.index')
                 ->with('error', 'Order number tidak ditemukan');
         }
 
@@ -73,7 +73,7 @@ class SubscriptionPaymentController extends Controller
 
         if (!$subscription) {
             return redirect()
-                ->route('customer-software.subscription.index')
+                ->route('customer-subscription.index')
                 ->with('error', 'Subscription tidak ditemukan');
         }
 
