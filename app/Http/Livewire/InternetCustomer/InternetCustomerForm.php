@@ -32,6 +32,8 @@ use App\Helpers\InboxHelper;
 use App\Services\XenditService;
 use App\Services\MidtransService;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Http;
 
 
 class InternetCustomerForm extends Component
@@ -56,6 +58,10 @@ class InternetCustomerForm extends Component
     public $isAvailableArea = false;
     
     // Step 2: Data Pribadi
+    public $ktp_input_mode = 'manual';  
+    public $ktpReadingStartedAt = null;
+    public $isReadingKtp = false;
+    public $tempKtpPath;
     public $name;
     public $phone_number;
     public $email;
@@ -139,14 +145,125 @@ class InternetCustomerForm extends Component
     ];
 
     public function updatedKtpPhoto($value)
-    {
-        $this->ktpPhotoUploaded = false;
-        
-        // Validate immediately
+    {   
+        // Validate
         $this->validateOnly('ktp_photo', [
             'ktp_photo' => 'required|file|mimes:jpg,jpeg,png,pdf|max:2048'
         ]);
+
+        if ($this->ktp_input_mode === 'manual') {
+            return;
+        }
+
+        $this->isReadingKtp = true;
+        $this->ktpReadingStartedAt = now();
+
+        try {
+            $sessionId = Str::uuid()->toString();
+            session(['ktp_session_id' => $sessionId]);
+            Cache::put('ktp_company_'.$sessionId, $this->company_id, now()->addMinutes(10));
+
+            logger('KTP N8N - SEND', [
+                'session_id' => $sessionId,
+                'file_name'  => $this->ktp_photo->getClientOriginalName(),
+                'file_size'  => $this->ktp_photo->getSize(),
+            ]);
+
+            $tempPath = $this->ktp_photo->store('n8n-temp', 'local');
+            $fullPath = storage_path('app/' . $tempPath);
+
+            if (!file_exists($fullPath)) {
+                throw new \Exception('File gagal disalin ke storage.');
+            }
+
+            $token = SettingCompany::byCompany($this->company_id)
+                ->where('menu', 'n8n')
+                ->where('field_title', 'n8n_webhook_token')
+                ->value('field_value');
+            
+            $baseUrl = rtrim(config('services.n8n.base_url'), '/');
+            $path    = ltrim(config('services.n8n.ktp_webhook_path'), '/');
+            $webhookUrl = $baseUrl . '/' . $path;
+
+            logger('KTP N8N - CONFIG', [
+                'base_url' => $baseUrl,
+                'path'     => $path,
+                'final_url'=> $webhookUrl,
+                'token_exists' => $token ? true : false,
+            ]);
+
+            if ($token && $webhookUrl) {
+
+                $response = Http::timeout(20)
+                    ->attach(
+                        'file',
+                        fopen($fullPath, 'r'),
+                        basename($tempPath)
+                    )
+                    ->post($webhookUrl, [
+                        'api_key'    => $token,
+                        'session_id' => $sessionId,
+                    ]);
+
+                logger('KTP N8N - RESPONSE', [
+                    'status' => $response->status(),
+                    'body'   => $response->body(),
+                ]);
+            } else {
+                logger('KTP N8N - SKIPPED', [
+                'reason' => 'Token or URL missing'
+            ]);
+            }
+
+            if (Storage::exists($tempPath)) {
+                Storage::delete($tempPath);
+            }
+        } catch (\Throwable $e) {
+            Log::warning('Gagal kirim KTP ke N8N', [
+                'error' => $e->getMessage()
+            ]);
+            $this->isReadingKtp = false;
+        }
     }
+
+    public function checkKtpScanResult()
+    {
+        $sessionId = session('ktp_session_id');
+
+        // logger('SESSION ID WEB:', ['session' => $sessionId]);
+
+        if (!$sessionId) return;
+
+        $data = Cache::pull('ktp_scan_result_'.$sessionId);
+
+        // logger('CACHE RESULT:', ['data' => $data]);
+
+        if ($this->isReadingKtp && $this->ktpReadingStartedAt) {
+            if (now()->diffInSeconds($this->ktpReadingStartedAt) > 30) {
+                $this->isReadingKtp = false;
+                $this->ktpReadingStartedAt = null;
+
+                session()->flash(
+                    'warning',
+                    'Proses membaca KTP terdapat gangguan. Silakan coba upload ulang atau lakukan secara manual.'
+                );
+
+                return;
+            }
+        }
+
+        if ($data) {
+            $this->name       = $data['name'] ?? $this->name;
+            $this->ktp_number = $data['ktp_number'] ?? $this->ktp_number;
+            $this->address    = $data['address'] ?? $this->address;
+
+            $this->isReadingKtp = false;
+            $this->ktpReadingStartedAt = null;
+
+            $this->dispatchBrowserEvent('ktp-autofill-success');
+        }
+    }
+
 
     public function updatedPaymentProof($value)
     {
@@ -457,7 +574,7 @@ class InternetCustomerForm extends Component
 
     public function nextStep()
     {
-        $this->generateAgreementPreviewJson();
+        // $this->generateAgreementPreviewJson();
 
         if ($this->step === 1) {
             $this->validateStep1();
@@ -469,6 +586,10 @@ class InternetCustomerForm extends Component
             $this->handleSaveSignature();
         } elseif ($this->step === 4) {
             $this->validateStep4();
+        }
+
+        if ($this->step === 3) {
+            $this->generateAgreementPreviewJson();
         }
     }
 
