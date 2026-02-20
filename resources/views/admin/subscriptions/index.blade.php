@@ -147,7 +147,7 @@
 
             {{-- Pagination --}}
             <div class="mt-3">
-                {{ $subscriptions->links() }}
+                {{ $subscriptions->withQueryString()->links('vendor.pagination.bootstrap-4') }}
             </div>
         </div>
     </div>

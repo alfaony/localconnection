@@ -205,7 +205,7 @@ class AppServiceProvider extends ServiceProvider
 
             $managementSoftwareMenu = [
                 'software_dashboards','software','master_accounts','subscriptions',
-                'customer_softwares','customer_subscriptions'
+                'customer_software','customer_subscriptions'
             ];
 
 
@@ -813,15 +813,15 @@ class AppServiceProvider extends ServiceProvider
                 ],
                 'customer_subscriptions' =>
                 [
-                    'text' => 'Customer Subscription',
+                    'text' => 'My Subscription',
                     'route' => 'customer-subscription.index',
                     'icon' => 'fa fa-credit-card',
                 ],
-                'customer_softwares' =>
+                'customer_software' =>
                 [
-                    'text' => 'Software Sharing',
-                    'route' => 'customer-softwares.index',
-                    'icon' => 'fa fa-cogs',
+                    'text' => 'Software Sharing List',
+                    'route' => 'customer-software.index',
+                    'icon' => 'fa fa-list',
                 ],
             ];
 

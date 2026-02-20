@@ -27,7 +27,7 @@ class PermissionForMenuCustomerSoftware extends Seeder
             $softwareDashboard = ['dashboardSoftwareSharing'];
             $customerSoftware = ['index','show'];
             $customerCheckout = ['process','show','paymentPending'];
-            $customerSubscription = ['index','show','renew','processRenewal','payments','show'];
+            $customerSubscription = ['index','show','renew','processRenewal','payments','store'];
             $subscriptionPayment = ['success','failed','uploadProof','checkStatus'];
 
 
@@ -85,7 +85,7 @@ class PermissionForMenuCustomerSoftware extends Seeder
             foreach ($customerSubscription as $method) 
             {
                 // create permision
-                $permissionsoftwareDashboard = Permission::firstOrCreate([
+                $permissionCustomerSubscription = Permission::firstOrCreate([
                     'name' => ucwords($method).' Customer Software Subscription',
                 ],[
                     'method' => $method,
@@ -97,7 +97,7 @@ class PermissionForMenuCustomerSoftware extends Seeder
                 foreach ($roles as $role) 
                 {
 
-                    PermissionRole::create(['role_id' => $role->id, 'permission_id' => $permissionsoftwareDashboard->id]);
+                    PermissionRole::create(['role_id' => $role->id, 'permission_id' => $permissionCustomerSubscription->id]);
                 }
             }
 

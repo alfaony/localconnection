@@ -73,7 +73,7 @@
                             <th>Tanggal Expired</th>
                             <td>
                                 @if($subscription->tanggal_expired)
-                                    {{ carbon\carbon::parse($subscription->tanggal_expired)->format('d m y') }}
+                                    {{ carbon\carbon::parse($subscription->tanggal_expired)->format('d M Y') }}
                                     @if($subscription->isExpiringSoon(7) && $subscription->status == 'active')
                                         <br><small class="text-danger">
                                             <i class="fas fa-exclamation-triangle"></i> {{ $subscription->days_until_expiry }} hari lagi
@@ -377,8 +377,8 @@
 <script>
     $(document).ready(function() {
         const subscriptionId = '{{ $subscription->id }}';
-        const chatUrl        = '{{ route("subscription.chat.index", $subscription) }}';
-        const storeUrl       = '{{ route("subscription.chat.store", $subscription) }}';
+        const chatUrl        = '{{ route("customer-subscription.chat.index", $subscription) }}';
+        const storeUrl       = '{{ route("customer-subscription.chat.store", $subscription) }}';
         const myId           = parseInt('{{ auth()->id() }}');
         let canChat          = false;
 

@@ -840,8 +840,8 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
       // ========================================================================
       // SUBSCRIPTION CHAT
       // ========================================================================
-      Route::get('customer-subscription/{subscription}/chat', [CustomerSubscriptionChatController::class, 'index'])->name('subscription.chat.index');
-      Route::post('customer-subscription/{subscription}/chat', [CustomerSubscriptionChatController::class, 'store'])->name('subscription.chat.store');
+      Route::get('customer-subscription/{subscription}/chat', [CustomerSubscriptionChatController::class, 'index'])->name('customer-subscription.chat.index');
+      Route::post('customer-subscription/{subscription}/chat', [CustomerSubscriptionChatController::class, 'store'])->name('customer-subscription.chat.store');
     });
 
 

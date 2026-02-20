@@ -288,20 +288,16 @@ class SubscriptionController extends Controller
             // Always update payment_status to paid
             $updateData = [
                 'payment_status' => 'paid',
+                'status'         => 'active',
             ];
 
-            // Activate subscription if not active
-            if ($subscription->status !== 'active') {
-                $updateData['status'] = 'active';
-                
-                // Set start and end dates if not set
-                if (!$subscription->tanggal_mulai) {
-                    $updateData['tanggal_mulai'] = now();
-                }
-                
-                if (!$subscription->tanggal_expired && $subscription->package) {
-                    $updateData['tanggal_expired'] = now()->addDays($subscription->package->durasi_hari);
-                }
+            // Set tanggal mulai & expired jika belum pernah di-set
+            if (!$subscription->tanggal_mulai) {
+                $updateData['tanggal_mulai'] = now();
+            }
+
+            if (!$subscription->tanggal_expired && $subscription->package) {
+                $updateData['tanggal_expired'] = now()->addDays($subscription->package->durasi_hari);
             }
 
             $subscription->update($updateData);
