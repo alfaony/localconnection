@@ -67,7 +67,7 @@ class ProvisionCustomerJob implements ShouldQueue
             elseif ($cust->status == ParamSchema::SUSPENDED)
             {
                 // $ros->disableSecret($client, $cust->username);
-                // $ros->disconnectIfActive($client, $cust->username);
+                $ros->disconnectIfActive($client, $cust->username);
 
                 // Set profile to "SUSPED" if exists, otherwise clear profile
                 $suspendProfileName = 'SUSPENDED';
@@ -104,6 +104,7 @@ class ProvisionCustomerJob implements ShouldQueue
 
             elseif ($cust->status == ParamSchema::REACTIVATED) 
             {
+                $ros->disconnectIfActive($client, $cust->username);
                $profile = $map->ros_profile ?? ('PKG_'.$pkg->id);
 
                 $ros->ensurePppProfile($client, $pkg, $profile, null, $cust->router_id, $poolName, $gateway);
