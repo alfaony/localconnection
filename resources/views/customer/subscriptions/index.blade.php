@@ -91,17 +91,59 @@
                                     </small>
                                     @endif
                                     
-                                    <div class="mt-2">
+                                     <div class="mt-2">
+                                        {{-- Main Detail Button --}}
                                         @canAccess('show','customer_subscriptions')
                                         <a href="{{ route('customer-subscription.show', $subscription) }}" class="btn btn-info btn-sm">
                                             <i class="fas fa-eye"></i> Detail
                                         </a>
                                         @endcanAccess
-                                        
-                                        @if($subscription->status == 'expired' || $subscription->isExpiringSoon(7))
-                                        <a href="{{ route('customer-subscription.renew', $subscription) }}" class="btn btn-success btn-sm">
-                                            <i class="fas fa-sync"></i> Perpanjang
-                                        </a>
+
+                                        {{-- Payment Action Buttons based on state --}}
+                                        @php $latestPayment = $subscription->latestPayment; @endphp
+
+                                        @if($subscription->payment_status !== 'paid')
+                                            {{-- Unpaid: show Pending button (go to pending payment page) --}}
+                                            @if($latestPayment && $latestPayment->payment_gateway === 'manual')
+                                                @canAccess('paymentPending','customer_checkouts')
+                                                <a href="{{ route('customer-checkout.payment.pending', $subscription->order_number) }}" 
+                                                   class="btn btn-warning btn-sm" title="Selesaikan pembayaran">
+                                                    <i class="fas fa-clock"></i> Bayar Sekarang
+                                                </a>
+                                                @endcanAccess
+                                            @elseif(!$latestPayment)
+                                                {{-- No payment yet, let them go to software catalog --}}
+                                                @canAccess('index','customer_software')
+                                                <a href="{{ route('customer-software.index') }}" 
+                                                   class="btn btn-warning btn-sm" title="Pilih metode pembayaran">
+                                                    <i class="fas fa-credit-card"></i> Lanjutkan Bayar
+                                                </a>
+                                                @endcanAccess
+                                            @endif
+                                        @else
+                                            {{-- Paid: show renew if expiring/expired --}}
+                                            @if($subscription->status == 'expired' || $subscription->isExpiringSoon(7))
+                                            <a href="{{ route('customer-subscription.renew', $subscription) }}" class="btn btn-success btn-sm">
+                                                <i class="fas fa-sync"></i> Perpanjang
+                                            </a>
+                                            @endif
+                                        @endif
+
+                                        {{-- Payment status quick info --}}
+                                        @if($latestPayment)
+                                            @if($latestPayment->status === 'paid' || $subscription->payment_status === 'paid')
+                                                <span class="btn btn-success btn-sm disabled">
+                                                    <i class="fas fa-check-circle"></i> Lunas
+                                                </span>
+                                            @elseif($latestPayment->status === 'failed' || $latestPayment->status === 'expired')
+                                                <span class="btn btn-danger btn-sm disabled" title="Pembayaran gagal/kadaluarsa">
+                                                    <i class="fas fa-times-circle"></i> Gagal
+                                                </span>
+                                            @elseif($latestPayment->manual_transfer_proof)
+                                                <span class="btn btn-secondary btn-sm disabled" title="Bukti transfer sudah diupload, menunggu verifikasi">
+                                                    <i class="fas fa-hourglass-half"></i> Verifikasi
+                                                </span>
+                                            @endif
                                         @endif
                                     </div>
                                 </div>

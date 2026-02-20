@@ -282,6 +282,7 @@ Route::get('used-item/showQr/{slug}', [UsedItemController::class,'showQr'])->nam
 
 Route::group(['middleware' => ['auth','role.permission','ip.restriction']], function()
 {
+  Route::get('home/softwareSharing', [App\Http\Controllers\HomeController::class, 'softwareSharing'])->name('home.softwareSharing');
   Route::get('home/meetingAgenda', [App\Http\Controllers\HomeController::class, 'meetingAgenda'])->name('home.meetingAgenda');
   Route::get('home/listDayoff', [App\Http\Controllers\HomeController::class, 'listDayoff'])->name('home.listDayoff');
   Route::get('home/dashboardReport', [App\Http\Controllers\HomeController::class, 'dashboardReport'])->name('home.dashboardReport');

@@ -24,7 +24,7 @@ class PermissionForMenuCustomerSoftware extends Seeder
         DB::beginTransaction();
         try {   
 
-            $softwareDashboard = ['dashboardSoftwareSharing'];
+            $softwareDashboard = ['softwareSharing'];
             $customerSoftware = ['index','show'];
             $customerCheckout = ['process','show','paymentPending'];
             $customerSubscription = ['index','show','renew','processRenewal','payments','store'];
@@ -43,6 +43,25 @@ class PermissionForMenuCustomerSoftware extends Seeder
             }
             
             $roles = Role::all();
+
+            foreach ($softwareDashboard as $method) 
+            {
+                // create permision
+                $permissionsoftwareDashboard = Permission::firstOrCreate([
+                    'name' => ucwords($method).' Software Dashboard Sharing',
+                ],[
+                    'method' => $method,
+                    'table' => 'homes',
+                    'model' => 'Home',
+                    'guard_name' => 'web'
+                ]);
+
+                foreach ($roles as $role) 
+                {
+
+                    PermissionRole::create(['role_id' => $role->id, 'permission_id' => $permissionsoftwareDashboard->id]);
+                }
+            }
 
             foreach ($customerSoftware as $method) 
             {
