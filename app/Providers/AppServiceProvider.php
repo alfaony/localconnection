@@ -204,7 +204,8 @@ class AppServiceProvider extends ServiceProvider
             $managementSettingMenu = ['setting_companies','roles','webhook_settings'];
 
             $managementSoftwareMenu = [
-                'software_dashboards','software','master_accounts','subscriptions'
+                'software_dashboards','software','master_accounts','subscriptions',
+                'customer_softwares','customer_subscriptions'
             ];
 
 
@@ -809,6 +810,18 @@ class AppServiceProvider extends ServiceProvider
                     'text' => 'Subscription',
                     'route' => 'subscription.index',
                     'icon' => 'fa fa-credit-card',
+                ],
+                'customer_subscriptions' =>
+                [
+                    'text' => 'Customer Subscription',
+                    'route' => 'customer-subscription.index',
+                    'icon' => 'fa fa-credit-card',
+                ],
+                'customer_softwares' =>
+                [
+                    'text' => 'Software Sharing',
+                    'route' => 'customer-softwares.index',
+                    'icon' => 'fa fa-cogs',
                 ],
             ];
 
