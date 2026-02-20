@@ -708,6 +708,7 @@ class InternetCustomerIndex extends Component
 
         
         // SyncInstalledCustomersJob::dispatch([$cust->id]);
+        dispatch(new ProvisionCustomerJob($cust->id));
         \App\Jobs\SyncInstalledCustomersJob::dispatch([$cust->id]);
         // dispatch(new ProvisionCustomerJob($cust->id));
 
