@@ -61,8 +61,12 @@ class CustomerCheckoutController extends Controller
 
         // Calculate PPN for price display
         $ppnCalculation = $this->paymentService->calculatePpn($package->harga);
+        
+        $settingCompany = \App\Models\SettingCompany::byCompany($software->company_id)
+            ->get()
+            ->pluck('field_value', 'field_title');
 
-        return view('customer.checkout.show', compact('software', 'package', 'paymentMethods', 'ppnCalculation'));
+        return view('customer.checkout.show', compact('software', 'package', 'paymentMethods', 'ppnCalculation', 'settingCompany'));
     }
 
     /**

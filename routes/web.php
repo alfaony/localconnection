@@ -281,7 +281,7 @@ Route::get('used-item/showQr/{slug}', [UsedItemController::class,'showQr'])->nam
 // ============================================================
 // PUBLIC SOFTWARE SHARING REGISTRATION
 // ============================================================
-Route::prefix('customer-software/account')->name('public.software-sharing.')->group(function () {
+Route::prefix('software-sharing')->name('public.software-sharing.')->group(function () {
     // Catalog halaman utama (list semua software)
     Route::get('{companySlug}', [SoftwareSharingController::class, 'index'])->name('index');
     // Form registrasi akun baru

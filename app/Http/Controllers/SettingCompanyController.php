@@ -107,7 +107,6 @@ class SettingCompanyController extends Controller
             DB::commit();
             return redirect()->route('setting-company.index')->with('store',true);
         } catch (\Throwable $th) {
-            // dd($th);
             DB::rollback();
             \Log::error($th);
             return redirect()->route('setting-company.index')->with('store',false);

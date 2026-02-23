@@ -959,6 +959,35 @@
                                             <span class="text-danger text-sm">{{ $message }}</span>
                                             @enderror
                                         </div>
+
+                                        <!-- Headline Message -->
+                                        <div class="form-group">
+                                            <label for="software_sharing_headline_message">Headline Message</label>
+                                            <textarea name="software_sharing_headline_message" class="form-control" rows="3" placeholder="Terima kasih atas kepercayaan Anda...">{{ old('software_sharing_headline_message', $data['software_sharing_headline_message'] ?? '') }}</textarea>
+                                            <small class="form-text text-muted">Pesan terima kasih atau catatan yang tertera di footer invoice</small>
+                                            @error('software_sharing_headline_message')
+                                            <span class="text-danger text-sm">{{ $message }}</span>
+                                            @enderror
+                                        </div>
+
+                                        <!-- Headline Support Message -->
+                                        <div class="form-group">
+                                            <label for="software_sharing_headline_support_message">Headline Support Message</label>
+                                            <textarea name="software_sharing_headline_support_message" class="form-control" rows="3" placeholder="Terima kasih atas kepercayaan Anda...">{{ old('software_sharing_headline_support_message', $data['software_sharing_headline_support_message'] ?? '') }}</textarea>
+                                            <small class="form-text text-muted">Pesan terima kasih atau catatan yang tertera di footer invoice</small>
+                                            @error('software_sharing_headline_support_message')
+                                            <span class="text-danger text-sm">{{ $message }}</span>
+                                            @enderror
+                                        </div>
+
+                                        <!-- Term and Condition -->
+                                        <div class="form-group">
+                                            <label for="term_and_condition_software_sharing">Term and Condition</label>
+                                            <input class="thriveEditor form-control" id="description_software_sharing_term_and_condition" data-ids="software_sharing_term_and_condition" name="software_sharing_term_and_condition" rows="3" placeholder="yang akan dicetak di perjanjian" value="{{ old('software_sharing_term_and_condition', $data['software_sharing_term_and_condition'] ?? null) }}"/>
+                                            @error('software_sharing_term_and_condition')
+                                            <span class="text-danger text-sm">{{ $message }}</span>
+                                            @enderror
+                                        </div>
                                     </div>
                                 </div>
                                 <div class="card">

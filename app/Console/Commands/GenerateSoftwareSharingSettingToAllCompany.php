@@ -45,6 +45,9 @@ class GenerateSoftwareSharingSettingToAllCompany extends Command
         $menu = 'software_sharing_setting';
         $fields = ['software_sharing_icon' => '','software_sharing_company_name' => '','software_sharing_company_address' => ''
         ,'software_sharing_phone' => '','software_sharing_footer_message' => ''
+        ,'software_sharing_headline_message' => ''
+        ,'software_sharing_headline_support_message' => ''
+        ,'software_sharing_term_and_condition' => ''
         , 'software_sharing_message_blast' => ''
         , 'software_sharing_manual_payment_status' => ''
         , 'software_sharing_nama_bank' => ''

@@ -10,7 +10,7 @@
     <style>
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
         :root {
-            --primary: #6366f1; --primary-d: #4f46e5; --primary-l: #e0e7ff;
+            --primary: #de342f; --primary-d: #b91c1c; --primary-l: #fee2e2;
             --success: #10b981; --danger: #ef4444;
             --bg: #f8faff; --card: #fff; --text: #1e293b; --muted: #64748b;
             --border: #e2e8f0; --radius: 16px;
@@ -21,7 +21,8 @@
         .page-wrap { display: flex; min-height: 100vh; }
         .sidebar {
             width: 420px; flex-shrink: 0;
-            background: linear-gradient(145deg, #4f46e5 0%, #7c3aed 60%, #a855f7 100%);
+            background-color: #de342f;
+            background-image: radial-gradient(circle at center, rgba(239, 68, 68, 0.8) 0%, rgba(219, 39, 41, 0) 80%);
             display: flex; flex-direction: column; justify-content: center;
             padding: 60px 48px; color: #fff;
         }

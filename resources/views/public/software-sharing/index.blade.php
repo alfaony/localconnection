@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Langganan software premium dengan harga terjangkau – {{ $company->name }}">
-    <title>Software Sharing – {{ $company->name }}</title>
+    <title>Software Sharing – {{ $settingCompany['software_sharing_company_name'] ?? '' }}</title>
 
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -16,9 +16,9 @@
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
         :root {
-            --primary:   #6366f1;
-            --primary-d: #4f46e5;
-            --primary-l: #e0e7ff;
+            --primary:   #de342f;
+            --primary-d: #b91c1c;
+            --primary-l: #fee2e2;
             --accent:    #f59e0b;
             --success:   #10b981;
             --danger:    #ef4444;
@@ -36,7 +36,8 @@
 
         /* ── HERO ────────────────────────────────────────────── */
         .hero {
-            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 60%, #a855f7 100%);
+            background-color: #de342f;
+            background-image: radial-gradient(circle at center, rgba(239, 68, 68, 0.8) 0%, rgba(219, 39, 41, 0) 80%);
             color: #fff;
             padding: 72px 24px 80px;
             text-align: center;
@@ -248,7 +249,7 @@
 <nav class="top-nav">
     <div class="nav-brand">
         <i class="fas fa-cube"></i>
-        {{ $company->name }}
+        {{ $settingCompany['software_sharing_company_name'] ?? '' }}
     </div>
     <div class="nav-actions">
         <a href="{{ route('public.software-sharing.login', $company->slug) }}" class="nav-btn outline">
@@ -262,12 +263,16 @@
 
 {{-- ── Hero ── --}}
 <section class="hero">
-    <div class="hero-content">
+    <div class="hero-content">  
         <div class="company-badge animate delay-1">
-            <i class="fas fa-building"></i> {{ $company->name }} Software Sharing
+            <i class="fas fa-building"></i> {{ $settingCompany['software_sharing_company_name'] ?? '' }} Software Sharing
         </div>
-        <h1 class="animate delay-2">Software Premium,<br>Harga Terjangkau</h1>
-        <p class="animate delay-3">Akses software-software pilihan dengan sistem akun sharing. Hemat biaya, kualitas tetap premium.</p>
+        <h1 class="animate delay-2">
+            {{ $settingCompany['software_sharing_headline_message'] ?? '' }}
+        </h1>
+        <p class="animate delay-3">
+            {{ $settingCompany['software_sharing_headline_support_message'] ?? '' }}
+        </p>
         <div class="hero-actions animate delay-4">
             <a href="{{ route('public.software-sharing.register', $company->slug) }}" class="btn-hero-primary">
                 <i class="fas fa-rocket"></i> Daftar Sekarang – Gratis!
@@ -435,7 +440,7 @@
 
 {{-- ── Footer ── --}}
 <footer class="footer">
-    <p>&copy; {{ date('Y') }} <a href="#">{{ $company->name }}</a>. Platform Software Sharing terpercaya.</p>
+    <p>&copy; {{ date('Y') }} <a href="#">{{ $settingCompany['software_sharing_company_name'] ?? '' }}</a>. Platform Software Sharing terpercaya.</p>
 </footer>
 
 <script>

@@ -8,6 +8,8 @@ use App\Models\Software;
 use App\Models\User;
 use App\Models\Role;
 use App\Schemas\RoleSchema;
+use App\Models\SoftwareSharing;
+use App\Models\SettingCompany;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -24,6 +26,7 @@ class SoftwareSharingController extends Controller
     public function index(string $companySlug)
     {
         $company = Company::where('slug', $companySlug)->firstOrFail();
+        $settingCompany = SettingCompany::byCompany($company->id)->where('menu','software_sharing_setting')->get()->pluck('field_value', 'field_title')->toArray();
 
         $softwares = Software::where('company_id', $company->id)
             ->where('status', 'active')
@@ -38,7 +41,7 @@ class SoftwareSharingController extends Controller
                 return $s;
             });
 
-        return view('public.software-sharing.index', compact('company', 'softwares'));
+        return view('public.software-sharing.index', compact('company', 'softwares', 'settingCompany'));
     }
 
     /**
@@ -95,7 +98,7 @@ class SoftwareSharingController extends Controller
                 ->with('success', 'Akun berhasil dibuat! Silakan cek email Anda dan klik link verifikasi sebelum login.');
 
         } catch (\Throwable $th) {
-            dd($th);
+            // dd($th);
 
             DB::rollBack();
             Log::error('Software sharing registration error: ' . $th->getMessage());
