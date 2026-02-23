@@ -1135,8 +1135,29 @@
                         </div>
                     </div>
 
+                    <!-- N8N Setting Card -->
+                    <div class="card">
+                        <div class="card-header" id="headingN8n">
+                            <h2 class="mb-0">
+                                <button class="btn btn-link btn-block text-left" type="button" data-toggle="collapse" data-target="#collapseN8n">
+                                    N8N Integration
+                                </button>
+                            </h2>
+                        </div>
 
-    
+                        <div id="collapseN8n" class="collapse" data-parent="#accordion">
+                            <div class="card-body">
+                                <div class="form-group">
+                                    <label for="n8n_webhook_token">N8N Webhook Token</label>
+                                    <input type="text" name="n8n_webhook_token" class="form-control"
+                                        value="{{ old('n8n_webhook_token', $data['n8n_webhook_token'] ?? '') }}">
+                                    <small class="text-muted">
+                                        Token ini digunakan untuk keamanan dan verifikasi request dari sistem automasi N8N.
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                    </div> 
                 <button type="submit" class="btn btn-primary">Simpan</button>
             </form>
 

@@ -40,15 +40,17 @@ class GenerateBillingJob implements ShouldQueue
             $check = InternetCustomerPurchase::where('internet_customer_id', $internetCustomer->id)
             ->whereYear('created_at', Carbon::now()->year)
             ->whereMonth('created_at', Carbon::now()->month)
+            ->orderBy('created_at', 'desc')
             ->first();
-            if (!$check) 
+
+            if (!$check || $check->payment_method == ParamSchema::EXPIRED) 
             {
                 $this->customer->internetCustomer->update([
                     'is_paid' => false,
                     'status' => ParamSchema::WAITING_PAYMENT_SUBSCRIPTION
                 ]);
 
-                $check = InternetCustomerPurchase::create([
+                $purchase = InternetCustomerPurchase::create([
                     'internet_package_id' => $internetCustomer->internetPackage->id,
                     'amount_paid' => $internetCustomer->internetPackage->price_nett ?? 0,
                     'internet_customer_id' => $internetCustomer->id,
@@ -80,7 +82,6 @@ class GenerateBillingJob implements ShouldQueue
 
             DB::commit();
         } catch (\Throwable $th) {
-            // dd($th);
             DB::rollBack();
             \Log::error("Gagal buat tagihan otomatis: " . $th->getMessage());
         }

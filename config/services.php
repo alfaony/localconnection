@@ -110,5 +110,9 @@ return [
     'keloola_pay' =>
     [
         'base_url' => env('KELOOLOA_PAY_BASE_URL', 'https://pay.keloola.xyz'),
-    ]
+    ],
+    'n8n' => [
+        'base_url' => env('N8N_BASE_URL', 'https://n8n.keloola.xyz'),
+        'ktp_webhook_path' => env('N8N_KTP_WEBHOOK_PATH', '/webhook-test/e-kyc-hikari'),
+    ],
 ];

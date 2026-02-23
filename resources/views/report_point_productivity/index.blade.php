@@ -30,6 +30,7 @@
                             <label for="end_date">End Date:</label>
                             <input type="date" name="end_date" id="end_date" class="form-control" value="{{ $endDate->format('Y-m-d') }}">
                         </div>
+                        @if(!$byUser)
                         <div class="form-group col-md-4">
                             <label for="user_id">User:</label>
                             <select name="user_id" id="user_id" class="form-control select2">
@@ -40,6 +41,7 @@
                                 @endforeach
                             </select>
                         </div>
+                        @endif
                     </div>
                     <button type="submit" class="btn btn-primary" onclick="showLoading()">
                         <i class="fas fa-filter"></i> Filter
@@ -200,12 +202,15 @@
     function exportData() {
         const startDate = document.getElementById('start_date').value;
         const endDate = document.getElementById('end_date').value;
-        const userId = document.getElementById('user_id').value;
+        const byUser = {{ $byUser ? 'true' : 'false' }};
         
         let url = "{{ route('report-productivity.export') }}?start_date=" + startDate + "&end_date=" + endDate;
         
-        if (userId) {
-            url += "&user_id=" + userId;
+        if (!byUser) {
+            const userIdEl = document.getElementById('user_id');
+            if (userIdEl && userIdEl.value) {
+                url += "&user_id=" + userIdEl.value;
+            }
         }
         
         showLoading();

@@ -26,6 +26,7 @@ use App\Http\Controllers\API\UserApiController;
 
 use App\Http\Controllers\API\ProductStoreController;
 use App\Http\Controllers\API\MeetingApiController;
+use App\Http\Controllers\API\EkycController;
 use App\Http\Controllers\UserController;
 
 
@@ -43,6 +44,8 @@ use App\Http\Controllers\UserController;
 Route::post('login', [LoginController::class, 'login']);
 
 Route::post('login_flutter', [LoginController::class, 'login_flutter']);
+
+Route::post('n8n/ktp/result', [EkycController::class, 'receiveKtpResult']);
 
 Route::group(['middleware' => ['auth:api','role.permission.api']], function() 
 {

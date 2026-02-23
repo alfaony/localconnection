@@ -627,6 +627,7 @@ class HomeController extends Controller
         $cutiToday = Dayoff::with('user', 'type')
             ->where('date_start', '<=', $today)
             ->where('date_end', '>=', $today)
+            ->whereNull('rejected_at')
             ->where(function ($query) {
                 $query->whereNotNull('approval_finance_user_id')
                       ->orWhereNotNull('approved_finance_at')

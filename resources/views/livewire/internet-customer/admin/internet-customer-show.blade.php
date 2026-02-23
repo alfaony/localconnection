@@ -519,8 +519,10 @@
                                                     <td>
                                                         @if($purchase->user_finance_id && $purchase->confirmation_finance_at)
                                                             <span class="badge badge-success">Lunas</span>
+                                                        @elseif($purchase->payment_method != \App\Schemas\ParamSchema::EXPIRED)
+                                                        <span class="badge badge-danger">Belum Lunas</span>
                                                         @else
-                                                            <span class="badge badge-danger">Belum Lunas</span>
+                                                        <span class="badge badge-danger">Kadaluarsa</span>
                                                         @endif
                                                     </td>
                                                     <td>
@@ -545,23 +547,30 @@
                                                     </td>
                                                     @canAccess('as_finance','internet_customers')
                                                     <td>
-                                                        @switch($customer->status)
-                                                            @case(\App\Schemas\ParamSchema::WAITING_PAYMENT_CONFIRMATION)
-                                                                @if($purchase->user_finance_id && $purchase->confirmation_finance_at)
-                                                                    <i class="fas fa-check-circle mr-1 text-success"></i>        
-                                                                @elseif($financeAccess && isset($purchase->payment_method))           
-                                                                <button class="btn btn-sm btn-success mt-1" onclick="confirmPayment('{{ $purchase->id }}')">
-                                                                    Konfirmasi
+                                                        @if($purchase->payment_method == \App\Schemas\ParamSchema::EXPIRED)
+                                                            {{-- Payment already expired --}}
+                                                            <span class="badge badge-danger">
+                                                                <i class="fas fa-times-circle mr-1"></i>Expired
+                                                            </span>
+                                                        @elseif($purchase->isConfirmed())
+                                                            {{-- Payment confirmed --}}
+                                                            <i class="fas fa-check-circle mr-1 text-success"></i>
+                                                        @else
+                                                            {{-- Payment not confirmed and not expired - show buttons --}}
+                                                            <div class="btn-group-vertical btn-group-sm" role="group">
+                                                                @if($customer->status == \App\Schemas\ParamSchema::WAITING_PAYMENT_CONFIRMATION && isset($purchase->payment_method) && $financeAccess)
+                                                                <button class="btn btn-success mb-1" onclick="confirmPayment('{{ $purchase->id }}')">
+                                                                    <i class="fas fa-check mr-1"></i>Konfirmasi
                                                                 </button>
-                                                                @else
                                                                 @endif
-                                                                @break
-                                                            @case(\App\Schemas\ParamSchema::WAITING_PAYMENT_SUBSCRIPTION)
-                                                                @break
-                                                            @default
-                                                                <i class="fas fa-check-circle mr-1 text-success"></i>
-                                                                @break
-                                                        @endswitch
+                                                                
+                                                                @if($financeAccess)
+                                                                <button class="btn btn-danger btn-sm" onclick="expirePayment('{{ $purchase->id }}')">
+                                                                    <i class="fas fa-times-circle mr-1"></i>Tandai Expired
+                                                                </button>
+                                                                @endif
+                                                            </div>
+                                                        @endif
                                                     </td>
                                                     @endcanAccess
                                                 </tr>
@@ -1221,6 +1230,25 @@
                 if (result.isConfirmed) {
                     // Panggil ke Livewire
                     @this.call('confirmPayment', customerId);
+                }
+            });
+        }
+
+        function expirePayment(purchaseId) 
+        {
+            Swal.fire({
+                title: 'Tandai Pembayaran Expired?',
+                text: "Pembayaran ini akan ditandai sebagai expired dan tidak dapat dibayar lagi.",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Ya, tandai expired',
+                cancelButtonText: 'Batal'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Call Livewire method
+                    @this.call('expirePayment', purchaseId);
                 }
             });
         }

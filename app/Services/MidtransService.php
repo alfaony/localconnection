@@ -127,8 +127,8 @@ class MidtransService
 
 
 
-            // Build order ID (unique) appending _internetCustomer for webhook routing
-            $orderId = 'INT-' . $purchase->id . '-' . time() . '_internetCustomer';
+            // Build order ID (unique)
+            $orderId = 'INT-' . $purchase->id . '-' . $customer->code .'-' . time();
 
             // Build item details FIRST
             $items = [];
