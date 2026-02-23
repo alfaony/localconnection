@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Models\CustomerSubscription;
 use App\Models\SubscriptionChat;
 use App\Jobs\SentInbox;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -74,6 +75,25 @@ class SubscriptionChatController extends Controller
             $path = $request->file('attachment')->store('subscription_chats');
         }
 
+        // Anti-Spam Check: Limit customer to 3 consecutive messages
+        $lastChats = SubscriptionChat::where('subscription_id', $subscription->id)
+            ->latest()
+            ->take(3)
+            ->get();
+            
+        if ($lastChats->count() === 3) {
+            $allFromMe = true;
+            foreach ($lastChats as $c) {
+                if ($c->user_id !== Auth::id()) {
+                    $allFromMe = false;
+                    break;
+                }
+            }
+            if ($allFromMe) {
+                return response()->json(['error' => 'Mohon tunggu balasan dari admin sebelum mengirim pesan lagi (Maksimal 3 pesan beruntun).'], 429);
+            }
+        }
+
         try {
             $chat = SubscriptionChat::create([
                 'subscription_id' => $subscription->id,
@@ -93,30 +113,68 @@ class SubscriptionChatController extends Controller
                 Auth::id()
             ));
 
-            // Kirim inbox ke semua user yang pernah terlibat dalam chat + PIC software
-            $subscription->load('software.pic', 'user');
+            // --- INBOX COOLDOWN LOGIC ---
+            // 1. Ambil waktu chat TERAKHIR dari SI PENGIRIM (Customer) di ruang ini (sebelum chat yang baru ini)
+            $lastChatFromSender = SubscriptionChat::where('subscription_id', $subscription->id)
+                ->where('user_id', Auth::id())
+                ->where('id', '!=', $chat->id) // Jangan hitung chat yang baru dibuat
+                ->latest()
+                ->first();
 
-            $userIds = SubscriptionChat::where('subscription_id', $subscription->id)
+            // 2. Ambil waktu chat TERAKHIR dari LAWAN BICARA (Admin/PIC) di ruang ini
+            $lastChatFromReceiver = SubscriptionChat::where('subscription_id', $subscription->id)
                 ->where('user_id', '!=', Auth::id())
-                ->distinct()
-                ->pluck('user_id');
+                ->latest()
+                ->first();
 
-            // Tambahkan PIC software jika ada dan bukan pengirim
-            $pic = $subscription->software->pic ?? null;
-            if ($pic) {
-                $userIds->push($pic->id);
+            $shouldSendInbox = false;
+
+            if (!$lastChatFromSender) {
+                // Kasus: Ini benar-benar chat PERTAMA DIA di ruang ini
+                $shouldSendInbox = true; 
+            } else {
+                $minutesSinceMyLastChat = now()->diffInMinutes($lastChatFromSender->created_at);
+                
+                if ($minutesSinceMyLastChat >= 5) {
+                    $shouldSendInbox = true; // Kasus: Udah kelamaan nganggur > 5 mnt, send alert!
+                } else {
+                    $shouldSendInbox = false; // Hindari spam beruntun diri sendiri
+                }
             }
 
-            $userIds = $userIds->unique()->filter();
+            // 3. Pengecualian Kasus Ping-Pong Aktif
+            if ($shouldSendInbox && $lastChatFromReceiver) {
+                $minutesSinceHeReplied = now()->diffInMinutes($lastChatFromReceiver->created_at);
+                // Kalau lawan bicara baru saja ngechat di bawah 5 menit yang lalu, Asumsinya kita sedang asyik tik-tok-an live chat
+                if ($minutesSinceHeReplied < 5) {
+                    $shouldSendInbox = false;
+                }
+            }
 
-            $url     = route('subscription.show', $subscription->id);
-            $message = "💬 Customer *{$subscription->user->name}* mengirim pesan baru di subscription *{$subscription->software->nama}*: \"{$request->message}\"";
+            if ($shouldSendInbox) {
+                // Kirim inbox ke PIC / Admin
+                $subscription->load('software.pic', 'user');
+                
+                $userIds = SubscriptionChat::where('subscription_id', $subscription->id)
+                    ->where('user_id', '!=', Auth::id())
+                    ->distinct()
+                    ->pluck('user_id');
 
-            // foreach ($userIds as $userId) {
-            //     if ($userId != Auth::id()) {
-            //         SentInbox::dispatch(Auth::id(), $userId, $message, $url);
-            //     }
-            // }
+                $pic = $subscription->software->pic ?? null;
+                if ($pic) {
+                    $userIds->push($pic->id);
+                }
+
+                $userIds = $userIds->unique()->filter();
+                $url     = route('subscription.show', $subscription->id);
+                $message = "💬 Customer *{$subscription->user->name}* mengirim pesan baru di subscription *{$subscription->software->nama}*: \"{$request->message}\"";
+
+                foreach ($userIds as $userId) {
+                    if ($userId != Auth::id()) {
+                        SentInbox::dispatch(Auth::id(), $userId, $message, $url);
+                    }
+                }
+            }
 
             return response()->json([
                 'success' => true,

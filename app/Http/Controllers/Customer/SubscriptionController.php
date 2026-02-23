@@ -4,7 +4,11 @@ namespace App\Http\Controllers\Customer;
 
 use App\Http\Controllers\Controller;
 use App\Models\CustomerSubscription;
+use App\Models\SettingCompany;
 use App\Models\SoftwarePackage;
+use App\Models\SubscriptionPayment;
+use App\Services\MidtransService;
+use App\Services\SubscriptionPaymentService;
 use App\Services\SubscriptionService;
 use App\Services\SubscriptionXenditService;
 use Illuminate\Http\Request;
@@ -75,14 +79,29 @@ class SubscriptionController extends Controller
             abort(403, 'Unauthorized access');
         }
 
-        $subscription->load(['masterAccount.software', 'package']);
+        $subscription->load(['masterAccount.software', 'software', 'package']);
 
-        // Get available packages for renewal
-        $packages = SoftwarePackage::where('software_id', $subscription->masterAccount->software_id)
+        // Get available packages for renewal (from the subscription's software)
+        $softwareId = $subscription->software_id ?? $subscription->masterAccount->software_id ?? null;
+        $packages = SoftwarePackage::where('software_id', $softwareId)
             ->active()
             ->get();
 
-        return view('customer.subscriptions.renew', compact('subscription', 'packages'));
+        // Get payment methods and PPN settings — exactly same as CustomerCheckoutController
+        $paymentService = new SubscriptionPaymentService($subscription->company_id);
+        $paymentMethods = $paymentService->getAvailablePaymentMethods();
+
+        $settingCompany = SettingCompany::byCompany($subscription->company_id)
+            ->get()->pluck('field_value', 'field_title');
+
+        $ppnSettings = [
+            'rate'     => floatval($settingCompany['ppn_default_software_sharing'] ?? 0),
+            'manual'   => true, // Manual always applies PPN
+            'xendit'   => ($settingCompany['xendit_pay_with_ppn_software_subscription'] ?? '0') === '1',
+            'midtrans' => ($settingCompany['midtrans_pay_with_ppn_software_sharing']   ?? '0') === '1',
+        ];
+
+        return view('customer.subscriptions.renew', compact('subscription', 'packages', 'paymentMethods', 'ppnSettings'));
     }
 
     /**
@@ -96,7 +115,9 @@ class SubscriptionController extends Controller
         }
 
         $validated = $request->validate([
-            'package_id' => 'required|exists:software_packages,id',
+            'package_id'       => 'required|exists:software_packages,id',
+            'payment_gateway'  => 'required|string|in:manual,xendit,midtrans',
+            'selected_bank'    => 'nullable|integer',
         ]);
 
         $user = Auth::user();
@@ -105,61 +126,88 @@ class SubscriptionController extends Controller
         DB::beginTransaction();
 
         try {
-            // If subscription is expired, need to check slot availability
+            // If subscription is expired, reactivate using the SAME master account
+            // (slot was already theirs — no need to find a new slot)
             if ($subscription->status === 'expired') {
-                $hasSlot = $this->subscriptionService->checkSlotsAvailability(
-                    $subscription->masterAccount->software_id,
-                    $subscription->company_id
-                );
+                $masterAccount = $subscription->masterAccount;
 
-                if (!$hasSlot) {
-                    throw new \Exception('Maaf, slot sudah penuh. Silakan hubungi admin.');
+                if (!$masterAccount) {
+                    // Master account has been removed; find a new available slot
+                    $hasFreeSlot = $this->subscriptionService->checkSlotsAvailability(
+                        $subscription->software_id,
+                        $subscription->company_id
+                    );
+
+                    if (!$hasFreeSlot) {
+                        throw new \Exception('Maaf, slot sudah penuh. Silakan hubungi admin.');
+                    }
+
+                    $masterAccount = $this->subscriptionService->findAvailableMasterAccount(
+                        $subscription->software_id,
+                        $subscription->company_id
+                    );
+                    $masterAccount->reserveSlot();
+
+                    $subscription->update(['master_account_id' => $masterAccount->id]);
+                }
+                // Else: keep using the same master account — nothing to change
+            }
+
+
+            // Create new payment record and handle gateway routing
+            $gateway = $validated['payment_gateway'];
+            $paymentService = new SubscriptionPaymentService($subscription->company_id);
+            $ppnCalc = $paymentService->calculatePpn($package->harga, $gateway);
+
+            $payment = SubscriptionPayment::create([
+                'company_id'         => $subscription->company_id,
+                'subscription_id'    => $subscription->id,
+                'amount'             => $ppnCalc['total'],
+                'xendit_external_id' => $subscription->order_number . '-RNW-' . time(),
+                'status'             => 'pending',
+                'expired_at'         => now()->addHours(24),
+            ]);
+
+            if ($gateway === 'xendit') {
+                $xenditService = new SubscriptionXenditService($subscription->company_id);
+                $invoiceResult = $xenditService->createInvoice($subscription, $package, $user);
+
+                if (!$invoiceResult['success']) {
+                    throw new \Exception($invoiceResult['message']);
                 }
 
-                // Reserve slot for renewed subscription
-                $masterAccount = $this->subscriptionService->findAvailableMasterAccount(
-                    $subscription->masterAccount->software_id,
-                    $subscription->company_id
-                );
-                $masterAccount->reserveSlot();
+                $invoice = $invoiceResult['invoice'];
+                $payment->update(['xendit_invoice_id' => $invoice['id']]);
 
-                // Update subscription with new master account if needed
-                $subscription->update([
-                    'master_account_id' => $masterAccount->id,
-                ]);
+                DB::commit();
+                return redirect($invoiceResult['payment_url']);
+
+            } elseif ($gateway === 'midtrans') {
+                $midtransService = new MidtransService($subscription->company_id);
+                $result = $midtransService->createTransactionForSubscription($subscription, $package, $user);
+
+                if (!$result['success']) {
+                    throw new \Exception($result['message']);
+                }
+
+                $payment->update(['xendit_invoice_id' => $result['order_id'] ?? null]);
+
+                DB::commit();
+                return redirect($result['redirect_url']);
+
+            } else {
+                // Manual transfer
+                $payment->update(['status' => 'pending']);
+
+                DB::commit();
+
+                return redirect()
+                    ->route('customer-subscription.show', $subscription->id)
+                    ->with('success', 'Pesanan perpanjangan berhasil dibuat! Silakan transfer ke rekening yang tersedia, lalu upload bukti pembayaran.');
             }
-
-            // Create new payment record
-            $payment = SubscriptionPayment::create([
-                'company_id' => $subscription->company_id,
-                'subscription_id' => $subscription->id,
-                'amount' => $package->harga,
-                'xendit_external_id' => $subscription->order_number . '-RNW-' . time(),
-                'status' => 'pending',
-                'expired_at' => now()->addHours(24),
-            ]);
-
-            // Create Xendit invoice
-            $xenditService = new SubscriptionXenditService($subscription->company_id);
-            $invoiceResult = $xenditService->createInvoice($subscription, $package, $user);
-
-            if (!$invoiceResult['success']) {
-                throw new \Exception($invoiceResult['message']);
-            }
-
-            $invoice = $invoiceResult['invoice'];
-
-            // Update payment with Xendit invoice ID
-            $payment->update([
-                'xendit_invoice_id' => $invoice['id'],
-            ]);
-
-            DB::commit();
-
-            // Redirect to Xendit payment page
-            return redirect($invoice['invoice_url']);
 
         } catch (\Exception $e) {
+            // dd($e);
             DB::rollBack();
 
             return redirect()

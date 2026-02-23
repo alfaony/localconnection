@@ -143,6 +143,21 @@ class Kernel extends ConsoleKernel
             ->dailyAt('23:45')
             ->withoutOverlapping(10)
             ->appendOutputTo(storage_path('logs/isolir.log'));
+
+        // =============== SUBSCRIPTION EXPIRY =================
+        // Notifikasi 7 hari, 3 hari, dan hari-H sekaligus
+        $schedule->command('subscription:notify-expiry --days=all')
+            ->timezone('Asia/Jakarta')
+            ->dailyAt('08:00')
+            ->withoutOverlapping(5)
+            ->appendOutputTo(storage_path('logs/subscription_expiry.log'));
+
+        // Expired: set status expired untuk subscription yang sudah melewati tanggal_expired
+        $schedule->command('subscription:expire-overdue')
+            ->timezone('Asia/Jakarta')
+            ->dailyAt('00:05')
+            ->withoutOverlapping(5);
+        // =============== END SUBSCRIPTION EXPIRY =============
         // =============== END BILLING & ISOLIR ===============
 
         // Send billing reminder untuk customer yang end_billing_date = today (jam 17:00)

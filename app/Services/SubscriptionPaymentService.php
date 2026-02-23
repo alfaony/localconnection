@@ -131,7 +131,7 @@ class SubscriptionPaymentService
         $gatewayAutoAddsPpn = false;
 
         if ($gateway === 'xendit') {
-            $xenditPpnSetting = $this->settings['xendit']['xendit_pay_with_ppn_software_subscription'] ?? '0';
+            $xenditPpnSetting = $this->settings['xendit']['xendit_pay_with_ppn_software_software_subscription'] ?? '0';
             $gatewayAutoAddsPpn = ($xenditPpnSetting === '1' || $xenditPpnSetting === true);
         } elseif ($gateway === 'midtrans') {
             $midtransPpnSetting = $this->settings['midtrans']['midtrans_pay_with_ppn_software_sharing'] ?? '0';

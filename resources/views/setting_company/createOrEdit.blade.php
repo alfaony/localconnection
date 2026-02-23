@@ -1009,8 +1009,8 @@
                                         
                                         <div class="form-group">
                                             <div class="custom-control custom-switch">
-                                                <input type="checkbox" class="custom-control-input" id="xendit_pay_with_ppn_software_subscription" name="xendit_pay_with_ppn_software_subscription" value="1" {{ old('xendit_pay_with_ppn_software_subscription', $data['xendit_pay_with_ppn_software_subscription'] ?? '0') == '1' ? 'checked' : '' }}>
-                                                <label class="custom-control-label" for="xendit_pay_with_ppn_software_subscription">
+                                                <input type="checkbox" class="custom-control-input" id="xendit_pay_with_ppn_software_software_subscription" name="xendit_pay_with_ppn_software_software_subscription" value="1" {{ old('xendit_pay_with_ppn_software_software_subscription', $data['xendit_pay_with_ppn_software_software_subscription'] ?? '0') == '1' ? 'checked' : '' }}>
+                                                <label class="custom-control-label" for="xendit_pay_with_ppn_software_software_subscription">
                                                     <strong>Gateway Auto-Calculate PPN</strong>
                                                 </label>
                                             </div>

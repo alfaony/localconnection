@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Models\CustomerSubscription;
 use App\Models\SubscriptionChat;
 use App\Jobs\SentInbox;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -84,28 +85,65 @@ class SubscriptionChatController extends Controller
                 Auth::id()
             ));
 
-            // Kirim inbox ke semua user yang pernah terlibat dalam chat + customer
-            $subscription->load('user', 'software');
+            // --- INBOX COOLDOWN LOGIC ---
+            // 1. Ambil waktu chat TERAKHIR dari SI PENGIRIM (Admin) di ruang ini
+            $lastChatFromSender = SubscriptionChat::where('subscription_id', $subscription->id)
+                ->where('user_id', Auth::id())
+                ->where('id', '!=', $chat->id) // Jangan hitung chat yang baru dibuat
+                ->latest()
+                ->first();
+
+            // 2. Ambil waktu chat TERAKHIR dari LAWAN BICARA (Customer) di ruang ini
             $customer = $subscription->user;
-
-            $userIds = SubscriptionChat::where('subscription_id', $subscription->id)
-                ->where('user_id', '!=', Auth::id())
-                ->distinct()
-                ->pluck('user_id');
-
-            // Tambahkan customer jika ada dan bukan pengirim
-            if ($customer) {
-                $userIds->push($customer->id);
+            $customerId = $customer ? $customer->id : null;
+            $lastChatFromReceiver = null;
+            if ($customerId) {
+                $lastChatFromReceiver = SubscriptionChat::where('subscription_id', $subscription->id)
+                    ->where('user_id', $customerId)
+                    ->latest()
+                    ->first();
             }
 
-            $userIds = $userIds->unique()->filter();
+            $shouldSendInbox = false;
 
-            $url     = route('customer-subscription.show', $subscription->id);
-            $message = "💬 Ada pesan baru dari admin untuk subscription *{$subscription->software->nama}*: \"{$request->message}\"";
+            if (!$lastChatFromSender) {
+                $shouldSendInbox = true; 
+            } else {
+                $minutesSinceMyLastChat = now()->diffInMinutes($lastChatFromSender->created_at);
+                if ($minutesSinceMyLastChat >= 5) {
+                    $shouldSendInbox = true; 
+                } else {
+                    $shouldSendInbox = false; 
+                }
+            }
 
-            foreach ($userIds as $userId) {
-                if ($userId != Auth::id()) {
-                    SentInbox::dispatch(Auth::id(), $userId, $message, $url);
+            // 3. Pengecualian Kasus Ping-Pong Aktif
+            if ($shouldSendInbox && $lastChatFromReceiver) {
+                $minutesSinceHeReplied = now()->diffInMinutes($lastChatFromReceiver->created_at);
+                if ($minutesSinceHeReplied < 5) {
+                    $shouldSendInbox = false;
+                }
+            }
+
+            if ($shouldSendInbox) {
+                $subscription->load('user', 'software');
+                $userIds = SubscriptionChat::where('subscription_id', $subscription->id)
+                    ->where('user_id', '!=', Auth::id())
+                    ->distinct()
+                    ->pluck('user_id');
+
+                if ($customer) {
+                    $userIds->push($customer->id);
+                }
+
+                $userIds = $userIds->unique()->filter();
+                $url     = route('customer-subscription.show', $subscription->id);
+                $message = "💬 Ada pesan baru dari admin untuk subscription *{$subscription->software->nama}*: \"{$request->message}\"";
+
+                foreach ($userIds as $userId) {
+                    if ($userId != Auth::id()) {
+                        SentInbox::dispatch(Auth::id(), $userId, $message, $url);
+                    }
                 }
             }
 
