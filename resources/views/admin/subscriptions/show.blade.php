@@ -84,7 +84,7 @@
                             <th>Tanggal Expired</th>
                             <td>
                                 @if($subscription->tanggal_expired)
-                                    {{ carbon\carbon::parse($subscription->tanggal_expired)->format('d m y') }}
+                                    {{ carbon\carbon::parse($subscription->tanggal_expired)->format('d M Y') }}
                                     @if($subscription->isExpiringSoon(7) && $subscription->status == 'active')
                                         <br><small class="text-danger">
                                             <i class="fas fa-exclamation-triangle"></i> {{ $subscription->days_until_expiry }} hari lagi

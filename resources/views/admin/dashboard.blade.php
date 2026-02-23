@@ -221,7 +221,7 @@
                             <br>
                             <small class="text-danger">
                                 <i class="far fa-clock"></i> 
-                                Expired: {{ carbon\carbon::parse($subscription->tanggal_expired)->format('d m y') }}
+                                Expired: {{ carbon\carbon::parse($subscription->tanggal_expired)->format('d M Y') }}
                                 ({{ $subscription->days_until_expiry }} hari lagi)
                             </small>
                         </li>

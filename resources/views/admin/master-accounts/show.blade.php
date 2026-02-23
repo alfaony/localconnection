@@ -395,7 +395,7 @@
                                                     {{ ucfirst($subscription->payment_status) }}
                                                 </span>
                                             </td>
-                                            <td><small>{{ carbon\carbon::parse($subscription->tanggal_expired)->format('d m y') }}</small></td>
+                                            <td><small>{{ carbon\carbon::parse($subscription->tanggal_expired)->format('d M Y') }}</small></td>
                                         </tr>
                                     @endforeach
                                 </tbody>
