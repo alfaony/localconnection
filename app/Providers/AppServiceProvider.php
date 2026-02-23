@@ -789,7 +789,7 @@ class AppServiceProvider extends ServiceProvider
                 ],
                 'software_dashboards' =>
                 [
-                    'text' => 'Dashboard',
+                    'text' => 'Dashboard Software',
                     'route' => 'software-dashboard.index',
                     'icon' => 'fa fa-tachometer-alt',
                 ],
@@ -1182,6 +1182,8 @@ class AppServiceProvider extends ServiceProvider
             //         ]
             //     ]
             // ];
+
+            // dd(Access::can('index','software_dashboards'));
 
             // ====== Helper: build submenu dari daftar role ======
             $buildSubmenu = function(array $roles) use ($menus) {

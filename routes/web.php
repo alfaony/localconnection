@@ -119,6 +119,7 @@ use App\Http\Controllers\PartnerDashboardController;
 use App\Http\Controllers\PartnerMonthlyReportController;
 use App\Http\Controllers\PartnerTargetController;
 use App\Http\Controllers\PartnerParameterTypeController;
+use App\Http\Controllers\Public\SoftwareSharingController;
 
 use App\Http\Controllers\Admin\{
     DashboardController,
@@ -225,11 +226,6 @@ Route::group(['prefix' => 'mom/external'], function ()
   Route::post('task/{token}/submit', [MomController::class, 'submitExternalTask'])->name('external.task.submit');
 });
 
-// Route::group(['prefix' => 'meeting/public'], function() {
-//     Route::get('oauth/callback', [MeetingController::class, 'handleGoogleCallbackPublic'])->name('meeting.public.callback');
-//     Route::view('error', 'meeting.public.error')->name('meeting.public.error');
-//     Route::get('join/{slug}/{token}', [MeetingController::class, 'redirectToGooglePublic'])->name('meeting.public.join');
-// });
 Route::prefix('meeting/public')->group(function () {
     Route::view('error', 'meeting.public_error')->name('meeting.public.error');
     Route::get('join/{slug}/{token}', [MeetingController::class, 'showPublicJoinForm'])->name('meeting.public.join');
@@ -266,6 +262,7 @@ Route::group(['middleware' => ['auth','web', 'ensure.xero.connected','role.permi
 
 Auth::routes([
   'register' => false, // Registration Routes...
+  'verify'   => true,  // Email Verification Routes (verification.verify, dll.)
 ]);
 
 Route::get('/', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
@@ -279,6 +276,23 @@ Route::put('partnership-agreement/signatureShare/{id}',[PartnershipAgreementCont
 
 Route::get('used-laptop/showQr/{slug}', [UsedLaptopController::class,'showQr'])->name('used-laptop.show-qr');
 Route::get('used-item/showQr/{slug}', [UsedItemController::class,'showQr'])->name('used-item.show-qr');
+
+
+// ============================================================
+// PUBLIC SOFTWARE SHARING REGISTRATION
+// ============================================================
+Route::prefix('customer-software/account')->name('public.software-sharing.')->group(function () {
+    // Catalog halaman utama (list semua software)
+    Route::get('{companySlug}', [SoftwareSharingController::class, 'index'])->name('index');
+    // Form registrasi akun baru
+    Route::get('{companySlug}/register', [SoftwareSharingController::class, 'showRegister'])->name('register');
+    Route::post('{companySlug}/register', [SoftwareSharingController::class, 'register'])->name('register.post');
+    // Form login
+    Route::get('{companySlug}/login', [SoftwareSharingController::class, 'showLogin'])->name('login');
+    Route::post('{companySlug}/login', [SoftwareSharingController::class, 'login'])->name('login.post');
+    // Resend verifikasi
+    Route::post('{companySlug}/resend-verification', [SoftwareSharingController::class, 'resendVerification'])->name('resend-verification');
+});
 
 Route::group(['middleware' => ['auth','role.permission','ip.restriction']], function()
 {
