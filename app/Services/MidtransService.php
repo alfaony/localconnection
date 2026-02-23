@@ -309,7 +309,7 @@ class MidtransService
             $totalAmount = $ppnCalculation['gateway_amount'];
 
             // Build order ID (unique) with _softwareSharing identifier
-            $orderId = 'SUB-' . $subscription->order_number . '_softwareSharing';
+            $orderId = $subscription->order_number . '_softwareSharing';
 
             // Build item details
             $items = [];

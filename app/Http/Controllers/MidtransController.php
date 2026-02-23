@@ -183,31 +183,12 @@ class MidtransController extends Controller
      */
     private function processSoftwareSharingWebhook($orderId, $data, $user, $request)
     {
-        // Parse order_id to get order_number (format: SUB-{order_number})
-        $parts = explode('-', $orderId);
-        if (count($parts) < 2 || $parts[0] !== 'SUB') {
-            Log::error('Invalid order_id format for Software Sharing', ['order_id' => $orderId]);
-            return response()->json(['message' => 'Invalid Order ID Format'], 200);
-        }
-
-        // Reconstruct order number if it has dashes SUB-123-abc becomes 123-abc
-        array_shift($parts); // Remove SUB
-        $orderNumber = implode('-', $parts);
-
-        // However CustomerSubscription typically uses format SUB&... so let's adjust for order_id passed to midtrans.
-        // Wait, earlier I passed order_id = 'SUB-' . $subscription->order_number . '_softwareSharing';
-        // If order_number is "SUB&20231010&ABCD", then we used "SUB-SUB&20231010&ABCD"
-        // Let's just find the subscription directly by getting the string after "SUB-"
-        if (str_starts_with($orderId, 'SUB-')) {
-            $orderNumber = substr($orderId, 4);
-        }
-
-        $subscription = CustomerSubscription::where('order_number', $orderNumber)->first();
+        $subscription = CustomerSubscription::where('order_number', $orderId)->first();
 
         if (!$subscription) {
             Log::error('Subscription not found for Midtrans notification', [
                 'order_id' => $orderId,
-                'order_number' => $orderNumber,
+                'order_number' => $orderId,
             ]);
             return response()->json(['message' => 'Subscription Not Found'], 200);
         }
@@ -286,8 +267,10 @@ class MidtransController extends Controller
             Log::info('Payment confirmed for Software Subscription', [
                 'company_id' => $subscription->company_id,
                 'subscription_id' => $subscription->id,
-                'order_number' => $orderNumber
+                'order_number' => $orderId
             ]);
+
+            $this->notifyTeamSuccess($subscription, $user);
 
         } elseif ($transactionStatus == 'pending') {
             $payment = SubscriptionPayment::where('subscription_id', $subscription->id)
@@ -435,6 +418,56 @@ class MidtransController extends Controller
         }
 
         $internetPurchase->customer->update($post);
+    }
+
+    /**
+     * Send inbox notifications after manual approve:
+     * 1. To the customer: payment approved
+     * 2. To PIC software (from software.pic relation): please follow up
+     */
+    protected function notifyTeamSuccess($subscription, $user)
+    {
+        $subscription->load(['user', 'package.software.pic', 'masterAccount.software.pic']);
+
+        $approvedBy = $user->id;
+        $customer   = $subscription->user;
+        $paket      = $subscription->package->nama_paket ?? 'Langganan';
+
+        // Resolve software object (prefer from masterAccount, fallback to package)
+        $softwareModel = $subscription->masterAccount->software
+                      ?? $subscription->package->software
+                      ?? null;
+        $softwareName  = $softwareModel->nama ?? 'Software';
+
+        // ── 1. Notifikasi ke Pelanggan ──────────────────────────────────────
+        $urlCustomer = route('customer-subscription.show', $subscription->id);
+        $msgCustomer = "🎉 Selamat! Pembayaran Anda untuk paket *{$paket}* ({$softwareName}) "
+                     . "telah berhasil dikonfirmasi. Langganan Anda kini sudah aktif. "
+                     . "Silakan akses dashboard untuk melihat detail akses Anda.";
+        $this->sentInbox($customer->id, $approvedBy, $msgCustomer, $urlCustomer);
+
+        // ── 2. Notifikasi ke PIC Software ──────────────────────────────────
+        $pic = $softwareModel ? $softwareModel->pic : null;
+
+        if ($pic && $pic->id !== $approvedBy) {
+            $urlAdmin = route('subscription.payments', $subscription->id);
+            $msgAdmin = "📋 Member *{$customer->name}* telah berhasil melakukan pembayaran "
+                      . "untuk paket *{$paket}* ({$softwareName}). "
+                      . "Pembayaran sudah disetujui. Silakan segera tindak lanjuti dan pastikan akses member sudah aktif.";
+
+            $this->sentInbox($pic->id, $approvedBy, $msgAdmin, $urlAdmin);
+
+            \Log::info('Inbox notification sent to PIC', [
+                'subscription_id' => $subscription->id,
+                'customer_id'     => $customer->id,
+                'pic_id'          => $pic->id,
+            ]);
+        } else {
+            \Log::info('No PIC found for software, skipping PIC notification', [
+                'subscription_id' => $subscription->id,
+                'software'        => $softwareName,
+            ]);
+        }
     }
 
     /**

@@ -8,7 +8,7 @@
 @section('content')
     <div class="row justify-content-center">
         <div class="col-md-8">
-            <div class="card card-success">
+            <div class="card card-success mt-5">
                 <div class="card-body text-center py-5">
                     <i class="fas fa-check-circle fa-5x text-success mb-4"></i>
                     <h1 class="text-success">Pembayaran Berhasil!</h1>

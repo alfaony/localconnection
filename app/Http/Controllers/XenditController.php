@@ -410,6 +410,7 @@ class XenditController extends Controller
                 ]);
 
                 $urlResutl = route('customer-checkout.payment.success', ['order' => $orderNumber]);
+                $this->notifyTeamSuccess($subscription, $user); 
                 break;
 
             case 'expired':

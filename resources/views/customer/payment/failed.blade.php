@@ -9,7 +9,7 @@
     <div class="row justify-content-center">
         <div class="col-md-8">
             <div class="card card-danger">
-                <div class="card-body text-center py-5">
+                <div class="card-body text-center py-5 mt-5">
                     <i class="fas fa-times-circle fa-5x text-danger mb-4"></i>
                     <h1 class="text-danger">Pembayaran Gagal</h1>
                     <p class="lead">Maaf, pembayaran Anda tidak dapat diproses</p>
