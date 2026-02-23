@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Cache;
 use App\Models\SettingCompany;
 use App\Models\CustomerSubscription;
 use App\Models\SubscriptionPayment;
+use App\Services\SubscriptionPaymentService;
 
 class SubscriptionXenditService
 {
@@ -89,12 +90,17 @@ class SubscriptionXenditService
             $description = "Pembayaran {$software->nama} - {$software->tipe_paket}";
             $description .= " untuk {$package->nama_paket}";
 
+            // Calculate PPN based on company settings for Xendit
+            $paymentService = new SubscriptionPaymentService($this->companyId);
+            $ppnCalculation = $paymentService->calculatePpn($package->harga, 'xendit');
+            $totalAmount = $ppnCalculation['gateway_amount'];
+
             // Build items array (plain array for Keloola Pay API)
             $items = [
                 [
                     'name' => "{$software->nama} - {$package->nama_paket}",
                     'qty' => 1,
-                    'price' => $package->harga,
+                    'price' => $totalAmount,
                     'category' => 'Subscription'
                 ]
             ];
@@ -102,7 +108,7 @@ class SubscriptionXenditService
             // Create invoice request payload
             $createInvoiceRequestPayload = [
                 'external_id' => $subscription->order_number . '_softwareSharing',
-                'amount' => $package->harga,
+                'amount' => $totalAmount,
                 'description' => $description,
                 'items' => $items,
             ];
@@ -148,7 +154,7 @@ class SubscriptionXenditService
                 'subscription_id' => $subscription->id ?? null,
                 'invoice_id' => $invoiceData['data']['id'] ?? null,
                 'external_id' => $subscription->order_number . '_softwareSharing',
-                'amount' => $package->harga,
+                'amount' => $totalAmount,
             ]);
 
             // Return consistent structure

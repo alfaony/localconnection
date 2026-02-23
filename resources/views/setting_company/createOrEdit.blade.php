@@ -1025,6 +1025,70 @@
                                 <div class="card">
                                     <div class="card-header">
                                         <h5>
+                                            Midtrans Software Sharing
+                                        </h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="alert alert-info">
+                                            <i class="fas fa-info-circle"></i> <strong>Info:</strong> Konfigurasi Midtrans SNAP untuk pembayaran pelanggan internet. Dapatkan credentials dari <a href="https://dashboard.midtrans.com" target="_blank">Midtrans Dashboard</a>.
+                                        </div>
+
+                                        <div class="form-group">
+                                            <label for="server_key_midtrans_software_sharing">Server Key Midtrans</label>
+                                            <input type="text" name="server_key_midtrans_software_sharing" class="form-control" value="{{ old('server_key_midtrans_software_sharing', $data['server_key_midtrans_software_sharing'] ?? '') }}" placeholder="SB-Mid-server-... atau Mid-server-...">
+                                            <small class="form-text text-muted">Server Key dari Midtrans (Sandbox atau Production)</small>
+                                            @error('server_key_midtrans_software_sharing')
+                                            <span class="text-danger text-sm">{{ $message }}</span>
+                                            @enderror
+                                        </div>
+
+                                        <div class="form-group">
+                                            <label for="client_key_midtrans_software_sharing">Client Key Midtrans</label>
+                                            <input type="text" name="client_key_midtrans_software_sharing" class="form-control" value="{{ old('client_key_midtrans_software_sharing', $data['client_key_midtrans_software_sharing'] ?? '') }}" placeholder="SB-Mid-client-... atau Mid-client-...">
+                                            <small class="form-text text-muted">Client Key dari Midtrans (Sandbox atau Production)</small>
+                                            @error('client_key_midtrans_software_sharing')
+                                            <span class="text-danger text-sm">{{ $message }}</span>
+                                            @enderror
+                                        </div>
+
+                                        <div class="form-group">
+                                            <label for="environment_midtrans_software_sharing">Environment</label>
+                                            <select name="environment_midtrans_software_sharing" class="form-control">
+                                                <option value="sandbox" {{ old('environment_midtrans_software_sharing', $data['environment_midtrans_software_sharing'] ?? 'sandbox') == 'sandbox' ? 'selected' : '' }}>Sandbox (Testing)</option>
+                                                <option value="production" {{ old('environment_midtrans', $data['environment_midtrans'] ?? 'sandbox') == 'production' ? 'selected' : '' }}>Production (Live)</option>
+                                            </select>
+                                            <small class="form-text text-muted">
+                                                <strong>Sandbox:</strong> Untuk testing<br>
+                                                <strong>Production:</strong> Untuk transaksi live
+                                            </small>
+                                            @error('environment_midtrans')
+                                            <span class="text-danger text-sm">{{ $message }}</span>
+                                            @enderror
+                                        </div>
+
+                                        <div class="alert alert-warning">
+                                            <i class="fas fa-exclamation-triangle"></i> <strong>Webhook URL:</strong> <code>{{ url('/midtrans/notification') }}</code><br>
+                                            <small>Pastikan URL ini terdaftar di Midtrans Dashboard → Settings → Configuration → Notification URL</small>
+                                        </div>
+                                        
+                                        <div class="form-group">
+                                            <div class="custom-control custom-switch">
+                                                <input type="checkbox" class="custom-control-input" id="pay_with_ppn_midtrans_software_sharing" name="midtrans_pay_with_ppn_software_sharing" value="1" {{ old('midtrans_pay_with_ppn_software_sharing', $data['midtrans_pay_with_ppn_software_sharing'] ?? '0') == '1' ? 'checked' : '' }}>
+                                                <label class="custom-control-label" for="pay_with_ppn_midtrans_software_sharing">
+                                                    <strong>Gateway Auto-Calculate PPN</strong>
+                                                </label>
+                                            </div>
+                                            <small class="form-text text-muted">
+                                                <i class="fas fa-info-circle"></i> 
+                                                <strong>Enabled:</strong> Kirim net price (price_nett), Midtrans akan tambahkan PPN<br>
+                                                <strong>Disabled:</strong> Kirim gross price (price) yang sudah termasuk PPN
+                                            </small>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h5>
                                             Rekening Software Sharing
                                         </h5>
                                     </div>

@@ -59,6 +59,8 @@ class SubscriptionPayment extends Model
         'manual_transfer_sender_bank',
         'midtrans_snap_token',
         'midtrans_order_id',
+        'finance_user_id',
+        'finance_user_idfinance_user_at',
     ];
 
     /**

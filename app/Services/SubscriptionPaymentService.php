@@ -35,7 +35,7 @@ class SubscriptionPaymentService
                 ->toArray();
             
             $midtransSettings = SettingCompany::byCompany($this->companyId)
-                ->where('menu', 'midtrans_software_subscription')
+                ->where('menu', 'midtrans_software_sharing')
                 ->get()
                 ->pluck('field_value', 'field_title')
                 ->toArray();
@@ -79,16 +79,15 @@ class SubscriptionPaymentService
                 'description' => 'Pembayaran via Xendit (Virtual Account, E-Wallet, dll)',
             ];
         }
-
+        
         // Check Midtrans
-        if (!empty($this->settings['midtrans']['server_key_software_subscription']) && 
-            !empty($this->settings['midtrans']['client_key_software_subscription'])) {
+        if (!empty($this->settings['midtrans']['server_key_midtrans_software_sharing']) && 
+            !empty($this->settings['midtrans']['client_key_midtrans_software_sharing'])) {
             $methods['midtrans'] = [
                 'name' => 'Midtrans',
                 'description' => 'Pembayaran via Midtrans (Virtual Account, E-Wallet, dll)',
             ];
         }
-
         return $methods;
     }
 
@@ -121,14 +120,25 @@ class SubscriptionPaymentService
     }
 
     /**
-     * Calculate PPN (tax) for given amount
+     * Calculate PPN (tax) for given amount based on gateway settings
      * 
      * @param float $baseAmount The base amount before PPN
+     * @param string $gateway The payment gateway (manual, xendit, midtrans)
      * @return array Array with subtotal, ppn_rate, ppn_amount, and total
      */
-    public function calculatePpn($baseAmount)
+    public function calculatePpn($baseAmount, $gateway = 'manual')
     {
-        // Get PPN rate from settings, default to 0 if not set
+        $gatewayAutoAddsPpn = false;
+
+        if ($gateway === 'xendit') {
+            $xenditPpnSetting = $this->settings['xendit']['xendit_pay_with_ppn_software_subscription'] ?? '0';
+            $gatewayAutoAddsPpn = ($xenditPpnSetting === '1' || $xenditPpnSetting === true);
+        } elseif ($gateway === 'midtrans') {
+            $midtransPpnSetting = $this->settings['midtrans']['midtrans_pay_with_ppn_software_sharing'] ?? '0';
+            $gatewayAutoAddsPpn = ($midtransPpnSetting === '1' || $midtransPpnSetting === true);
+        }
+
+        // Customer always pays PPN now. Get PPN rate from settings, default to 0 if not set.
         $ppnRate = floatval($this->settings['manual']['ppn_default_software_sharing'] ?? 0);
         
         // Calculate PPN amount
@@ -142,6 +152,7 @@ class SubscriptionPaymentService
             'ppn_rate' => $ppnRate,
             'ppn_amount' => $ppnAmount,
             'total' => $total,
+            'gateway_amount' => $gatewayAutoAddsPpn ? $baseAmount : $total,
         ];
     }
 
@@ -184,7 +195,7 @@ class SubscriptionPaymentService
             $bankInfo = $banks[$selectedBank];
 
             // Calculate PPN
-            $ppnCalculation = $this->calculatePpn($package->harga);
+            $ppnCalculation = $this->calculatePpn($package->harga, 'manual');
 
             // Create payment record
             $payment = $this->createPaymentRecord([
@@ -247,7 +258,7 @@ class SubscriptionPaymentService
     {
         try {
             // Calculate PPN
-            $ppnCalculation = $this->calculatePpn($package->harga);
+            $ppnCalculation = $this->calculatePpn($package->harga, 'xendit');
 
             // Create payment record first
             $payment = $this->createPaymentRecord([
@@ -323,7 +334,7 @@ class SubscriptionPaymentService
     {
         try {
             // Calculate PPN
-            $ppnCalculation = $this->calculatePpn($package->harga);
+            $ppnCalculation = $this->calculatePpn($package->harga, 'midtrans');
 
             // Create payment record first
             $payment = $this->createPaymentRecord([

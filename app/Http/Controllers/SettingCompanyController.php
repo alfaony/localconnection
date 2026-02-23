@@ -55,6 +55,7 @@ class SettingCompanyController extends Controller
         $this->clearCache("xendit",Auth::user()->company_id);
         $this->clearCache("xendit_software_subscription",Auth::user()->company_id);
         $this->clearCache("payment_gateway",Auth::user()->company_id);
+        $this->clearCache("payment_gateway_settings",Auth::user()->company_id);
 
         
         // Boolean

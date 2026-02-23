@@ -51,22 +51,29 @@ class CustomerCheckoutController extends Controller
         // Get available payment methods
         $this->paymentService = new SubscriptionPaymentService($software->company_id);
         $paymentMethods = $this->paymentService->getAvailablePaymentMethods();
-
-
+        
         if (empty($paymentMethods)) {
             return redirect()
                 ->route('customer-software.show', $slug)
                 ->with('error', 'Tidak ada metode pembayaran yang tersedia. Silakan hubungi admin.');
         }
 
-        // Calculate PPN for price display
-        $ppnCalculation = $this->paymentService->calculatePpn($package->harga);
+        // Calculate PPN base metrics
+        $packagePrice = $package->harga;
         
         $settingCompany = \App\Models\SettingCompany::byCompany($software->company_id)
             ->get()
             ->pluck('field_value', 'field_title');
 
-        return view('customer.checkout.show', compact('software', 'package', 'paymentMethods', 'ppnCalculation', 'settingCompany'));
+        // Extract PPn settings specifically for frontend logic
+        $ppnSettings = [
+            'rate' => floatval($settingCompany['ppn_default_software_sharing'] ?? 0),
+            'manual' => true, // Manual always applies based on previous assumption
+            'xendit' => ($settingCompany['xendit_pay_with_ppn_software_software_subscription'] ?? '0') === '1',
+            'midtrans' => ($settingCompany['midtrans_pay_with_ppn_software_software_subscription'] ?? '0') === '1',
+        ];
+
+        return view('customer.checkout.show', compact('software', 'package', 'paymentMethods', 'packagePrice', 'ppnSettings', 'settingCompany'));
     }
 
     /**

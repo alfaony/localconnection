@@ -62,19 +62,17 @@
                         </tr>
                         <tr>
                             <th class="text-muted border-bottom">Subtotal</th>
-                            <td class="border-bottom text-right"><strong class="text-dark" style="font-size: 1.1rem;">Rp {{ number_format($ppnCalculation['subtotal'], 0, ',', '.') }}</strong></td>
+                            <td class="border-bottom text-right"><strong class="text-dark" style="font-size: 1.1rem;" id="ui-subtotal">Rp 0</strong></td>
                         </tr>
-                        @if($ppnCalculation['ppn_rate'] > 0)
-                        <tr>
-                            <th class="text-muted border-bottom">PPN ({{ number_format($ppnCalculation['ppn_rate'], 0) }}%)</th>
-                            <td class="border-bottom text-right"><strong class="text-dark">Rp {{ number_format($ppnCalculation['ppn_amount'], 0, ',', '.') }}</strong></td>
+                        <tr id="ui-ppn-row" style="display: none;">
+                            <th class="text-muted border-bottom" id="ui-ppn-label">PPN (0%)</th>
+                            <td class="border-bottom text-right"><strong class="text-dark" id="ui-ppn-amount">Rp 0</strong></td>
                         </tr>
-                        @endif
                         <tr style="background: var(--primary-l); border-radius: 12px;">
                             <th class="align-middle border-bottom-0" style="color: var(--primary-d); font-size: 1.15rem; padding-left: 16px;">Total Pembayaran</th>
                             <td class="border-bottom-0 text-right" style="padding-right: 16px;">
-                                <h4 class="mb-0 font-weight-bold" style="color: var(--primary); font-size: 1.5rem;">
-                                    Rp {{ number_format($ppnCalculation['total'], 0, ',', '.') }}
+                                <h4 class="mb-0 font-weight-bold" style="color: var(--primary); font-size: 1.5rem;" id="ui-total">
+                                    Rp 0
                                 </h4>
                             </td>
                         </tr>
@@ -481,6 +479,9 @@ $(document).ready(function() {
             $('#v_manual_details').slideDown(200);
         }
         $('#hidden_payment_gateway').val(selectedMethod);
+        
+        // Recalculate price presentation based on gateway selection
+        calculatePaymentTotal(selectedMethod);
     });
     
     // Bank selection styling
@@ -501,6 +502,9 @@ $(document).ready(function() {
     const initBank = $('.bank-checker:checked');
     $('#hidden_selected_bank').val(initBank.val());
     initBank.closest('.manual-bank-item').addClass('active').css('border-color', 'var(--primary)');
+    
+    // Initial Price Calculation on page load
+    calculatePaymentTotal($('#hidden_payment_gateway').val() || 'manual');
 
     // Submit form proxy
     $('#btn-submit-proxy').on('click', function(e) {
@@ -546,5 +550,35 @@ $(document).ready(function() {
         btn.find('.spinner').show();
     });
 });
+</script>
+<script>
+    // Constants for pricing logic passed from backend
+    const PACKAGE_PRICE = {{ $packagePrice }};
+    const PPN_SETTINGS = @json($ppnSettings);
+
+    function formatRupiah(amount) {
+        return 'Rp ' + amount.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+    }
+
+    function calculatePaymentTotal(gateway) {
+        let ppnRateString = PPN_SETTINGS.rate;
+        let ppnRate = parseFloat(ppnRateString);
+        let ppnAmount = PACKAGE_PRICE * (ppnRate / 100);
+        let total = PACKAGE_PRICE + ppnAmount;
+
+        // Update UI Elements
+        document.getElementById('ui-subtotal').innerText = formatRupiah(PACKAGE_PRICE);
+        
+        const ppnRowElement = document.getElementById('ui-ppn-row');
+        if (ppnRate > 0) {
+            ppnRowElement.style.display = 'table-row';
+            document.getElementById('ui-ppn-label').innerText = `PPN (${ppnRate}%)`;
+            document.getElementById('ui-ppn-amount').innerText = formatRupiah(ppnAmount);
+        } else {
+            ppnRowElement.style.display = 'none';
+        }
+
+        document.getElementById('ui-total').innerText = formatRupiah(total);
+    }
 </script>
 @stop

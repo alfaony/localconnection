@@ -26,7 +26,7 @@ class PermissionForMenuCustomerSoftware extends Seeder
 
             $softwareDashboard = ['softwareSharing'];
             $customerSoftware = ['index','show'];
-            $customerCheckout = ['process','show','paymentPending'];
+            $customerCheckout = ['process','show','paymentPending','paymentSuccess','paymentFailed'];
             $customerSubscription = ['index','show','renew','processRenewal','payments','store'];
             $subscriptionPayment = ['success','failed','uploadProof','checkStatus'];
 

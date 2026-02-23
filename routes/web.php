@@ -827,6 +827,8 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
       Route::post('customer-checkout/{slug}/{package}', [CustomerCheckoutController::class, 'process'])->name('customer-checkout.process');
       Route::get('customer-checkout/{slug}/{package}', [CustomerCheckoutController::class, 'show'])->name('customer-checkout.show');
       Route::get('customer-checkout/payment/pending/{order}', [CustomerCheckoutController::class, 'paymentPending'])->name('customer-checkout.payment.pending');
+      Route::get('customer-checkout/payment/success/{order}', [CustomerCheckoutController::class, 'paymentSuccess'])->name('customer-checkout.payment.success');
+      Route::get('customer-checkout/payment/failed/{order}', [CustomerCheckoutController::class, 'paymentFailed'])->name('customer-checkout.payment.failed');
 
       // ========================================================================
       // MY subscription

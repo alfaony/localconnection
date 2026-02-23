@@ -127,8 +127,8 @@ class MidtransService
 
 
 
-            // Build order ID (unique)
-            $orderId = 'INT-' . $purchase->id . '-' . time();
+            // Build order ID (unique) appending _internetCustomer for webhook routing
+            $orderId = 'INT-' . $purchase->id . '-' . time() . '_internetCustomer';
 
             // Build item details FIRST
             $items = [];
@@ -275,6 +275,139 @@ class MidtransService
             Log::error('Midtrans transaction creation failed', [
                 'company_id' => $this->companyId,
                 'purchase_id' => $purchase->id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return [
+                'success' => false,
+                'message' => $e->getMessage()
+            ];
+        }
+    }
+
+    /**
+     * Create SNAP transaction for software subscription
+     */
+    public function createTransactionForSubscription($subscription, $package, $customer, $options = [])
+    {
+        if (!$this->isActive()) {
+            return [
+                'success' => false,
+                'message' => 'Midtrans payment is not active for this company'
+            ];
+        }
+
+        try {
+            // Determine price based on PPN setting
+            $midtransPayWithPpn = $options['midtrans_pay_with_ppn'] ?? false;
+            
+            // Fetch PPN logic for SoftwareSharing
+            $paymentService = new SubscriptionPaymentService($this->companyId);
+            $ppnCalculation = $paymentService->calculatePpn($package->harga, 'midtrans');
+            
+            $totalAmount = $ppnCalculation['gateway_amount'];
+
+            // Build order ID (unique) with _softwareSharing identifier
+            $orderId = 'SUB-' . $subscription->order_number . '_softwareSharing';
+
+            // Build item details
+            $items = [];
+            
+            // Main package item
+            $software = $subscription->masterAccount->software ?? $subscription->software;
+            $packageItemName = $software->nama . " - " . $package->nama_paket;
+            
+            // Round to integer to avoid decimal issues
+            $itemPriceRounded = (int) round($totalAmount);
+                
+            $items[] = [
+                'id' => 'SOFT-' . $package->id,
+                'price' => $itemPriceRounded,
+                'quantity' => 1,
+                'name' => substr($packageItemName, 0, 50),
+            ];
+
+            // Build transaction details with calculated gross_amount
+            $transactionDetails = [
+                'order_id' => $orderId,
+                'gross_amount' => $itemPriceRounded,
+            ];
+
+            // Build customer details
+            $customerDetails = [
+                'first_name' => $customer->name,
+                'email' => $customer->email ?? 'noreply@example.com',
+                'phone' => $customer->phone_number ?? '',
+            ];
+
+            // Build request payload
+            $payload = [
+                'transaction_details' => $transactionDetails,
+                'item_details' => $items,
+                'customer_details' => $customerDetails,
+                'enabled_payments' => [
+                    'credit_card', 'bca_va', 'bni_va', 'bri_va', 'mandiri_va',
+                    'permata_va', 'other_va', 'gopay', 'shopeepay', 'qris'
+                ],
+                'callbacks' => [
+                    'finish' => route('customer-checkout.payment.success', ['order' => $subscription->order_number]),
+                    'error' => route('customer-checkout.payment.failed', ['order' => $subscription->order_number]),
+                    'pending' => route('customer-checkout.payment.pending', ['order' => $subscription->order_number]),
+                ],
+            ];
+
+            Log::info('Midtrans subscription payload', [
+                'order_id' => $orderId,
+                'gross_amount' => $itemPriceRounded,
+                'subscription_id' => $subscription->id
+            ]);
+
+            // Create SNAP transaction
+           $response = Http::withHeaders([
+                'Accept' => 'application/json',
+                'Content-Type' => 'application/json',
+                'Authorization' => 'Basic ' . base64_encode($this->serverKey . ':'),
+            ])->post($this->getApiUrl(), $payload);
+
+
+            if ($response->failed()) {
+                $errorBody = $response->json();
+                $errorMessage = $errorBody['error_messages'][0] ?? $response->body() ?? 'Unknown error';
+
+                Log::error('Midtrans SNAP transaction for subscription failed', [
+                    'status' => $response->status(),
+                    'body' => $errorBody,
+                ]);
+
+                return [
+                    'success' => false,
+                    'message' => "Failed to create transaction: {$errorMessage}"
+                ];
+            }
+
+            $result = $response->json();
+            $snapToken = $result['token'] ?? null;
+
+            if (!$snapToken) {
+                return [
+                    'success' => false,
+                    'message' => 'Failed to get SNAP token from Midtrans'
+                ];
+            }
+
+            return [
+                'success' => true,
+                'snap_token' => $snapToken,
+                'redirect_url' => $this->getRedirectUrl($snapToken),
+                'order_id' => $orderId,
+                'raw_response' => $result,
+            ];
+
+        } catch (\Exception $e) {
+            Log::error('Midtrans transaction creation for subscription failed', [
+                'company_id' => $this->companyId,
+                'subscription_id' => $subscription->id,
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
             ]);

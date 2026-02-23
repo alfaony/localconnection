@@ -43,7 +43,7 @@
 
                     @if($subscription->payment_status == 'paid')
                     <div class="alert alert-success mt-3">
-                        <i class="fas fa-envelope"></i> Kredensial akses sudah dikirim ke email Anda: <strong>{{ Auth::user()->email }}</strong>
+                        <i class="fas fa-envelope"></i> Untuk credential bisa dilihat tatacara di laman, atau chat admin kami melalui room chat subscription
                     </div>
                     @else
                     <div class="alert alert-warning mt-3">
@@ -52,10 +52,10 @@
                     @endif
 
                     <div class="mt-4">
-                        <a href="{{ route('customer-subscription.show', $subscription) }}" class="btn btn-success btn-lg mr-2">
+                        <a href="{{ route('customer-subscription.show', $subscription) }}" class="btn btn-success btn mr-2">
                             <i class="fas fa-eye"></i> Lihat Detail Subscription
                         </a>
-                        <a href="{{ route('customer-subscription.index') }}" class="btn btn-outline-success btn-lg">
+                        <a href="{{ route('customer-subscription.index') }}" class="btn btn-outline-success btn">
                             <i class="fas fa-list"></i> My Subscriptions
                         </a>
                     </div>
@@ -64,12 +64,11 @@
                         <i class="fas fa-info-circle"></i> Silakan cek email Anda untuk detail lebih lanjut.
                     </div>
                     <div class="mt-4">
-                        <a href="{{ route('customer-subscription.index') }}" class="btn btn-success btn-lg">
+                        <a href="{{ route('customer-subscription.index') }}" class="btn btn-success btn">
                             <i class="fas fa-list"></i> My Subscriptions
                         </a>
                     </div>
                     @endif
-                @endif
                 </div>
             </div>
 
@@ -78,7 +77,7 @@
                 <div class="card-body">
                     <h5 class="mb-3"><i class="fas fa-question-circle"></i> Langkah Selanjutnya:</h5>
                     <ol>
-                        <li>Cek email Anda untuk kredensial akses</li>
+                        <li>Silahkan Chat untuk menanyakan credential</li>
                         <li>Simpan informasi akses dengan aman</li>
                         <li>Login menggunakan kredensial yang diberikan</li>
                         <li>Hubungi admin jika ada kendala</li>
@@ -89,8 +88,6 @@
     </div>
 @stop
 
-@section('css')
-@stop
 
 @section('js')
 <script>
@@ -104,7 +101,7 @@ $(document).ready(function() {
         checkCount++;
         
         $.ajax({
-            url: '{{ route("customer.payment.check-status", $subscription->order_number ?? "none") }}',
+            url: '{{ route("subscription-payment.check-status", $subscription->order_number ?? "none") }}',
             method: 'GET',
             success: function(response) {
                 if (response.is_paid) {
