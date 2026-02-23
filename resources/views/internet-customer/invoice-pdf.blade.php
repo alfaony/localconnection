@@ -5,55 +5,65 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Invoice - {{ $invoiceNumber }}</title>
     <style>
+        @page {
+            margin: 20mm 18mm 20mm 15mm;
+            size: A4;
+        }
+        
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
+        
         body {
             font-family: 'DejaVu Sans', Arial, sans-serif;
             font-size: 10px;
             color: #333;
             line-height: 1.5;
+            padding: 0px 20px 10px 5px; 
         }
+        
         .container {
             width: 100%;
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
+            max-width: 100%;
+            padding: 8px;
         }
         
         /* Header */
         .header-table {
             width: 100%;
-            margin-bottom: 20px;
-            border-bottom: 3px solid #db2729;
-            padding-bottom: 15px;
+            margin-bottom: 18px;
+            border-bottom: 2px solid #db2729;
+            padding-bottom: 12px;
         }
+        
         .company-name {
-            font-size: 24px;
+            font-size: 20px;
             font-weight: bold;
             color: #db2729;
-            margin-bottom: 8px;
+            margin-bottom: 6px;
             letter-spacing: 0.5px;
         }
+        
         .company-info {
-            font-size: 9px;
+            font-size: 8.5px;
             color: #666;
             line-height: 1.6;
         }
+        
         .company-logo img {
-            max-height: 60px;
-            max-width: 200px;
+            max-height: 55px;
+            max-width: 160px;
         }
         
         /* Invoice Title */
         .invoice-title {
-            font-size: 36px;
+            font-size: 28px;
             font-weight: bold;
             color: #db2729;
-            letter-spacing: 2px;
-            margin: 15px 0;
+            letter-spacing: 1.5px;
+            margin: 12px 0 15px 0;
             text-align: left;
         }
         
@@ -61,18 +71,21 @@
         .invoice-meta-table {
             width: 100%;
             background: #fff5f5;
-            border-left: 4px solid #db2729;
-            border-radius: 8px;
-            margin-bottom: 20px;
+            border-left: 3px solid #db2729;
+            margin-bottom: 18px;
+            border-radius: 4px;
         }
+        
         .invoice-meta-table td {
             padding: 8px 12px;
             font-size: 9px;
         }
+        
         .meta-label {
             font-weight: 600;
             color: #555;
         }
+        
         .meta-value {
             font-weight: 500;
             color: #333;
@@ -83,31 +96,37 @@
             width: 100%;
             background: #fafafa;
             border: 1px solid #e5e5e5;
-            border-left: 4px solid #db2729;
-            border-radius: 8px;
-            margin-bottom: 20px;
+            border-left: 3px solid #db2729;
+            margin-bottom: 18px;
+            border-radius: 4px;
+            page-break-inside: avoid;
         }
+        
         .box-title {
-            font-size: 12px;
+            font-size: 11px;
             font-weight: bold;
             color: #db2729;
-            padding: 12px 15px 8px 15px;
+            padding: 12px 14px 8px 14px;
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
+        
         .info-table {
             width: 100%;
         }
+        
         .info-table td {
-            padding: 5px 15px;
+            padding: 5px 14px;
             font-size: 9px;
         }
+        
         .info-label {
             font-weight: 600;
             color: #666;
-            width: 120px;
+            width: 115px;
             vertical-align: top;
         }
+        
         .info-value {
             color: #333;
             vertical-align: top;
@@ -117,56 +136,64 @@
         .items-table {
             width: 100%;
             border-collapse: collapse;
-            margin-bottom: 20px;
-            border-radius: 8px;
+            margin-bottom: 18px;
+            border-radius: 4px;
             overflow: hidden;
+            page-break-inside: avoid;
         }
+        
         .items-table thead {
             background: #db2729;
         }
+        
         .items-table th {
             color: white;
             padding: 10px 12px;
             text-align: left;
             font-weight: 600;
-            font-size: 10px;
+            font-size: 9px;
             text-transform: uppercase;
             letter-spacing: 0.3px;
         }
+        
         .items-table td {
             padding: 12px;
             border-bottom: 1px solid #f0f0f0;
             background: white;
-            font-size: 10px;
+            font-size: 9px;
         }
         
         /* Bottom Section */
         .bottom-table {
             width: 100%;
-            margin-bottom: 20px;
+            margin-bottom: 18px;
+            page-break-inside: avoid;
         }
+        
         .bottom-table td {
             vertical-align: top;
-            padding: 0 10px;
+            padding: 0 6px;
         }
         
         /* Payment Box */
         .payment-box {
             background: #fff5f5;
             border: 1px solid #f0f0f0;
-            border-left: 4px solid #db2729;
-            padding: 15px;
-            border-radius: 8px;
+            border-left: 3px solid #db2729;
+            padding: 14px;
+            border-radius: 4px;
         }
+        
         .payment-title {
-            font-size: 11px;
+            font-size: 10px;
             font-weight: bold;
             color: #db2729;
             margin-bottom: 10px;
             text-transform: uppercase;
         }
+        
         .payment-detail {
-            font-size: 9px;
+            font-size: 8px;
             color: #666;
             margin-top: 6px;
         }
@@ -175,37 +202,43 @@
         .summary-table {
             width: 100%;
             border-collapse: collapse;
-            border-radius: 8px;
+            border-radius: 4px;
             overflow: hidden;
         }
+        
         .summary-table td {
             padding: 8px 12px;
             font-size: 9px;
             border-bottom: 1px solid #f0f0f0;
         }
+        
         .summary-label {
             font-weight: 600;
             color: #555;
             text-align: left;
             width: 60%;
         }
+        
         .summary-value {
             font-weight: 500;
             text-align: right;
             color: #333;
             width: 40%;
         }
+        
         .tax-row {
             background: #fef3f3;
         }
+        
         .total-row {
             background: #db2729;
             border: none;
         }
+        
         .total-row td {
             color: white !important;
             font-weight: bold;
-            font-size: 11px;
+            font-size: 10px;
             padding: 12px;
             border: none;
         }
@@ -213,41 +246,53 @@
         /* Badges */
         .badge {
             display: inline-block;
-            padding: 5px 12px;
-            border-radius: 20px;
-            font-size: 8px;
+            padding: 5px 11px;
+            border-radius: 15px;
+            font-size: 7.5px;
             font-weight: 600;
             letter-spacing: 0.5px;
             text-transform: uppercase;
         }
+        
         .badge-success {
             background: #dcfce7;
             color: #166534;
             border: 1px solid #86efac;
         }
+        
         .badge-info {
             background: #dbeafe;
             color: #1e40af;
             border: 1px solid #93c5fd;
         }
+        
         .badge-warning {
             background: #fef3c7;
             color: #92400e;
             border: 1px solid #fcd34d;
         }
+
+        .badge-danger {
+            background: #ea2c06ff;
+            color: #ffffffff;
+            border: 1px solid #ea2c06ff;
+        }
         
         /* Footer */
         .footer {
             width: 100%;
-            margin-top: 30px;
+            margin-top: 25px;
             padding-top: 15px;
-            border-top: 2px solid #f0f0f0;
+            border-top: 1.5px solid #e5e5e5;
             text-align: center;
             font-size: 8px;
             color: #999;
+            page-break-inside: avoid;
         }
+        
         .footer p {
             margin: 3px 0;
+            line-height: 1.6;
         }
         
         /* Utilities */
@@ -295,8 +340,10 @@
                 <td colspan="3" class="meta-value">
                     @if($purchase->confirmation_finance_at || $purchase->xendit_paid_at || $purchase->midtrans_paid_at)
                         <span class="badge badge-success">Lunas</span>
+                    @elseif($purchase->payment_method != \App\Schemas\ParamSchema::EXPIRED)
+                    <span class="badge badge-warning">Menunggu Konfirmasi</span>
                     @else
-                        <span class="badge badge-warning">Menunggu Konfirmasi</span>
+                    <span class="badge badge-danger">Kadaluarsa</span>
                     @endif
                 </td>
             </tr>
@@ -375,7 +422,7 @@
                             @endif
                             
                             @if($purchase->payment_date)
-                                <div class="payment-detail" style="margin-top: 8px;">
+                                <div class="payment-detail" style="margin-top: 6px;">
                                     <strong>Tanggal Pembayaran:</strong><br>
                                     {{ $purchase->payment_date->format('d M Y H:i') }}
                                 </div>

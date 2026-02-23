@@ -479,6 +479,14 @@ class User extends Authenticatable
         }
     }
 
+    public function scopeByCompanyPublic($query,$companyId)
+    {
+        if($companyId)
+        {
+            return $query->where("company_id",$companyId);
+        }
+    }
+
     public function scopeByCompanyJob($query,$companyId, $role)
     {
         if($companyId && $role && $role != RoleSchema::ROOT)

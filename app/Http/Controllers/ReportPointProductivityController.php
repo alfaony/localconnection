@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use App\Helpers\Access;
 
 use App\Jobs\ExportReportPointProductivityJob;
 
@@ -16,15 +17,31 @@ use App\Models\SalesAchievement;
 use App\Models\User;
 use App\Models\TaskStatus;
 use App\Models\DailyTask;
+use App\Models\SettingCompany;
 
 class ReportPointProductivityController extends Controller
 {
     public function index(Request $request)
     {
+        // Cek permission byUser: jika true, hanya tampilkan user yang login
+        $byUser = Access::can('byUser', 'report_productivities');
+
+        $setting = SettingCompany::byCompany(Auth::user()->company_id)->get()->pluck('field_value','field_title');
+        $periodStartDay = $setting && $setting['range_start_date'] ? (int) $setting['range_start_date'] : 21;
+        $now = Carbon::now();
+        if ($now->day >= $periodStartDay) {
+            $start = Carbon::create($now->year, $now->month, $periodStartDay)->startOfDay();
+            $end = Carbon::create($now->year, $now->month, $periodStartDay)->addMonth()->subDay()->endOfDay();
+        } else {
+            $start = Carbon::create($now->year, $now->month, $periodStartDay)->subMonth()->startOfDay();
+            $end = Carbon::create($now->year, $now->month, $periodStartDay)->subDay()->endOfDay();
+        }
+
+
         // Set default date range from the start of the current month to today
-        $startDate = Carbon::now()->startOfMonth();
-        $endDate = Carbon::now()->endOfMonth();
-        $allUsers = User::isActive()->byCompany(Auth::user()->company_id)->get();
+        $startDate = $start;
+        $endDate = $end;
+        $allUsers = $byUser ? collect() : User::byCompany(Auth::user()->company_id)->get();
 
         // Retrieve the date range from the request if provided
         if ($request->has('start_date')) {
@@ -36,11 +53,13 @@ class ReportPointProductivityController extends Controller
         }
 
         $query = User::query();
-        if ($request->has('user_id') && $request->input('user_id') != '' && $request->input('user_id') != "all_user_checkin") 
-        {
+
+        if ($byUser) {
+            // Hanya tampilkan user yang sedang login
+            $query->where('id', Auth::id());
+        } elseif ($request->has('user_id') && $request->input('user_id') != '' && $request->input('user_id') != "all_user_checkin") {
             $query->where('id', $request->input('user_id'));
-        }
-        elseif ($request->input('user_id') === 'all_user_checkin') {
+        } elseif ($request->input('user_id') === 'all_user_checkin') {
             // Show all users who checked in
             $query->where(function($q){
                 $q->where('wfo_check_in', true)
@@ -49,7 +68,9 @@ class ReportPointProductivityController extends Controller
         }
 
         // Retrieve all users
-        $users = $query->isActive()->byCompany(Auth::user()->company_id)->paginate(10);
+        $users = $query->when(!$byUser && !request('user_id'), function($q) {
+            $q->isActive();
+        })->byCompany(Auth::user()->company_id)->paginate(10);
 
         $complate = TaskStatus::select('id')->where('name',ParamSchema::COMPLATE)->firstOrFail()->id;
         // Map the user data to include points from each model within the date range
@@ -112,16 +133,20 @@ class ReportPointProductivityController extends Controller
         });
 
         return view('report_point_productivity.index', [
-            'reports' => $reports,
+            'reports'   => $reports,
             'startDate' => $startDate,
-            'endDate' => $endDate,
-            'users' => $users,
-            'allUsers' => $allUsers
+            'endDate'   => $endDate,
+            'users'     => $users,
+            'allUsers'  => $allUsers,
+            'byUser'    => $byUser,
         ]);
     }
 
     public function export(Request $request)
     {
+        // Cek permission byUser
+        $byUser = Access::can('byUser', 'report_productivities');
+
         // Set default date range
         $startDate = Carbon::now()->startOfMonth();
         $endDate = Carbon::now()->endOfMonth();
@@ -136,12 +161,12 @@ class ReportPointProductivityController extends Controller
         }
 
         $query = User::query();
-        if ($request->has('user_id') && $request->input('user_id') != '' && $request->input('user_id') != "all_user_checkin") 
-        {
+
+        if ($byUser) {
+            $query->where('id', Auth::id());
+        } elseif ($request->has('user_id') && $request->input('user_id') != '' && $request->input('user_id') != "all_user_checkin") {
             $query->where('id', $request->input('user_id'));
-        }
-        elseif ($request->input('user_id') === 'all_user_checkin') {
-            // Show all users who checked in
+        } elseif ($request->input('user_id') === 'all_user_checkin') {
             $query->where(function($q){
                 $q->where('wfo_check_in', true)
                 ->orWhere('is_checkin', true);
@@ -149,7 +174,9 @@ class ReportPointProductivityController extends Controller
         }
 
         // Retrieve all users (tanpa pagination untuk export)
-        $users = $query->byCompany(Auth::user()->company_id)->get();
+        $users = $query->when(!$byUser && !request('user_id'), function($q) {
+            $q->isActive();
+        })->byCompany(Auth::user()->company_id)->get();
 
         // Map the user data
         $reports = $users->map(function ($user) use ($startDate, $endDate) {
@@ -203,20 +230,21 @@ class ReportPointProductivityController extends Controller
             : '-';
 
             return [
-                'company' => $user->company ? $user->company->name : '',
-                'division' => $divisions,
-                'name' => $user->name,
-                'training_points' => $trainingPoints,
-                'ip_right_points' => $ipRightPoints,
-                'sales_achievement_points' => $salesAchievementPoints,
-                'daily_task_points' => $dailyTaskPoints,
-                'punishment_points' => $punishmentPoints,
-                'direct_points' => $directPointsReceived,
-                'total_points' => $trainingPoints + $ipRightPoints + $salesAchievementPoints + $dailyTaskPoints + $punishmentPoints + $directPointsReceived,
+                'user_id'                    => $user->id,
+                'company'                    => $user->company ? $user->company->name : '',
+                'division'                   => $divisions,
+                'name'                       => $user->name,
+                'training_points'            => $trainingPoints,
+                'ip_right_points'            => $ipRightPoints,
+                'sales_achievement_points'   => $salesAchievementPoints,
+                'daily_task_points'          => $dailyTaskPoints,
+                'punishment_points'          => $punishmentPoints,
+                'direct_points'              => $directPointsReceived,
+                'total_points'               => $trainingPoints + $ipRightPoints + $salesAchievementPoints + $dailyTaskPoints + $punishmentPoints + $directPointsReceived,
             ];
         });
 
-        // Dispatch  job
+        // Dispatch job
         ExportReportPointProductivityJob::dispatch(
             $reports->toArray(),
             $startDate,
@@ -280,6 +308,7 @@ class ReportPointProductivityController extends Controller
 
         // Get Daily Task details (non-punishment)
         $dailyTasks = DailyTask::where('assignment_user_id', $userId)
+            ->where('point','!=',0)
             ->whereHas('statusRecords', function ($query) use ($startDate, $endDate) {
                 $query
                     ->whereBetween('date', [$startDate, $endDate])

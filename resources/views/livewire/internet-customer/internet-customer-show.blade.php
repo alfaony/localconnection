@@ -245,9 +245,14 @@
                                                         <span class="badge badge-success">
                                                             <i class="fas fa-check-circle mr-1"></i>Lunas
                                                         </span>
-                                                    @else
+                                                    @elseif($purchase->payment_method != \App\Schemas\ParamSchema::EXPIRED)
                                                         <span class="badge badge-danger">
                                                             <i class="fas fa-times-circle mr-1"></i>Belum Lunas
+                                                        </span>
+                                                    @else
+                                                        <span class="badge badge-danger">
+                                                            <i class="fas fa-times-circle mr-1"></i>
+                                                            Kadaluarsa
                                                         </span>
                                                     @endif
                                                 </td>
@@ -270,7 +275,13 @@
                                                     @endif
                                                 </td>
                                                 <td>
-                                                    @if(!$purchase->isConfirmed() && ($customer->status == \App\Schemas\ParamSchema::WAITING_PAYMENT_SUBSCRIPTION || $customer->status == \App\Schemas\ParamSchema::SUSPENDED ) && $customer->getOldestUnconfirmed()->id == $purchase->id)
+                                                    @if($purchase->payment_method == \App\Schemas\ParamSchema::EXPIRED)
+                                                        {{-- Payment marked as expired --}}
+                                                        <span class="badge badge-danger">
+                                                            <i class="fas fa-times-circle mr-1"></i>
+                                                            Expired
+                                                        </span>
+                                                    @elseif(!$purchase->isConfirmed() && ($customer->status == \App\Schemas\ParamSchema::WAITING_PAYMENT_SUBSCRIPTION || $customer->status == \App\Schemas\ParamSchema::SUSPENDED ) && $customer->getOldestUnconfirmed()->id == $purchase->id)
                                                         <button class="btn btn-sm btn-success" wire:click="showPaymentModal({{ $purchase->id }})">
                                                             <i class="fas fa-money-bill-wave mr-1"></i>Bayar Sekarang
                                                         </button>
@@ -283,10 +294,11 @@
                                                         <span class="text-success">
                                                             <i class="fas fa-check-circle mr-1"></i>
                                                             {{ \Carbon\Carbon::parse($purchase->confirmation_finance_at)->format('d M Y H:i:s') }}
+                                                        </span>
                                                     @else
-                                                        <span class="badge badge-danger">
+                                                        <span class="badge badge-secondary">
                                                             <i class="fas fa-clock mr-1"></i>
-                                                            Expired
+                                                            Belum Bayar
                                                         </span>
                                                     @endif
                                                 </td>
@@ -314,8 +326,10 @@
                                                 <td>
                                                     @if($purchase->user_finance_id && $purchase->confirmation_finance_at)
                                                         <span class="badge badge-success">Lunas</span>
-                                                    @else
+                                                    @elseif($purchase->payment_method != \App\Schemas\ParamSchema::EXPIRED)
                                                         <span class="badge badge-danger">Belum Lunas</span>
+                                                    @else
+                                                        <span class="badge badge-danger">Kadaluarsa</span>
                                                     @endif
                                                 </td>
                                                 <td>

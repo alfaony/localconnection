@@ -27,6 +27,7 @@ use App\Http\Controllers\API\UserApiController;
 use App\Http\Controllers\API\ProductStoreController;
 use App\Http\Controllers\API\MeetingApiController;
 use App\Http\Controllers\API\InternetCustomerApiController;
+use App\Http\Controllers\API\EkycController;
 use App\Http\Controllers\UserController;
 
 
@@ -46,6 +47,8 @@ Route::post('login', [LoginController::class, 'login']);
 
 Route::post('login_flutter', [LoginController::class, 'login_flutter']);
 
+Route::post('n8n/ktp/result', [EkycController::class, 'receiveKtpResult']);
+
 Route::middleware('auth:sanctum')->prefix('internet-customers')->group(function () {
     Route::get('/', [InternetCustomerApiController::class, 'index']);
     Route::get('/{id}', [InternetCustomerApiController::class, 'show']);
@@ -53,7 +56,6 @@ Route::middleware('auth:sanctum')->prefix('internet-customers')->group(function 
     Route::post('/{id}/close', [InternetCustomerApiController::class, 'close']);
     Route::post('/{id}/complete-installation', [InternetCustomerApiController::class, 'completeInstallation']);
 });
-
 
 Route::group(['middleware' => ['auth:api','role.permission.api']], function() 
 {
