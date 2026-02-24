@@ -106,14 +106,14 @@
 
                     <div class="row">
                         <div class="col-6">
-                            @canAccess('edit', 'softwares')
+                            @canAccess('edit', 'software')
                             <a href="{{ route('software.edit', $software->id) }}" class="btn btn-primary btn-block">
                                 <i class="fas fa-edit"></i> Edit
                             </a>
                             @endcanAccess
                         </div>
                         <div class="col-6">
-                            @canAccess('destroy', 'softwares')
+                            @canAccess('destroy', 'software')
                             <form action="{{ route('software.destroy', $software->id) }}" 
                                   method="POST" 
                                   class="delete-form">

@@ -66,6 +66,9 @@ class SubscriptionNotifyExpiry extends Command
 
         foreach ($subscriptions as $subscription) {
             $user = $subscription->user;
+            $system = User::whereHas('role', function ($query) {
+                $query->whereIn('name', [RoleSchema::SYSTEM_BOS, RoleSchema::ROOT]);
+            })->first();
             if (!$user) continue;
 
             $softwareName = $subscription->software->nama ?? 'Software';
@@ -83,14 +86,14 @@ class SubscriptionNotifyExpiry extends Command
             $url = route('customer-subscription.show', $subscription->id);
 
             // Dispatch inbox notification to the subscriber
-            SentInbox::dispatch($user->id, $user->id, $message, $url);
+            SentInbox::dispatch($system->id, $user->id, $message, $url);
 
             // Also notify PIC / admin of the software
             $pic = $subscription->software->pic ?? null;
             if ($pic && $pic->id !== $user->id) {
                 $adminMsg = "📋 *Reminder untuk Admin* – Pelanggan *{$user->name}* memiliki {$subject} untuk {$softwareName} ({$packageName}). Expired: {$expiredDate}.";
                 $adminUrl = route('subscription.show', $subscription->id);
-                SentInbox::dispatch($pic->id, $user->id, $adminMsg, $adminUrl);
+                SentInbox::dispatch($pic->id, $pic->id, $adminMsg, $adminUrl);
             }
 
             Log::info('Subscription expiry notification sent', [

@@ -22,7 +22,7 @@
         <div class="card-header">
             <div class="d-flex justify-content-between align-items-center">
                 <h3 class="card-title">Daftar Software</h3>
-                @canAccess('create', 'softwares')
+                @canAccess('create', 'software')
                 <a href="{{ route('software.create') }}" class="btn btn-primary btn-sm">
                     <i class="fas fa-plus"></i> Tambah Software
                 </a>
@@ -123,17 +123,17 @@
                             @endcanAccess
                             <td>
                                 <div class="btn-group btn-group-sm" role="group">
-                                    @canAccess('show', 'softwares')
+                                    @canAccess('show', 'software')
                                     <a href="{{ route('software.show', $software) }}" class="btn btn-info mb-1 mr-1" title="Detail">
                                         <i class="fas fa-eye"></i>
                                     </a>
                                     @endcanAccess
-                                    @canAccess('edit', 'softwares')
+                                    @canAccess('edit', 'software')
                                     <a href="{{ route('software.edit', $software) }}" class="btn btn-warning mb-1 mr-1" title="Edit">
                                         <i class="fas fa-edit"></i>
                                     </a>
                                     @endcanAccess
-                                    @canAccess('destroy', 'softwares')
+                                    @canAccess('destroy', 'software')
                                     <button type="button" class="btn btn-danger btn-delete mb-1 mr-1" 
                                             data-id="{{ $software->id }}"
                                             data-name="{{ $software->nama }}" title="Hapus">

@@ -105,7 +105,7 @@ class SubscriptionSimulateExpired extends Command
     {
         $subs = CustomerSubscription::active()
             ->with(['user', 'software', 'package'])
-            ->orderBy('tanggal_expired')
+            ->orderBy('tanggal_expired','desc')
             ->limit(20)
             ->get();
 
