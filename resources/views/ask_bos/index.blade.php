@@ -319,7 +319,7 @@
 
 
     // ── Nominal threshold dari env ───────────────────────────────────────────
-    const NOMINAL_THRESHOLD = {{ env('ASKBOS_NOMINAL_THRESHOLD', 100000000) }};
+    const NOMINAL_THRESHOLD = {{ config('services.openai.nominal_threshold', 100000000) }};
 
     // Switch Consult: dropdown → free text vendor jika nominal >= threshold
     document.addEventListener('DOMContentLoaded', function () {
