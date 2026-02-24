@@ -37,45 +37,47 @@ class DecisionController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'responsible' => 'required|uuid|exists:users,id',
-            'accountable' => 'required|uuid|exists:users,id',
-            'consult' => 'nullable|uuid|exists:users,id',
-            'question' => 'required|string',
-            'analysisResult' => 'required|string',
-            'trustScoreResult' => 'required|integer|between:0,100',
+            'responsible'          => 'required|uuid|exists:users,id',
+            'accountable'          => 'required|uuid|exists:users,id',
+            'consult'              => 'nullable|uuid|exists:users,id',
+            'question'             => 'required|string',
+            'analysisResult'       => 'required|string',
+            'trustScoreResult'     => 'required|integer|between:0,100',
             'executionScoreResult' => 'nullable|integer|between:0,100',
+            'nominal'              => 'nullable|numeric|min:0',
+            'consultVendor'        => 'nullable|string|max:255',
         ], [
             'responsible.required' => 'User yang responsible harus diisi',
-            'responsible.uuid' => 'User yang responsible harus berupa UUID',
-            'responsible.exists' => 'User yang responsible tidak ditemukan',
+            'responsible.uuid'     => 'User yang responsible harus berupa UUID',
+            'responsible.exists'   => 'User yang responsible tidak ditemukan',
             'accountable.required' => 'User yang accountable harus diisi',
-            'accountable.uuid' => 'User yang accountable harus berupa UUID',
-            'accountable.exists' => 'User yang accountable tidak ditemukan',
-            'consult.uuid' => 'User yang consult harus berupa UUID',
-            'consult.exists' => 'User yang consult tidak ditemukan',
-            'question.required' => 'Pertanyaan harus diisi',
-            'analysisResult.required' => 'Hasil analisa harus diisi',
+            'accountable.uuid'     => 'User yang accountable harus berupa UUID',
+            'accountable.exists'   => 'User yang accountable tidak ditemukan',
+            'consult.uuid'         => 'User yang consult harus berupa UUID',
+            'consult.exists'       => 'User yang consult tidak ditemukan',
+            'question.required'    => 'Pertanyaan harus diisi',
+            'analysisResult.required'   => 'Hasil analisa harus diisi',
             'trustScoreResult.required' => 'Nilai trust score harus diisi',
-            'trustScoreResult.between' => 'Nilai trust score harus di antara 0-100',
+            'trustScoreResult.between'  => 'Nilai trust score harus di antara 0-100',
             'executionScoreResult.between' => 'Nilai execution score harus di antara 0-100',
         ]);
 
         try {
-            //code...
-            $dicision = Decision::create([
+            Decision::create([
                 'user_responsible_id' => $request->responsible ?? null,
                 'user_accountable_id' => $request->accountable ?? null,
-                'user_consult_id' => $request->consult ?? null,
-                'question' => $request->question,
-                'answer' => $request->analysisResult,
-                'trust_score' => $request->trustScoreResult ?? null,
-                'execution_score' => $request->executionScoreResult ?? null,
-                'user_create_id' => auth()->id()
+                'user_consult_id'     => $request->consult     ?? null,
+                'question'            => $request->question,
+                'answer'              => $request->analysisResult,
+                'trust_score'         => $request->trustScoreResult     ?? null,
+                'execution_score'     => $request->executionScoreResult ?? null,
+                'nominal'             => $request->nominal              ?? null,
+                'consult_vendor'      => $request->consultVendor        ?? null,
+                'user_create_id'      => auth()->id(),
             ]);
 
             return redirect()->route('decision.index')->with('store', true);
         } catch (\Throwable $th) {
-            //throw $th;
             Log::error($th->getMessage());
             return redirect()->route('decision.index')->with('store', false);
         }

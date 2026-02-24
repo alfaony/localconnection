@@ -35,7 +35,6 @@ class ProcessOpenAiQuery implements ShouldQueue
         $analysis       = $data['Analysis']       ?? 'Not found Analysis';
         $trustScore     = (int) ($data['trust_score']     ?? 0);
         $executionScore = (int) ($data['execution_score'] ?? 0);
-
         // Simpan ke cache sebagai fallback jika broadcast gagal
         cache()->put("ai_response_{$this->userId}", [
             'analysis'       => $analysis,

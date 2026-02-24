@@ -86,6 +86,8 @@
                         <input type="hidden" name="analysisResult" id="analysisResultSave"/>
                         <input type="hidden" name="trustScoreResult" id="trustScoreResultSave"/>
                         <input type="hidden" name="executionScoreResult" id="executionScoreResultSave"/>
+                        <input type="hidden" name="nominal" id="nominalSave"/>
+                        <input type="hidden" name="consultVendor" id="consultVendorSave"/>
         
                         <ul class="list-group">
                             <li class="list-group-item"><b>Analisis:</b> <span id="analysisResult">-</span></li>
@@ -125,11 +127,29 @@
             <div class="modal-body">
                 @canAccess('store','decisions')
                 <form id="decisionForm">
+                    {{-- Nilai / Nominal --}}
+                    <div class="mb-3">
+                        <label for="nominalInput" class="form-label">
+                            Nilai Keputusan
+                            <small class="text-muted">(opsional — nominal transaksi/anggaran)</small>
+                        </label>
+                        <div class="input-group">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text">Rp</span>
+                            </div>
+                            <input type="number" class="form-control" id="nominalInput"
+                                   placeholder="0" min="0" step="1000">
+                        </div>
+                        <small id="nominalHint" class="text-muted" style="display:none;">
+                            <i class="fas fa-info-circle text-warning"></i>
+                            Nilai ini melebihi threshold — Consult diisi dengan nama vendor/pihak luar.
+                        </small>
+                    </div>
+
                     <div class="mb-3">
                         <label for="responsible" class="form-label">Responsible</label>
                         <select class="form-select selectModal2" id="responsible" name="responsible" required>
                             <option value="">Choose Responsible User</option>
-                            <!-- Populate with users from backend -->
                             @foreach($users as $user)
                                 <option value="{{ $user->id }}" {{ !$user->back_ground_verified ? 'disabled' : '' }}>{{ $user->name }} </option>
                             @endforeach
@@ -139,21 +159,26 @@
                         <label for="accountable" class="form-label">Accountable</label>
                         <select class="form-select selectModal2" id="accountable" name="accountable" required>
                             <option value="">Choose Accountable User</option>
-                            <!-- Populate with users from backend -->
                             @foreach($users as $user)
                                 <option value="{{ $user->id }}" {{ !$user->back_ground_verified ? 'disabled' : '' }}>{{ $user->name }} </option>
                             @endforeach
                         </select>
                     </div>
-                    <div class="mb-3">
+                    <div class="mb-3" id="consultWrapper">
                         <label for="consult" class="form-label">Consult</label>
-                        <select class="form-select selectModal2" id="consult" name="consult" >
+
+                        {{-- Default: dropdown user internal --}}
+                        <select class="form-select selectModal2" id="consult" name="consult">
                             <option value="">Choose Consult User</option>
-                            <!-- Populate with users from backend -->
                             @foreach($users as $user)
                                 <option value="{{ $user->id }}" {{ !$user->back_ground_verified ? 'disabled' : '' }}>{{ $user->name }} </option>
                             @endforeach
                         </select>
+
+                        {{-- Vendor luar — muncul jika nominal > threshold --}}
+                        <input type="text" class="form-control" id="consultVendor" name="consult_vendor"
+                               placeholder="Nama vendor / pihak luar (misal: PT Maju Jaya)"
+                               style="display:none;">
                     </div>
                 </form>
                 @endcanAccess
@@ -164,6 +189,7 @@
             </div>
         </div>
     </div>
+
 </div>
 @stop
 @section('js')
@@ -291,6 +317,23 @@
         });
     });
 
+
+    // ── Nominal threshold dari env ───────────────────────────────────────────
+    const NOMINAL_THRESHOLD = {{ env('ASKBOS_NOMINAL_THRESHOLD', 100000000) }};
+
+    // Switch Consult: dropdown → free text vendor jika nominal >= threshold
+    document.addEventListener('DOMContentLoaded', function () {
+        document.getElementById('nominalInput')?.addEventListener('input', function () {
+            const nominal       = parseFloat(this.value) || 0;
+            const isHighValue   = nominal >= NOMINAL_THRESHOLD;
+            document.getElementById('nominalHint').style.display        = isHighValue ? 'block' : 'none';
+            document.getElementById('consult').style.display            = isHighValue ? 'none'  : 'block';
+            document.getElementById('consultVendor').style.display      = isHighValue ? 'block' : 'none';
+            if (isHighValue) document.getElementById('consult').value       = '';
+            else             document.getElementById('consultVendor').value = '';
+        });
+    });
+
     document.addEventListener('DOMContentLoaded', function () {
         const askButton            = document.getElementById('askButton');
         const decisionButton       = document.getElementById('decisionButton');
@@ -300,12 +343,11 @@
 
         // ── Ask Questions ──────────────────────────────────────────────────
         askButton.addEventListener('click', function () {
-            const question       = document.getElementById('questionInput').value;
+            const question        = document.getElementById('questionInput').value;
             const selectedFilters = Array.from(document.querySelectorAll('input[type="checkbox"]:checked')).map(el => el.value);
 
             if (!question.trim()) { alert('Silakan masukkan pertanyaan sebelum mengirim.'); return; }
 
-            // Reset form
             document.getElementById('questionResult').value = question;
             ['responsibleResult','accountableResult','consultResult'].forEach(id => document.getElementById(id).value = '');
             setLoading(true);
@@ -322,25 +364,35 @@
             });
         });
 
-        // ── Make Decision modal submit ─────────────────────────────────────
+        // ── Make Decision — buka modal ─────────────────────────────────────
         decisionButton.addEventListener('click', function () {
             const modal = new bootstrap.Modal(document.getElementById('makeDecisionModal'));
             modal.show();
         });
 
+        // ── Make Decision — submit ─────────────────────────────────────────
         submitDecisionButton.addEventListener('click', function () {
-            const responsible = document.getElementById('responsible').value;
-            const accountable = document.getElementById('accountable').value;
-            const consult     = document.getElementById('consult').value;
-            const question    = document.getElementById('questionInput').value;
+            const responsible   = document.getElementById('responsible').value;
+            const accountable   = document.getElementById('accountable').value;
+            const question      = document.getElementById('questionInput').value;
+            const nominal       = parseFloat(document.getElementById('nominalInput').value) || 0;
+            const isHighValue   = nominal >= NOMINAL_THRESHOLD;
+
+            // Consult: dropdown user internal ATAU free text vendor luar
+            const consult       = isHighValue ? '' : document.getElementById('consult').value;
+            const consultVendor = isHighValue ? document.getElementById('consultVendor').value.trim() : '';
 
             if (!question.trim())              { alert('Silakan masukkan pertanyaan sebelum mengirim.'); return; }
             if (!responsible || !accountable)  { alert('Please select Responsible dan Accountable.'); return; }
+            if (isHighValue && !consultVendor) { alert('Nilai melebihi threshold — nama vendor wajib diisi.'); return; }
 
             document.getElementById('questionResult').value    = question;
             document.getElementById('responsibleResult').value = responsible;
             document.getElementById('accountableResult').value = accountable;
             document.getElementById('consultResult').value     = consult;
+            // Simpan ke hidden field form → akan ikut tersubmit ke decision.store
+            document.getElementById('nominalSave').value       = nominal || '';
+            document.getElementById('consultVendorSave').value = consultVendor || '';
 
             setLoading(true);
             document.getElementById('closeModal').click();
@@ -348,7 +400,7 @@
             fetch("{{ route('ask.makeDesition') }}", {
                 method : 'POST',
                 headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
-                body   : JSON.stringify({ question, responsible, accountable, consult })
+                body   : JSON.stringify({ question, responsible, accountable, consult, consult_vendor: consultVendor, nominal })
             })
             .then(r => r.json())
             .catch(() => {
@@ -357,6 +409,7 @@
             });
         });
     });
+
 </script>
 @stop
 
