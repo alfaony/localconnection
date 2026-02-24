@@ -33,6 +33,12 @@ class ProcessOpenAiQuery implements ShouldQueue
         $data = json_decode($cleanJsonString, true);
 
         $analysis       = $data['Analysis']       ?? 'Not found Analysis';
+        if($analysis === "Not found Analysis"){
+            Log::error("Not found Analysis", [
+                'answer' => $answer,
+                'data' => $data
+            ]);
+        }
         $trustScore     = (int) ($data['trust_score']     ?? 0);
         $executionScore = (int) ($data['execution_score'] ?? 0);
         // Simpan ke cache sebagai fallback jika broadcast gagal
