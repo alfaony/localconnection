@@ -23,8 +23,23 @@ class SoftwareSharingController extends Controller
      * Redirect ke company pertama yang tersedia
      * URL: /software-sharing
      */
+    /**
+     * Cek apakah user sudah login sebagai Customer Software
+     */
+    private function isLoggedInCustomer(): bool
+    {
+        return auth()->check()
+            && auth()->user()->role?->name === RoleSchema::CUSTOMER_SOFTWARE;
+    }
+
     public function redirectToFirst()
     {
+        // Kalau sudah login sebagai Customer Software → langsung ke dashboard
+        if ($this->isLoggedInCustomer()) {
+            return redirect()->route('customer-software.index');
+        }
+
+        // Guest → cari company pertama yang punya software aktif
         $company = Company::whereHas('softwares', function ($q) {
             $q->where('status', 'active');
         })->first();
@@ -42,6 +57,11 @@ class SoftwareSharingController extends Controller
      */
     public function index(string $companySlug)
     {
+        // Sudah login → ke dashboard
+        if ($this->isLoggedInCustomer()) {
+            return redirect()->route('customer-software.index');
+        }
+
         $company = Company::where('slug', $companySlug)->firstOrFail();
         $settingCompany = SettingCompany::byCompany($company->id)->where('menu','software_sharing_setting')->get()->pluck('field_value', 'field_title')->toArray();
 
@@ -67,6 +87,11 @@ class SoftwareSharingController extends Controller
      */
     public function showRegister(string $companySlug)
     {
+        // Sudah login → ke dashboard
+        if ($this->isLoggedInCustomer()) {
+            return redirect()->route('customer-software.index');
+        }
+
         $company = Company::where('slug', $companySlug)->firstOrFail();
         return view('public.software-sharing.register', compact('company', 'companySlug'));
     }
@@ -133,6 +158,11 @@ class SoftwareSharingController extends Controller
      */
     public function showLogin(string $companySlug)
     {
+        // Sudah login → ke dashboard
+        if ($this->isLoggedInCustomer()) {
+            return redirect()->route('customer-software.index');
+        }
+
         $company = Company::where('slug', $companySlug)->firstOrFail();
         return view('public.software-sharing.login', compact('company', 'companySlug'));
     }
