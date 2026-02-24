@@ -360,7 +360,7 @@ class SubscriptionPaymentService
             }
 
             // Prepare transaction data for subscription
-            $transactionResult = $midtransService->createTransactionForSubscription($subscription, $package, $user);
+            $transactionResult = $midtransService->createTransactionForSubscription($subscription, $package, $user, $payment);
 
             if (!$transactionResult['success']) {
                 throw new \Exception($transactionResult['message']);

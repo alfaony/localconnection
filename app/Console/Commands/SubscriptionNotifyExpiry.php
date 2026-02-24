@@ -4,9 +4,11 @@ namespace App\Console\Commands;
 
 use App\Jobs\SentInbox;
 use App\Models\CustomerSubscription;
+use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
+use App\Schemas\RoleSchema;
 
 class SubscriptionNotifyExpiry extends Command
 {

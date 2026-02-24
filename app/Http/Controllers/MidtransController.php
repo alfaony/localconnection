@@ -43,23 +43,18 @@ class MidtransController extends Controller
                 return response()->json(['message' => 'Order ID Not Found'], 200);
             }
 
-            // Parse order_id format: e.g. "INT-123_internetCustomer" or "SUB-abc_softwareSharing"
             $idParts = explode('_', $orderIdRaw);
-            $orderId = $idParts[0]; 
-            $subscriptionType = $idParts[1] ?? 'internetCustomer'; // Default logic if no suffix
+            $identifier       = $idParts[0];
+            $subscriptionType = $idParts[1] ?? 'internetCustomer';
 
-            if ($subscriptionType === 'internetCustomer') {
-                return $this->processInternetCustomerWebhook($orderId, $data, $user, $request);
-            } elseif ($subscriptionType === 'softwareSharing') {
-                return $this->processSoftwareSharingWebhook($orderId, $data, $user, $request);
+            if ($subscriptionType === 'softwareSharing') {
+                return $this->processSoftwareSharingWebhook($identifier, $data, $user, $request);
             } else {
-                Log::error('Unknown subscription type for Midtrans callback', [
-                    'order_id' => $orderIdRaw,
-                ]);
-                return response()->json(['message' => 'Unknown subscription type'], 200);
+                return $this->processInternetCustomerWebhook($identifier, $data, $user, $request);
             }
 
         } catch (\Exception $e) {
+            dd($e);
             $this->logging($request, 500, $e);
 
             Log::error('Midtrans webhook processing failed', [
@@ -181,14 +176,26 @@ class MidtransController extends Controller
     /**
      * Process Software Sharing Webhook Logic
      */
-    private function processSoftwareSharingWebhook($orderId, $data, $user, $request)
+    private function processSoftwareSharingWebhook($invoiceNumber, $data, $user, $request)
     {
-        $subscription = CustomerSubscription::where('order_number', $orderId)->first();
+        // Lookup SubscriptionPayment via invoice_number
+        $payment = SubscriptionPayment::with('subscription.package')
+            ->where('invoice_number', $invoiceNumber)
+            ->first();
+        $paymentId = $payment->id;
+
+        if (!$payment) {
+            Log::error('SubscriptionPayment not found for Midtrans notification', [
+                'invoice_number' => $invoiceNumber,
+            ]);
+            return response()->json(['message' => 'Payment Not Found'], 200);
+        }
+
+        $subscription = $payment->subscription;
 
         if (!$subscription) {
-            Log::error('Subscription not found for Midtrans notification', [
-                'order_id' => $orderId,
-                'order_number' => $orderId,
+            Log::error('Subscription not found for payment', [
+                'payment_id' => $paymentId,
             ]);
             return response()->json(['message' => 'Subscription Not Found'], 200);
         }
@@ -200,10 +207,8 @@ class MidtransController extends Controller
         if (!$midtransService->verifyNotification($data)) {
             Log::warning('Invalid Midtrans notification signature (Software Sharing)', [
                 'company_id' => $subscription->company_id,
-                'order_id' => $orderId
+                'payment_id' => $paymentId,
             ]);
-            // Temporarily ignore token failure for development compatibility if needed, but standard is:
-            // return response()->json(['error' => 'Invalid signature'], 403);
         }
 
         // Get transaction status
@@ -212,10 +217,11 @@ class MidtransController extends Controller
         $paymentType = $data['payment_type'] ?? null;
 
         Log::info('Processing Midtrans notification (Software Sharing)', [
-            'order_id' => $orderId,
+            'payment_id'         => $paymentId,
+            'subscription_id'    => $subscription->id,
             'transaction_status' => $transactionStatus,
-            'fraud_status' => $fraudStatus,
-            'payment_type' => $paymentType
+            'fraud_status'       => $fraudStatus,
+            'payment_type'       => $paymentType,
         ]);
 
         if ($transactionStatus == 'capture' || $transactionStatus == 'settlement') {
@@ -223,23 +229,16 @@ class MidtransController extends Controller
                 return response()->json(['status' => 'ignored']);
             }
 
-            // Find latest pending payment
-            $payment = SubscriptionPayment::where('subscription_id', $subscription->id)
-                ->where('status', 'pending')
-                ->latest()
-                ->first();
-
-            if ($payment) {
-                $payment->update([
-                    'status' => 'paid',
-                    'paid_at' => now(),
-                    'payment_proof' => 'AUTO_VERIFIED', // System verified
-                    'notes' => 'Otomatis via webhook Midtrans',
-                    'raw_response' => json_encode($data),
-                    'user_finance_id' => $user->id, // System auto-confirm
-                    'confirmation_finance_at' => now(),
-                ]);
-            }
+            // Update payment yang tepat (langsung dari ID, bukan cari pending terbaru)
+            $payment->update([
+                'status'                  => 'paid',
+                'paid_at'                 => now(),
+                'payment_proof'           => 'AUTO_VERIFIED',
+                'notes'                   => 'Otomatis via webhook Midtrans',
+                'raw_response'            => json_encode($data),
+                'user_finance_id'         => $user->id,
+                'confirmation_finance_at' => now(),
+            ]);
 
             // Update subscription status and dates
             $package = $subscription->package;
@@ -251,54 +250,41 @@ class MidtransController extends Controller
                 $months = !empty($matches) ? (int)$matches[0] : 1;
             }
 
-            $tanggalMulai = $subscription->tanggal_expired && $subscription->tanggal_expired->isFuture() 
-                            ? $subscription->tanggal_expired 
+            $tanggalMulai = $subscription->tanggal_expired && $subscription->tanggal_expired->isFuture()
+                            ? $subscription->tanggal_expired
                             : now();
-                            
+
             $tanggalExpired = $tanggalMulai->copy()->addMonths($months);
 
             $subscription->update([
-                'status' => 'active',
+                'status'         => 'active',
                 'payment_status' => 'paid',
-                'tanggal_mulai' => $subscription->tanggal_mulai ?? now(), // keep original if exists
-                'tanggal_expired' => $tanggalExpired,
+                'tanggal_mulai'  => $subscription->tanggal_mulai ?? now(),
+                'tanggal_expired'=> $tanggalExpired,
             ]);
 
             Log::info('Payment confirmed for Software Subscription', [
-                'company_id' => $subscription->company_id,
+                'company_id'      => $subscription->company_id,
                 'subscription_id' => $subscription->id,
-                'order_number' => $orderId
+                'payment_id'      => $paymentId,
             ]);
 
             $this->notifyTeamSuccess($subscription, $user);
 
         } elseif ($transactionStatus == 'pending') {
-            $payment = SubscriptionPayment::where('subscription_id', $subscription->id)
-                ->where('status', 'pending')
-                ->latest()
-                ->first();
-
-            if ($payment) {
-                $payment->update([
-                    'raw_response' => json_encode($data),
-                ]);
-            }
+            $payment->update([
+                'raw_response' => json_encode($data),
+            ]);
         } elseif ($transactionStatus == 'deny' || $transactionStatus == 'cancel' || $transactionStatus == 'expire') {
-            $payment = SubscriptionPayment::where('subscription_id', $subscription->id)
-                ->where('status', 'pending')
-                ->latest()
-                ->first();
-
-            if ($payment) {
-                $payment->update([
-                    'status' => 'failed',
-                    'raw_response' => json_encode($data),
-                ]);
-            }
+            $payment->update([
+                'status'       => 'failed',
+                'raw_response' => json_encode($data),
+            ]);
 
             Log::info('Payment ' . $transactionStatus . ' for Software Subscription', [
-                'company_id' => $subscription->company_id,
+                'company_id'      => $subscription->company_id,
                 'subscription_id' => $subscription->id,
+                'payment_id'      => $paymentId,
             ]);
         }
 

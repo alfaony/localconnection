@@ -39,6 +39,7 @@ class SubscriptionPayment extends Model
     protected $fillable = [
         'company_id',
         'subscription_id',
+        'invoice_number',
         'amount',
         'subtotal',
         'ppn_rate',
@@ -89,6 +90,14 @@ class SubscriptionPayment extends Model
         static::creating(function ($model) {
             if (empty($model->{$model->getKeyName()})) {
                 $model->{$model->getKeyName()} = (string) Str::uuid();
+            }
+
+            // Auto-generate invoice_number: SS-YYYYMMDD-XXXXX (maks ~18 char)
+            if (empty($model->invoice_number)) {
+                do {
+                    $candidate = 'SS-' . now()->format('Ymd') . '-' . strtoupper(Str::random(5));
+                } while (static::where('invoice_number', $candidate)->exists());
+                $model->invoice_number = $candidate;
             }
         });
     }

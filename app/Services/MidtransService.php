@@ -289,7 +289,7 @@ class MidtransService
     /**
      * Create SNAP transaction for software subscription
      */
-    public function createTransactionForSubscription($subscription, $package, $customer, $options = [])
+    public function createTransactionForSubscription($subscription, $package, $customer, $payment = null, $options = [])
     {
         if (!$this->isActive()) {
             return [
@@ -308,8 +308,9 @@ class MidtransService
             
             $totalAmount = $ppnCalculation['gateway_amount'];
 
-            // Build order ID (unique) with _softwareSharing identifier
-            $orderId = $subscription->order_number . '_softwareSharing';
+            // Build order ID — pakai invoice_number agar pendek & unique (max 30 char)
+            // Format: SS-YYYYMMDD-XXXXX (aman untuk batas Midtrans)
+            $orderId = $payment->invoice_number . '_softwareSharing';
 
             // Build item details
             $items = [];
@@ -405,6 +406,7 @@ class MidtransService
             ];
 
         } catch (\Exception $e) {
+            // dd($e);
             Log::error('Midtrans transaction creation for subscription failed', [
                 'company_id' => $this->companyId,
                 'subscription_id' => $subscription->id,

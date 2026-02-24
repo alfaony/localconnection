@@ -184,7 +184,7 @@ class SubscriptionController extends Controller
 
             } elseif ($gateway === 'midtrans') {
                 $midtransService = new MidtransService($subscription->company_id);
-                $result = $midtransService->createTransactionForSubscription($subscription, $package, $user);
+                $result = $midtransService->createTransactionForSubscription($subscription, $package, $user, $payment);
 
                 if (!$result['success']) {
                     throw new \Exception($result['message']);
@@ -207,7 +207,7 @@ class SubscriptionController extends Controller
             }
 
         } catch (\Exception $e) {
-            dd($e);
+            // dd($e);
             DB::rollBack();
 
             return redirect()
