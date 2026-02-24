@@ -77,7 +77,7 @@ class PermissionForMenuSoftwareSharingSeeder extends Seeder
             foreach ($softwarePackages as $method) 
             {
                 // create permision
-                $permission = Permission::firstOrCreate([
+                $permissionSoftwarePackages = Permission::firstOrCreate([
                     'name' => ucwords($method).' Sharing Account Software',
                 ],[
                     'method' => $method,
@@ -88,7 +88,7 @@ class PermissionForMenuSoftwareSharingSeeder extends Seeder
 
                 foreach ($roles as $role) 
                 {
-                    PermissionRole::create(['role_id' => $role->id, 'permission_id' => $permission->id]);
+                    PermissionRole::create(['role_id' => $role->id, 'permission_id' => $permissionSoftwarePackages->id]);
                 }
             }
 
