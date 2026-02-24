@@ -78,7 +78,7 @@ class PermissionForMenuSoftwareSharingSeeder extends Seeder
             {
                 // create permision
                 $permissionSoftwarePackages = Permission::firstOrCreate([
-                    'name' => ucwords($method).' Sharing Account Software',
+                    'name' => ucwords($method).' Sharing Package Software',
                 ],[
                     'method' => $method,
                     'table' => 'software_packages',
