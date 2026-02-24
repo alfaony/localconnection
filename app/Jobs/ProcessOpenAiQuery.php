@@ -2,9 +2,9 @@
 
 namespace App\Jobs;
 
+use App\Events\AskBosResponseReady;
 use App\Services\ServiceOpenAi;
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldBeUnique;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
@@ -21,24 +21,29 @@ class ProcessOpenAiQuery implements ShouldQueue
     public function __construct($question, $filters, $userId)
     {
         $this->question = $question;
-        $this->filters = $filters;
-        $this->userId = $userId;
+        $this->filters  = $filters;
+        $this->userId   = $userId;
     }
 
     public function handle(ServiceOpenAi $openAiService)
     {
-        $prompt = $this->question;
-        $answer = $openAiService->askOpenAi($prompt);
+        $answer = $openAiService->askOpenAi($this->question);
 
         $cleanJsonString = stripslashes($answer);
-
         $data = json_decode($cleanJsonString, true);
-        
-        // Simpan ke cache atau database jika diperlukan
+
+        $analysis       = $data['Analysis']       ?? 'Not found Analysis';
+        $trustScore     = (int) ($data['trust_score']     ?? 0);
+        $executionScore = (int) ($data['execution_score'] ?? 0);
+
+        // Simpan ke cache sebagai fallback jika broadcast gagal
         cache()->put("ai_response_{$this->userId}", [
-            'analysis' => $data['Analysis']  ?? "Not found Analysis",
-            'trust_score' => $data['trust_score'] ?? 0,
-            'execution_score' => $data['execution_score'] ?? 0,
+            'analysis'       => $analysis,
+            'trust_score'    => $trustScore,
+            'execution_score'=> $executionScore,
         ], now()->addMinutes(10));
+
+        // Broadcast langsung ke user (primary — realtime)
+        event(new AskBosResponseReady($this->userId, $analysis, $trustScore, $executionScore));
     }
 }

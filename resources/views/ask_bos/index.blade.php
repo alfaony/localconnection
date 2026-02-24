@@ -91,7 +91,16 @@
                             <li class="list-group-item"><b>Trust Score:</b> <span id="trustScoreResult">-</span></li>
                             <li class="list-group-item"><b>Execution Score:</b> <span id="executionScoreResult">-</span></li>
                         </ul>
-                    </div>
+
+                        {{-- Tombol Reload: fallback manual jika broadcast tidak diterima --}}
+                        <div class="mt-3 text-right" id="reloadWrapper" style="display:none;">
+                            <button type="button" id="reloadBtn" class="btn btn-sm btn-outline-warning"
+                                    onclick="fetchFromCache()" title="Gunakan jika hasil tidak muncul otomatis">
+                                <i class="fas fa-sync-alt mr-1"></i> Reload Hasil
+                            </button>
+                            <small class="text-muted ml-2">Gunakan jika hasil tidak muncul otomatis</small>
+                        </div>
+
                      @canAccess('store','decisions')
                     <div class="d-flex justify-content-end mt-2">
                         <button type="submit" id="submitDecision" class="btn btn-primary" style="display:none;" onclick="return confirm('Yakin ingin menyimpan keputusan?')">Simpan</button>
@@ -159,186 +168,193 @@
 @section('js')
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/pusher-js@7.2.0/dist/web/pusher.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/laravel-echo/dist/echo.iife.js"></script>
+<audio id="notification-sound" src="/audio/notification-message-entry.mp3" preload="auto"></audio>
 <script>
+    // ── Setup Laravel Echo (Reverb) ──────────────────────────────────────────
+    const userId = @json(auth()->id());
+    const host   = '{{ config('services.connection_reverb.host') }}';
+    const key    = '{{ config('services.connection_reverb.key') }}';
+    const port   = '{{ config('services.connection_reverb.port') }}';
+
+    window.Pusher = Pusher;
+    window.Echo = new Echo.default({
+        broadcaster       : 'reverb',
+        key               : key,
+        wsHost            : host,
+        wsPort            : 8080,
+        wssPort           : port,
+        forceTLS          : true,
+        enabledTransports : ['ws', 'wss'],
+        authEndpoint      : '/broadcasting/authorize',
+        disableStats      : true,
+    });
+
+    // ── Listen hasil AI dari broadcast ──────────────────────────────────────
+    window.Echo.private(`ask-bos.${userId}`)
+        .listen('AskBosResponseReady', (e) => {
+            setLoading(false);
+
+            document.getElementById('analysisResult').innerText      = e.analysis;
+            document.getElementById('trustScoreResult').innerText    = e.trust_score;
+            document.getElementById('executionScoreResult').innerText = e.execution_score;
+
+            document.getElementById('analysisResultSave').value      = e.analysis;
+            document.getElementById('trustScoreResultSave').value    = e.trust_score;
+            document.getElementById('executionScoreResultSave').value = e.execution_score;
+
+            if (e.trust_score !== 0 || e.execution_score !== 0) {
+                document.getElementById('submitDecision').style.display = 'block';
+            }
+
+            // Notifikasi suara
+            document.getElementById('notification-sound')?.play();
+
+            // Toast singkat
+            showToast('✅ Hasil analisa B.O.S sudah siap!');
+        });
+
+    // ── Helper: loading state ────────────────────────────────────────────────
+    function setLoading(isLoading) {
+        const analysis     = document.getElementById('analysisResult');
+        const reloadWrapper = document.getElementById('reloadWrapper');
+        if (isLoading) {
+            analysis.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Sedang memproses, harap tunggu...';
+            document.getElementById('trustScoreResult').innerText     = '';
+            document.getElementById('executionScoreResult').innerText = '';
+            document.getElementById('submitDecision').style.display   = 'none';
+            // Tampilkan tombol Reload setelah 15 detik jika broadcast belum datang
+            setTimeout(() => { reloadWrapper.style.display = 'block'; }, 15000);
+        } else {
+            // Hasil sudah diterima — sembunyikan tombol Reload
+            reloadWrapper.style.display = 'none';
+        }
+    }
+
+    // ── Helper: toast notifikasi ─────────────────────────────────────────────
+    function showToast(message) {
+        const toast = document.createElement('div');
+        toast.className = 'askbos-toast';
+        toast.innerText = message;
+        document.body.appendChild(toast);
+        setTimeout(() => toast.classList.add('show'), 100);
+        setTimeout(() => { toast.classList.remove('show'); setTimeout(() => toast.remove(), 400); }, 3500);
+    }
+
+    // ── Fallback: ambil hasil dari cache secara manual ───────────────────────
+    function fetchFromCache() {
+        const btn = document.getElementById('reloadBtn');
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> Memuat...';
+
+        fetch("{{ route('check.response') }}")
+            .then(r => r.json())
+            .then(data => {
+                if (data.status === 'waiting') {
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fas fa-sync-alt mr-1"></i> Reload Hasil';
+                    showToast('⏳ Hasil belum tersedia, coba lagi sebentar.');
+                    return;
+                }
+
+                // Hasil ditemukan di cache — tampilkan
+                setLoading(false);
+                document.getElementById('analysisResult').innerText       = data.analysis;
+                document.getElementById('trustScoreResult').innerText     = data.trust_score;
+                document.getElementById('executionScoreResult').innerText = data.execution_score;
+                document.getElementById('analysisResultSave').value       = data.analysis;
+                document.getElementById('trustScoreResultSave').value     = data.trust_score;
+                document.getElementById('executionScoreResultSave').value = data.execution_score;
+
+                if (data.trust_score !== 0 || data.execution_score !== 0) {
+                    document.getElementById('submitDecision').style.display = 'block';
+                }
+                document.getElementById('notification-sound')?.play();
+                showToast('✅ Hasil analisa B.O.S sudah siap!');
+            })
+            .catch(() => {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-sync-alt mr-1"></i> Reload Hasil';
+                showToast('❌ Gagal memuat. Coba lagi.');
+            });
+    }
+
+    // ── Select2 untuk modal ──────────────────────────────────────────────────
     $(document).ready(function () {
         $('.selectModal2').select2({
             dropdownParent: '#makeDecisionModal',
-            width: '100%',
-            placeholder: 'Pilih',
-            allowClear: true
+            width         : '100%',
+            placeholder   : 'Pilih',
+            allowClear    : true
         });
     });
+
     document.addEventListener('DOMContentLoaded', function () {
-        const askButton = document.getElementById('askButton');
-        const decisionButton = document.getElementById('decisionButton');
-
-        askButton.addEventListener('click', function () {
-            const question = document.getElementById('questionInput').value;
-            const selectedFilters = Array.from(document.querySelectorAll('input[type="checkbox"]:checked')).map(el => el.value);
-
-            // Simulasi hasil
-            document.getElementById('analysisResult').innerText = `Analisis untuk "${question}" dengan filter ${selectedFilters.join(', ')}`;
-            document.getElementById('trustScoreResult').innerText = `${Math.floor(Math.random() * 100)} / 100`;
-            document.getElementById('executionScoreResult').innerText = `${Math.floor(Math.random() * 100)} / 100`;
-        });
-    });
-
-    document.addEventListener('DOMContentLoaded', function () 
-    {
-        const decisionButton = document.getElementById('decisionButton');
+        const askButton            = document.getElementById('askButton');
+        const decisionButton       = document.getElementById('decisionButton');
         const submitDecisionButton = document.getElementById('submitDecisionButton');
-        const askButton = document.getElementById('askButton');
-        
+
         document.getElementById('submitDecision').style.display = 'none';
 
-        // Show Modal when "Make Decision" is clicked
+        // ── Ask Questions ──────────────────────────────────────────────────
+        askButton.addEventListener('click', function () {
+            const question       = document.getElementById('questionInput').value;
+            const selectedFilters = Array.from(document.querySelectorAll('input[type="checkbox"]:checked')).map(el => el.value);
+
+            if (!question.trim()) { alert('Silakan masukkan pertanyaan sebelum mengirim.'); return; }
+
+            // Reset form
+            document.getElementById('questionResult').value = question;
+            ['responsibleResult','accountableResult','consultResult'].forEach(id => document.getElementById(id).value = '');
+            setLoading(true);
+
+            fetch("{{ route('ask.bos') }}", {
+                method : 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
+                body   : JSON.stringify({ question, filters: selectedFilters })
+            })
+            .then(r => r.json())
+            .catch(() => {
+                document.getElementById('analysisResult').innerText = 'Terjadi kesalahan saat memproses.';
+                setLoading(false);
+            });
+        });
+
+        // ── Make Decision modal submit ─────────────────────────────────────
         decisionButton.addEventListener('click', function () {
             const modal = new bootstrap.Modal(document.getElementById('makeDecisionModal'));
             modal.show();
         });
 
-        // Handle the submission of the decision form
-        submitDecisionButton.addEventListener('click', function () 
-        {            
+        submitDecisionButton.addEventListener('click', function () {
             const responsible = document.getElementById('responsible').value;
             const accountable = document.getElementById('accountable').value;
-            const consult = document.getElementById('consult').value;
-            const question = document.getElementById('questionInput').value;
+            const consult     = document.getElementById('consult').value;
+            const question    = document.getElementById('questionInput').value;
 
-            document.getElementById('questionResult').value = '';
-            document.getElementById('responsibleResult').value = '';
-            document.getElementById('accountableResult').value = '';
-            document.getElementById('consultResult').value = '';
-            document.getElementById('analysisResultSave').value = '';
-            document.getElementById('trustScoreResultSave').value = '';
-            document.getElementById('executionScoreResultSave').value = '';
+            if (!question.trim())              { alert('Silakan masukkan pertanyaan sebelum mengirim.'); return; }
+            if (!responsible || !accountable)  { alert('Please select Responsible dan Accountable.'); return; }
 
-            document.getElementById('analysisResult').innerText = "Sedang memproses...";
-            document.getElementById('trustScoreResult').innerText = "";
-            document.getElementById('executionScoreResult').innerText = "";
-            
-            retryCount = 0; // Reset retry counter
-
-            if (!question.trim()) {
-                alert('Silakan masukkan pertanyaan sebelum mengirim.');
-                return;
-            }
-
-            // Check if all fields are selected
-            if (!responsible || !accountable ) 
-            {
-                alert('Please select Responsible, Accountable, and Consult.');
-                return;
-            }
-            
-            document.getElementById('questionResult').value = question;
+            document.getElementById('questionResult').value    = question;
             document.getElementById('responsibleResult').value = responsible;
             document.getElementById('accountableResult').value = accountable;
-            document.getElementById('consultResult').value = consult;
+            document.getElementById('consultResult').value     = consult;
 
-            // Example: Send the data to the server
-            fetch("{{ route('ask.makeDesition') }}", 
-            {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "X-CSRF-TOKEN": "{{ csrf_token() }}"
-                },
-                body: JSON.stringify({
-                    question:question,
-                    responsible: responsible,
-                    accountable: accountable,
-                    consult: consult
-                })
+            setLoading(true);
+            document.getElementById('closeModal').click();
+
+            fetch("{{ route('ask.makeDesition') }}", {
+                method : 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
+                body   : JSON.stringify({ question, responsible, accountable, consult })
             })
-            .then(response => response.json())
-            .then(data => {
-                if (data.status === 'processing') {
-                    document.getElementById('closeModal').click();         
-                    checkResponse(); // Jalankan polling untuk mengambil hasil
-                }
-            })
-            .catch(error => {
-                console.error("Error:", error);
-                document.getElementById('analysisResult').innerText = "Terjadi kesalahan saat memproses.";
+            .then(r => r.json())
+            .catch(() => {
+                document.getElementById('analysisResult').innerText = 'Terjadi kesalahan saat memproses.';
+                setLoading(false);
             });
         });
-
-        askButton.addEventListener('click', function () {
-            const question = document.getElementById('questionInput').value;
-            const selectedFilters = Array.from(document.querySelectorAll('input[type="checkbox"]:checked')).map(el => el.value);
-
-            document.getElementById('questionResult').value = '';
-            document.getElementById('responsibleResult').value = '';
-            document.getElementById('accountableResult').value = '';
-            document.getElementById('consultResult').value = '';
-
-            if (!question.trim()) {
-                alert('Silakan masukkan pertanyaan sebelum mengirim.');
-                return;
-            }
-
-            document.getElementById('analysisResult').innerText = "Sedang memproses...";
-            document.getElementById('trustScoreResult').innerText = "";
-            document.getElementById('executionScoreResult').innerText = "";
-            
-            retryCount = 0; // Reset retry counter
-
-            document.getElementById('questionResult').value = question;
-
-            fetch("{{ route('ask.bos') }}", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "X-CSRF-TOKEN": "{{ csrf_token() }}"
-                },
-                body: JSON.stringify({ question: question, filters: selectedFilters })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.status === 'processing') {
-                    checkResponse(); // Jalankan polling untuk mengambil hasil
-                }
-            })
-            .catch(error => {
-                console.error("Error:", error);
-                document.getElementById('analysisResult').innerText = "Terjadi kesalahan saat memproses.";
-            });
-        });
-
-        let retryCount = 0;
-        function checkResponse() {
-            setTimeout(() => {
-                fetch("{{ route('check.response') }}")
-                .then(response => response.json())
-                .then(data => {
-                    console.log(data);
-                    
-                    if (data.status !== 'waiting') {
-                        document.getElementById('analysisResult').innerText = data.analysis;
-                        document.getElementById('trustScoreResult').innerText = `${data.trust_score} `;
-                        document.getElementById('executionScoreResult').innerText = `${data.execution_score}`;
-                        
-                        document.getElementById('analysisResultSave').value = data.analysis;
-                        document.getElementById('trustScoreResultSave').value = `${data.trust_score} `;
-                        document.getElementById('executionScoreResultSave').value = `${data.execution_score}`;
-
-                        if (data.trust_score !== 0 && data.execution_score !== 0) 
-                        {
-                            const submitDecision = document.getElementById('submitDecision');
-                            submitDecision.style.display = 'block';
-                        }
-                    } else if (retryCount < 16) 
-                    {
-                        retryCount += 1;
-                        checkResponse(); // Cek kembali jika belum selesai
-                    } else {
-                        document.getElementById('analysisResult').innerText = "Terjadi kesalahan saat memproses. Silakan coba lagi nanti.";
-                    }
-                })
-                .catch(error => console.error("Error fetching response:", error));
-            }, 5000); // Polling setiap 3 detik
-        }
     });
 </script>
 @stop
@@ -346,48 +362,33 @@
 @section('css')
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css">
 <style>
-    .form-check-inline {
-        margin-right: 15px;
-    }
-    body {
-        font-family: Arial, sans-serif;
-        /* padding: 20px; */
-        background-color: #f4f4f4;
-    }
+    .form-check-inline { margin-right: 15px; }
 
-    .container {
-        background-color: #fff;
-        padding: 10px;
-        border-radius: 5px;
-    }
+    .select2-selection__rendered { line-height: 31px !important; }
+    .select2-container .select2-selection--single { height: 35px !important; }
+    .select2-selection__arrow { height: 34px !important; }
+    hr { border: 1px solid black; border-radius: 5px; }
 
-    .select2-selection__rendered {
-        line-height: 31px !important;
+    /* ── Toast AskBos ─────────────────────────────────── */
+    .askbos-toast {
+        position: fixed;
+        bottom: 30px;
+        right: 30px;
+        background: #28a745;
+        color: #fff;
+        padding: 14px 24px;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 500;
+        box-shadow: 0 4px 16px rgba(0,0,0,.25);
+        opacity: 0;
+        transform: translateY(20px);
+        transition: opacity .3s, transform .3s;
+        z-index: 9999;
     }
-
-    .select2-container .select2-selection--single {
-        height: 35px !important;
-    }
-
-    .select2-selection__arrow {
-        height: 34px !important;
-    }
-
-    hr {
-        border: 1px solid black;
-        border-radius: 5px;
-    }
-
-    .select2-selection__rendered {
-        line-height: 31px !important;
-    }
-
-    .select2-container .select2-selection--single {
-        height: 35px !important;
-    }
-
-    .select2-selection__arrow {
-        height: 34px !important;
+    .askbos-toast.show {
+        opacity: 1;
+        transform: translateY(0);
     }
 </style>
 @stop

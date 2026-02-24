@@ -62,19 +62,23 @@ class AskBosController extends Controller
         ]);
     }
 
+
+    /**
+     * Fallback: ambil hasil dari cache jika broadcast gagal.
+     * Dipanggil manual via tombol "Reload" di halaman.
+     */
     public function checkResponse()
     {
-        $userId = auth()->id();
+        $userId   = auth()->id();
         $response = Cache::get("ai_response_{$userId}", null);
 
         if ($response) {
-            Cache::forget("ai_response_{$userId}"); // Hapus setelah ditampilkan
+            Cache::forget("ai_response_{$userId}");
             return response()->json($response);
         }
 
         return response()->json(['status' => 'waiting'], 202);
     }
-
 
     private function prePrompt($request)
     {
