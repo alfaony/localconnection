@@ -74,7 +74,7 @@
                     {{ $software->has_available_slots ? 'Slot Tersedia' : 'Slot Penuh' }}
                 </span>
 
-                @canAccess('show','customer_softwares')
+                @canAccess('show','customer_software')
                 <a href="{{ route('customer-software.show', $software->slug) }}" class="btn-modern {{ $software->has_available_slots ? 'primary' : 'secondary' }}">
                     <i class="fas fa-info-circle"></i> Lihat Detail
                 </a>
