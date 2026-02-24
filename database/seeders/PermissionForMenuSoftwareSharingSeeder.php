@@ -27,6 +27,7 @@ class PermissionForMenuSoftwareSharingSeeder extends Seeder
         try {   
             $softwareDashboard = ['index'];
             $software = ['index','create','store','edit','update','destroy','show','toggleStatus','dashboard'];
+            $softwarePackages = ['index','create','store','edit','update','destroy','show'];
             $masterAccount = ['index','edit', 'create','store','update', 'show', 'destroy','toggleStatus','customers'];
             $subscriptions = ['index','create','store','edit','update','destroy','show','toggleStatus','editExpiry','updateExpiry','editMasterAccount','updateMasterAccount','suspend','activate','payments','manual-approve'];
             
@@ -70,6 +71,24 @@ class PermissionForMenuSoftwareSharingSeeder extends Seeder
                     {
                         PermissionRole::create(['role_id' => $role->id, 'permission_id' => $permission->id]);
                     }
+                }
+            }
+
+            foreach ($softwarePackages as $method) 
+            {
+                // create permision
+                $permission = Permission::firstOrCreate([
+                    'name' => ucwords($method).' Sharing Account Software',
+                ],[
+                    'method' => $method,
+                    'table' => 'software_packages',
+                    'model' => 'SoftwarePackage',
+                    'guard_name' => 'web'
+                ]);
+
+                foreach ($roles as $role) 
+                {
+                    PermissionRole::create(['role_id' => $role->id, 'permission_id' => $permission->id]);
                 }
             }
 
