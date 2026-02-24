@@ -9,6 +9,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\Log;
 
 class ProcessOpenAiQuery implements ShouldQueue
 {
@@ -33,6 +34,12 @@ class ProcessOpenAiQuery implements ShouldQueue
         $data = json_decode($cleanJsonString, true);
 
         $analysis       = $data['Analysis']       ?? 'Not found Analysis';
+        if($analysis === "Not found Analysis"){
+            Log::error("Not found Analysis", [
+                'answer' => $answer,
+                'data' => $data
+            ]);
+        }
         $trustScore     = (int) ($data['trust_score']     ?? 0);
         $executionScore = (int) ($data['execution_score'] ?? 0);
         // Simpan ke cache sebagai fallback jika broadcast gagal
