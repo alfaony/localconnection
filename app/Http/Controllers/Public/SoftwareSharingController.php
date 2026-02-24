@@ -20,6 +20,23 @@ use Illuminate\Validation\Rules;
 class SoftwareSharingController extends Controller
 {
     /**
+     * Redirect ke company pertama yang tersedia
+     * URL: /software-sharing
+     */
+    public function redirectToFirst()
+    {
+        $company = Company::whereHas('softwares', function ($q) {
+            $q->where('status', 'active');
+        })->first();
+
+        if (!$company) {
+            abort(404, 'Tidak ada perusahaan yang tersedia.');
+        }
+
+        return redirect()->route('public.software-sharing.index', $company->slug);
+    }
+
+    /**
      * Halaman publik: daftar semua software milik company
      * URL: /customer-software/registration/{companySlug}
      */
