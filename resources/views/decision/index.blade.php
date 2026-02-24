@@ -54,6 +54,8 @@
                     <tr>
                         <th>User</th>
                         <th>Pertanyaan</th>
+                        <th>Nominal</th>
+                        <th>Vendor Eksternal</th>
                         <th>Aksi</th>
                     </tr>
                 </thead>
@@ -61,7 +63,21 @@
                 @forelse($decisions as $a)
                 <tr>
                     <td>{{ $a->user->name ?? "" }}</td>
-                    <td>{{ $a->question }}</td>
+                    <td>{{ Str::limit($a->question, 60) }}</td>
+                    <td style="white-space:nowrap;">
+                        @if($a->nominal)
+                            Rp {{ number_format($a->nominal, 0, ',', '.') }}
+                        @else
+                            <span class="text-muted">-</span>
+                        @endif
+                    </td>
+                    <td>
+                        @if($a->consult_vendor)
+                            <span class="badge badge-warning">{{ $a->consult_vendor }}</span>
+                        @else
+                            <span class="text-muted">-</span>
+                        @endif
+                    </td>
                     <td style="white-space: nowrap;">
                         @canAccess('update','decisions')
                         <button class="btn btn-secondary btn-sm" 
