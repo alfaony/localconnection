@@ -199,7 +199,7 @@ class AskBosController extends Controller
             $prompt .= "3. EXECUTION SCORE: Seberapa besar kemungkinan tim ini berhasil mengeksekusi keputusan ini? (0-100)\n";
         }
         $prompt .= "5. TRUST SCORE: Seberapa valid dan dapat dipercaya keputusan ini secara keseluruhan? (0-100)\n";
-        $prompt .= "6. VERDICT: Berikan kesimpulan singkat dan tegas — apakah keputusan ini layak dilanjutkan atau tidak, dan mengapa.\n\n";
+        $prompt .= "6. VERDICT: Berikan kesimpulan yang tegas — apakah keputusan ini layak dilanjutkan atau tidak, dan mengapa. Serta berikut Solusi untuk mengatasi kekurangan yang ada. Dan meningkatkan EXECUTION SCORE dan TRUST SCORE.\n\n";
 
         $prompt .= "INSTRUKSI OUTPUT — WAJIB DIIKUTI:\n";
         $prompt .= "Respond HANYA dengan JSON murni. JANGAN tambahkan teks apapun di luar JSON.\n";
