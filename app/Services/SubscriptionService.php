@@ -443,14 +443,24 @@ class SubscriptionService
      * Auto-expire unpaid subscriptions whose slot reservation deadline has passed.
      * Releases the slot and marks subscription as expired.
      *
-     * @param bool $dryRun  If true, do not persist changes.
+     * @param bool        $dryRun  If true, do not persist changes.
+     * @param string|null $id      If provided, force expire this specific subscription (skip deadline).
      * @return array  List of expired subscription summaries.
      */
-    public function autoExpireUnpaidSubscriptions(bool $dryRun = false): array
+    public function autoExpireUnpaidSubscriptions(bool $dryRun = false, ?string $id = null): array
     {
-        $expired = CustomerSubscription::slotExpired()
-            ->with(['user', 'software', 'masterAccount'])
-            ->get();
+        if ($id) {
+            // Force-expire specific subscription by ID (for simulation/testing)
+            $expired = CustomerSubscription::where('id', $id)
+                ->where('payment_status', 'unpaid')
+                ->whereIn('status', ['active', 'pending'])
+                ->with(['user', 'software', 'masterAccount'])
+                ->get();
+        } else {
+            $expired = CustomerSubscription::slotExpired()
+                ->with(['user', 'software', 'masterAccount'])
+                ->get();
+        }
 
         $results = [];
 
@@ -464,7 +474,7 @@ class SubscriptionService
             ];
 
             if (!$dryRun) {
-                $this->cancelSubscription($sub, 'Auto-expired: slot reservation deadline passed');
+                $this->cancelSubscription($sub, $id ? 'Manual force-expire via artisan command' : 'Auto-expired: slot reservation deadline passed');
             }
 
             $results[] = $summary;

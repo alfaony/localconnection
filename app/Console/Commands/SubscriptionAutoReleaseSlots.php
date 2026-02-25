@@ -12,15 +12,17 @@ class SubscriptionAutoReleaseSlots extends Command
      * Runs hourly – expires unpaid subscriptions whose slot reservation deadline has passed.
      */
     protected $signature = 'subscription:auto-release-slots
-                            {--dry-run : Preview without saving}';
+                            {--dry-run : Preview without saving}
+                            {--id= : Force expire specific subscription ID (skip deadline check)}';
 
     protected $description = 'Auto-release slots for unpaid subscriptions past their reservation deadline';
 
     public function handle(SubscriptionService $service)
     {
         $dryRun = $this->option('dry-run');
+        $id = $this->option('id');
 
-        $results = $service->autoExpireUnpaidSubscriptions($dryRun);
+        $results = $service->autoExpireUnpaidSubscriptions($dryRun, $id);
 
         if (empty($results)) {
             $this->info('✅ Tidak ada subscription unpaid yang perlu di-expire.');

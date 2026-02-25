@@ -126,13 +126,13 @@ class SubscriptionController extends Controller
         DB::beginTransaction();
 
         try {
-            // If subscription is expired, reactivate using the SAME master account
-            // (slot was already theirs — no need to find a new slot)
+            // If subscription is expired, must re-check slot availability
+            // (slot was released when it expired — cannot assume it's still available)
             if ($subscription->status === 'expired') {
                 $masterAccount = $subscription->masterAccount;
 
-                if (!$masterAccount) {
-                    // Master account has been removed; find a new available slot
+                if (!$masterAccount || !$masterAccount->hasSlotsAvailable()) {
+                    // Original master account gone or full — find a new one
                     $hasFreeSlot = $this->subscriptionService->checkSlotsAvailability(
                         $subscription->software_id,
                         $subscription->company_id
@@ -146,11 +146,12 @@ class SubscriptionController extends Controller
                         $subscription->software_id,
                         $subscription->company_id
                     );
-                    $masterAccount->reserveSlot();
 
                     $subscription->update(['master_account_id' => $masterAccount->id]);
                 }
-                // Else: keep using the same master account — nothing to change
+
+                // Re-reserve slot (it was released on expire)
+                $masterAccount->reserveSlot();
             }
 
 

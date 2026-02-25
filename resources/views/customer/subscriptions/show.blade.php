@@ -297,7 +297,7 @@
             @else
             {{-- Subscription not active or not paid --}}
             <div class="modern-card slide-up-1 text-center py-5 border-0" style="background: #fff8f1; border-top: 4px solid var(--warning) !important;">
-                @if($subscription->payment_status == 'unpaid')
+                @if($subscription->payment_status == 'unpaid' && in_array($subscription->status, ['active', 'pending']))
                 <div class="mb-4 text-warning" style="font-size: 48px;">
                     <i class="fas fa-exclamation-triangle"></i>
                 </div>
