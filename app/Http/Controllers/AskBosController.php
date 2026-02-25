@@ -44,66 +44,75 @@ class AskBosController extends Controller
     public function makeDesition(Request $request)
     {
         $validated = $request->validate([
-            'question' => 'required|string',
-            'filters' => 'nullable|array'
+            'question'       => 'required|string',
+            'filters'        => 'nullable|array',
+            'nominal'        => 'nullable|numeric|min:0',
+            'consult_vendor' => 'nullable|string|max:255',
         ]);
 
-        $question = $validated['question'];
         $filters = $validated['filters'] ?? [];
-        $userId = auth()->id();
-        
-        // Jalankan job ke queue
+        $userId  = auth()->id();
+
         $prompt = $this->prePromptDesition($request);
         ProcessOpenAiQuery::dispatch($prompt, $filters, $userId);
 
         return response()->json([
-            'status' => 'processing',
+            'status'  => 'processing',
             'message' => 'Pertanyaan sedang diproses, silakan tunggu beberapa detik.',
         ]);
     }
 
+
+    /**
+     * Fallback: ambil hasil dari cache jika broadcast gagal.
+     * Dipanggil manual via tombol "Reload" di halaman.
+     */
     public function checkResponse()
     {
-        $userId = auth()->id();
+        $userId   = auth()->id();
         $response = Cache::get("ai_response_{$userId}", null);
 
         if ($response) {
-            Cache::forget("ai_response_{$userId}"); // Hapus setelah ditampilkan
+            Cache::forget("ai_response_{$userId}");
             return response()->json($response);
         }
 
         return response()->json(['status' => 'waiting'], 202);
     }
 
-
     private function prePrompt($request)
     {
         $user = Auth::user();
         $background = strip_tags($user->background) ?? '';
         $experience = strip_tags($user->experience) ?? '';
-        $skill = strip_tags($user->skill) ?? '';
+        $skill      = strip_tags($user->skill) ?? '';
+        $achievement = json_decode($user->achievement) ?? [];
+        $failure     = json_decode($user->failure) ?? [];
 
-        $prompt  = "Profil Saya\n";
+        $prompt  = "Kamu adalah sistem B.O.S (Business Operating System) — AI advisor berbasis data nyata dari internet.\n";
+        $prompt .= "Tugasmu adalah memberikan PENILAIAN (assessment) faktual, bukan daftar saran generik.\n";
+        $prompt .= "Selalu dasarkan analisa pada data nyata, riset, dan fakta yang dapat diverifikasi.\n\n";
+
+        $prompt .= "=== PERTANYAAN/TOPIK ===\n";
+        $prompt .= "$request->question\n\n";
+
+        $prompt .= "=== PROFIL PEMBERI SARAN ===\n";
         $prompt .= "Nama: $user->name\n";
-        $prompt .= "Pendidikan: $background\n";
+        $prompt .= "Latar Belakang Pendidikan: $background\n";
         $prompt .= "Pengalaman Kerja: $experience\n";
         $prompt .= "Keterampilan: $skill\n";
-        $achievement = json_decode($user->achievement) ?? [];
-        $failure = json_decode($user->failure) ?? [];
         $prompt .= "Pencapaian: " . implode(', ', $achievement) . "\n";
-        $prompt .= "Kegagalan: " . implode(', ', $failure) . "\n";
+        $prompt .= "Riwayat Kegagalan: " . implode(', ', $failure) . "\n\n";
 
-        $prompt .= "Saran: $user->name memberikan saran, $request->question.\n";
+        $prompt .= "=== YANG HARUS KAMU NILAI ===\n";
+        $prompt .= "1. KREDIBILITAS SARAN: Apakah background, pengalaman, dan keterampilan orang ini memadai untuk memberikan saran tentang topik tersebut? Nilai secara jujur — apakah mereka kompeten di bidang ini berdasarkan profil di atas?\n";
+        $prompt .= "2. VALIDASI FAKTUAL: Berdasarkan data dan riset terkini (2023-2025) dari internet, apakah saran/pernyataan mereka akurat? Sebutkan fakta konkret yang mendukung atau membantah.\n";
+        $prompt .= "3. TRUST SCORE: Berikan nilai 0-100 — 100 berarti saran sangat valid dan orang ini sangat kompeten, 0 berarti tidak relevan sama sekali.\n\n";
 
-        $prompt .= "Analisa berdasarkan data di internet dan trends: \n";
-        $prompt .= "Analisa berdasarkan latar belakang dan pengalaman dia: \n";
-        $prompt .= "Analisa berdasarkan tingkat kepercayaan dan possibility benar: \n";
-        $prompt .= "Berikan nilai score final: trust score 0 - 100. \n";
-        $prompt .= "Analisa berdasarkan logika keputusan terbaik. terdapat minimal 15 pointers berupa pertimbangan, dan bagaimana cara naikin trust score jika nilai trust score di bawah 75.\n";
-        
-        $prompt .= "Tuliskan hasil analisa dalam format json seperti berikut: \n";
-        $prompt .= "- Analysis: [Hasil analisis]\n";
-        $prompt .= "- trust_score: [Nilai trust score dalam angka, 0-100]\n";
+        $prompt .= "INSTRUKSI OUTPUT — WAJIB DIIKUTI:\n";
+        $prompt .= "Respond HANYA dengan JSON murni. JANGAN tambahkan teks apapun di luar JSON.\n";
+        $prompt .= '{"Analysis": "<assessment faktual lengkap: nilai kredibilitas pemberi saran, validasi dengan data nyata, verdict akhir>", "trust_score": <angka 0-100>}' . "\n";
+        $prompt .= "JANGAN output apapun selain JSON tersebut.\n";
 
         return $prompt;
     }
@@ -113,86 +122,89 @@ class AskBosController extends Controller
         $user = Auth::user();
         $backgroundDecision = strip_tags($user->background) ?? '';
         $experienceDecision = strip_tags($user->experience) ?? '';
-        $skillDecision = strip_tags($user->skill) ?? '';
-
-        $prompt = "$request->question \n";
-        $prompt .= "Analisa pertanyaan diatas berdasarkan ini :\n";
-        $prompt  .= "Profil Yang Memutuskan\n";
-        $prompt .= "Nama: $user->name\n";
-        $prompt .= "Pendidikan: $backgroundDecision\n";
-        $prompt .= "Pengalaman Kerja: $experienceDecision\n";
-        $prompt .= "Keterampilan: $skillDecision\n";
+        $skillDecision      = strip_tags($user->skill) ?? '';
         $achievement = json_decode($user->achievement) ?? [];
-        $failure = json_decode($user->failure) ?? [];
-        $prompt .= "Pencapaian: " . implode(', ', $achievement) . "\n";
-        $prompt .= "Kegagalan: " . implode(', ', $failure) . "\n";
-        
-        if($request->responsible)
-        {
+        $failure     = json_decode($user->failure) ?? [];
+
+        $prompt  = "Kamu adalah sistem B.O.S (Business Operating System) — AI advisor berbasis data nyata.\n";
+        $prompt .= "Tugasmu: berikan PENILAIAN FAKTUAL (bukan daftar saran/tips generik) terhadap keputusan bisnis ini.\n";
+        $prompt .= "Gunakan data nyata, riset terkini, dan fakta yang dapat diverifikasi sebagai dasar analisa.\n\n";
+
+        $prompt .= "=== KEPUTUSAN YANG DIANALISA ===\n";
+        $prompt .= "$request->question\n\n";
+
+        $prompt .= "=== PROFIL YANG MEMUTUSKAN (Decision Maker) ===\n";
+        $prompt .= "Nama: $user->name | Pendidikan: $backgroundDecision | Pengalaman: $experienceDecision | Skill: $skillDecision\n";
+        $prompt .= "Pencapaian: " . implode(', ', $achievement) . " | Kegagalan: " . implode(', ', $failure) . "\n\n";
+
+        if ($request->responsible) {
             $responsible = User::find($request->responsible);
-            $backgroundResponsible = strip_tags($responsible->background) ?? '';
-            $experienceResponsible = strip_tags($responsible->experience) ?? '';
-            $skillResponsible = strip_tags($responsible->skill) ?? '';
-    
-            $prompt .= "Profil Yang Responsible\n";
+            $prompt .= "=== PROFIL PELAKSANA (Responsible) ===\n";
             $prompt .= "Nama: $responsible->name\n";
-            $prompt .= "Pendidikan: $backgroundResponsible\n";
-            $prompt .= "Pengalaman Kerja: $experienceResponsible\n";
-            $prompt .= "Keterampilan: $skillResponsible\n";
-            $achievement = json_decode($responsible->achievement) ?? [];
-            $failure = json_decode($responsible->failure) ?? [];
-            $prompt .= "Pencapaian: " . implode(', ', $achievement) . "\n";
-            $prompt .= "Kegagalan: " . implode(', ', $failure) . "\n";
-            
+            $prompt .= "Pendidikan: " . strip_tags($responsible->background ?? '') . "\n";
+            $prompt .= "Pengalaman: " . strip_tags($responsible->experience ?? '') . "\n";
+            $prompt .= "Skill: " . strip_tags($responsible->skill ?? '') . "\n";
+            $rAch = json_decode($responsible->achievement) ?? [];
+            $rFail = json_decode($responsible->failure) ?? [];
+            $prompt .= "Pencapaian: " . implode(', ', $rAch) . " | Kegagalan: " . implode(', ', $rFail) . "\n\n";
         }
 
-        $prompt .= "Buatkan analisa berdasarkan fakta, data yg ditemukan di internet juga. Analisa berdasarkan logika keputusan terbaik. Buatkan minimal 15 pointers berupa pertimbangan, dan bagaimana cara naikin trust score dan execution score ke 99 jika nilai trust score dan execution score di bawah 70.\n";
-        $prompt .= "Jawablah dengan format : Trust Score 0 - 100 dengan mengamati kelengkapan informasi yang sudah dimiliki. Pekerjaan ini akan diserahkan kepada, sesuai dengan prinsip management RACI, analisa kesesuaian dan kemampuan pelaku dan hitung 0-100 execution score.\n";
-
-        if($request->accountable)
-        {
+        if ($request->accountable) {
             $accountable = User::find($request->accountable);
-            $backgroundAccountable = strip_tags($accountable->background) ?? '';
-            $experienceAccountable = strip_tags($accountable->experience) ?? '';
-            $skillAccountable = strip_tags($accountable->skill) ?? '';
-    
-            $prompt .= "Profil yang Accountable\n";
-            $prompt .= "Accountable: $accountable->name\n";
-            $prompt .= "Pendidikan: $backgroundAccountable\n";
-            $prompt .= "Pengalaman Kerja: $experienceAccountable\n";
-            $prompt .= "Keterampilan: $skillAccountable\n";
-            $achievement = json_decode($accountable->achievement) ?? [];
-            $failure = json_decode($accountable->failure) ?? [];
-            $prompt .= "Pencapaian: " . implode(', ', $achievement) . "\n";
-            $prompt .= "Kegagalan: " . implode(', ', $failure) . "\n";
-            
+            $prompt .= "=== PROFIL PENANGGUNG JAWAB (Accountable) ===\n";
+            $prompt .= "Nama: $accountable->name\n";
+            $prompt .= "Pendidikan: " . strip_tags($accountable->background ?? '') . "\n";
+            $prompt .= "Pengalaman: " . strip_tags($accountable->experience ?? '') . "\n";
+            $prompt .= "Skill: " . strip_tags($accountable->skill ?? '') . "\n";
+            $aAch = json_decode($accountable->achievement) ?? [];
+            $aFail = json_decode($accountable->failure) ?? [];
+            $prompt .= "Pencapaian: " . implode(', ', $aAch) . " | Kegagalan: " . implode(', ', $aFail) . "\n\n";
         }
 
-        if($request->consult)
-        {
+        if ($request->consult) {
             $consult = User::find($request->consult);
-            $backgroundConsult = strip_tags($consult->background) ?? '';
-            $experienceConsult = strip_tags($consult->experience) ?? '';
-            $skillConsult = strip_tags($consult->skill) ?? '';
-    
-            $prompt .= "Profil yang Consult\n";
-            $prompt .= "Consult: $consult->name\n";
-            $prompt .= "Pendidikan: $backgroundConsult\n";
-            $prompt .= "Pengalaman Kerja: $experienceConsult\n";
-            $prompt .= "Keterampilan: $skillConsult\n";
-            $achievement = json_decode($consult->achievement) ?? [];
-            $failure = json_decode($consult->failure) ?? [];
-            $prompt .= "Pencapaian: " . implode(', ', $achievement) . "\n";
-            $prompt .= "Kegagalan: " . implode(', ', $failure) . "\n";
-            
-        }else
-        {
-            $prompt .= "Consult : Tidak Ada\n";
+            $prompt .= "=== PROFIL KONSULTAN INTERNAL (Consult) ===\n";
+            $prompt .= "Nama: $consult->name\n";
+            $prompt .= "Pendidikan: " . strip_tags($consult->background ?? '') . "\n";
+            $prompt .= "Pengalaman: " . strip_tags($consult->experience ?? '') . "\n";
+            $prompt .= "Skill: " . strip_tags($consult->skill ?? '') . "\n";
+            $cAch = json_decode($consult->achievement) ?? [];
+            $cFail = json_decode($consult->failure) ?? [];
+            $prompt .= "Pencapaian: " . implode(', ', $cAch) . " | Kegagalan: " . implode(', ', $cFail) . "\n\n";
+        } elseif ($request->filled('consult_vendor')) {
+            $vendorName    = $request->consult_vendor;
+            $nominalFormat = 'Rp ' . number_format((float) ($request->nominal ?? 0), 0, ',', '.');
+            $prompt .= "=== VENDOR/KONSULTAN EKSTERNAL ===\n";
+            $prompt .= "Nama Vendor: $vendorName\n";
+            $prompt .= "Nilai Kontrak: $nominalFormat\n\n";
+        } else {
+            $prompt .= "=== KONSULTAN: Tidak Ada ===\n\n";
         }
-        $prompt .= "Tuliskan hasil analisa dalam format json seperti berikut: \n";
-        $prompt .= "- Analysis: [Hasil analisis]\n";
-        $prompt .= "- trust_score: [Nilai trust score dalam angka, 0-100]\n";
-        $prompt .= "- execution_score: [Nilai  Execution Score dalam angka, 0-100]\n";
+
+        if ($request->filled('nominal') && (float) $request->nominal > 0) {
+            $nominalFormat = 'Rp ' . number_format((float) $request->nominal, 0, ',', '.');
+            $prompt .= "=== NILAI KEPUTUSAN/TRANSAKSI ===\n";
+            $prompt .= "Nominal: $nominalFormat\n\n";
+        }
+
+        $prompt .= "=== YANG HARUS KAMU NILAI (secara faktual, bukan tips) ===\n";
+        $prompt .= "1. KESIAPAN TIM: Apakah latar belakang, pengalaman, dan keterampilan masing-masing orang (Decision Maker, Responsible, Accountable, Consult) BENAR-BENAR memadai untuk keputusan ini? Nilai secara jujur dan spesifik — jangan generik.\n";
+        $prompt .= "2. KELAYAKAN KEPUTUSAN: Berdasarkan data dan riset nyata (fakta industri, statistik, precedent), apakah keputusan ini layak dilakukan? Sebutkan fakta konkret.\n";
+
+
+        if ($request->filled('consult_vendor')) {
+            $prompt .= "3. KREDIBILITAS VENDOR: Cari dan nilai vendor '$request->consult_vendor' — apakah dikenal di industri? Rekam jejak? Risiko kerjasama pada nilai $nominalFormat? Apakah wajar harga untuk scope ini?\n";
+            $prompt .= "4. EXECUTION SCORE: Seberapa besar kemungkinan tim ini berhasil mengeksekusi keputusan ini bersama vendor tersebut? (0-100)\n";
+        } else {
+            $prompt .= "3. EXECUTION SCORE: Seberapa besar kemungkinan tim ini berhasil mengeksekusi keputusan ini? (0-100)\n";
+        }
+        $prompt .= "5. TRUST SCORE: Seberapa valid dan dapat dipercaya keputusan ini secara keseluruhan? (0-100)\n";
+        $prompt .= "6. VERDICT: Berikan kesimpulan yang tegas — apakah keputusan ini layak dilanjutkan atau tidak, dan mengapa. Serta berikan Solusi untuk mengatasi kekurangan yang ada. Dan meningkatkan EXECUTION SCORE dan TRUST SCORE.\n\n";
+
+        $prompt .= "INSTRUKSI OUTPUT — WAJIB DIIKUTI:\n";
+        $prompt .= "Respond HANYA dengan JSON murni. JANGAN tambahkan teks apapun di luar JSON.\n";
+        $prompt .= '{"Analysis": "<assessment faktual: kesiapan tim, kelayakan keputusan, kredibilitas vendor jika ada, verdict akhir — tulis seperti laporan analis profesional, bukan daftar tips>", "trust_score": <angka 0-100>, "execution_score": <angka 0-100>}' . "\n";
+        $prompt .= "JANGAN output apapun selain JSON tersebut.\n";
 
         return $prompt;
     }

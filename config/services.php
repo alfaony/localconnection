@@ -115,4 +115,8 @@ return [
         'base_url' => env('N8N_BASE_URL', 'https://n8n.keloola.xyz'),
         'ktp_webhook_path' => env('N8N_KTP_WEBHOOK_PATH', '/webhook-test/e-kyc-hikari'),
     ],
+
+    'openai' => [
+        'nominal_threshold' => env('KELOOLA_OPENAI_NOMINAL_TRAHOLD', 100000000),
+    ],
 ];

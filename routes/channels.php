@@ -60,3 +60,8 @@ Broadcast::channel('subscription.chat.{subscriptionId}', function ($user, $subsc
     // return Access::can('manul')
     return true;
 });
+
+// AskBos – hasil AI dikirim langsung ke user via broadcast
+Broadcast::channel('ask-bos.{userId}', function ($user, $userId) {
+    return $user->id === $userId;
+});

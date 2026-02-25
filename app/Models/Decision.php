@@ -21,7 +21,9 @@ class Decision extends Model
         'user_consult_id',
         'is_approve',
         'trust_score',
-        'execution_score'
+        'execution_score',
+        'nominal',
+        'consult_vendor',
     ];
 
     public function user()
