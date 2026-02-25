@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\InternetCustomerPurchase;
 use App\Services\XenditService;
+use App\Services\SubscriptionService;
 use App\Schemas\ParamSchema;
 use App\Jobs\ProvisionCustomerJob;
 use Illuminate\Support\Facades\Log;
@@ -381,25 +382,17 @@ class XenditController extends Controller
 
                 // Update subscription status and dates
                 $package = $subscription->package;
-                $months = 1;
-                // Basic plan duration parsing if applicable, usually 1 month if not specified
-                if (stripos($package->durasi_paket, 'tahun') !== false || stripos($package->durasi_paket, 'year') !== false) {
-                    $months = 12;
-                } elseif (stripos($package->durasi_paket, 'bulan') !== false || stripos($package->durasi_paket, 'month') !== false) {
-                    preg_match('/\d+/', $package->durasi_paket, $matches);
-                    $months = !empty($matches) ? (int)$matches[0] : 1;
-                }
 
-                $tanggalMulai = $subscription->tanggal_expired && $subscription->tanggal_expired->isFuture() 
-                                ? $subscription->tanggal_expired 
+                $tanggalMulai = $subscription->tanggal_expired && $subscription->tanggal_expired->isFuture()
+                                ? $subscription->tanggal_expired
                                 : now();
-                                
-                $tanggalExpired = $tanggalMulai->copy()->addMonths($months);
+
+                $tanggalExpired = SubscriptionService::calculateExpiredDate($tanggalMulai, $package->durasi_paket ?? null);
 
                 $subscription->update([
                     'status' => 'active',
                     'payment_status' => 'paid',
-                    'tanggal_mulai' => $subscription->tanggal_mulai ?? now(), // keep original if exists
+                    'tanggal_mulai' => $subscription->tanggal_mulai ?? $tanggalMulai, // keep original start date; $tanggalMulai used for new/renewal
                     'tanggal_expired' => $tanggalExpired,
                 ]);
 
@@ -536,5 +529,55 @@ class XenditController extends Controller
         $inboxHelper = new InboxHelper();
         $inboxHelper->sent($to, $from, $message, $directUrl);
         return true;
+    }
+
+    /**
+     * Send inbox notifications after manual approve:
+     * 1. To the customer: payment approved
+     * 2. To PIC software (from software.pic relation): please follow up
+     */
+    protected function notifyTeamSuccess($subscription, $user)
+    {
+        $subscription->load(['user', 'package.software.pic', 'masterAccount.software.pic']);
+
+        $approvedBy = $user->id;
+        $customer   = $subscription->user;
+        $paket      = $subscription->package->nama_paket ?? 'Langganan';
+
+        // Resolve software object (prefer from masterAccount, fallback to package)
+        $softwareModel = $subscription->masterAccount->software
+                      ?? $subscription->package->software
+                      ?? null;
+        $softwareName  = $softwareModel->nama ?? 'Software';
+
+        // ── 1. Notifikasi ke Pelanggan ──────────────────────────────────────
+        $urlCustomer = route('customer-subscription.show', $subscription->id);
+        $msgCustomer = "🎉 Selamat! Pembayaran Anda untuk paket *{$paket}* ({$softwareName}) "
+                     . "telah berhasil dikonfirmasi. Langganan Anda kini sudah aktif. "
+                     . "Silakan akses dashboard untuk melihat detail akses Anda.";
+        $this->sentInbox($customer->id, $approvedBy, $msgCustomer, $urlCustomer);
+
+        // ── 2. Notifikasi ke PIC Software ──────────────────────────────────
+        $pic = $softwareModel ? $softwareModel->pic : null;
+
+        if ($pic && $pic->id !== $approvedBy) {
+            $urlAdmin = route('subscription.payments', $subscription->id);
+            $msgAdmin = "📋 Member *{$customer->name}* telah berhasil melakukan pembayaran "
+                      . "untuk paket *{$paket}* ({$softwareName}). "
+                      . "Pembayaran sudah disetujui. Silakan segera tindak lanjuti dan pastikan akses member sudah aktif.";
+
+            $this->sentInbox($pic->id, $approvedBy, $msgAdmin, $urlAdmin);
+
+            \Log::info('Inbox notification sent to PIC', [
+                'subscription_id' => $subscription->id,
+                'customer_id'     => $customer->id,
+                'pic_id'          => $pic->id,
+            ]);
+        } else {
+            \Log::info('No PIC found for software, skipping PIC notification', [
+                'subscription_id' => $subscription->id,
+                'software'        => $softwareName,
+            ]);
+        }
     }
 }

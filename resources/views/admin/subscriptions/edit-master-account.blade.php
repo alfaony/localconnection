@@ -122,7 +122,7 @@
                             <div class="alert alert-danger">
                                 <i class="fas fa-times-circle"></i>
                                 <strong>No Available Accounts!</strong> Semua master account untuk software ini sudah penuh. 
-                                <a href="{{ route('admin.master-accounts.create', ['software_id' => $subscription->software_id]) }}" class="alert-link">
+                                <a href="{{ route('master-account.create', ['software_id' => $subscription->software_id]) }}" class="alert-link">
                                     Tambahkan master account baru
                                 </a> atau tingkatkan max_slots pada account yang ada.
                             </div>

@@ -291,13 +291,22 @@ class SubscriptionController extends Controller
                 'status'         => 'active',
             ];
 
-            // Set tanggal mulai & expired jika belum pernah di-set
+            // Calculate tanggal_mulai & tanggal_expired for renewal
+            // Logic: if currently-expired date is in the future → extend from there (renewal)
+            //        otherwise use now() as the new start (new/re-activation)
+            $package = $subscription->package;
+            $tanggalMulai = $subscription->tanggal_expired && $subscription->tanggal_expired->isFuture()
+                            ? $subscription->tanggal_expired
+                            : now();
+
+            // Only set tanggal_mulai if it was never set (first activation)
             if (!$subscription->tanggal_mulai) {
-                $updateData['tanggal_mulai'] = now();
+                $updateData['tanggal_mulai'] = $tanggalMulai;
             }
 
-            if (!$subscription->tanggal_expired && $subscription->package) {
-                $updateData['tanggal_expired'] = now()->addDays($subscription->package->durasi_hari);
+            // Always recalculate tanggal_expired based on package duration
+            if ($package) {
+                $updateData['tanggal_expired'] = SubscriptionService::calculateExpiredDate($tanggalMulai, $package->durasi_paket ?? null);
             }
 
             $subscription->update($updateData);

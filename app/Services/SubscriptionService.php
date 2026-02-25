@@ -12,6 +12,45 @@ use Illuminate\Support\Facades\Log;
 class SubscriptionService
 {
     /**
+     * Parse durasi_paket string into unit & value.
+     * Supports: "90 hari", "3 bulan", "1 tahun", "2 years", "6 months", "30 days"
+     * Returns: ['unit' => 'days'|'months', 'value' => int]
+     */
+    public static function parseDurasiPaket(?string $durasi): array
+    {
+        if (!$durasi) {
+            return ['unit' => 'months', 'value' => 1]; // safe default
+        }
+
+        preg_match('/(\d+)/', $durasi, $matches);
+        $value = !empty($matches[1]) ? (int) $matches[1] : 1;
+
+        if (stripos($durasi, 'hari') !== false || stripos($durasi, 'day') !== false) {
+            return ['unit' => 'days', 'value' => $value];
+        }
+
+        if (stripos($durasi, 'tahun') !== false || stripos($durasi, 'year') !== false) {
+            return ['unit' => 'months', 'value' => $value * 12];
+        }
+
+        // Default: bulan / month
+        return ['unit' => 'months', 'value' => $value];
+    }
+
+    /**
+     * Calculate tanggal_expired from a start date and package durasi_paket string.
+     */
+    public static function calculateExpiredDate(Carbon $startDate, ?string $durasi): Carbon
+    {
+        $parsed = static::parseDurasiPaket($durasi);
+        return $startDate->copy()->addDays($parsed['value']);
+        // if ($parsed['unit'] === 'days') {
+        // }
+        // return $startDate->copy()->addMonths($parsed['value']);
+    }
+
+
+    /**
      * Find available master account for a software
      */
     public function findAvailableMasterAccount($softwareId, $companyId)

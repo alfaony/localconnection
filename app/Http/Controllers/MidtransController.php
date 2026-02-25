@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\InternetCustomerPurchase;
 use App\Services\MidtransService;
+use App\Services\SubscriptionService;
 use App\Schemas\ParamSchema;
 use App\Jobs\ProvisionCustomerJob;
 use Illuminate\Support\Facades\Log;
@@ -242,24 +243,17 @@ class MidtransController extends Controller
 
             // Update subscription status and dates
             $package = $subscription->package;
-            $months = 1;
-            if (stripos($package->durasi_paket, 'tahun') !== false || stripos($package->durasi_paket, 'year') !== false) {
-                $months = 12;
-            } elseif (stripos($package->durasi_paket, 'bulan') !== false || stripos($package->durasi_paket, 'month') !== false) {
-                preg_match('/\d+/', $package->durasi_paket, $matches);
-                $months = !empty($matches) ? (int)$matches[0] : 1;
-            }
-
+            
             $tanggalMulai = $subscription->tanggal_expired && $subscription->tanggal_expired->isFuture()
                             ? $subscription->tanggal_expired
                             : now();
 
-            $tanggalExpired = $tanggalMulai->copy()->addMonths($months);
+            $tanggalExpired = SubscriptionService::calculateExpiredDate($tanggalMulai, $package->durasi_hari ?? null);
 
             $subscription->update([
                 'status'         => 'active',
                 'payment_status' => 'paid',
-                'tanggal_mulai'  => $subscription->tanggal_mulai ?? now(),
+                'tanggal_mulai'  => $subscription->tanggal_mulai ?? $tanggalMulai, // keep original start date; $tanggalMulai used for new/renewal
                 'tanggal_expired'=> $tanggalExpired,
             ]);
 
