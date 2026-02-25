@@ -303,6 +303,31 @@
                 </div>
                 <h5 class="font-weight-bold text-dark mb-2">Menunggu Pembayaran</h5>
                 <p class="text-muted" style="font-size: 14px;">Silakan selesaikan pembayaran untuk mengakses kredensial</p>
+
+                @if($subscription->slot_deadline)
+                <div class="mt-3 mx-4 p-3 rounded" style="background: {{ $subscription->isSlotExpired() ? '#fee2e2' : '#fef3c7' }}; border: 1px solid {{ $subscription->isSlotExpired() ? '#f87171' : '#fbbf24' }};">
+                    @if($subscription->isSlotExpired())
+                        <div class="text-danger font-weight-bold" style="font-size: 13px;">
+                            <i class="fas fa-times-circle"></i> Reservasi slot sudah habis
+                        </div>
+                        <small class="text-muted">Slot akan segera dibebaskan oleh sistem</small>
+                    @else
+                        <div class="text-warning font-weight-bold" style="font-size: 13px;">
+                            <i class="fas fa-clock"></i> Sisa waktu reservasi slot:
+                        </div>
+                        <div class="font-weight-bold text-dark mt-1" style="font-size: 16px;" id="slot-countdown">
+                            {{ $subscription->slot_remaining }}
+                        </div>
+                        <small class="text-muted d-block mt-1">
+                            Deadline: {{ $subscription->slot_deadline->timezone('Asia/Jakarta')->format('d M Y H:i') }} WIB
+                        </small>
+                        <small class="text-danger d-block mt-1">
+                            <i class="fas fa-info-circle"></i> Jika pembayaran tidak selesai, slot akan otomatis dibebaskan.
+                        </small>
+                    @endif
+                </div>
+                @endif
+
                 @else
                 <div class="mb-4 text-danger" style="font-size: 48px;">
                     <i class="fas fa-ban"></i>

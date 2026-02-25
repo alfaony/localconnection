@@ -15,6 +15,25 @@
                 <p class="text-muted">
                     Pesanan Anda telah dibuat. Silakan selesaikan pembayaran untuk mengaktifkan langganan.
                 </p>
+
+                {{-- Auto-cancel deadline warning --}}
+                @if($subscription->payment_status == 'unpaid' && $subscription->slot_deadline)
+                <div class="mt-3 mx-auto p-3 rounded-lg" style="max-width: 500px; background: {{ $subscription->isSlotExpired() ? '#fee2e2' : '#fef9c3' }}; border: 1px solid {{ $subscription->isSlotExpired() ? '#f87171' : '#facc15' }};">
+                    @if($subscription->isSlotExpired())
+                        <div style="color: #dc2626; font-weight: 600; font-size: 14px;">
+                            <i class="fas fa-times-circle"></i> Pesanan ini sudah melewati batas waktu dan akan otomatis dibatalkan.
+                        </div>
+                    @else
+                        <div style="color: #92400e; font-weight: 600; font-size: 14px;">
+                            <i class="fas fa-clock"></i> Pesanan akan otomatis dibatalkan pada 
+                            <strong>{{ $subscription->slot_deadline->timezone('Asia/Jakarta')->format('d M Y, H:i') }} WIB</strong>
+                        </div>
+                        <div style="color: #78350f; font-size: 12px; margin-top: 4px;">
+                            Sisa waktu: <strong>{{ $subscription->slot_remaining }}</strong>
+                        </div>
+                    @endif
+                </div>
+                @endif
             </div>
 
             <div class="row g-4">

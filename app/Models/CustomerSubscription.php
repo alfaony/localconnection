@@ -191,6 +191,57 @@ class CustomerSubscription extends Model
     }
 
     /**
+     * Slot reservation deadline: 24 hours after creation.
+     */
+    public function getSlotDeadlineAttribute()
+    {
+        $hours = (int) env('SLOT_RESERVATION_HOURS', 1);
+        return $this->created_at ? $this->created_at->copy()->addHours($hours) : null;
+    }
+
+    /**
+     * Scope: unpaid subscriptions whose slot reservation has expired (created_at + 24h < now).
+     */
+    public function scopeSlotExpired($query)
+    {
+        $hours = (int) env('SLOT_RESERVATION_HOURS', 1);
+        return $query->where('payment_status', 'unpaid')
+            ->whereIn('status', ['active', 'pending'])
+            ->where('created_at', '<', Carbon::now()->subHours($hours));
+    }
+
+    /**
+     * Get human-readable remaining time for slot reservation.
+     * Returns null if not applicable.
+     */
+    public function getSlotRemainingAttribute()
+    {
+        if ($this->payment_status !== 'unpaid' || !$this->created_at) {
+            return null;
+        }
+
+        $now = Carbon::now();
+        $deadline = $this->slot_deadline;
+
+        if ($now->gte($deadline)) {
+            return 'Expired';
+        }
+
+        return $now->diffForHumans($deadline, ['parts' => 2, 'short' => true]);
+    }
+
+    /**
+     * Check if slot reservation has expired (24h after creation).
+     */
+    public function isSlotExpired(): bool
+    {
+        if (!$this->created_at || $this->payment_status !== 'unpaid') {
+            return false;
+        }
+        return Carbon::now()->gte($this->slot_deadline);
+    }
+
+    /**
      * Scope a query for expiring soon subscriptions.
      */
     public function scopeExpiringSoon($query, $days = 7)

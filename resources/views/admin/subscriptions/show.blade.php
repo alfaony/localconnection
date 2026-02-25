@@ -99,6 +99,24 @@
                             <th>Dibuat</th>
                             <td>{{ $subscription->created_at->format('d M Y H:i') }}</td>
                         </tr>
+                        @if($subscription->payment_status == 'unpaid' && $subscription->slot_deadline)
+                        <tr>
+                            <th>Slot Reserved Until</th>
+                            <td>
+                                @if($subscription->isSlotExpired())
+                                    <span class="badge badge-danger">
+                                        <i class="fas fa-times-circle"></i> Expired — {{ $subscription->slot_deadline->timezone('Asia/Jakarta')->format('d M Y H:i') }} WIB
+                                    </span>
+                                    <br><small class="text-muted">Slot akan segera di-release oleh sistem</small>
+                                @else
+                                    <span class="badge badge-warning">
+                                        <i class="fas fa-clock"></i> {{ $subscription->slot_remaining }}
+                                    </span>
+                                    <br><small class="text-muted">Deadline: {{ $subscription->slot_deadline->timezone('Asia/Jakarta')->format('d M Y H:i') }} WIB</small>
+                                @endif
+                            </td>
+                        </tr>
+                        @endif
                     </table>
                 </div>
             </div>

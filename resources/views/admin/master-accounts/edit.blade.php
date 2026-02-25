@@ -18,6 +18,7 @@
 @stop
 
 @section('content')
+@include('components.alert')
     <div class="card">
         <form action="{{ route('master-account.update', $masterAccount) }}" method="POST" enctype="multipart/form-data">
             @csrf

@@ -157,6 +157,13 @@ class Kernel extends ConsoleKernel
             ->timezone('Asia/Jakarta')
             ->dailyAt('00:05')
             ->withoutOverlapping(5);
+
+        // Auto-release: bebaskan slot dari subscription unpaid yang melewati deadline reservasi
+        $schedule->command('subscription:auto-release-slots')
+            ->timezone('Asia/Jakarta')
+            ->hourly()
+            ->withoutOverlapping(5)
+            ->appendOutputTo(storage_path('logs/subscription_auto_release.log'));
         // =============== END SUBSCRIPTION EXPIRY =============
         // =============== END BILLING & ISOLIR ===============
 

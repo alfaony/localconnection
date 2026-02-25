@@ -93,7 +93,7 @@ class SubscriptionService
             // Reserve slot
             $masterAccount->reserveSlot();
 
-            // Create subscription
+            // Create subscription (slot deadline = created_at + 24h, calculated dynamically)
             $subscription = CustomerSubscription::create([
                 'company_id' => $data['company_id'],
                 'software_id' => $data['software_id'],
@@ -437,5 +437,39 @@ class SubscriptionService
             }])
             ->latest()
             ->first();
+    }
+
+    /**
+     * Auto-expire unpaid subscriptions whose slot reservation deadline has passed.
+     * Releases the slot and marks subscription as expired.
+     *
+     * @param bool $dryRun  If true, do not persist changes.
+     * @return array  List of expired subscription summaries.
+     */
+    public function autoExpireUnpaidSubscriptions(bool $dryRun = false): array
+    {
+        $expired = CustomerSubscription::slotExpired()
+            ->with(['user', 'software', 'masterAccount'])
+            ->get();
+
+        $results = [];
+
+        foreach ($expired as $sub) {
+            $summary = [
+                'subscription_id' => $sub->id,
+                'order_number'    => $sub->order_number,
+                'user'            => $sub->user->name ?? 'Unknown',
+                'software'        => $sub->software->nama ?? 'N/A',
+                'reserved_until'  => $sub->slot_deadline?->format('d M Y H:i'),
+            ];
+
+            if (!$dryRun) {
+                $this->cancelSubscription($sub, 'Auto-expired: slot reservation deadline passed');
+            }
+
+            $results[] = $summary;
+        }
+
+        return $results;
     }
 }

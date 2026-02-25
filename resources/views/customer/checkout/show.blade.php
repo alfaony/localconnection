@@ -42,6 +42,13 @@
                     dibuat pada {{ $pendingSubscription->created_at->diffForHumans() }}.
                     Slot sudah terkunci untuk Anda.
                 </p>
+                @if($pendingSubscription->slot_deadline && !$pendingSubscription->isSlotExpired())
+                <p class="mb-2" style="color:#92400e; font-size:13px; font-weight:600;">
+                    <i class="fas fa-clock"></i> Akan otomatis dibatalkan pada 
+                    <strong>{{ $pendingSubscription->slot_deadline->timezone('Asia/Jakarta')->format('d M Y, H:i') }} WIB</strong>
+                    ({{ $pendingSubscription->slot_remaining }})
+                </p>
+                @endif
                 <div class="d-flex flex-wrap gap-2 mt-3">
                     {{-- Resume (if URL still available) --}}
                     @if($pendingPayment && $pendingPayment->payment_gateway !== 'manual')
