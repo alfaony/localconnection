@@ -90,7 +90,10 @@
                         <input type="hidden" name="consultVendor" id="consultVendorSave"/>
         
                         <ul class="list-group">
-                            <li class="list-group-item"><b>Analisis:</b> <span id="analysisResult">-</span></li>
+                            <li class="list-group-item">
+                                <b>Analisis:</b>
+                                <div id="analysisResult" style="white-space: pre-line; margin-top: 4px;">-</div>
+                            </li>
                             <li class="list-group-item"><b>Trust Score:</b> <span id="trustScoreResult">-</span></li>
                             <li class="list-group-item"><b>Execution Score:</b> <span id="executionScoreResult">-</span></li>
                         </ul>
@@ -218,20 +221,36 @@
         disableStats      : true,
     });
 
+    // ── Helper: tampilkan analisa dengan newline rapi ──────────────────────
+    function setAnalysis(text) {
+        const el = document.getElementById('analysisResult');
+        // Ubah literal \n (dari JSON string) menjadi newline sebenarnya
+        el.innerText = (text || '-').replace(/\\n/g, '\n');
+    }
+
     // ── Listen hasil AI dari broadcast ──────────────────────────────────────
-    window.Echo.private(`ask-bos.${userId}`)
-        .listen('AskBosResponseReady', (e) => {
+    // Channel: bos.user.{userId} (public Channel — bukan PrivateChannel)
+    // Event  : .bos.response.ready (dot prefix = custom broadcastAs name)
+    window.Echo.channel(`bos.user.${userId}`)
+        .listen('.bos.response.ready', (e) => {
             setLoading(false);
 
-            document.getElementById('analysisResult').innerText      = e.analysis;
-            document.getElementById('trustScoreResult').innerText    = e.trust_score;
-            document.getElementById('executionScoreResult').innerText = e.execution_score;
+            // Handle error flag dari backend (job gagal permanen)
+            if (e.is_error) {
+                setAnalysis(e.analysis || 'Terjadi kesalahan saat memproses.');
+                showToast('❌ Gagal mendapatkan hasil analisa.');
+                return;
+            }
+
+            setAnalysis(e.analysis);
+            document.getElementById('trustScoreResult').innerText    = e.trust_score ?? '-';
+            document.getElementById('executionScoreResult').innerText = e.execution_score ?? '-';
 
             document.getElementById('analysisResultSave').value      = e.analysis;
-            document.getElementById('trustScoreResultSave').value    = e.trust_score;
-            document.getElementById('executionScoreResultSave').value = e.execution_score;
+            document.getElementById('trustScoreResultSave').value    = e.trust_score ?? 0;
+            document.getElementById('executionScoreResultSave').value = e.execution_score ?? 0;
 
-            if (e.trust_score !== 0 || e.execution_score !== 0) {
+            if (e.trust_score || e.execution_score) {
                 document.getElementById('submitDecision').style.display = 'block';
             }
 
@@ -287,7 +306,7 @@
 
                 // Hasil ditemukan di cache — tampilkan
                 setLoading(false);
-                document.getElementById('analysisResult').innerText       = data.analysis;
+                setAnalysis(data.analysis);
                 document.getElementById('trustScoreResult').innerText     = data.trust_score;
                 document.getElementById('executionScoreResult').innerText = data.execution_score;
                 document.getElementById('analysisResultSave').value       = data.analysis;
@@ -359,7 +378,7 @@
             })
             .then(r => r.json())
             .catch(() => {
-                document.getElementById('analysisResult').innerText = 'Terjadi kesalahan saat memproses.';
+                setAnalysis('Terjadi kesalahan saat memproses.');
                 setLoading(false);
             });
         });
