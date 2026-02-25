@@ -316,4 +316,87 @@ class SubscriptionService
             ];
         }
     }
+
+    /**
+     * Cancel a pending/stuck subscription and release slot.
+     * Cancels all pending payments and frees the reserved master account slot.
+     */
+    public function cancelSubscription($subscription, string $reason = 'Cancelled by user')
+    {
+        DB::beginTransaction();
+
+        try {
+            // Cancel all pending payments related to this subscription
+            SubscriptionPayment::where('subscription_id', $subscription->id)
+                ->whereIn('status', ['pending', 'unpaid'])
+                ->update([
+                    'status'     => 'expired',
+                    // 'notes'      => $reason,
+                    'expired_at' => now(),
+                ]);
+
+            // Release slot on master account
+            if ($subscription->masterAccount) {
+                $subscription->masterAccount->releaseSlot();
+            }
+
+            // Mark subscription as expired (slot released, payment never completed)
+            // Note: payment_status enum only allows 'unpaid'|'paid' — leave as unpaid
+            $subscription->update([
+                'status' => 'expired',
+            ]);
+
+            DB::commit();
+
+            Log::info('Subscription cancelled and slot released', [
+                'subscription_id' => $subscription->id,
+                'order_number'    => $subscription->order_number,
+                'reason'          => $reason,
+            ]);
+
+            return ['success' => true, 'subscription' => $subscription->fresh()];
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            Log::error('Failed to cancel subscription', [
+                'subscription_id' => $subscription->id,
+                'error'           => $e->getMessage(),
+            ]);
+
+            return ['success' => false, 'message' => $e->getMessage()];
+        }
+    }
+
+    /**
+     * Find a stale pending subscription for a user & software.
+     * "Stale" = unpaid subscription older than given minutes.
+     */
+    public function findStalePendingSubscription($userId, $softwareId, int $staleMinutes = 30)
+    {
+        return CustomerSubscription::where('user_id', $userId)
+            ->where('software_id', $softwareId)
+            ->whereIn('payment_status', ['unpaid', 'pending'])
+            ->whereIn('status', ['active', 'pending'])
+            ->where('created_at', '<=', now()->subMinutes($staleMinutes))
+            ->latest()
+            ->first();
+    }
+
+    /**
+     * Find ANY pending subscription (even fresh ones) for a user & software.
+     * Used to prevent duplicate active payment sessions.
+     */
+    public function findPendingSubscription($userId, $softwareId)
+    {
+        return CustomerSubscription::where('user_id', $userId)
+            ->where('software_id', $softwareId)
+            ->whereIn('payment_status', ['unpaid', 'pending'])
+            ->whereIn('status', ['active', 'pending'])
+            ->with(['payments' => function ($q) {
+                $q->whereIn('status', ['pending', 'unpaid'])->latest();
+            }])
+            ->latest()
+            ->first();
+    }
 }

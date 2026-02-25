@@ -99,18 +99,32 @@
                             @php $latestPayment = $subscription->latestPayment; @endphp
 
                             @if($subscription->payment_status !== 'paid')
-                                @if($latestPayment && $latestPayment->payment_gateway === 'manual')
+                                @if($latestPayment && $latestPayment->payment_gateway === 'manual' && in_array($latestPayment->status, ['pending','unpaid']))
+                                    {{-- Manual: upload bukti transfer --}}
                                     @canAccess('paymentPending','customer_checkouts')
                                     <a href="{{ route('customer-checkout.payment.pending', $subscription->order_number) }}" 
                                        class="btn-modern warning py-2 px-3 action-btn" title="Selesaikan pembayaran">
-                                        <i class="fas fa-clock"></i> Bayar
+                                        <i class="fas fa-upload"></i> Bayar
                                     </a>
                                     @endcanAccess
-                                @elseif(!$latestPayment)
+
+                                @elseif($latestPayment && in_array($latestPayment->payment_gateway, ['xendit','midtrans']) && in_array($subscription->payment_status, ['unpaid','pending']))
+                                    {{-- Xendit/Midtrans pending: buat ulang sesi --}}
+                                    @canAccess('paymentPending','customer_checkouts')
+                                    <a href="{{ route('customer-checkout.retry-payment', ['subscription' => $subscription->id, 'gateway' => $latestPayment->payment_gateway]) }}"
+                                       class="btn-modern warning py-2 px-3 action-btn"
+                                       title="Buat ulang sesi pembayaran"
+                                       onclick="return confirm('Buat ulang sesi pembayaran via {{ strtoupper($latestPayment->payment_gateway) }}?')">
+                                        <i class="fas fa-credit-card"></i> Bayar
+                                    </a>
+                                    @endcanAccess
+
+                                @elseif(!$latestPayment || in_array($latestPayment->status, ['failed', 'expired', 'cancelled']))
+                                    {{-- Tidak ada payment atau gagal: arahkan ke katalog --}}
                                     @canAccess('index','customer_software')
                                     <a href="{{ route('customer-software.index') }}" 
                                        class="btn-modern warning py-2 px-3 action-btn" title="Pilih metode pembayaran">
-                                        <i class="fas fa-credit-card"></i> Lanjut Bayar
+                                        <i class="fas fa-credit-card"></i> Bayar Ulang
                                     </a>
                                     @endcanAccess
                                 @endif
@@ -128,11 +142,7 @@
                                     <span class="btn-modern success disabled py-2 px-3 action-btn">
                                         <i class="fas fa-check-circle"></i> Lunas
                                     </span>
-                                @elseif($latestPayment->status === 'failed' || $latestPayment->status === 'expired')
-                                    <span class="btn-modern danger disabled py-2 px-3 action-btn" title="Pembayaran gagal/kadaluarsa">
-                                        <i class="fas fa-times-circle"></i> Gagal
-                                    </span>
-                                @elseif($latestPayment->manual_transfer_proof)
+                                @elseif($latestPayment->manual_transfer_proof && $latestPayment->status === 'pending')
                                     <span class="btn-modern secondary disabled py-2 px-3 action-btn" title="Bukti transfer sudah diupload, menunggu verifikasi">
                                         <i class="fas fa-hourglass-half"></i> Verifikasi
                                     </span>

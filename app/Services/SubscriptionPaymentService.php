@@ -13,6 +13,8 @@ class SubscriptionPaymentService
 {
     protected $companyId;
     protected $settings;
+    /** Override for xendit_external_id (used on payment retry to avoid UNIQUE violation) */
+    protected $externalIdOverride = null;
 
     public function __construct($companyId = null)
     {
@@ -161,19 +163,24 @@ class SubscriptionPaymentService
      */
     public function createPaymentRecord($data)
     {
+        // Use override if set (e.g. retry scenario), otherwise use provided xendit_external_id
+        $externalId = $this->externalIdOverride ?? $data['xendit_external_id'];
+        // Reset override after use
+        $this->externalIdOverride = null;
+
         return SubscriptionPayment::create([
-            'company_id' => $data['company_id'],
-            'software_id' => $data['software_id'],
-            'subscription_id' => $data['subscription_id'],
-            'amount' => $data['amount'],
-            'subtotal' => $data['subtotal'] ?? null,
-            'ppn_rate' => $data['ppn_rate'] ?? null,
-            'ppn_amount' => $data['ppn_amount'] ?? null,
-            'payment_gateway' => $data['payment_gateway'],
-            'payment_method' => $data['payment_method'] ?? null,
-            'xendit_external_id' => $data['xendit_external_id'],
-            'status' => $data['status'] ?? 'pending',
-            'expired_at' => $data['expired_at'] ?? now()->addHours(24),
+            'company_id'        => $data['company_id'],
+            'software_id'       => $data['software_id'],
+            'subscription_id'   => $data['subscription_id'],
+            'amount'            => $data['amount'],
+            'subtotal'          => $data['subtotal'] ?? null,
+            'ppn_rate'          => $data['ppn_rate'] ?? null,
+            'ppn_amount'        => $data['ppn_amount'] ?? null,
+            'payment_gateway'   => $data['payment_gateway'],
+            'payment_method'    => $data['payment_method'] ?? null,
+            'xendit_external_id'=> $externalId,
+            'status'            => $data['status'] ?? 'pending',
+            'expired_at'        => $data['expired_at'] ?? now()->addHours(24),
         ]);
     }
 
@@ -312,8 +319,6 @@ class SubscriptionPaymentService
             ];
 
         } catch (\Exception $e) {
-            // dd($e);
-
             Log::error('Xendit payment failed', [
                 'company_id' => $this->companyId,
                 'subscription_id' => $subscription->id,
@@ -450,5 +455,57 @@ class SubscriptionPaymentService
     public static function clearCache($companyId)
     {
         Cache::forget("payment_gateway_settings_{$companyId}");
+    }
+
+    /**
+     * Expire/void all pending payments for a subscription.
+     * Called before creating a fresh payment attempt.
+     */
+    public function voidPendingPayments($subscription): void
+    {
+        SubscriptionPayment::where('subscription_id', $subscription->id)
+            ->whereIn('status', ['pending', 'unpaid'])
+            ->update([
+                'status'     => 'expired',
+                'expired_at' => now(),
+            ]);
+
+        Log::info('Voided pending payments for subscription', [
+            'subscription_id' => $subscription->id,
+            'order_number'    => $subscription->order_number,
+        ]);
+    }
+
+    /**
+     * Retry a payment for an existing subscription (fresh gateway transaction).
+     * Voids the old pending payment and creates a new one.
+     * Subscription slot is NOT released — it stays reserved.
+     */
+    public function retryGatewayPayment($subscription, $package, $user, string $gateway)
+    {
+        // Void previous pending payments first
+        $this->voidPendingPayments($subscription);
+
+        // Generate unique external ID: order_number + retry suffix to avoid UNIQUE violation
+        $retryCount = SubscriptionPayment::where('subscription_id', $subscription->id)->count();
+        $this->externalIdOverride = $subscription->order_number . '-R' . $retryCount;
+
+        switch ($gateway) {
+            case 'xendit':
+                return $this->processXenditPayment($subscription, $package, $user);
+
+            case 'midtrans':
+                return $this->processMidtransPayment($subscription, $package, $user);
+
+            case 'manual':
+                $banks = $this->getManualTransferBanks();
+                if (empty($banks)) {
+                    return ['success' => false, 'message' => 'Tidak ada bank tersedia untuk transfer manual.'];
+                }
+                return $this->processManualTransfer($subscription, $package, 0);
+
+            default:
+                return ['success' => false, 'message' => 'Gateway tidak dikenal: ' . $gateway];
+        }
     }
 }

@@ -874,6 +874,11 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
       Route::post('customer-subscription/{subscription}/chat', [CustomerSubscriptionChatController::class, 'store'])->name('customer-subscription.chat.store');
     });
 
+          // Handle stuck/stale payment
+      Route::post('customer-checkout/pending/{subscription}/cancel', [CustomerCheckoutController::class, 'cancelPending'])->name('customer-checkout.cancel-pending');
+      Route::get('customer-checkout/pending/{subscription}/resume', [CustomerCheckoutController::class, 'resumePayment'])->name('customer-checkout.resume-payment');
+      Route::get('customer-checkout/pending/{subscription}/retry', [CustomerCheckoutController::class, 'retryPayment'])->name('customer-checkout.retry-payment');
+
 
   Route::get('internet-customer/registration/{companyId}', InternetCustomerForm::class)->name('internet-customer.create');
   Route::get('internet-customer/customer-active/{code}', CustomerShow::class)->name('internet-customer.customer.show');

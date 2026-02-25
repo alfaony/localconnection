@@ -25,6 +25,75 @@
         </div>
     </div>
 
+    {{-- ⚠️ Pending Payment Warning Banner --}}
+    @if($pendingSubscription)
+    <div class="pending-payment-banner mb-4 slide-up-1" id="pendingBanner">
+        <div class="d-flex align-items-start gap-3">
+            <div class="pending-icon-wrap">
+                <i class="fas fa-exclamation-triangle"></i>
+            </div>
+            <div class="flex-grow-1">
+                <h5 class="mb-1 font-weight-bold" style="color:#92400e;">
+                    Anda Masih Memiliki Pembayaran yang Belum Selesai
+                </h5>
+                <p class="mb-2 text-sm" style="color:#78350f; font-size:13.5px;">
+                    Order <strong>#{{ $pendingSubscription->order_number }}</strong>
+                    (via <strong>{{ strtoupper($pendingPayment->payment_gateway ?? 'manual') }}</strong>)
+                    dibuat pada {{ $pendingSubscription->created_at->diffForHumans() }}.
+                    Slot sudah terkunci untuk Anda.
+                </p>
+                <div class="d-flex flex-wrap gap-2 mt-3">
+                    {{-- Resume (if URL still available) --}}
+                    @if($pendingPayment && $pendingPayment->payment_gateway !== 'manual')
+                    <a href="{{ route('customer-checkout.resume-payment', $pendingSubscription->id) }}"
+                       class="btn-pending-action btn-resume">
+                        <i class="fas fa-play-circle mr-1"></i> Lanjutkan Pembayaran
+                    </a>
+                    @elseif($pendingPayment && $pendingPayment->payment_gateway === 'manual')
+                    <a href="{{ route('customer-checkout.payment.pending', $pendingSubscription->order_number) }}"
+                       class="btn-pending-action btn-resume">
+                        <i class="fas fa-upload mr-1"></i> Upload Bukti Transfer
+                    </a>
+                    @endif
+
+                    {{-- Retry: buat payment baru (tanpa release slot) --}}
+                    @if($pendingPayment && $pendingPayment->payment_gateway !== 'manual')
+                    <a href="{{ route('customer-checkout.retry-payment', ['subscription' => $pendingSubscription->id, 'gateway' => $pendingPayment->payment_gateway]) }}"
+                       class="btn-pending-action btn-retry"
+                       onclick="return confirm('Buat ulang sesi pembayaran? Invoice lama akan diganti dengan yang baru.')">
+                        <i class="fas fa-redo mr-1"></i> Buat Ulang Pembayaran
+                    </a>
+                    @endif
+
+                    {{-- Cancel --}}
+                    <form method="POST"
+                          action="{{ route('customer-checkout.cancel-pending', $pendingSubscription->id) }}?redirect_slug={{ $software->slug }}"
+                          id="cancelPendingForm">
+                        @csrf
+                        <button type="button" class="btn-pending-action btn-cancel-pending" onclick="confirmCancelPending()">
+                            <i class="fas fa-times-circle mr-1"></i> Batalkan & Buat Order Baru
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    @endif
+
+    {{-- Session errors / success --}}
+    @if(session('error'))
+    <div class="alert alert-danger alert-dismissible fade show mb-3" role="alert">
+        <i class="fas fa-exclamation-circle mr-2"></i> {{ session('error') }}
+        <button type="button" class="close" data-dismiss="alert"><span>&times;</span></button>
+    </div>
+    @endif
+    @if(session('success'))
+    <div class="alert alert-success alert-dismissible fade show mb-3" role="alert">
+        <i class="fas fa-check-circle mr-2"></i> {{ session('success') }}
+        <button type="button" class="close" data-dismiss="alert"><span>&times;</span></button>
+    </div>
+    @endif
+
     <div class="modern-two-col">
         {{-- Left Column: Review Pembelian & Order Summary --}}
         <div class="left-col" style="flex: 1.5;">
@@ -406,6 +475,45 @@
     #tnc-box::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 8px; }
     #tnc-box::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 8px; }
     #tnc-box::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+    /* Pending Payment Warning Banner */
+    .pending-payment-banner {
+        background: #fffbeb;
+        border: 2px solid #f59e0b;
+        border-radius: 16px;
+        padding: 22px 28px;
+        box-shadow: 0 4px 16px rgba(245, 158, 11, 0.15);
+    }
+    .pending-icon-wrap {
+        width: 44px; height: 44px; border-radius: 50%;
+        background: #fef3c7; border: 2px solid #fcd34d;
+        display: flex; align-items: center; justify-content: center;
+        flex-shrink: 0; margin-top: 2px;
+        font-size: 20px; color: #d97706;
+    }
+    .btn-pending-action {
+        display: inline-flex; align-items: center; gap: 6px;
+        padding: 9px 20px; border-radius: 999px; font-size: 13.5px;
+        font-weight: 700; cursor: pointer; text-decoration: none;
+        border: none; transition: all 0.2s;
+    }
+    .btn-resume {
+        background: #10b981; color: #fff;
+        box-shadow: 0 3px 10px rgba(16,185,129,0.25);
+    }
+    .btn-resume:hover { background: #059669; color: #fff; transform: translateY(-1px); }
+    .btn-cancel-pending {
+        background: #fff; color: #ef4444;
+        border: 2px solid #fca5a5 !important;
+    }
+    .btn-cancel-pending:hover { background: #fef2f2; border-color: #ef4444 !important; }
+    .btn-retry {
+        background: #3b82f6; color: #fff;
+        box-shadow: 0 3px 10px rgba(59,130,246,0.25);
+    }
+    .btn-retry:hover { background: #2563eb; color: #fff; transform: translateY(-1px); }
+    .gap-2 { gap: 8px; }
+    .gap-3 { gap: 12px; }
 </style>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 @stop
@@ -420,6 +528,12 @@ $(document).ready(function() {
     const agreeLabel = document.getElementById('agree_terms_label');
     const tncAlert = document.getElementById('tnc-alert');
     let scrolledToBottom = false;
+
+    @if($pendingSubscription)
+    // Jika ada pending subscription, disable form checkout baru
+    $('#checkout-form').find('input, button, textarea, select').prop('disabled', true);
+    $('#btn-submit-proxy').prop('disabled', true).text('Selesaikan atau Batalkan Order yang Ada Dulu');
+    @endif
 
     setTimeout(checkTncScroll, 300);
 
@@ -579,6 +693,23 @@ $(document).ready(function() {
         }
 
         document.getElementById('ui-total').innerText = formatRupiah(total);
+    }
+
+    function confirmCancelPending() {
+        Swal.fire({
+            title: 'Batalkan Order Lama?',
+            html: 'Slot yang sudah terkunci akan <strong>dibebaskan</strong>.<br>Anda bisa membuat order baru setelah ini.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#ef4444',
+            cancelButtonColor: '#6b7280',
+            confirmButtonText: '<i class="fas fa-times-circle"></i> Ya, Batalkan Order',
+            cancelButtonText: 'Kembali',
+        }).then((result) => {
+            if (result.isConfirmed) {
+                document.getElementById('cancelPendingForm').submit();
+            }
+        });
     }
 </script>
 @stop

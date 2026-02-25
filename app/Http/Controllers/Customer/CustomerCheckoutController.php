@@ -39,10 +39,19 @@ class CustomerCheckoutController extends Controller
             ->active()
             ->firstOrFail();
 
+        // ── Detect stale pending subscription ───────────────────────────
+        $pendingSubscription = $this->subscriptionService->findPendingSubscription(
+            Auth::id(), $software->id
+        );
+        $pendingPayment = $pendingSubscription
+            ? $pendingSubscription->payments->first()
+            : null;
+        // ────────────────────────────────────────────────────────────────
+
         // Check if slots available
         $hasAvailableSlots = $software->availableMasterAccounts->isNotEmpty();
 
-        if (!$hasAvailableSlots) {
+        if (!$hasAvailableSlots && !$pendingSubscription) {
             return redirect()
                 ->route('customer-software.show', $slug)
                 ->with('error', 'Maaf, slot untuk software ini sudah penuh. Silakan hubungi admin atau coba lagi nanti.');
@@ -73,7 +82,11 @@ class CustomerCheckoutController extends Controller
             'midtrans' => ($settingCompany['midtrans_pay_with_ppn_software_software_subscription'] ?? '0') === '1',
         ];
 
-        return view('customer.checkout.show', compact('software', 'package', 'paymentMethods', 'packagePrice', 'ppnSettings', 'settingCompany'));
+        return view('customer.checkout.show', compact(
+            'software', 'package', 'paymentMethods', 'packagePrice',
+            'ppnSettings', 'settingCompany',
+            'pendingSubscription', 'pendingPayment'
+        ));
     }
 
     /**
@@ -92,6 +105,17 @@ class CustomerCheckoutController extends Controller
         // Get software and package
         $software = Software::where('slug', $slug)->active()->firstOrFail();
         $package = SoftwarePackage::findOrFail($packageId);
+
+        // ── Guard: cek apakah sudah ada pending subscription ────────────
+        $existingPending = $this->subscriptionService->findPendingSubscription($user->id, $software->id);
+        if ($existingPending) {
+            return redirect()
+                ->route('customer-checkout.show', [$slug, $packageId])
+                ->with('error', '⚠️ Anda masih memiliki pembayaran yang belum selesai untuk software ini (Order #' 
+                    . $existingPending->order_number 
+                    . '). Silakan selesaikan atau batalkan terlebih dahulu.');
+        }
+        // ────────────────────────────────────────────────────────────────
 
         // Initialize payment service
         $this->paymentService = new SubscriptionPaymentService($software->company_id);
@@ -172,10 +196,8 @@ class CustomerCheckoutController extends Controller
             return $this->redirectAfterPayment($paymentGateway, $paymentResult, $subscription);
 
         } catch (\Exception $e) {
-            // dd($e);
             DB::rollBack();
 
-            // dd($e);
             Log::error('Checkout failed', [
                 'user_id' => $user->id,
                 'software_slug' => $slug,
@@ -187,6 +209,151 @@ class CustomerCheckoutController extends Controller
             return redirect()
                 ->route('customer-software.show', $slug)
                 ->with('error', 'Checkout gagal: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Cancel a stuck/pending subscription and release slot
+     */
+    public function cancelPending(Request $request, $subscriptionId)
+    {
+        $user = Auth::user();
+
+        $subscription = CustomerSubscription::where('id', $subscriptionId)
+            ->where('user_id', $user->id)
+            ->whereIn('payment_status', ['unpaid', 'pending'])
+            ->firstOrFail();
+
+        $result = $this->subscriptionService->cancelSubscription(
+            $subscription,
+            'Dibatalkan oleh user melalui halaman checkout'
+        );
+
+        if (!$result['success']) {
+            return redirect()->back()->with('error', 'Gagal membatalkan pesanan: ' . ($result['message'] ?? ''));
+        }
+
+        // Determine where to go back
+        $slug = $subscription->masterAccount->software->slug
+            ?? $request->query('redirect_slug', null);
+
+        $redirectTo = $slug
+            ? route('customer-software.show', $slug)
+            : route('customer-software.index');
+
+        return redirect($redirectTo)
+            ->with('success', '✅ Pesanan berhasil dibatalkan dan slot sudah dibebaskan. Anda bisa melakukan pemesanan baru.');
+    }
+
+    /**
+     * Resume an existing pending payment (redirect back to gateway URL)
+     */
+    public function resumePayment(Request $request, $subscriptionId)
+    {
+        $user = Auth::user();
+
+        $subscription = CustomerSubscription::where('id', $subscriptionId)
+            ->where('user_id', $user->id)
+            ->whereIn('payment_status', ['unpaid', 'pending'])
+            ->with(['payments' => fn($q) => $q->whereIn('status', ['pending', 'unpaid'])->latest()])
+            ->firstOrFail();
+
+        $payment = $subscription->payments->first();
+
+        if (!$payment) {
+            return redirect()->back()->with('error', 'Tidak ada data pembayaran yang ditemukan.');
+        }
+
+        // For manual transfer → go to pending page
+        if ($payment->payment_gateway === 'manual') {
+            return redirect()->route('customer-checkout.payment.pending', $subscription->order_number);
+        }
+
+        // For Xendit → try to get invoice URL
+        if ($payment->payment_gateway === 'xendit') {
+            $invoiceUrl = $payment->payment_url ?? $payment->xendit_invoice_url ?? null;
+            if ($invoiceUrl) {
+                return redirect($invoiceUrl);
+            }
+        }
+
+        // For Midtrans → try to get snap URL
+        if ($payment->payment_gateway === 'midtrans') {
+            $snapUrl = $payment->snap_url ?? $payment->midtrans_redirect_url ?? null;
+            if ($snapUrl) {
+                return redirect($snapUrl);
+            }
+        }
+
+        // URL expired → otomatis redirect ke retry (buat ulang tanpa konfirmasi tambahan)
+        return redirect()
+            ->route('customer-checkout.retry-payment', [
+                'subscription' => $subscriptionId,
+                'gateway'      => $payment->payment_gateway,
+            ]);
+    }
+
+    /**
+     * Retry payment: void lama, buat fresh gateway transaction untuk existing subscription.
+     * Slot TIDAK di-release — subscription tetap, hanya payment baru dibuat.
+     */
+    public function retryPayment(Request $request, $subscriptionId)
+    {
+        $user = Auth::user();
+
+        $subscription = CustomerSubscription::where('id', $subscriptionId)
+            ->where('user_id', $user->id)
+            ->whereIn('payment_status', ['unpaid', 'pending'])
+            ->with(['package', 'masterAccount.software'])
+            ->firstOrFail();
+
+        $package = $subscription->package;
+        if (!$package) {
+            return redirect()->back()->with('error', 'Paket tidak ditemukan.');
+        }
+
+        // Tentukan gateway — dari query param atau dari payment lama
+        $gateway = $request->query('gateway');
+        if (!$gateway) {
+            $oldPayment = $subscription->payments()
+                ->whereIn('status', ['pending', 'unpaid', 'expired'])
+                ->latest()->first();
+            $gateway = $oldPayment->payment_gateway ?? 'manual';
+        }
+
+        $this->paymentService = new SubscriptionPaymentService($subscription->company_id);
+
+        DB::beginTransaction();
+        try {
+            $result = $this->paymentService->retryGatewayPayment($subscription, $package, $user, $gateway);
+
+            if (!$result['success']) {
+                throw new \Exception($result['message']);
+            }
+
+            DB::commit();
+
+            Log::info('Payment retried successfully', [
+                'user_id'         => $user->id,
+                'subscription_id' => $subscription->id,
+                'order_number'    => $subscription->order_number,
+                'gateway'         => $gateway,
+            ]);
+
+            return $this->redirectAfterPayment($gateway, $result, $subscription);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            Log::error('Retry payment failed', [
+                'user_id'         => $user->id,
+                'subscription_id' => $subscriptionId,
+                'gateway'         => $gateway,
+                'error'           => $e->getMessage(),
+            ]);
+
+            return redirect()->back()
+                ->with('error', 'Gagal membuat ulang pembayaran: ' . $e->getMessage());
         }
     }
 
