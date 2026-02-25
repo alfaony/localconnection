@@ -387,7 +387,7 @@ class XenditController extends Controller
                                 ? $subscription->tanggal_expired
                                 : now();
 
-                $tanggalExpired = SubscriptionService::calculateExpiredDate($tanggalMulai, $package->durasi_paket ?? null);
+                $tanggalExpired = SubscriptionService::calculateExpiredDate($tanggalMulai, $package->durasi_hari ?? null);
 
                 $subscription->update([
                     'status' => 'active',

@@ -306,7 +306,7 @@ class SubscriptionController extends Controller
 
             // Always recalculate tanggal_expired based on package duration
             if ($package) {
-                $updateData['tanggal_expired'] = SubscriptionService::calculateExpiredDate($tanggalMulai, $package->durasi_paket ?? null);
+                $updateData['tanggal_expired'] = SubscriptionService::calculateExpiredDate($tanggalMulai, $package->durasi_hari ?? null);
             }
 
             $subscription->update($updateData);
