@@ -7,6 +7,7 @@ use App\Models\Software;
 use App\Models\MasterAccount;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 class MasterAccountController extends Controller
 {
@@ -143,53 +144,62 @@ class MasterAccountController extends Controller
     public function update(Request $request, MasterAccount $masterAccount)
     {
         // $this->authorize('update', $masterAccount);
-
-        $validated = $request->validate([
-            'software_id' => 'required|exists:softwares,id',
-            'nama_akun' => 'required|string|max:255',
-            'max_slots' => 'required|integer|min:1',
-            
-            // Flexible fields
-            'email_akun' => 'nullable|string',
-            'password_akun' => 'nullable|string',
-            'pin_code' => 'nullable|string|max:255',
-            'link_invite' => 'nullable|string',
-            'instruksi_akses' => 'nullable|string',
-            'attachment' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120',
-            
-            'status' => 'required|in:active,inactive',
-        ]);
-
-        // Verify software belongs to company
-        $software = Software::byCompany($masterAccount->company_id)
-            ->findOrFail($validated['software_id']);
-
-        // Check if max_slots is being reduced below used_slots
-        if ($validated['max_slots'] < $masterAccount->used_slots) {
+        try {
+            $validated = $request->validate([
+                'software_id' => 'required|exists:softwares,id',
+                'nama_akun' => 'required|string|max:255',
+                'max_slots' => 'required|integer|min:1',
+                
+                // Flexible fields
+                'email_akun' => 'nullable|string',
+                'password_akun' => 'nullable|string',
+                'pin_code' => 'nullable|string|max:255',
+                'link_invite' => 'nullable|string',
+                'instruksi_akses' => 'nullable|string',
+                'attachment' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120',
+                
+                'status' => 'required|in:active,inactive',
+            ]);
+    
+            // Verify software belongs to company
+            $software = Software::byCompany($masterAccount->company_id)
+                ->findOrFail($validated['software_id']);
+    
+            // Check if max_slots is being reduced below used_slots
+            if ($validated['max_slots'] < $masterAccount->used_slots) {
+                return redirect()
+                    ->back()
+                    ->withInput()
+                    ->with('error', "Max slots tidak boleh kurang dari used slots ({$masterAccount->used_slots})");
+            }
+    
+            // Handle attachment upload
+            if ($request->hasFile('attachment')) {
+                // Delete old attachment if exists
+                if ($masterAccount->attachment) {
+                    \Storage::delete('public/' . $masterAccount->attachment);
+                }
+    
+                $file = $request->file('attachment');
+                $fileName = time() . '_' . $file->getClientOriginalName();
+                $file->storeAs('public/master-accounts', $fileName);
+                $validated['attachment'] = 'master-accounts/' . $fileName;
+            }
+    
+            $masterAccount->update($validated);
+    
+            return redirect()
+                ->route('master-account.index')
+                ->with('store', 'Master Account berhasil diupdate');
+        } catch (\Throwable $th) {
+            //throw $th;
+            dd($th);
+            \Log::error($th->getMessage());
             return redirect()
                 ->back()
                 ->withInput()
-                ->with('error', "Max slots tidak boleh kurang dari used slots ({$masterAccount->used_slots})");
+                ->with('error', 'Gagal mengupdate Master Account');
         }
-
-        // Handle attachment upload
-        if ($request->hasFile('attachment')) {
-            // Delete old attachment if exists
-            if ($masterAccount->attachment) {
-                \Storage::delete('public/' . $masterAccount->attachment);
-            }
-
-            $file = $request->file('attachment');
-            $fileName = time() . '_' . $file->getClientOriginalName();
-            $file->storeAs('public/master-accounts', $fileName);
-            $validated['attachment'] = 'master-accounts/' . $fileName;
-        }
-
-        $masterAccount->update($validated);
-
-        return redirect()
-            ->route('master-account.index')
-            ->with('success', 'Master Account berhasil diupdate');
     }
 
     /**

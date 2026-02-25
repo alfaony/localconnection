@@ -212,7 +212,7 @@
                     @if($ma->attachment)
                     <div class="form-group">
                         <label>File Attachment:</label>
-                        <a href="{{ Storage::url($ma->attachment) }}" target="_blank" class="btn btn-secondary btn-block">
+                        <a href="{{ s3_asset(true,10,$ma->attachment) }}" target="_blank" class="btn btn-secondary btn-block">
                             <i class="fas fa-file-download"></i> Download File
                         </a>
                     </div>

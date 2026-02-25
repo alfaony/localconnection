@@ -172,6 +172,10 @@ class MasterAccount extends Model
         return false;
     }
 
+    public function getAttachmentAttributes($value){
+        return "public/".$value;
+    }
+
     /**
      * Scope a query to only include active master accounts.
      */

@@ -146,7 +146,7 @@ $(document).ready(function() {
         var shift = $(this).data('shift');
 
         // Construct the URL for the pic_in image
-        let urlpicin = "{{ s3_asset(true,10,'attendance/') }}" + attendance.pic_in;
+        let urlpicin = "{{ ,'attendance/') }}" + attendance.pic_in;
         // Construct the URL for the pic_out image
         let urlpicout = "{{ s3_asset(true,10,'attendance/') }}" + attendance.pic_out;
 

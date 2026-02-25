@@ -168,7 +168,7 @@
                             
                             @if($masterAccount->attachment)
                             <div class="mb-2">
-                                <a href="{{ Storage::url($masterAccount->attachment) }}" target="_blank" class="btn btn-sm btn-info">
+                                <a href="{{ s3_asset(true,10,$masterAccount->attachment) }}" target="_blank" class="btn btn-sm btn-info">
                                     <i class="fas fa-file"></i> Lihat File Saat Ini
                                 </a>
                             </div>
