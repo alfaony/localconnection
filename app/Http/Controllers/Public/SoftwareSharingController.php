@@ -10,11 +10,15 @@ use App\Models\Role;
 use App\Schemas\RoleSchema;
 use App\Models\SoftwareSharing;
 use App\Models\SettingCompany;
+use App\Notifications\VerifyEmailCustomer;
+use App\Notifications\ResetPasswordCustomer;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Password;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rules;
 
 class SoftwareSharingController extends Controller
@@ -131,8 +135,8 @@ class SoftwareSharingController extends Controller
             
             DB::commit();
 
-            // Kirim email verifikasi (tidak auto-login)
-            $user->sendEmailVerificationNotification();
+            // Kirim custom email verifikasi dengan UI rapi + redirect ke customer login
+            $user->notify(new VerifyEmailCustomer($companySlug));
 
             return redirect()
                 ->route('public.software-sharing.login', $companySlug)
@@ -220,12 +224,136 @@ class SoftwareSharingController extends Controller
                     ->first();
 
         if ($user && !$user->hasVerifiedEmail()) {
-            $user->sendEmailVerificationNotification();
+            $user->notify(new VerifyEmailCustomer($companySlug));
             return redirect()->back()->with('success', 'Link verifikasi ulang telah dikirim ke email Anda. Silakan periksa inbox atau folder spam.');
         }
 
         return redirect()->back()
             ->withInput($request->only('email'))
             ->withErrors(['email' => 'Email tidak ditemukan, sudah diverifikasi, atau tidak terdaftar di perusahaan ini.']);
+    }
+
+    /**
+     * Verifikasi email customer dan redirect ke halaman login company
+     */
+    public function verifyEmail(Request $request, string $id, string $hash)
+    {
+        $user = User::findOrFail($id);
+
+        // Validasi hash
+        if (!hash_equals($hash, sha1($user->getEmailForVerification()))) {
+            abort(403, 'Link verifikasi tidak valid.');
+        }
+
+        // Ambil company_slug dari query param
+        $companySlug = $request->query('company_slug');
+
+        // Jika belum diverifikasi, tandai sekarang
+        if (!$user->hasVerifiedEmail()) {
+            $user->markEmailAsVerified();
+        }
+
+        // Redirect ke customer login page
+        $loginRoute = $companySlug
+            ? route('public.software-sharing.login', $companySlug)
+            : route('login');
+
+        return redirect($loginRoute)
+            ->with('success', '✅ Email Anda berhasil diverifikasi! Silakan login untuk mulai menggunakan layanan.');
+    }
+
+    // ============================================================
+    // FORGOT PASSWORD
+    // ============================================================
+
+    /**
+     * Form request reset password
+     */
+    public function showForgotPassword(string $companySlug)
+    {
+        if ($this->isLoggedInCustomer()) {
+            return redirect()->route('customer-software.index');
+        }
+        $company = Company::where('slug', $companySlug)->firstOrFail();
+        return view('public.software-sharing.forgot-password', compact('company', 'companySlug'));
+    }
+
+    /**
+     * Kirim link reset password via email
+     */
+    public function sendResetLink(Request $request, string $companySlug)
+    {
+        $company = Company::where('slug', $companySlug)->firstOrFail();
+
+        $request->validate([
+            'email' => ['required', 'email'],
+        ], [
+            'email.required' => 'Email wajib diisi.',
+            'email.email'    => 'Format email tidak valid.',
+        ]);
+
+        // Cari user berdasarkan email DAN company
+        $user = User::where('email', $request->email)
+                    ->where('company_id', $company->id)
+                    ->first();
+
+        // Selalu tampilkan pesan sukses (mencegah user enumeration)
+        if ($user) {
+            // Generate token manual via Password broker
+            $token = app('auth.password.broker')->createToken($user);
+            $user->notify(new ResetPasswordCustomer($token, $companySlug));
+        }
+
+        return redirect()->back()
+            ->with('success', '📩 Jika email terdaftar, link reset password telah dikirim. Silakan cek inbox Anda.');
+    }
+
+    /**
+     * Tampilkan form reset password baru
+     */
+    public function showResetPassword(Request $request, string $companySlug, string $token)
+    {
+        if ($this->isLoggedInCustomer()) {
+            return redirect()->route('customer-software.index');
+        }
+        $company = Company::where('slug', $companySlug)->firstOrFail();
+        $email   = $request->query('email', '');
+
+        return view('public.software-sharing.reset-password', compact('company', 'companySlug', 'token', 'email'));
+    }
+
+    /**
+     * Proses reset password baru
+     */
+    public function resetPassword(Request $request, string $companySlug)
+    {
+        $company = Company::where('slug', $companySlug)->firstOrFail();
+
+        $request->validate([
+            'token'    => ['required'],
+            'email'    => ['required', 'email'],
+            'password' => ['required', 'confirmed', Rules\Password::defaults()],
+        ], [
+            'password.confirmed' => 'Konfirmasi password tidak cocok.',
+            'password.min'       => 'Password minimal 8 karakter.',
+        ]);
+
+        // Verifikasi token via Password broker
+        $status = Password::reset(
+            $request->only('email', 'password', 'password_confirmation', 'token'),
+            function (User $user, string $password) {
+                $user->forceFill(['password' => Hash::make($password)])->save();
+            }
+        );
+
+        if ($status === Password::PASSWORD_RESET) {
+            return redirect()
+                ->route('public.software-sharing.login', $companySlug)
+                ->with('success', '🔒 Password berhasil direset! Silakan login dengan password baru Anda.');
+        }
+
+        return redirect()->back()
+            ->withInput($request->only('email'))
+            ->withErrors(['email' => __($status)]);
     }
 }

@@ -296,6 +296,17 @@ Route::prefix('software-sharing')->name('public.software-sharing.')->group(funct
     Route::post('{companySlug}/resend-verification', [SoftwareSharingController::class, 'resendVerification'])->name('resend-verification');
 });
 
+// Email Verification untuk Customer Software (tanpa auth)
+Route::get('/customer-software/email/verify/{id}/{hash}', [SoftwareSharingController::class, 'verifyEmail'])
+    ->middleware(['signed'])
+    ->name('customer.email.verify');
+
+// Forgot Password untuk Customer Software
+Route::get('/software-sharing/{companySlug}/forgot-password', [SoftwareSharingController::class, 'showForgotPassword'])->name('customer.password.request');
+Route::post('/software-sharing/{companySlug}/forgot-password', [SoftwareSharingController::class, 'sendResetLink'])->name('customer.password.email');
+Route::get('/software-sharing/{companySlug}/reset-password/{token}', [SoftwareSharingController::class, 'showResetPassword'])->name('customer.password.reset.form');
+Route::post('/software-sharing/{companySlug}/reset-password', [SoftwareSharingController::class, 'resetPassword'])->name('customer.password.reset');
+
 Route::group(['middleware' => ['auth','role.permission','ip.restriction']], function()
 {
   Route::get('home/softwareSharing', [App\Http\Controllers\HomeController::class, 'softwareSharing'])->name('home.softwareSharing');

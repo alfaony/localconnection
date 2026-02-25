@@ -157,6 +157,9 @@
                     <label class="check-label">
                         <input type="checkbox" name="remember"> Ingat saya
                     </label>
+                    <a href="{{ route('customer.password.request', $companySlug) }}" style="font-size:13px; color:var(--primary); text-decoration:none; font-weight:600;">
+                        Lupa Password?
+                    </a>
                 </div>
 
                 <button type="submit" class="btn-submit" id="submitBtn">
