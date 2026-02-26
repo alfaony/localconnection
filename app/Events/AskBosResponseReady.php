@@ -44,7 +44,9 @@ class AskBosResponseReady implements ShouldBroadcast
     public function broadcastWith(): array
     {
         return [
-            'analysis'        => $this->analysis,
+            // FIX: Hapus payload analysis dari broadcast untuk menghindari error Pusher (Payload too large > 10KB)
+            // Frontend akan menggunakan cache_key untuk mengambil payload utuh via endpoint AJAX (checkResponse).
+            'analysis'        => null,
             'trust_score'     => $this->trustScore,
             'execution_score' => $this->executionScore,  // null jika tidak di-generate AI
             'cache_key'       => $this->cacheKey,
