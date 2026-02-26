@@ -172,7 +172,7 @@ class MasterAccount extends Model
         return false;
     }
 
-    public function getAttachmentAttributes($value){
+    public function getAttachmentAttribute($value){
         return "public/".$value;
     }
 
