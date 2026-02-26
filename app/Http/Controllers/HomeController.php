@@ -736,7 +736,7 @@ class HomeController extends Controller
                         'nama' => $sub->package->nama_paket,
                     ],
                     'tanggal_expired' => Carbon::parse($sub->tanggal_expired)->format('d M Y'),
-                    'software_url' => route('customer-software.show', $sub->software->id),
+                    'software_url' => route('customer-software.show', $sub->software->slug),
                 ];
             });
 
