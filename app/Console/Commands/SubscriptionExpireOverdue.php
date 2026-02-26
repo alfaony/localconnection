@@ -38,7 +38,7 @@ class SubscriptionExpireOverdue extends Command
         foreach ($overdue as $sub) {
             $userName = $sub->user->name ?? 'Unknown';
             $soft     = $sub->software->nama ?? 'N/A';
-            $expStr   = $sub->tanggal_expired ? $sub->tanggal_expired->format('d M Y') : '-';
+            $expStr   = $sub->tanggal_expired ? Carbon::parse($sub->tanggal_expired)->format('d M Y') : '-';
 
             if (!$dryRun) {
                 $sub->update(['status' => 'expired']);

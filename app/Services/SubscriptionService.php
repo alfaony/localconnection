@@ -107,11 +107,11 @@ class SubscriptionService
 
             DB::commit();
             
-            Log::info('Subscription created', [
-                'subscription_id' => $subscription->id,
-                'order_number' => $subscription->order_number,
-                'master_account_id' => $masterAccount->id,
-            ]);
+            // Log::info('Subscription created', [
+            //     'subscription_id' => $subscription->id,
+            //     'order_number' => $subscription->order_number,
+            //     'master_account_id' => $masterAccount->id,
+            // ]);
 
             return [
                 'success' => true,
@@ -165,12 +165,12 @@ class SubscriptionService
 
             DB::commit();
             
-            Log::info('Subscription activated', [
-                'subscription_id' => $subscription->id,
-                'order_number' => $subscription->order_number,
-                'tanggal_mulai' => $tanggalMulai,
-                'tanggal_expired' => $tanggalExpired,
-            ]);
+            // Log::info('Subscription activated', [
+            //     'subscription_id' => $subscription->id,
+            //     'order_number' => $subscription->order_number,
+            //     'tanggal_mulai' => $tanggalMulai,
+            //     'tanggal_expired' => $tanggalExpired,
+            // ]);
 
             return [
                 'success' => true,
@@ -212,11 +212,11 @@ class SubscriptionService
 
             DB::commit();
             
-            Log::info('Subscription suspended', [
-                'subscription_id' => $subscription->id,
-                'order_number' => $subscription->order_number,
-                'reason' => $reason,
-            ]);
+            // Log::info('Subscription suspended', [
+            //     'subscription_id' => $subscription->id,
+            //     'order_number' => $subscription->order_number,
+            //     'reason' => $reason,
+            // ]);
 
             return [
                 'success' => true,
@@ -258,10 +258,10 @@ class SubscriptionService
 
             DB::commit();
             
-            Log::info('Subscription expired', [
-                'subscription_id' => $subscription->id,
-                'order_number' => $subscription->order_number,
-            ]);
+            // Log::info('Subscription expired', [
+            //     'subscription_id' => $subscription->id,
+            //     'order_number' => $subscription->order_number,
+            // ]);
 
             return [
                 'success' => true,
@@ -329,12 +329,12 @@ class SubscriptionService
 
             DB::commit();
             
-            Log::info('Subscription extended', [
-                'subscription_id' => $subscription->id,
-                'order_number' => $subscription->order_number,
-                'additional_days' => $additionalDays,
-                'new_expired_date' => $newExpiredDate,
-            ]);
+            // Log::info('Subscription extended', [
+            //     'subscription_id' => $subscription->id,
+            //     'order_number' => $subscription->order_number,
+            //     'additional_days' => $additionalDays,
+            //     'new_expired_date' => $newExpiredDate,
+            // ]);
 
             return [
                 'success' => true,
@@ -387,11 +387,11 @@ class SubscriptionService
 
             DB::commit();
 
-            Log::info('Subscription cancelled and slot released', [
-                'subscription_id' => $subscription->id,
-                'order_number'    => $subscription->order_number,
-                'reason'          => $reason,
-            ]);
+            // Log::info('Subscription cancelled and slot released', [
+            //     'subscription_id' => $subscription->id,
+            //     'order_number'    => $subscription->order_number,
+            //     'reason'          => $reason,
+            // ]);
 
             return ['success' => true, 'subscription' => $subscription->fresh()];
 

@@ -121,7 +121,7 @@ class SubscriptionSimulateExpired extends Command
                 $s->user->name ?? '-',
                 $s->software->nama ?? '-',
                 $s->package->nama_paket ?? '-',
-                $s->tanggal_expired ? $s->tanggal_expired->format('d M Y') : '-',
+                $s->tanggal_expired ? Carbon::parse($s->tanggal_expired)->format('d M Y') : '-',
                 $s->days_until_expiry !== null ? $s->days_until_expiry . ' hari' : '-',
             ])
         );
