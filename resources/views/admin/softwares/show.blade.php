@@ -211,7 +211,7 @@
                                                         <i class="fas fa-edit"></i>
                                                     </a>
                                                     @endcanAccess
-                                                    @canAccess('update', 'software_packages')
+                                                    @canAccess('toggleStatus', 'software_packages')
                                                     <button type="button" 
                                                             class="btn btn-sm btn-{{ $package->status == 'active' ? 'warning' : 'success' }} toggle-status mb-1 mr-1" 
                                                             data-id="{{ $package->id }}"

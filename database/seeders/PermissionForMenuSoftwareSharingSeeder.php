@@ -27,7 +27,7 @@ class PermissionForMenuSoftwareSharingSeeder extends Seeder
         try {   
             $softwareDashboard = ['index'];
             $software = ['index','create','store','edit','update','destroy','show','toggleStatus','dashboard'];
-            $softwarePackages = ['index','create','store','edit','update','destroy','show'];
+            $softwarePackages = ['index','create','store','edit','update','destroy','show','toggleStatus'];
             $masterAccount = ['index','edit', 'create','store','update', 'show', 'destroy','toggleStatus','customers'];
             $subscriptions = ['index','create','store','edit','update','destroy','show','toggleStatus','editExpiry','updateExpiry','editMasterAccount','updateMasterAccount','suspend','activate','payments','manual-approve'];
             
