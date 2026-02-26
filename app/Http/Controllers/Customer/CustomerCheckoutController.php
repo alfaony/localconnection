@@ -258,6 +258,14 @@ class CustomerCheckoutController extends Controller
             ->with(['payments' => fn($q) => $q->whereIn('status', ['pending', 'unpaid'])->latest()])
             ->firstOrFail();
 
+        // Guard: auto-expire if slot reservation deadline has passed
+        if ($subscription->isSlotExpired()) {
+            $this->subscriptionService->cancelSubscription($subscription, 'Slot reservation expired');
+            return redirect()
+                ->route('customer-software.index')
+                ->with('error', '⏰ Waktu reservasi slot sudah habis. Silakan lakukan pemesanan baru.');
+        }
+
         $payment = $subscription->payments->first();
 
         if (!$payment) {
@@ -306,6 +314,14 @@ class CustomerCheckoutController extends Controller
             ->whereIn('payment_status', ['unpaid', 'pending'])
             ->with(['package', 'masterAccount.software'])
             ->firstOrFail();
+
+        // Guard: auto-expire if slot reservation deadline has passed
+        if ($subscription->isSlotExpired()) {
+            $this->subscriptionService->cancelSubscription($subscription, 'Slot reservation expired');
+            return redirect()
+                ->route('customer-software.index')
+                ->with('error', '⏰ Waktu reservasi slot sudah habis. Silakan lakukan pemesanan baru.');
+        }
 
         $package = $subscription->package;
         if (!$package) {

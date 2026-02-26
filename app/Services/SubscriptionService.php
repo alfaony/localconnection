@@ -247,9 +247,15 @@ class SubscriptionService
         
         try {
             // Update subscription status
-            $subscription->update([
-                'status' => 'expired',
-            ]);
+            $subscription->update(['status' => 'expired']);
+
+            // Expire any pending payments to avoid dangling records
+            SubscriptionPayment::where('subscription_id', $subscription->id)
+                ->whereIn('status', ['pending', 'unpaid'])
+                ->update([
+                    'status'     => 'expired',
+                    'expired_at' => now(),
+                ]);
 
             // Release slot from master account
             if ($subscription->masterAccount) {
@@ -379,8 +385,7 @@ class SubscriptionService
                 $subscription->masterAccount->releaseSlot();
             }
 
-            // Mark subscription as expired (slot released, payment never completed)
-            // Note: payment_status enum only allows 'unpaid'|'paid' — leave as unpaid
+            // Mark subscription as expired (keep payment_status as-is per ENUM constraint)
             $subscription->update([
                 'status' => 'expired',
             ]);
@@ -445,36 +450,68 @@ class SubscriptionService
      *
      * @param bool        $dryRun  If true, do not persist changes.
      * @param string|null $id      If provided, force expire this specific subscription (skip deadline).
+     * @param bool        $force   Force expire (skip deadline check).
      * @return array  List of expired subscription summaries.
      */
-    public function autoExpireUnpaidSubscriptions(bool $dryRun = false, ?string $id = null): array
+    public function autoExpireUnpaidSubscriptions(bool $dryRun = false, ?string $id = null, bool $force = false): array
     {
-        if ($id) {
-            // Force-expire specific subscription by ID (for simulation/testing)
-            $expired = CustomerSubscription::where('id', $id)
-                ->where('payment_status', 'unpaid')
-                ->whereIn('status', ['active', 'pending'])
-                ->with(['user', 'software', 'masterAccount'])
-                ->get();
-        } else {
-            $expired = CustomerSubscription::slotExpired()
-                ->with(['user', 'software', 'masterAccount'])
-                ->get();
+        // Find unpaid/pending payments that have passed their `expired_at` deadline
+        $query = \App\Models\SubscriptionPayment::whereIn('status', ['pending', 'unpaid']);
+        
+        if (!$force) {
+            $query->where('expired_at', '<', now());
         }
+            
+        if ($id) {
+            $query->where('subscription_id', $id);
+        }
+
+        // We only care about payments linked to a subscription
+        $expiredPayments = $query->with(['subscription.user', 'subscription.software', 'subscription.masterAccount'])->get();
 
         $results = [];
 
-        foreach ($expired as $sub) {
+        // Track processed subscriptions to avoid duplicate processing in the loop
+        $processedSubIds = [];
+
+        foreach ($expiredPayments as $payment) {
+            $sub = $payment->subscription;
+            if (!$sub || in_array($sub->id, $processedSubIds)) {
+                continue;
+            }
+
+            $processedSubIds[] = $sub->id;
+
             $summary = [
                 'subscription_id' => $sub->id,
                 'order_number'    => $sub->order_number,
                 'user'            => $sub->user->name ?? 'Unknown',
                 'software'        => $sub->software->nama ?? 'N/A',
-                'reserved_until'  => $sub->slot_deadline?->format('d M Y H:i'),
+                'reserved_until'  => $payment->expired_at ? $payment->expired_at->format('d M Y H:i') : 'N/A',
             ];
 
             if (!$dryRun) {
-                $this->cancelSubscription($sub, $id ? 'Manual force-expire via artisan command' : 'Auto-expired: slot reservation deadline passed');
+                // 1. Expire all pending payments for this subscription
+                $sub->payments()->whereIn('status', ['pending', 'unpaid'])->update([
+                    'status' => 'expired',
+                    'updated_at' => now(),
+                ]);
+
+                // 2. Handle Subscription and Slot Release
+                if ($sub->status === 'pending') {
+                    // New subscription abandoned
+                    $sub->update(['status' => 'expired']);
+                    if ($sub->masterAccount) {
+                        $sub->masterAccount->releaseSlot();
+                    }
+                } elseif ($sub->status === 'expired') {
+                    // Late renewal abandoned: subscription is already 'expired' but we must release the slot it reserved for this payment
+                    if ($sub->masterAccount) {
+                        $sub->masterAccount->releaseSlot();
+                    }
+                }
+                // If $sub->status === 'active' (Early renewal abandoned):
+                // Do nothing to the subscription status, and do NOT release the slot because they currently own it.
             }
 
             $results[] = $summary;

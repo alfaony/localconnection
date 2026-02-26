@@ -13,7 +13,8 @@ class SubscriptionAutoReleaseSlots extends Command
      */
     protected $signature = 'subscription:auto-release-slots
                             {--dry-run : Preview without saving}
-                            {--id= : Force expire specific subscription ID (skip deadline check)}';
+                            {--id= : Force expire specific subscription ID (skip deadline check if used with --force)}
+                            {--force : Ignore the deadline and forcefully expire them (Useful for testing)}';
 
     protected $description = 'Auto-release slots for unpaid subscriptions past their reservation deadline';
 
@@ -21,8 +22,9 @@ class SubscriptionAutoReleaseSlots extends Command
     {
         $dryRun = $this->option('dry-run');
         $id = $this->option('id');
+        $force = $this->option('force');
 
-        $results = $service->autoExpireUnpaidSubscriptions($dryRun, $id);
+        $results = $service->autoExpireUnpaidSubscriptions($dryRun, $id, $force);
 
         if (empty($results)) {
             $this->info('✅ Tidak ada subscription unpaid yang perlu di-expire.');

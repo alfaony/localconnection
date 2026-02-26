@@ -27,6 +27,61 @@
         </div>
     </div>
 
+    {{-- ⚠️ Pending Payment Warning Banner --}}
+    @if(isset($pendingPayment) && $pendingPayment)
+    <div class="pending-payment-banner mb-4 slide-up-1" id="pendingBanner">
+        <div class="d-flex align-items-start gap-3">
+            <div class="pending-icon-wrap" style="background:#fef3c7; color:#d97706; padding:12px 14px; border-radius:50%; display:inline-block;">
+                <i class="fas fa-exclamation-triangle fa-2x"></i>
+            </div>
+            <div class="flex-grow-1">
+                <h5 class="mb-1 font-weight-bold" style="color:#92400e;">
+                    Anda Masih Memiliki Pembayaran yang Belum Selesai
+                </h5>
+                <p class="mb-2 text-sm" style="color:#78350f; font-size:13.5px;">
+                    Order <strong>#{{ $subscription->order_number }}</strong>
+                    (via <strong>{{ strtoupper($pendingPayment->payment_gateway ?? 'manual') }}</strong>)
+                    dibuat {{ $pendingPayment->created_at ? $pendingPayment->created_at->diffForHumans() : '' }}.
+                    Semua slot sudah terkunci. Anda tidak dapat membuat pesanan baru sbelum pesanan lama diselesaikan atau dibatalkan.
+                </p>
+                @if($pendingPayment->expired_at && \Carbon\Carbon::parse($pendingPayment->expired_at)->isFuture())
+                <p class="mb-2" style="color:#92400e; font-size:13px; font-weight:600;">
+                    <i class="fas fa-clock"></i> Akan otomatis dibatalkan pada 
+                    <strong>{{ \Carbon\Carbon::parse($pendingPayment->expired_at)->timezone('Asia/Jakarta')->format('d M Y, H:i') }} WIB</strong>
+                    ({{ \Carbon\Carbon::parse($pendingPayment->expired_at)->diffForHumans(['parts' => 2, 'short' => true]) }})
+                </p>
+                @endif
+                <div class="d-flex flex-wrap gap-2 mt-3">
+                    <a href="{{ route('customer-subscription.resume-renewal-payment', $subscription->id) }}" class="btn btn-warning font-weight-bold shadow-sm" style="color: #663c00; padding:8px 16px; border-radius:8px; font-size:14px; text-decoration:none;">
+                        <i class="fas fa-wallet mr-1"></i> Lanjutkan Pembayaran Sebelumnya
+                    </a>
+                    <form action="{{ route('customer-subscription.cancel-renewal-payment', $subscription->id) }}" method="POST" class="d-inline">
+                        @csrf
+                        <button type="submit" class="btn btn-outline-danger font-weight-bold bg-white shadow-sm" 
+                                style="padding:8px 16px; border-radius:8px; font-size:14px;"
+                                onclick="return confirm('Apakah Anda yakin ingin membatalkan pesanan sebelumnya? Jika dibatalkan, slot pesanan lama akan dilepas dan Anda dapat memilih paket/metode baru.')">
+                            <i class="fas fa-times-circle mr-1"></i> Batalkan & Buat Order Baru
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <style>
+            .modern-two-col { pointer-events: none; opacity: 0.6; filter: grayscale(30%); }
+            .modern-two-col button { cursor: not-allowed !important; }
+            .pending-payment-banner {
+                background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+                border: 1px solid #fde68a;
+                border-left: 5px solid #f59e0b;
+                border-radius: 12px;
+                padding: 24px;
+                box-shadow: 0 4px 15px rgba(245, 158, 11, 0.1);
+            }
+        </style>
+    </div>
+    @endif
+
     {{-- Status Alert --}}
     @php
         $daysLeft = $subscription->days_until_expiry ?? 0;
@@ -532,6 +587,11 @@ $(document).ready(function() {
 
     // Init defaults
     $('#input-payment-gateway').val($('.payment-method-checker:checked').val());
+    // Init selected_bank from the first auto-checked bank radio
+    var checkedBank = $('.bank-checker:checked');
+    if (checkedBank.length) {
+        $('#input-selected-bank').val(checkedBank.val());
+    }
 
     // Submit
     $('#btn-submit-renew').on('click', function(e) {

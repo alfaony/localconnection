@@ -116,6 +116,11 @@ class SubscriptionPaymentController extends Controller
             abort(403, 'Unauthorized access');
         }
 
+        // Guard: reject if slot reservation has expired
+        if ($subscription->isSlotExpired()) {
+            return back()->with('error', '⏰ Waktu reservasi slot sudah habis. Pembayaran tidak bisa diproses.');
+        }
+
         // Verify it's a manual transfer payment
         if (!$payment->isManualTransfer()) {
             return back()->with('error', 'Upload bukti transfer hanya untuk pembayaran manual');

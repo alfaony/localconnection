@@ -71,9 +71,10 @@ class SubscriptionSimulateExpired extends Command
                 $action = "Status → expired";
                 if (!$dryRun) {
                     $sub->update([
-                        'status'           => 'expired',
                         'tanggal_expired'  => Carbon::today('Asia/Jakarta'),
                     ]);
+                    // Use service to properly expire (release slots & expire payments)
+                    app(\App\Services\SubscriptionService::class)->expireSubscription($sub);
                 }
             } else {
                 $newDate = Carbon::today('Asia/Jakarta')->addDays($days);

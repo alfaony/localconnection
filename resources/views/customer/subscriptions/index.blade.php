@@ -98,7 +98,7 @@
                             {{-- Payment Action Buttons based on state --}}
                             @php $latestPayment = $subscription->latestPayment; @endphp
 
-                            @if($subscription->payment_status !== 'paid')
+                            @if($subscription->payment_status !== 'paid' && !in_array($subscription->status, ['expired']))
                                 @if($latestPayment && $latestPayment->payment_gateway === 'manual' && in_array($latestPayment->status, ['pending','unpaid']))
                                     {{-- Manual: upload bukti transfer --}}
                                     @canAccess('paymentPending','customer_checkouts')
@@ -284,6 +284,7 @@
     .status-default { background: #f1f5f9; color: #475569; }
     .payment-success { background: #d1fae5; color: #065f46; }
     .payment-warning { background: #fef3c7; color: #b45309; }
+    .payment-danger  { background: #fee2e2; color: #991b1b; }
 
     .sub-date { font-size: 12.5px; color: var(--text); }
     

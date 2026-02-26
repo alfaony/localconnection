@@ -41,7 +41,8 @@ class SubscriptionExpireOverdue extends Command
             $expStr   = $sub->tanggal_expired ? Carbon::parse($sub->tanggal_expired)->format('d M Y') : '-';
 
             if (!$dryRun) {
-                $sub->update(['status' => 'expired']);
+                // Use service to properly expire (release slots & expire payments)
+                app(\App\Services\SubscriptionService::class)->expireSubscription($sub);
                 Log::info("subscription:expire-overdue → Expired [{$sub->order_number}] {$userName} | {$soft}, was due {$expStr}");
             }
 

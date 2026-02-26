@@ -101,7 +101,10 @@ class SubscriptionController extends Controller
             'midtrans' => ($settingCompany['midtrans_pay_with_ppn_software_sharing']   ?? '0') === '1',
         ];
 
-        return view('customer.subscriptions.renew', compact('subscription', 'packages', 'paymentMethods', 'ppnSettings'));
+        // Check for existing pending payments
+        $pendingPayment = $subscription->payments()->whereIn('status', ['pending', 'unpaid'])->latest()->first();
+
+        return view('customer.subscriptions.renew', compact('subscription', 'packages', 'paymentMethods', 'ppnSettings', 'pendingPayment'));
     }
 
     /**
@@ -126,9 +129,21 @@ class SubscriptionController extends Controller
         DB::beginTransaction();
 
         try {
+            // Clean up any existing pending payments to avoid slot leaks
+            $pendingPayments = $subscription->payments()->whereIn('status', ['pending', 'unpaid'])->get();
+            foreach ($pendingPayments as $p) {
+                $p->update(['status' => 'expired', 'expired_at' => now()]);
+                // If subscription is already expired, it means this pending payment held a temporary slot. Release it.
+                if ($subscription->status === 'expired' && $subscription->masterAccount) {
+                    $subscription->masterAccount->releaseSlot();
+                }
+            }
+
             // If subscription is expired, must re-check slot availability
             // (slot was released when it expired — cannot assume it's still available)
             if ($subscription->status === 'expired') {
+                // Refresh master account in case it changed
+                $subscription->load('masterAccount');
                 $masterAccount = $subscription->masterAccount;
 
                 if (!$masterAccount || !$masterAccount->hasSlotsAvailable()) {
@@ -158,18 +173,38 @@ class SubscriptionController extends Controller
             // Create new payment record and handle gateway routing
             $gateway = $validated['payment_gateway'];
             $paymentService = new SubscriptionPaymentService($subscription->company_id);
-            $ppnCalc = $paymentService->calculatePpn($package->harga, $gateway);
 
-            $payment = SubscriptionPayment::create([
-                'company_id'         => $subscription->company_id,
-                'subscription_id'    => $subscription->id,
-                'amount'             => $ppnCalc['total'],
-                'xendit_external_id' => $subscription->order_number . '-RNW-' . time(),
-                'status'             => 'pending',
-                'expired_at'         => now()->addHours(24),
-            ]);
+            if ($gateway === 'manual') {
+                // Use processManualTransfer to properly save gateway, bank info, and PPN
+                $selectedBank = $validated['selected_bank'] ?? 0;
+                $paymentResult = $paymentService->processManualTransfer($subscription, $package, $selectedBank);
 
-            if ($gateway === 'xendit') {
+                if (!$paymentResult['success']) {
+                    throw new \Exception($paymentResult['message']);
+                }
+
+                DB::commit();
+
+                return redirect()
+                    ->route('customer-subscription.show', $subscription->id)
+                    ->with('success', 'Pesanan perpanjangan berhasil dibuat! Silakan transfer ke rekening yang tersedia, lalu upload bukti pembayaran.');
+
+            } elseif ($gateway === 'xendit') {
+                $ppnCalc = $paymentService->calculatePpn($package->harga, $gateway);
+
+                $payment = SubscriptionPayment::create([
+                    'company_id'         => $subscription->company_id,
+                    'subscription_id'    => $subscription->id,
+                    'amount'             => $ppnCalc['total'],
+                    'subtotal'           => $ppnCalc['subtotal'],
+                    'ppn_rate'           => $ppnCalc['ppn_rate'],
+                    'ppn_amount'         => $ppnCalc['ppn_amount'],
+                    'payment_gateway'    => 'xendit',
+                    'xendit_external_id' => $subscription->order_number . '-RNW-' . time(),
+                    'status'             => 'pending',
+                    'expired_at'         => now()->addHours(24),
+                ]);
+
                 $xenditService = new SubscriptionXenditService($subscription->company_id);
                 $invoiceResult = $xenditService->createInvoice($subscription, $package, $user);
 
@@ -184,6 +219,21 @@ class SubscriptionController extends Controller
                 return redirect($invoiceResult['payment_url']);
 
             } elseif ($gateway === 'midtrans') {
+                $ppnCalc = $paymentService->calculatePpn($package->harga, $gateway);
+
+                $payment = SubscriptionPayment::create([
+                    'company_id'         => $subscription->company_id,
+                    'subscription_id'    => $subscription->id,
+                    'amount'             => $ppnCalc['total'],
+                    'subtotal'           => $ppnCalc['subtotal'],
+                    'ppn_rate'           => $ppnCalc['ppn_rate'],
+                    'ppn_amount'         => $ppnCalc['ppn_amount'],
+                    'payment_gateway'    => 'midtrans',
+                    'xendit_external_id' => $subscription->order_number . '-RNW-' . time(),
+                    'status'             => 'pending',
+                    'expired_at'         => now()->addHours(24),
+                ]);
+
                 $midtransService = new MidtransService($subscription->company_id);
                 $result = $midtransService->createTransactionForSubscription($subscription, $package, $user, $payment);
 
@@ -197,14 +247,7 @@ class SubscriptionController extends Controller
                 return redirect($result['redirect_url']);
 
             } else {
-                // Manual transfer
-                $payment->update(['status' => 'pending']);
-
-                DB::commit();
-
-                return redirect()
-                    ->route('customer-subscription.show', $subscription->id)
-                    ->with('success', 'Pesanan perpanjangan berhasil dibuat! Silakan transfer ke rekening yang tersedia, lalu upload bukti pembayaran.');
+                throw new \Exception('Metode pembayaran tidak valid.');
             }
 
         } catch (\Exception $e) {
@@ -232,5 +275,71 @@ class SubscriptionController extends Controller
             ->paginate(15);
 
         return view('customer.subscriptions.payments', compact('subscription', 'payments'));
+    }
+
+    /**
+     * Cancel pending renewal payment
+     */
+    public function cancelRenewalPayment(Request $request, CustomerSubscription $subscription)
+    {
+        // Check if user owns this subscription
+        if ($subscription->user_id !== Auth::id()) {
+            abort(403, 'Unauthorized access');
+        }
+
+        $pendingPayments = $subscription->payments()->whereIn('status', ['pending', 'unpaid'])->get();
+        if ($pendingPayments->isEmpty()) {
+            return redirect()->back()->with('error', 'Tidak ada pembayaran yang tertunda.');
+        }
+
+        foreach ($pendingPayments as $p) {
+            $p->update(['status' => 'expired', 'expired_at' => now()]);
+            // Re-release slot if subscription is already expired
+            if ($subscription->status === 'expired' && $subscription->masterAccount) {
+                $subscription->masterAccount->releaseSlot();
+            }
+        }
+
+        return redirect()->route('customer-subscription.renew', $subscription->id)->with('success', 'Order renewal sebelumnya berhasil dibatalkan. Silakan buat pesanan baru.');
+    }
+
+    /**
+     * Resume pending renewal payment
+     */
+    public function resumeRenewalPayment(Request $request, CustomerSubscription $subscription)
+    {
+        // Check if user owns this subscription
+        if ($subscription->user_id !== Auth::id()) {
+            abort(403, 'Unauthorized access');
+        }
+
+        $payment = $subscription->payments()->whereIn('status', ['pending', 'unpaid'])->latest()->first();
+
+        if (!$payment) {
+            return redirect()->back()->with('error', 'Tidak ada data pembayaran yang ditemukan.');
+        }
+
+        // For manual transfer → go to pending page
+        if ($payment->payment_gateway === 'manual') {
+            return redirect()->route('customer-checkout.payment.pending', $subscription->order_number);
+        }
+
+        // For Xendit → try to get invoice URL
+        if ($payment->payment_gateway === 'xendit') {
+            $invoiceUrl = $payment->payment_url ?? $payment->xendit_invoice_url ?? null;
+            if ($invoiceUrl) {
+                return redirect($invoiceUrl);
+            }
+        }
+
+        // For Midtrans → try to get snap URL
+        if ($payment->payment_gateway === 'midtrans') {
+            $snapUrl = $payment->snap_url ?? $payment->midtrans_redirect_url ?? null;
+            if ($snapUrl) {
+                return redirect($snapUrl);
+            }
+        }
+
+        return redirect()->back()->with('error', 'URL pembayaran tidak ditemukan. Silakan batalkan dan buat ulang.');
     }
 }

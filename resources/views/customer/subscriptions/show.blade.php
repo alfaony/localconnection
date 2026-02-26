@@ -275,7 +275,7 @@
                         </a>
                     </div>
                     @endif
-                    
+
                     @if($ma->attachment)
                     <div class="form-group mb-3">
                         <a href="{{ s3_asset(true,10,$ma->attachment) }}" target="_blank" class="btn-modern secondary py-2 w-100">
@@ -297,7 +297,7 @@
             @else
             {{-- Subscription not active or not paid --}}
             <div class="modern-card slide-up-1 text-center py-5 border-0" style="background: #fff8f1; border-top: 4px solid var(--warning) !important;">
-                @if($subscription->payment_status == 'unpaid' && in_array($subscription->status, ['active', 'pending']))
+                @if($subscription->payment_status == 'unpaid' && in_array($subscription->status, ['active', 'pending']) && $subscription->status !== 'expired')
                 <div class="mb-4 text-warning" style="font-size: 48px;">
                     <i class="fas fa-exclamation-triangle"></i>
                 </div>

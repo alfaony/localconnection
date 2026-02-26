@@ -843,6 +843,11 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
       Route::get('customer-checkout/payment/success/{order}', [CustomerCheckoutController::class, 'paymentSuccess'])->name('customer-checkout.payment.success');
       Route::get('customer-checkout/payment/failed/{order}', [CustomerCheckoutController::class, 'paymentFailed'])->name('customer-checkout.payment.failed');
 
+            // Handle stuck/stale payment
+      Route::post('customer-checkout/payment/pending/{subscription}/cancel-pending-payment', [CustomerCheckoutController::class, 'cancelPending'])->name('customer-checkout.cancel-pending');
+      Route::get('customer-checkout/payment/pending/{subscription}/resume-payment', [CustomerCheckoutController::class, 'resumePayment'])->name('customer-checkout.resume-payment');
+      Route::get('customer-checkout/payment/pending/{subscription}/retry-payment', [CustomerCheckoutController::class, 'retryPayment'])->name('customer-checkout.retry-payment');
+
       // ========================================================================
       // MY subscription
       // ========================================================================
@@ -853,6 +858,12 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
       Route::get('customer-subscription/{subscription}/renew', [CustomerSubscriptionController::class, 'renew'])->name('customer-subscription.renew');
       // Process renewal
       Route::post('customer-subscription/{subscription}/renew', [CustomerSubscriptionController::class, 'processRenewal'])->name('customer-subscription.process-renewal');
+
+      // Cancel pending renewal
+      Route::post('customer-subscription/{subscription}/cancel-renewal-payment', [CustomerSubscriptionController::class, 'cancelRenewalPayment'])->name('customer-subscription.cancel-renewal-payment');
+      // Resume pending renewal
+      Route::get('customer-subscription/{subscription}/resume-renewal-payment', [CustomerSubscriptionController::class, 'resumeRenewalPayment'])->name('customer-subscription.resume-renewal-payment');
+
       // View payment history for subscription
       Route::get('customer-subscription/{subscription}/payments', [CustomerSubscriptionController::class, 'payments'])->name('customer-subscription.payments');
 
@@ -873,12 +884,6 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
       Route::get('customer-subscription/{subscription}/chat', [CustomerSubscriptionChatController::class, 'index'])->name('customer-subscription.chat.index');
       Route::post('customer-subscription/{subscription}/chat', [CustomerSubscriptionChatController::class, 'store'])->name('customer-subscription.chat.store');
     });
-
-          // Handle stuck/stale payment
-      Route::post('customer-checkout/pending/{subscription}/cancel', [CustomerCheckoutController::class, 'cancelPending'])->name('customer-checkout.cancel-pending');
-      Route::get('customer-checkout/pending/{subscription}/resume', [CustomerCheckoutController::class, 'resumePayment'])->name('customer-checkout.resume-payment');
-      Route::get('customer-checkout/pending/{subscription}/retry', [CustomerCheckoutController::class, 'retryPayment'])->name('customer-checkout.retry-payment');
-
 
   Route::get('internet-customer/registration/{companyId}', InternetCustomerForm::class)->name('internet-customer.create');
   Route::get('internet-customer/customer-active/{code}', CustomerShow::class)->name('internet-customer.customer.show');
