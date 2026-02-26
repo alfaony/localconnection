@@ -60,6 +60,9 @@ class ProcessOpenAiQuery implements ShouldQueue
             'execution_score' => $executionScore, // bisa null jika AI tidak generate
         ], now()->addMinutes(10));
 
+        // Note: Simpan ref ke cache terbaru agar aksi "Reload" manual di frontend tetap bekerja
+        cache()->put("latest_ai_response_{$this->userId}", $cacheKey, now()->addMinutes(10));
+
         Log::info('ProcessOpenAiQuery: success', [
             'userId'          => $this->userId,
             'trust_score'     => $trustScore,
@@ -68,15 +71,25 @@ class ProcessOpenAiQuery implements ShouldQueue
             // Tidak log 'answer' mentah — terlalu panjang dan ada data sensitif
         ]);
 
-        // FIX #3 — Kirim cacheKey ke frontend via event
-        // agar frontend tahu harus fetch response yang mana
-        event(new AskBosResponseReady(
-            userId:         $this->userId,
-            analysis:       $analysis,
-            trustScore:     $trustScore,
-            executionScore: $executionScore,
-            cacheKey:       $cacheKey,      // ← tambahan parameter
-        ));
+        // FIX: Jangan kirim analysis ke event — terlalu besar untuk Pusher (10KB limit)
+        // Frontend akan fetch data lengkap via AJAX menggunakan cache_key
+        try {
+            event(new AskBosResponseReady(
+                userId:         $this->userId,
+                analysis:       '', // dikosongkan — data diambil dari cache via AJAX
+                trustScore:     $trustScore,
+                executionScore: $executionScore,
+                cacheKey:       $cacheKey,
+            ));
+        } catch (\Throwable $e) {
+            // Broadcast gagal (misal Pusher down) — data tetap aman di cache
+            // Frontend bisa ambil via tombol "Reload Hasil"
+            Log::warning('ProcessOpenAiQuery: broadcast failed, data still in cache', [
+                'userId'   => $this->userId,
+                'cacheKey' => $cacheKey,
+                'error'    => $e->getMessage(),
+            ]);
+        }
     }
 
     // ─────────────────────────────────────────────────────────

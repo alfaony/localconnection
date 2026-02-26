@@ -237,28 +237,16 @@
 
             // Handle error flag dari backend (job gagal permanen)
             if (e.is_error) {
-                setAnalysis(e.analysis || 'Terjadi kesalahan saat memproses.');
+                setAnalysis('Terjadi kesalahan saat memproses.');
                 showToast('❌ Gagal mendapatkan hasil analisa.');
                 return;
             }
 
-            setAnalysis(e.analysis);
-            document.getElementById('trustScoreResult').innerText    = e.trust_score ?? '-';
-            document.getElementById('executionScoreResult').innerText = e.execution_score ?? '-';
-
-            document.getElementById('analysisResultSave').value      = e.analysis;
-            document.getElementById('trustScoreResultSave').value    = e.trust_score ?? 0;
-            document.getElementById('executionScoreResultSave').value = e.execution_score ?? 0;
-
-            if (e.trust_score || e.execution_score) {
-                document.getElementById('submitDecision').style.display = 'block';
+            // FIX: karena Pusher (10KB limit) payload-nya dikurangi,
+            // kita gunakan cache_key-nya untuk fetch full data lewat HTTP (AJAX).
+            if (e.cache_key) {
+                fetchFromCache(e.cache_key);
             }
-
-            // Notifikasi suara
-            document.getElementById('notification-sound')?.play();
-
-            // Toast singkat
-            showToast('✅ Hasil analisa B.O.S sudah siap!');
         });
 
     // ── Helper: loading state ────────────────────────────────────────────────
@@ -289,12 +277,16 @@
     }
 
     // ── Fallback: ambil hasil dari cache secara manual ───────────────────────
-    function fetchFromCache() {
+    function fetchFromCache(cacheKey = null) {
         const btn = document.getElementById('reloadBtn');
         btn.disabled = true;
         btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> Memuat...';
 
-        fetch("{{ route('check.response') }}")
+        const url = cacheKey 
+            ? "{{ route('check.response') }}?cache_key=" + cacheKey 
+            : "{{ route('check.response') }}";
+
+        fetch(url)
             .then(r => r.json())
             .then(data => {
                 if (data.status === 'waiting') {
