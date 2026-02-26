@@ -174,9 +174,10 @@ $(document).ready(function() {
     $('.toggle-status').on('change', function() {
         const id = $(this).data('id');
         const isChecked = $(this).is(':checked');
+        const url = `{{ route('master-account.toggle-status', ':masterAccount') }}`.replace(':masterAccount', id);
         
         $.ajax({
-            url: `/admin/master-accounts/${id}/toggle-status`,
+            url: url,
             type: 'POST',
             data: {
                 _token: '{{ csrf_token() }}'
