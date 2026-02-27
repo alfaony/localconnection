@@ -277,21 +277,13 @@ class CustomerCheckoutController extends Controller
             return redirect()->route('customer-checkout.payment.pending', $subscription->order_number);
         }
 
-        // For Xendit → try to get invoice URL
-        if ($payment->payment_gateway === 'xendit') {
-            $invoiceUrl = $payment->payment_url ?? $payment->xendit_invoice_url ?? null;
-            if ($invoiceUrl) {
-                return redirect($invoiceUrl);
-            }
+         // Coba redirect ke URL payment yang sudah tersimpan
+        if ($payment->payment_channel) {
+            return redirect($payment->payment_channel);
         }
 
-        // For Midtrans → try to get snap URL
-        if ($payment->payment_gateway === 'midtrans') {
-            $snapUrl = $payment->snap_url ?? $payment->midtrans_redirect_url ?? null;
-            if ($snapUrl) {
-                return redirect($snapUrl);
-            }
-        }
+        // Batalkan pembayaran lama
+        $payment->update(['status' => 'expired', 'expired_at' => now()]);
 
         // URL expired → otomatis redirect ke retry (buat ulang tanpa konfirmasi tambahan)
         return redirect()
@@ -315,8 +307,13 @@ class CustomerCheckoutController extends Controller
             ->with(['package', 'masterAccount.software'])
             ->firstOrFail();
 
+        // Determine if this is a renewal (status active/expired, or has previously paid payments)
+        $isRenewal = in_array($subscription->status, ['active', 'expired']) 
+                  || $subscription->payments()->where('status', 'paid')->exists();
+
         // Guard: auto-expire if slot reservation deadline has passed
-        if ($subscription->isSlotExpired()) {
+        // ONLY FOR INITIAL CHECKOUT! Renewals already hold a valid slot/status.
+        if (!$isRenewal && $subscription->isSlotExpired()) {
             $this->subscriptionService->cancelSubscription($subscription, 'Slot reservation expired');
             return redirect()
                 ->route('customer-software.index')
@@ -338,6 +335,17 @@ class CustomerCheckoutController extends Controller
         }
 
         $this->paymentService = new SubscriptionPaymentService($subscription->company_id);
+
+        // Guard: Limit percobaan retry (maksimal 2x retry = 3 payment) dalam 1 jam terakhir
+        $recentPaymentsCount = $subscription->payments()
+            ->where('created_at', '>=', now()->subHour())
+            ->count();
+
+        if ($recentPaymentsCount >= 3) {
+            return redirect()
+                ->route('customer-software.index')
+                ->with('error', 'Anda telah mencapai batas maksimal percobaan pembayaran (2 kali). Silakan tunggu 1 jam lagi sebelum mencoba kembali.');
+        }
 
         DB::beginTransaction();
         try {

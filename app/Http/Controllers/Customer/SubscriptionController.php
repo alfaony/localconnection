@@ -104,7 +104,19 @@ class SubscriptionController extends Controller
         // Check for existing pending payments
         $pendingPayment = $subscription->payments()->whereIn('status', ['pending', 'unpaid'])->latest()->first();
 
-        return view('customer.subscriptions.renew', compact('subscription', 'packages', 'paymentMethods', 'ppnSettings', 'pendingPayment'));
+        // Check slot availability (if subscription expired, and masterAccount has no slots, we need to find another)
+        $hasFreeSlot = true;
+        if ($subscription->status === 'expired') {
+            $masterAccount = $subscription->masterAccount;
+            if (!$masterAccount || !$masterAccount->hasSlotsAvailable()) {
+                $hasFreeSlot = $this->subscriptionService->checkSlotsAvailability(
+                    $softwareId,
+                    $subscription->company_id
+                );
+            }
+        }
+
+        return view('customer.subscriptions.renew', compact('subscription', 'packages', 'paymentMethods', 'ppnSettings', 'pendingPayment', 'hasFreeSlot'));
     }
 
     /**
@@ -123,8 +135,26 @@ class SubscriptionController extends Controller
             'selected_bank'    => 'nullable|integer',
         ]);
 
+        
         $user = Auth::user();
         $package = SoftwarePackage::findOrFail($validated['package_id']);
+
+        if($subscription->id != $validated['package_id']){
+            $subscription->update([
+                'package_id' => $validated['package_id'],
+            ]);
+        }
+
+        // Guard: Limit percobaan renewal (maksimal 2x retry = 3 payment) dalam 1 jam terakhir
+        $recentPaymentsCount = $subscription->payments()
+            ->where('created_at', '>=', now()->subHour())
+            ->count();
+
+        if ($recentPaymentsCount >= 3) {
+            return redirect()
+                ->route('customer-subscription.show', $subscription->id)
+                ->with('error', 'Anda telah mencapai batas maksimal pembuatan pesanan perpanjangan (2 kali). Silakan tunggu 1 jam lagi sebelum mencoba kembali.');
+        }
 
         DB::beginTransaction();
 
@@ -213,7 +243,7 @@ class SubscriptionController extends Controller
                 }
 
                 $invoice = $invoiceResult['invoice'];
-                $payment->update(['xendit_invoice_id' => $invoice['id']]);
+                $payment->update(['xendit_invoice_id' => $invoice['id'], 'payment_channel' => $invoice['payment_url']]);
 
                 DB::commit();
                 return redirect($invoiceResult['payment_url']);
@@ -241,7 +271,7 @@ class SubscriptionController extends Controller
                     throw new \Exception($result['message']);
                 }
 
-                $payment->update(['xendit_invoice_id' => $result['order_id'] ?? null]);
+                $payment->update(['xendit_invoice_id' => $result['order_id'] ?? null, 'payment_channel' => $result['redirect_url']]);
 
                 DB::commit();
                 return redirect($result['redirect_url']);
@@ -324,22 +354,21 @@ class SubscriptionController extends Controller
             return redirect()->route('customer-checkout.payment.pending', $subscription->order_number);
         }
 
-        // For Xendit → try to get invoice URL
-        if ($payment->payment_gateway === 'xendit') {
-            $invoiceUrl = $payment->payment_url ?? $payment->xendit_invoice_url ?? null;
-            if ($invoiceUrl) {
-                return redirect($invoiceUrl);
-            }
+        // Coba redirect ke URL payment yang sudah tersimpan
+        if ($payment->payment_channel) {
+            return redirect($payment->payment_channel);
         }
 
-        // For Midtrans → try to get snap URL
-        if ($payment->payment_gateway === 'midtrans') {
-            $snapUrl = $payment->snap_url ?? $payment->midtrans_redirect_url ?? null;
-            if ($snapUrl) {
-                return redirect($snapUrl);
-            }
-        }
+        // Batalkan pembayaran lama
+        dd("here");
+        dd($payment->payment_channel);
+        $payment->update(['status' => 'expired', 'expired_at' => now()]);
 
-        return redirect()->back()->with('error', 'URL pembayaran tidak ditemukan. Silakan batalkan dan buat ulang.');
+        // Selalu redirect ke retry payment di checkout untuk membuat payment url baru
+        return redirect()
+            ->route('customer-checkout.retry-payment', [
+                'subscription' => $subscription->id,
+                'gateway'      => $payment->payment_gateway,
+            ]);
     }
 }

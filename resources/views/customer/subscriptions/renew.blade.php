@@ -177,15 +177,23 @@
             <div class="modern-card slide-up-2">
                 <h4 class="card-heading"><i class="fas fa-box-open mr-2 text-primary"></i> Pilih Paket Perpanjangan</h4>
 
+                @if(isset($hasFreeSlot) && !$hasFreeSlot)
+                    <div class="status-alert danger mb-3">
+                        <i class="fas fa-exclamation-circle icon" style="font-size: 22px;"></i>
+                        <div><strong>Maaf, Slot Penuh!</strong><br>Saat ini tidak ada slot yang tersedia untuk perpanjangan layanan ini. Pilihan paket dinonaktifkan sementara. Silakan datang kembali nanti atau hubungi admin.</div>
+                    </div>
+                @endif
+
                 @if($packages->count() > 0)
                     <div class="package-grid">
                         @foreach($packages as $package)
                         @php
                             $isCurrent = $subscription->package_id == $package->id;
+                            $isDisabled = isset($hasFreeSlot) ? !$hasFreeSlot : false;
                         @endphp
-                        <div class="package-card {{ $isCurrent ? 'current' : '' }}"
+                        <div class="package-card {{ $isCurrent ? 'current' : '' }} {{ $isDisabled ? 'disabled' : '' }}"
                              id="pkg-card-{{ $package->id }}"
-                             onclick="selectPackage('{{ $package->id }}', '{{ $package->nama_paket }}', {{ $package->harga }}, {{ $package->durasi_hari }}, '{{ $subscription->tanggal_expired ? \Carbon\Carbon::parse($subscription->tanggal_expired)->addDays($package->durasi_hari)->format('Y-m-d') : '' }}')">
+                             @if(!$isDisabled) onclick="selectPackage('{{ $package->id }}', '{{ $package->nama_paket }}', {{ $package->harga }}, {{ $package->durasi_hari }}, '{{ $subscription->tanggal_expired ? \Carbon\Carbon::parse($subscription->tanggal_expired)->addDays($package->durasi_hari)->format('Y-m-d') : '' }}')" @endif>
                             @if($isCurrent)
                                 <span class="pkg-label">Paket Saat Ini</span>
                             @endif
@@ -202,7 +210,8 @@
                                 data-id="{{ $package->id }}"
                                 data-name="{{ $package->nama_paket }}"
                                 data-price="{{ $package->harga }}"
-                                data-days="{{ $package->durasi_hari }}">
+                                data-days="{{ $package->durasi_hari }}"
+                                {{ $isDisabled ? 'disabled' : '' }}>
                                 <i class="fas fa-check mr-1"></i> Pilih Paket Ini
                             </button>
                         </div>
@@ -424,6 +433,9 @@
     .package-card:hover { border-color: var(--primary); box-shadow: 0 4px 16px rgba(222,52,47,.1); transform: translateY(-2px); }
     .package-card.selected,
     .package-card.current { border-color: var(--primary); background: var(--primary-l); }
+    .package-card.disabled { opacity: 0.6; cursor: not-allowed; border-color: var(--border); background: #f8f9fa; pointer-events: none; }
+    .package-card.disabled:hover { transform: none; box-shadow: none; border-color: var(--border); }
+    .package-card.disabled .pkg-select-btn { background: var(--muted); cursor: not-allowed; }
     .pkg-label { position: absolute; top: -1px; left: 50%; transform: translateX(-50%); background: var(--primary); color: #fff; font-size: 10px; font-weight: 700; padding: 3px 10px; border-radius: 0 0 8px 8px; text-transform: uppercase; letter-spacing: .5px; white-space: nowrap; }
     .pkg-name  { font-weight: 800; font-size: 1rem; color: var(--text); margin-top: 10px; margin-bottom: 6px; }
     .pkg-price { font-size: 1.2rem; font-weight: 800; color: var(--primary); margin-bottom: 4px; }

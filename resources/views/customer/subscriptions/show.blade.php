@@ -11,6 +11,7 @@
 @stop
 
 @section('content')
+@include('components.alert')
 <div class="custom-container">
     <div class="modern-two-col">
         {{-- Left Column: Sub Info, Payment History, Chat --}}

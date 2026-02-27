@@ -11,6 +11,7 @@
 @stop
 
 @section('content')
+@include('components.alert')
 <div class="custom-container">
     {{-- Top Radial Gradient Premium Banner --}}
     <div class="checkout-hero-banner mb-4 slide-up-1">

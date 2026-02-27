@@ -10,6 +10,7 @@
 @stop
 
 @section('content')
+@include('components.alert')
     <div class="custom-container">
         {{-- Search --}}
         <div class="search-wrapper mb-4">

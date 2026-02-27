@@ -457,7 +457,6 @@ class SubscriptionService
     {
         // Find unpaid/pending payments that have passed their `expired_at` deadline
         $query = \App\Models\SubscriptionPayment::whereIn('status', ['pending', 'unpaid']);
-        
         if (!$force) {
             $query->where('expired_at', '<', now());
         }
@@ -491,6 +490,7 @@ class SubscriptionService
             ];
 
             if (!$dryRun) {
+
                 // 1. Expire all pending payments for this subscription
                 $sub->payments()->whereIn('status', ['pending', 'unpaid'])->update([
                     'status' => 'expired',
@@ -498,8 +498,8 @@ class SubscriptionService
                 ]);
 
                 // 2. Handle Subscription and Slot Release
-                if ($sub->status === 'pending') {
-                    // New subscription abandoned
+                if ($sub->status === 'pending' || ($sub->status === 'active' && is_null($sub->tanggal_mulai))) {
+                    // New subscription abandoned (status active but never paid/started)
                     $sub->update(['status' => 'expired']);
                     if ($sub->masterAccount) {
                         $sub->masterAccount->releaseSlot();
@@ -516,7 +516,6 @@ class SubscriptionService
 
             $results[] = $summary;
         }
-
         return $results;
     }
 }

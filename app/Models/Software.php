@@ -69,8 +69,17 @@ class Software extends Model
         static::creating(function ($model) {
             if (empty($model->{$model->getKeyName()})) {
                 $model->{$model->getKeyName()} = (string) Str::uuid();
+                $model->slug = $model->createUniqueSlug();
             }
         });
+    }
+
+    protected function createUniqueSlug()
+    {
+        $slug = Str::slug($this->nama);
+        $count = static::where('slug', 'LIKE', "$slug%")->withTrashed()->count();
+
+        return $count ? "{$slug}-{$count}" : $slug;
     }
 
     /**

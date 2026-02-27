@@ -280,7 +280,7 @@ class SubscriptionPaymentService
                 'payment_method' => 'XENDIT', // Will be updated by webhook with specific method
                 'xendit_external_id' => $subscription->order_number,
                 'status' => 'pending',
-                'expired_at' => now()->addHours(24),
+                'expired_at' => now()->addHours((int) env('SLOT_RESERVATION_HOURS', 1)),
             ]);
 
             // Use SubscriptionXenditService to create invoice
@@ -299,6 +299,7 @@ class SubscriptionPaymentService
             // Update payment with invoice ID
             $payment->update([
                 'xendit_invoice_id' => $invoiceResult['invoice']['id'] ?? null,
+                'payment_channel' => $invoiceResult['payment_url'] ?? null,
             ]);
 
             Log::info('Xendit payment created', [
@@ -354,7 +355,7 @@ class SubscriptionPaymentService
                 'payment_method' => 'MIDTRANS', // Will be updated by callback with specific method
                 'xendit_external_id' => $subscription->order_number,
                 'status' => 'pending',
-                'expired_at' => now()->addHours(24),
+                'expired_at' => now()->addHours((int) env('SLOT_RESERVATION_HOURS', 1)),
             ]);
 
             // Use MidtransService to create transaction
@@ -375,6 +376,7 @@ class SubscriptionPaymentService
             $payment->update([
                 'midtrans_snap_token' => $transactionResult['snap_token'],
                 'midtrans_order_id' => $transactionResult['order_id'],
+                'payment_channel' => $transactionResult['redirect_url'] ?? null,
             ]);
 
             Log::info('Midtrans payment created', [

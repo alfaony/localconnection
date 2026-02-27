@@ -18,6 +18,7 @@
 @stop
 
 @section('content')
+@include('components.alert')
 <div class="custom-container">
     <div class="modern-card p-4">
         {{-- Filter --}}
