@@ -18,6 +18,7 @@
 @stop
 
 @section('content')
+@include('components.alert')
     <div class="row">
         <!-- Software Info Card -->
         <div class="col-md-4">

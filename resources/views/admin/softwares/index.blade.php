@@ -211,6 +211,7 @@ $(document).ready(function() {
     $('.btn-delete').on('click', function() {
         const id = $(this).data('id');
         const name = $(this).data('name');
+        const url = `{{ route('software.destroy', ':id') }}`.replace(':id', id);
         
         Swal.fire({
             title: 'Yakin ingin menghapus?',
@@ -224,7 +225,7 @@ $(document).ready(function() {
         }).then((result) => {
             if (result.isConfirmed) {
                 const form = $('#delete-form');
-                form.attr('action', `/admin/softwares/${id}`);
+                form.attr('action', url);
                 form.submit();
             }
         });
