@@ -19,6 +19,7 @@
 @stop
 
 @section('content')
+@include('components.alert')
     <!-- Subscription Info -->
     <div class="row">
         <div class="col-md-12">
