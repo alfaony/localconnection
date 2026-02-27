@@ -605,6 +605,15 @@ $(document).ready(function() {
         $('#input-selected-bank').val(checkedBank.val());
     }
 
+    // Pre-select package initially
+    // Check if query parameter selected_package exists
+    const urlParams = new URLSearchParams(window.location.search);
+    const selectedPackageId = urlParams.get('selected_package') || '{{ $subscription->package_id }}';
+    
+    // Auto-click the corresponding package card
+    $(`.pkg-select-btn[data-id="${selectedPackageId}"]`).closest('.package-card').click();
+
+
     // Submit
     $('#btn-submit-renew').on('click', function(e) {
         e.preventDefault();

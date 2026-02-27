@@ -48,6 +48,24 @@ class CustomerCheckoutController extends Controller
             : null;
         // ────────────────────────────────────────────────────────────────
 
+        // ── Detect existing active/expired subscription to prevent duplicate ──
+        $existingSubscription = CustomerSubscription::where('user_id', Auth::id())
+            ->where('software_id', $software->id)
+            ->whereIn('status', ['expired'])
+            ->latest()
+            ->first();
+
+        if ($existingSubscription) {
+            $msg = $existingSubscription->status === 'active' 
+                ? 'Anda sudah memiliki langganan aktif untuk software ini. Silakan lakukan perpanjangan dari sini.' 
+                : 'Anda memiliki riwayat langganan untuk software ini. Silakan lanjutkan dengan memperpanjang langganan tersebut.';
+            return redirect()->route('customer-subscription.renew', [
+                'subscription' => $existingSubscription->id,
+                'selected_package' => $packageId
+            ])->with('info', $msg);
+        }
+        // ────────────────────────────────────────────────────────────────
+
         // Check if slots available
         $hasAvailableSlots = $software->availableMasterAccounts->isNotEmpty();
 
@@ -117,6 +135,24 @@ class CustomerCheckoutController extends Controller
         }
         // ────────────────────────────────────────────────────────────────
 
+        // ── Detect existing active/expired subscription to prevent duplicate ──
+        $existingSubscription = CustomerSubscription::where('user_id', Auth::id())
+            ->where('software_id', $software->id)
+            ->whereIn('status', ['active', 'expired'])
+            ->latest()
+            ->first();
+
+        if ($existingSubscription) {
+            $msg = $existingSubscription->status === 'active' 
+                ? 'Anda sudah memiliki langganan aktif. Silakan lakukan perpanjangan.' 
+                : 'Anda sudah memiliki riwayat langganan. Silakan lanjutkan dengan perpanjangan.';
+            return redirect()->route('customer-subscription.renew', [
+                'subscription' => $existingSubscription->id,
+                'selected_package' => $packageId
+            ])->with('info', $msg);
+        }
+        // ────────────────────────────────────────────────────────────────
+
         // Initialize payment service
         $this->paymentService = new SubscriptionPaymentService($software->company_id);
 
@@ -156,6 +192,7 @@ class CustomerCheckoutController extends Controller
                         $package,
                         $validated['selected_bank']
                     );
+                    
                     break;
 
                 case 'xendit':

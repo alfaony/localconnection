@@ -8,6 +8,7 @@ use App\Models\SettingCompany;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
+use Carbon\Carbon;
 
 class SubscriptionPaymentService
 {
@@ -215,7 +216,7 @@ class SubscriptionPaymentService
                 'ppn_amount' => $ppnCalculation['ppn_amount'],
                 'payment_gateway' => 'manual',
                 'payment_method' => 'MANUAL_TRANSFER',
-                'xendit_external_id' => $subscription->order_number,
+                'xendit_external_id' => $subscription->order_number.'-MANUAL-'.Carbon::now()->format('YmdHis'),
                 'status' => 'pending',
                 'expired_at' => now()->addDays(3), // 3 days for manual transfer
             ]);
@@ -245,6 +246,8 @@ class SubscriptionPaymentService
             ];
 
         } catch (\Exception $e) {
+            dd($e);
+
             Log::error('Manual transfer payment failed', [
                 'company_id' => $this->companyId,
                 'subscription_id' => $subscription->id,
