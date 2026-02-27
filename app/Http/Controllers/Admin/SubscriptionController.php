@@ -503,9 +503,9 @@ class SubscriptionController extends Controller
                 }
                 
                 // Ensure user has the CUSTOMER_SOFTWARE role just in case
-                if (!$user->hasRole(RoleSchema::CUSTOMER_SOFTWARE)) {
-                    $user->assignRole(RoleSchema::CUSTOMER_SOFTWARE);
-                }
+                // if (!$user->hasRole(RoleSchema::CUSTOMER_SOFTWARE)) {
+                //     $user->assignRole(RoleSchema::CUSTOMER_SOFTWARE);
+                // }
                 
             } else {
                 // Determine if they used an existing email accidentally instead of existing radio

@@ -19,6 +19,7 @@
 @stop
 
 @section('content')
+@include('components.alert')
     <div class="card">
         <div class="card-header">
             <h3 class="card-title">Package List</h3>
@@ -83,7 +84,7 @@
                                             <i class="fas fa-edit"></i>
                                         </a>
                                         @endcanAccess
-                                        @canAccess('update', 'software_packages')
+                                        @canAccess('toggleStatus', 'software_packages')
                                         <button type="button" 
                                                 class="btn btn-sm btn-{{ $package->status == 'active' ? 'warning' : 'success' }} toggle-status mr-1 mb-1" 
                                                 data-id="{{ $package->id }}"
@@ -136,15 +137,6 @@
 
 <script>
 $(document).ready(function() {
-    // DataTable
-    $('#packages-table').DataTable({
-        "paging": false,
-        "searching": true,
-        "ordering": true,
-        "info": false,
-        "order": [[1, "asc"]]
-    });
-
     // Delete confirmation
     $('.delete-form').on('submit', function(e) {
         e.preventDefault();
@@ -169,10 +161,13 @@ $(document).ready(function() {
     // Toggle status
     $('.toggle-status').on('click', function() {
         const packageId = $(this).data('id');
+        const softwareId = "{{ $software->id }}";
         const button = $(this);
+        const url = "{{ route('software.packages.toggleStatus', ['software' => ':softwareId', 'package' => ':packageId']) }}".replace(':softwareId', softwareId).replace(':packageId', packageId);
+            
         
         $.ajax({
-            url: `/admin/softwares/{{ $software->id }}/packages/${packageId}/toggle-status`,
+            url: url,
             type: 'POST',
             data: {
                 _token: '{{ csrf_token() }}'

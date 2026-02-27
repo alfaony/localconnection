@@ -217,7 +217,7 @@
                         <li class="list-group-item">
                             <small class="text-muted">{{ $subscription->user->name }}</small>
                             <br>
-                            <strong>{{ $subscription->masterAccount->software->nama }}</strong>
+                            <strong>{{ $subscription->masterAccount->software->nama ?? ""}}</strong>
                             <br>
                             <small class="text-danger">
                                 <i class="far fa-clock"></i> 

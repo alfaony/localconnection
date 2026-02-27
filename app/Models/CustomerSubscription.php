@@ -92,7 +92,7 @@ class CustomerSubscription extends Model
      */
     public function user()
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(User::class)->withTrashed();
     }
 
     /**
@@ -108,7 +108,7 @@ class CustomerSubscription extends Model
      */
     public function package()
     {
-        return $this->belongsTo(SoftwarePackage::class, 'package_id');
+        return $this->belongsTo(SoftwarePackage::class, 'package_id')->withTrashed();
     }
 
     /**

@@ -57,7 +57,7 @@
                                 <div class="col-md-3 text-center">
                                     @if($subscription->masterAccount->software->logo)
                                     <img src="{{ Storage::url($subscription->masterAccount->software->logo) }}" 
-                                         alt="{{ $subscription->masterAccount->software->nama }}" 
+                                         alt="{{ $subscription->masterAccount->software->nama ?? ''}}" 
                                          class="img-fluid"
                                          style="max-height: 80px;">
                                     @else
@@ -65,7 +65,7 @@
                                     @endif
                                 </div>
                                 <div class="col-md-9">
-                                    <h5>{{ $subscription->masterAccount->software->nama }}</h5>
+                                    <h5>{{ $subscription->masterAccount->software->nama ?? ''}}</h5>
                                     <p class="text-muted mb-2">{{ $subscription->package->nama_paket }}</p>
                                     
                                     <div class="mb-2">

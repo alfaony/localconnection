@@ -21,7 +21,7 @@
     <div class="card">
         <div class="card-header d-flex justify-content-between align-items-center">
             <h3 class="card-title">Daftar Subscription</h3>
-            <div class="card-tools ms-auto">
+            <div class="card-tools ml-auto">
                 @canAccess('createMarketplace','subscriptions')
                 <a href="{{ route('subscription.create-marketplace') }}" class="btn btn-primary btn-sm">
                     <i class="fas fa-plus"></i> Create Marketplace Subscription
@@ -103,10 +103,10 @@
                             </td>
                             <td>
                                 <span class="badge badge-info">
-                                    {{ $subscription->masterAccount->software->nama }}
+                                    {{ $subscription->masterAccount->software->nama ?? ""}}
                                 </span>
                             </td>
-                            <td>{{ $subscription->package->nama_paket }}</td>
+                            <td>{{ $subscription->package->nama_paket ?? ""}}</td>
                             <td>Rp {{ number_format($subscription->harga_bayar, 0, ',', '.') }}</td>
                             <td>
                                 @if($subscription->tanggal_expired)

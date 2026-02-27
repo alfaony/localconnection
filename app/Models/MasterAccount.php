@@ -86,7 +86,7 @@ class MasterAccount extends Model
      */
     public function software()
     {
-        return $this->belongsTo(Software::class);
+        return $this->belongsTo(Software::class)->withTrashed();
     }
 
     /**

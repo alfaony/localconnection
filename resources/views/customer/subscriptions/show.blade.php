@@ -28,7 +28,7 @@
                     <div class="flex-shrink-0 mr-4">
                         @if($subscription->masterAccount->software->logo)
                         <img src="{{ s3_asset(true, 10, $subscription->masterAccount->software->logo) }}" 
-                             alt="{{ $subscription->masterAccount->software->nama }}" 
+                             alt="{{ $subscription->masterAccount->software->nama ?? ''}}" 
                              class="detail-logo m-0" style="width: 100px; height: 100px;">
                         @else
                         <div class="detail-logo-placeholder m-0" style="width: 100px; height: 100px; font-size: 36px;">
@@ -37,7 +37,7 @@
                         @endif
                     </div>
                     <div>
-                        <h2 class="detail-title mb-1">{{ $subscription->masterAccount->software->nama }}</h2>
+                        <h2 class="detail-title mb-1">{{ $subscription->masterAccount->software->nama ?? ''}}</h2>
                         <div class="text-muted mb-2 font-weight-bold">{{ $subscription->masterAccount->software->tipe_paket }}</div>
                         <span class="custom-badge status-info d-inline-block">{{ $subscription->package->nama_paket }}</span>
                     </div>

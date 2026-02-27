@@ -18,6 +18,7 @@
 @stop
 
 @section('content')
+@include('components.alert')
     <div class="card">
         <form action="{{ route('software.store') }}" method="POST" enctype="multipart/form-data">
             @csrf

@@ -54,7 +54,7 @@
                     <div class="sub-card-left">
                         @if($subscription->masterAccount->software->logo)
                         <img src="{{ s3_asset(true, 10, $subscription->masterAccount->software->logo) }}" 
-                             alt="{{ $subscription->masterAccount->software->nama }}" 
+                             alt="{{ $subscription->masterAccount->software->nama ?? ''}}" 
                              class="sub-logo">
                         @else
                         <div class="sub-logo-placeholder">
@@ -63,7 +63,7 @@
                         @endif
                     </div>
                     <div class="sub-card-right">
-                        <h5 class="sub-title">{{ $subscription->masterAccount->software->nama }}</h5>
+                        <h5 class="sub-title">{{ $subscription->masterAccount->software->nama ?? ''}}</h5>
                         <p class="sub-package">{{ $subscription->package->nama_paket }}</p>
                         
                         <div class="sub-badges mb-2">

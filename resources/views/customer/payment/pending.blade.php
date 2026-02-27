@@ -62,7 +62,7 @@
                                         <i class="fas fa-laptop-code text-muted me-2 mt-1"></i>
                                         <div>
                                             <small class="text-muted d-block">Software</small>
-                                            <strong class="text-dark">{{ $subscription->masterAccount->software->nama }}</strong>
+                                            <strong class="text-dark">{{ $subscription->masterAccount->software->nama ?? ""}}</strong>
                                         </div>
                                     </div>
                                 </div>

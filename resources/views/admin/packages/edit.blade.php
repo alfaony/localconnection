@@ -20,6 +20,7 @@
 @stop
 
 @section('content')
+@include('components.alert')
     <div class="card">
         <div class="card-header">
             <h3 class="card-title">Edit Package Form</h3>

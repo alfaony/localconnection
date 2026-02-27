@@ -26,7 +26,7 @@
                                     </tr>
                                     <tr>
                                         <th class="text-right">Software:</th>
-                                        <td class="text-left">{{ $subscription->masterAccount->software->nama }}</td>
+                                        <td class="text-left">{{ $subscription->masterAccount->software->nama ?? ""}}</td>
                                     </tr>
                                     <tr>
                                         <th class="text-right">Package:</th>

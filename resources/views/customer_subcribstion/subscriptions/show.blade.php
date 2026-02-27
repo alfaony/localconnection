@@ -30,7 +30,7 @@
                         <div class="col-md-3 text-center">
                             @if($subscription->masterAccount->software->logo)
                             <img src="{{ Storage::url($subscription->masterAccount->software->logo) }}" 
-                                 alt="{{ $subscription->masterAccount->software->nama }}" 
+                                 alt="{{ $subscription->masterAccount->software->nama ?? ''}}" 
                                  class="img-fluid"
                                  style="max-height: 120px;">
                             @else
@@ -38,7 +38,7 @@
                             @endif
                         </div>
                         <div class="col-md-9">
-                            <h3>{{ $subscription->masterAccount->software->nama }}</h3>
+                            <h3>{{ $subscription->masterAccount->software->nama ?? ''}}</h3>
                             <p class="text-muted">{{ $subscription->masterAccount->software->tipe_paket }}</p>
                             <span class="badge badge-info">{{ $subscription->package->nama_paket }}</span>
                         </div>

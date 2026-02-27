@@ -51,7 +51,7 @@
                             <th>Software</th>
                             <td>
                                 <span class="badge badge-info">
-                                    {{ $subscription->masterAccount->software->nama }} - {{ $subscription->masterAccount->software->tipe_paket }}
+                                    {{ $subscription->masterAccount->software->nama ?? ''}} - {{ $subscription->masterAccount->software->tipe_paket }}
                                 </span>
                             </td>
                         </tr>
