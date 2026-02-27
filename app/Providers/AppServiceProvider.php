@@ -204,10 +204,9 @@ class AppServiceProvider extends ServiceProvider
             $managementSettingMenu = ['setting_companies','roles','webhook_settings'];
 
             $managementSoftwareMenu = [
-                'software_dashboards','software','master_accounts','subscriptions',
+                'software_dashboards','software','master_accounts','subscriptions','',
                 'customer_software','customer_subscriptions'
             ];
-
 
             $menus = [
                 'homes' => [

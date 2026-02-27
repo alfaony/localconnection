@@ -17,9 +17,17 @@
 @stop
 
 @section('content')
+@include('components.alert')
     <div class="card">
-        <div class="card-header">
+        <div class="card-header d-flex justify-content-between align-items-center">
             <h3 class="card-title">Daftar Subscription</h3>
+            <div class="card-tools ms-auto">
+                @canAccess('createMarketplace','subscriptions')
+                <a href="{{ route('subscription.create-marketplace') }}" class="btn btn-primary btn-sm">
+                    <i class="fas fa-plus"></i> Create Marketplace Subscription
+                </a>
+                @endcanAccess
+            </div>
         </div>
         <div class="card-body">
             {{-- Filter --}}

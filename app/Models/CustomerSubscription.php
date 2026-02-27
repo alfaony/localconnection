@@ -74,7 +74,7 @@ class CustomerSubscription extends Model
             
             // Auto-generate order number if not provided
             if (empty($model->order_number)) {
-                $model->order_number = 'SUB-' . date('YmHis') . '-' . strtoupper(Str::random(4));
+                $model->order_number = 'BOS-' . date('YmHis') . '-' . strtoupper(Str::random(4));
             }
         });
     }

@@ -231,7 +231,7 @@ Route::prefix('meeting/public')->group(function () {
     Route::get('join/{slug}/{token}', [MeetingController::class, 'showPublicJoinForm'])->name('meeting.public.join');
     Route::post('join/{slug}/{token}', [MeetingController::class, 'submitPublicJoinForm'])->name('meeting.public.join.submit');
 });
-
+    
 Route::group(['middleware' => ['auth','web', 'ensure.xero.connected','role.permission']], function(){
   Route::get('xero',function(){
     
@@ -812,6 +812,9 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
     // subscription MANAGEMENT
     // ========================================================================
     Route::get('subscription', [AdminSubscriptionController::class, 'index'])->name('subscription.index');
+    Route::get('subscription/create-marketplace', [AdminSubscriptionController::class, 'createMarketplace'])->name('subscription.create-marketplace');
+    Route::post('subscription/store-marketplace', [AdminSubscriptionController::class, 'storeMarketplace'])->name('subscription.store-marketplace');
+    Route::post('subscription/check-user-email', [AdminSubscriptionController::class, 'checkUserEmail'])->name('subscription.check-user-email');
     Route::get('subscription/{subscription}', [AdminSubscriptionController::class, 'show'])->name('subscription.show');
     Route::get('subscription/{subscription}/edit-expiry', [AdminSubscriptionController::class, 'editExpiry'])->name('subscription.edit-expiry');
     Route::put('subscription/{subscription}/update-expiry', [AdminSubscriptionController::class, 'updateExpiry'])->name('subscription.update-expiry');

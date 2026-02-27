@@ -3,16 +3,25 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\DB;
+
 use App\Models\CustomerSubscription;
 use App\Models\Software;
 use App\Models\MasterAccount;
-use App\Services\SubscriptionService;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use Carbon\Carbon;
-use App\Helpers\InboxHelper;
-use App\Schemas\RoleSchema;
+use App\Models\Role;
 use App\Models\User;
+use App\Models\SoftwarePackage;
+use App\Models\SubscriptionPayment;
+use App\Services\SubscriptionService;
+use App\Schemas\RoleSchema;
+use App\Helpers\InboxHelper;
+
+use Carbon\Carbon;
+
 
 class SubscriptionController extends Controller
 {
@@ -409,5 +418,184 @@ class SubscriptionController extends Controller
         $inboxHelper = new InboxHelper();
         $inboxHelper->sent($to, $from, $message, $directUrl);
         return true;
+    }
+
+    /**
+     * Show form to create subscription manually from marketplace.
+     */
+    public function createMarketplace()
+    {
+        $companyId = Auth::user()->company_id;
+        
+        $softwares = Software::byCompany($companyId)
+            ->active()
+            ->with([
+                'packages' => function($q) {
+                    $q->where('status', true);
+                },
+                'availableMasterAccounts'
+            ])
+            ->get();
+            
+        return view('admin.subscriptions.create-marketplace', compact('softwares'));
+    }
+    /**
+     * Check if user email exists (AJAX)
+     */
+    public function checkUserEmail(Request $request)
+    {
+        $request->validate([
+            'email' => 'required|email'
+        ]);
+
+        $companyId = Auth::user()->company_id;
+        $user = User::where('company_id', $companyId)
+                    ->where('email', $request->email)
+                    ->first();
+
+        if ($user) {
+            return response()->json([
+                'exists' => true,
+                'name' => $user->name,
+                'phone' => $user->phone
+            ]);
+        }
+
+        return response()->json(['exists' => false]);
+    }
+
+    /**
+     * Store new subscription manually from marketplace.
+     */
+    public function storeMarketplace(Request $request)
+    {
+        $rules = [
+            'user_type' => 'required|in:new,existing',
+            'user_email' => 'required|string|email|max:255',
+            'software_id' => 'required|exists:softwares,id',
+            'package_id' => 'required|exists:software_packages,id',
+            'tanggal_mulai' => 'required|date',
+            'tanggal_expired' => 'required|date|after_or_equal:tanggal_mulai',
+            'order_reference' => 'required|string|max:255'
+        ];
+
+        if ($request->user_type === 'new') {
+            // Require user info for new users
+            $rules['user_name'] = 'required|string|max:255';
+            $rules['user_password'] = 'required|string|min:8';
+            $rules['user_phone'] = 'nullable|string|max:20';
+        }
+
+        $request->validate($rules);
+
+        try {
+            DB::beginTransaction();
+            $companyId = Auth::user()->company_id;
+
+            // 1. Find or create User
+            if ($request->user_type === 'existing') {
+                $user = User::where('company_id', $companyId)
+                            ->where('email', $request->user_email)
+                            ->first();
+                            
+                if (!$user) {
+                    return redirect()->back()->withInput()->with('error', 'User dengan email tersebut tidak ditemukan di perusahaan Anda.');
+                }
+                
+                // Ensure user has the CUSTOMER_SOFTWARE role just in case
+                if (!$user->hasRole(RoleSchema::CUSTOMER_SOFTWARE)) {
+                    $user->assignRole(RoleSchema::CUSTOMER_SOFTWARE);
+                }
+                
+            } else {
+                // Determine if they used an existing email accidentally instead of existing radio
+                $user = User::where('company_id', $companyId)->where('email', $request->user_email)->first();
+                
+                if (!$user) {
+                    $user = User::create([
+                        'company_id' => $companyId,
+                        'name' => $request->user_name,
+                        'email' => $request->user_email,
+                        'password' => Hash::make($request->user_password),
+                        'phone' => $request->user_phone,
+                        'role_id' => Role::where('name', RoleSchema::CUSTOMER_SOFTWARE)->first()->id,
+                        'email_verified_at' => now(), // Auto verify since admin created
+                    ]);
+                } else {
+                    // Update role if they already exist
+                    if (!$user->hasRole(RoleSchema::CUSTOMER_SOFTWARE)) {
+                        $user->assignRole(RoleSchema::CUSTOMER_SOFTWARE);
+                    }
+                }
+            }
+
+            // 2. Calculate Dates
+            $package = SoftwarePackage::findOrFail($request->package_id);
+            $tanggalMulai = $request->tanggal_mulai;
+            $tanggalExpired = $request->tanggal_expired;
+
+            // 3. Find available master account slot if needed (Auto assign if possible)
+            $availableMasterAccount = MasterAccount::byCompany($companyId)
+                ->where('software_id', $request->software_id)
+                ->where('status', 'active')
+                ->whereRaw('used_slots < max_slots')
+                ->first();
+
+            if (!$availableMasterAccount) {
+                return redirect()->back()->with('error', 'Tidak ada slot master account yang tersedia untuk software ini.');
+            }
+
+            $masterAccountId = $availableMasterAccount->id;
+
+            // 4. Create Subscription
+            $orderNumber = $request->order_reference ?: str_replace('SUB-', 'MPX-', 'SUB-' . date('YmHis') . '-' . strtoupper(\Illuminate\Support\Str::random(4)));
+
+            $subscription = CustomerSubscription::create([
+                'company_id' => $companyId,
+                'software_id' => $request->software_id,
+                'user_id' => $user->id,
+                'master_account_id' => $masterAccountId,
+                'package_id' => $request->package_id,
+                'order_number' => $orderNumber,
+                'harga_bayar' => $package->harga ?? 0,
+                'tanggal_mulai' => $tanggalMulai,
+                'tanggal_expired' => $tanggalExpired,
+                'status' => 'active',
+                'payment_status' => 'paid',
+            ]);
+
+            // 5. Reserve slot on MasterAccount if assigned
+            if ($availableMasterAccount) {
+                $availableMasterAccount->reserveSlot();
+            }   
+
+            // 6. Create Payment Record to keep relation complete
+            SubscriptionPayment::create([
+                'xendit_external_id' => $request->order_reference,
+                'company_id' => $user->company_id,
+                'subscription_id' => $subscription->id,
+                'payment_number' => 'PAY-' . date('YmHis') . '-' . strtoupper(\Illuminate\Support\Str::random(4)),
+                'amount' => $subscription->harga_bayar,
+                'payment_method' => 'marketplace',
+                'status' => 'paid',
+                'payment_details' => [
+                    'reference' => $request->order_reference,
+                    'tanggal_mulai' => $request->tanggal_mulai,
+                    'tanggal_expired' => $request->tanggal_expired,
+                    'notes' => 'Created via Admin Marketplace Form'
+                ],
+                'paid_at' => now(),
+            ]);
+
+            DB::commit();
+
+            return redirect()->route('subscription.show', $subscription->id)->with('success', 'Marketplace Subscription created successfully.');
+        } catch (\Exception $e) {
+            // dd($e);
+            
+            DB::rollBack();
+            \Log::error('Marketplace Subscription creation failed: ' . $e->getMessage());
+            return redirect()->back()->withInput()->with('error', 'Failed to create subscription: ' . $e->getMessage());
+        }
     }
 }
