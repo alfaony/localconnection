@@ -8,6 +8,7 @@ use App\Models\Meeting;
 use App\Models\Project;
 use App\Models\SettingCompany;
 use App\Models\PassChecking;
+use App\Models\MeetingRecurrence;
 
 use Google\Service\Calendar;
 use Illuminate\Http\Request;
@@ -144,7 +145,13 @@ class MeetingController extends Controller
             'participant.*' => 'required|email',
             'attachment_link' => 'nullable|url',
             'attachment' => 'nullable|file|max:2048',
-            'project_id' => 'nullable|exists:projects,id'
+            'project_id' => 'nullable|exists:projects,id',
+            'is_recurring' => 'nullable|boolean',
+            'recurring_type' => 'nullable|string|in:daily,monthly,yearly',
+            'recurring_daily_days' => 'nullable|array',
+            'recurring_monthly_date' => 'nullable|integer|min:1|max:31',
+            'recurring_yearly_month' => 'nullable|integer|min:1|max:12',
+            'recurring_yearly_date' => 'nullable|integer|min:1|max:31',
         ]);
 
         DB::beginTransaction(); 
@@ -159,6 +166,18 @@ class MeetingController extends Controller
             }
     
             $meeting = Meeting::create($validated);
+            
+            if ($request->is_recurring) {
+                MeetingRecurrence::create([
+                    'meeting_id' => $meeting->id,
+                    'recurring_type' => $request->recurring_type,
+                    'recurring_daily_days' => $request->recurring_daily_days,
+                    'recurring_monthly_date' => $request->recurring_monthly_date,
+                    'recurring_yearly_month' => $request->recurring_yearly_month,
+                    'recurring_yearly_date' => $request->recurring_yearly_date,
+                    'is_active' => true,
+                ]);
+            }
     
             $participantIds = [];
             $externalEmails = [];
@@ -214,7 +233,7 @@ class MeetingController extends Controller
             return redirect()->route('meeting.show', $meeting->slug)->with('store', true);
         } catch (\Throwable $th) {
             //throw $th;
-            // dd($th);
+            dd($th);
             DB::rollBack();
             Log::error('Error in store method: ' . $th->getMessage());
             return redirect()->route('meeting.index')->with('error', $th->getMessage());
@@ -280,6 +299,12 @@ class MeetingController extends Controller
             'attachment_link' => 'nullable|url',
             'attachment' => 'nullable|file|max:2048',
             'project_id' => 'nullable|exists:projects,id',
+            'is_recurring' => 'nullable|boolean',
+            'recurring_type' => 'nullable|string|in:daily,monthly,yearly',
+            'recurring_daily_days' => 'nullable|array',
+            'recurring_monthly_date' => 'nullable|integer|min:1|max:31',
+            'recurring_yearly_month' => 'nullable|integer|min:1|max:12',
+            'recurring_yearly_date' => 'nullable|integer|min:1|max:31',
         ]);
         $meeting = Meeting::byCompany(Auth::user()->company_id)->where('slug', $slug)->firstOrFail();
         
@@ -299,6 +324,39 @@ class MeetingController extends Controller
             }
 
             $meeting->update($validated);
+            
+            $recurrence = MeetingRecurrence::where('meeting_id', $meeting->id)->first();
+            
+            // "ketika edit ubah recurring ke daily maka secara otomatis recurring tidak berjalan kembali"
+            // We interpret this as: if the user unchecks `is_recurring` (meaning they want to cancel recurring)
+            // or if they change the base logic where they actually remove recurrence,
+            // we will set is_active to false.
+            if ($request->is_recurring) {
+                if ($recurrence) {
+                    $recurrence->update([
+                        'recurring_type' => $request->recurring_type,
+                        'recurring_daily_days' => $request->recurring_daily_days,
+                        'recurring_monthly_date' => $request->recurring_monthly_date,
+                        'recurring_yearly_month' => $request->recurring_yearly_month,
+                        'recurring_yearly_date' => $request->recurring_yearly_date,
+                        'is_active' => true,
+                    ]);
+                } else {
+                    MeetingRecurrence::create([
+                        'meeting_id' => $meeting->id,
+                        'recurring_type' => $request->recurring_type,
+                        'recurring_daily_days' => $request->recurring_daily_days,
+                        'recurring_monthly_date' => $request->recurring_monthly_date,
+                        'recurring_yearly_month' => $request->recurring_yearly_month,
+                        'recurring_yearly_date' => $request->recurring_yearly_date,
+                        'is_active' => true,
+                    ]);
+                }
+            } else {
+                if ($recurrence) {
+                    $recurrence->update(['is_active' => false]);
+                }
+            }
 
 
             $participantIds = [];

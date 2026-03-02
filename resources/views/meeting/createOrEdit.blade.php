@@ -41,6 +41,75 @@
                         <x-adminlte-input name="end_time" label="Jam Berakhir" type="time" value="{{ old('end_time', $meeting->end_time ?? '') }}" required />
                     </div>
                 </div>
+
+                @php
+                    $isRecurring = old('is_recurring', isset($meeting) && $meeting->meetingRecurrence && $meeting->meetingRecurrence->is_active ? 1 : 0);
+                    $recType = old('recurring_type', $meeting->meetingRecurrence->recurring_type ?? 'daily');
+                    $recDays = old('recurring_daily_days', $meeting->meetingRecurrence->recurring_daily_days ?? []);
+                    if (!is_array($recDays)) {
+                        $recDays = [];
+                    }
+                    $recMonthDate = old('recurring_monthly_date', $meeting->meetingRecurrence->recurring_monthly_date ?? '');
+                    $recYearMonth = old('recurring_yearly_month', $meeting->meetingRecurrence->recurring_yearly_month ?? '');
+                    $recYearDate = old('recurring_yearly_date', $meeting->meetingRecurrence->recurring_yearly_date ?? '');
+                @endphp
+                <hr>
+                <div class="form-group mb-0">
+                    <div class="custom-control custom-checkbox">
+                        <input class="custom-control-input" type="checkbox" id="is_recurring" name="is_recurring" value="1" {{ $isRecurring ? 'checked' : '' }}>
+                        <label for="is_recurring" class="custom-control-label">Jadikan Rapat Rutin / Berulang</label>
+                    </div>
+                </div>
+                
+                <div id="recurring_options" style="display: {{ $isRecurring ? 'block' : 'none' }}; margin-top: 15px;">
+                    <x-adminlte-select name="recurring_type" label="Tipe Pengulangan" id="recurring_type">
+                        <option value="daily" {{ $recType == 'daily' ? 'selected' : '' }}>Harian</option>
+                        <option value="monthly" {{ $recType == 'monthly' ? 'selected' : '' }}>Bulanan</option>
+                        <option value="yearly" {{ $recType == 'yearly' ? 'selected' : '' }}>Tahunan</option>
+                    </x-adminlte-select>
+
+                    <div id="recurring_daily_options" style="display: {{ $recType == 'daily' ? 'block' : 'none' }};">
+                        <label>Pilih Hari (Kosongkan jika setiap hari)</label>
+                        <div class="d-flex flex-wrap gap-2">
+                            @foreach(['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'] as $day)
+                                <div class="custom-control custom-checkbox mr-3">
+                                    <input class="custom-control-input" type="checkbox" id="day_{{ $day }}" name="recurring_daily_days[]" value="{{ $day }}" {{ in_array($day, $recDays) ? 'checked' : '' }}>
+                                    <label for="day_{{ $day }}" class="custom-control-label">{{ $day }}</label>
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+
+                    <div id="recurring_monthly_options" style="display: {{ $recType == 'monthly' ? 'block' : 'none' }};">
+                        <x-adminlte-select name="recurring_monthly_date" label="Tanggal Tiap Bulan">
+                            <option value="">-- Pilih Tanggal --</option>
+                            @for($i=1; $i<=31; $i++)
+                                <option value="{{ $i }}" {{ $recMonthDate == $i ? 'selected' : '' }}>{{ $i }}</option>
+                            @endfor
+                        </x-adminlte-select>
+                    </div>
+
+                    <div id="recurring_yearly_options" style="display: {{ $recType == 'yearly' ? 'block' : 'none' }};">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <x-adminlte-select name="recurring_yearly_month" label="Bulan">
+                                    <option value="">-- Pilih Bulan --</option>
+                                    @foreach([1=>'Januari', 2=>'Februari', 3=>'Maret', 4=>'April', 5=>'Mei', 6=>'Juni', 7=>'Juli', 8=>'Agustus', 9=>'September', 10=>'Oktober', 11=>'November', 12=>'Desember'] as $m => $mName)
+                                        <option value="{{ $m }}" {{ $recYearMonth == $m ? 'selected' : '' }}>{{ $mName }}</option>
+                                    @endforeach
+                                </x-adminlte-select>
+                            </div>
+                            <div class="col-md-6">
+                                <x-adminlte-select name="recurring_yearly_date" label="Tanggal">
+                                    <option value="">-- Pilih Tanggal --</option>
+                                    @for($i=1; $i<=31; $i++)
+                                        <option value="{{ $i }}" {{ $recYearDate == $i ? 'selected' : '' }}>{{ $i }}</option>
+                                    @endfor
+                                </x-adminlte-select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </x-adminlte-card>
 
             {{-- Peserta --}}
@@ -184,6 +253,27 @@
                 $('#google_meet_link').val('');
             }
         }
+
+        // Recurring logic
+        $('#is_recurring').change(function() {
+            if ($(this).is(':checked')) {
+                $('#recurring_options').show();
+            } else {
+                $('#recurring_options').hide();
+            }
+        });
+
+        $('#recurring_type').change(function() {
+            var type = $(this).val();
+            $('#recurring_daily_options, #recurring_monthly_options, #recurring_yearly_options').hide();
+            if (type === 'daily') {
+                $('#recurring_daily_options').show();
+            } else if (type === 'monthly') {
+                $('#recurring_monthly_options').show();
+            } else if (type === 'yearly') {
+                $('#recurring_yearly_options').show();
+            }
+        }).trigger('change');
 
         $('#meeting_type').change(toggleFields).trigger('change');
 
