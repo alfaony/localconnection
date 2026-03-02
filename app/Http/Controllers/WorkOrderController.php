@@ -133,7 +133,7 @@ class WorkOrderController extends Controller
             //throw $th;
             DB::rollback();
             Log::error($th);
-            // dd($th);
+            dd($th);
             return redirect()->to(route('work-order.index'))->with('store',false);
         }
     }
