@@ -13,13 +13,13 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::table('quote_products', function (Blueprint $table) {
-            $table->unsignedBigInteger('price_sell')->nullable()->change();
-        });
+        // Schema::table('quote_products', function (Blueprint $table) {
+        //     $table->unsignedBigInteger('price_sell')->nullable()->change();
+        // });
 
-        Schema::table('invoice_products', function (Blueprint $table) {
-            $table->unsignedBigInteger('price_sell')->nullable()->change();
-        });
+        // Schema::table('invoice_products', function (Blueprint $table) {
+        //     $table->unsignedBigInteger('price_sell')->nullable()->change();
+        // });
     }
 
     /**
@@ -33,8 +33,8 @@ return new class extends Migration
             $table->integer('price_sell')->nullable()->change();
         });
 
-        Schema::table('invoice_products', function (Blueprint $table) {
-            $table->integer('price_sell')->nullable()->change();
-        });
+        // Schema::table('invoice_products', function (Blueprint $table) {
+        //     $table->integer('price_sell')->nullable()->change();
+        // });
     }
 };
