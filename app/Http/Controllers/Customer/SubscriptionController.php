@@ -360,8 +360,8 @@ class SubscriptionController extends Controller
         }
 
         // Batalkan pembayaran lama
-        dd("here");
-        dd($payment->payment_channel);
+        // dd("here");
+        // dd($payment->payment_channel);
         $payment->update(['status' => 'expired', 'expired_at' => now()]);
 
         // Selalu redirect ke retry payment di checkout untuk membuat payment url baru
