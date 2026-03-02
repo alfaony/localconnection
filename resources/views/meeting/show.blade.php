@@ -41,7 +41,9 @@
                                     @php
                                         $recModel = $meeting->meetingRecurrence ?? App\Models\MeetingRecurrence::find($meeting->meeting_recurrence_id);
                                         $recText = '';
-                                        if($recModel) {
+                                        $showRecurrence = false;
+                                        if($recModel && $recModel->is_active) {
+                                            $showRecurrence = true;
                                             $typeMap = ['daily' => 'Harian', 'monthly' => 'Bulanan', 'yearly' => 'Tahunan'];
                                             $recText = 'Rutin ' . ($typeMap[$recModel->recurring_type] ?? '');
                                             if($recModel->recurring_type == 'daily' && !empty($recModel->recurring_daily_days)) {
@@ -58,7 +60,7 @@
                                         <i class="fas fa-tag mr-1 text-muted"></i>
                                         {{ $meeting->meeting_type == 'offline' ? 'Rapat Offline' : 'Rapat Online' }}
                                         
-                                        @if($recModel)
+                                        @if($showRecurrence)
                                             <span class="badge bg-secondary ml-2"><i class="fas fa-sync-alt"></i> {{ $recText }}</span>
                                         @endif
                                     </span>

@@ -53,8 +53,16 @@
                                         {{ \Carbon\Carbon::parse($meeting->end_time)->format('H:i') }}</td>
                                     <td>
                                         {!! $meeting->meeting_type_badge !!}
-                                        @if($meeting->meetingRecurrence || $meeting->meeting_recurrence_id)
-                                            <span class="badge bg-secondary ml-1" title="Rapat Berulang"><i class="fas fa-sync-alt"></i> Rutin</span>
+                                        @php
+                                            $isActiveRecurrence = false;
+                                            if ($meeting->meetingRecurrence && $meeting->meetingRecurrence->is_active) {
+                                                $isActiveRecurrence = true;
+                                            } elseif ($meeting->generatedFromRecurrence && $meeting->generatedFromRecurrence->is_active) {
+                                                $isActiveRecurrence = true;
+                                            }
+                                        @endphp
+                                        @if($isActiveRecurrence)
+                                            <span class="badge bg-secondary ml-1" title="Rapat Berulang Aktif"><i class="fas fa-sync-alt"></i> Rutin</span>
                                         @endif
                                     </td>
                                     <td>
