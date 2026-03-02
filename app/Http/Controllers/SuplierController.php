@@ -110,7 +110,7 @@ class SuplierController extends Controller
             return redirect()->to(route('suplier.index'))->with('store',true);
         } catch (\Throwable $th) {
             //throw $th;
-            dd($th);
+            // dd($th);
             Log::error($th);
             DB::rollback();
             return redirect()->to(route('suplier.index'))->with('store',false);
