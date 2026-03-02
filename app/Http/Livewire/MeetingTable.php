@@ -40,6 +40,7 @@ class MeetingTable extends Component
     {
         return view('livewire.meeting-table', [
             'meetings' => Meeting::query()
+                ->with(['meetingRecurrence', 'generatedFromRecurrence'])
                 ->where(function($query) {
                     $query->where('meeting_name', 'LIKE', '%'.$this->search.'%')
                         ->orWhere('meeting_agenda', 'LIKE', '%'.$this->search.'%');

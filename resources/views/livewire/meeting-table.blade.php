@@ -53,6 +53,9 @@
                                         {{ \Carbon\Carbon::parse($meeting->end_time)->format('H:i') }}</td>
                                     <td>
                                         {!! $meeting->meeting_type_badge !!}
+                                        @if($meeting->meetingRecurrence || $meeting->meeting_recurrence_id)
+                                            <span class="badge bg-secondary ml-1" title="Rapat Berulang"><i class="fas fa-sync-alt"></i> Rutin</span>
+                                        @endif
                                     </td>
                                     <td>
                                         <div class="btn-group" role="group">

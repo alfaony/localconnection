@@ -43,15 +43,19 @@
                 </div>
 
                 @php
-                    $isRecurring = old('is_recurring', isset($meeting) && $meeting->meetingRecurrence && $meeting->meetingRecurrence->is_active ? 1 : 0);
-                    $recType = old('recurring_type', $meeting->meetingRecurrence->recurring_type ?? 'daily');
-                    $recDays = old('recurring_daily_days', $meeting->meetingRecurrence->recurring_daily_days ?? []);
+                    $recModel = null;
+                    if (isset($meeting)) {
+                        $recModel = $meeting->meetingRecurrence ?? App\Models\MeetingRecurrence::find($meeting->meeting_recurrence_id);
+                    }
+                    $isRecurring = old('is_recurring', $recModel && $recModel->is_active ? 1 : 0);
+                    $recType = old('recurring_type', $recModel->recurring_type ?? 'daily');
+                    $recDays = old('recurring_daily_days', $recModel->recurring_daily_days ?? []);
                     if (!is_array($recDays)) {
                         $recDays = [];
                     }
-                    $recMonthDate = old('recurring_monthly_date', $meeting->meetingRecurrence->recurring_monthly_date ?? '');
-                    $recYearMonth = old('recurring_yearly_month', $meeting->meetingRecurrence->recurring_yearly_month ?? '');
-                    $recYearDate = old('recurring_yearly_date', $meeting->meetingRecurrence->recurring_yearly_date ?? '');
+                    $recMonthDate = old('recurring_monthly_date', $recModel->recurring_monthly_date ?? '');
+                    $recYearMonth = old('recurring_yearly_month', $recModel->recurring_yearly_month ?? '');
+                    $recYearDate = old('recurring_yearly_date', $recModel->recurring_yearly_date ?? '');
                 @endphp
                 <hr>
                 <div class="form-group mb-0">

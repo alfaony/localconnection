@@ -10,8 +10,8 @@ use Carbon\Carbon;
 
 class GenerateRecurringMeetings extends Command
 {
-    protected $signature = 'recurring:generate-meetings';
-    protected $description = 'Generate daily, monthly, and yearly recurring meetings for today';
+    protected $signature = 'recurring:generate-meetings {slug?} {--date=} {--simulate} {--test}';
+    protected $description = 'Generate daily, monthly, and yearly recurring meetings for today or simulate/test by slug';
 
     public function __construct()
     {
@@ -20,8 +20,15 @@ class GenerateRecurringMeetings extends Command
 
     public function handle()
     {
-        $today = Carbon::today();
+        $slug = $this->argument('slug');
+        $dateOpt = $this->option('date');
+        $isSimulation = $this->option('simulate');
+        $isTest = $this->option('test');
+
+        $today = $dateOpt ? Carbon::parse($dateOpt) : Carbon::today();
         
+        $this->info("Menjalankan scheduler untuk tanggal: " . $today->toDateString());
+
         // 1. Cek jika hari ini adalah hari libur nasional
         if ($this->isNationalHoliday($today)) {
             $this->info("Hari ini adalah hari libur nasional. Recurring meeting tidak di-generate.");
@@ -29,7 +36,16 @@ class GenerateRecurringMeetings extends Command
         }
 
         // 2. Ambil semua recurrences yang aktif
-        $activeRecurrences = MeetingRecurrence::where('is_active', true)->with('templateMeeting')->get();
+        $query = MeetingRecurrence::where('is_active', true)->with('templateMeeting');
+        
+        if ($slug) {
+            $query->whereHas('templateMeeting', function ($q) use ($slug) {
+                $q->where('slug', $slug);
+            });
+            $this->info("Memfilter data untuk simulasi dengan slug meeting: {$slug}");
+        }
+
+        $activeRecurrences = $query->get();
 
         $generatedCount = 0;
 
@@ -74,6 +90,12 @@ class GenerateRecurringMeetings extends Command
                     ->exists();
 
                 if (!$alreadyGenerated) {
+                    if ($isSimulation) {
+                        $this->info("[SIMULASI] Meeting '{$template->meeting_name}' akan di-generate untuk tanggal {$today->toDateString()}.");
+                        $generatedCount++;
+                        continue;
+                    }
+
                     $newMeeting = $template->replicate();
                     // Set parameter baru
                     $newMeeting->meeting_name = $template->meeting_name; // trigger slug regenerasi jika butuh
@@ -89,7 +111,7 @@ class GenerateRecurringMeetings extends Command
                     }
 
                     $newMeeting->meeting_recurrence_id = $recurrence->id;
-                    $newMeeting->status = 'Pending'; // Override status jika perlu
+                    $newMeeting->status = 'scheduled'; // Override status
                     $newMeeting->save();
 
                     // Copy partisipan
@@ -104,7 +126,19 @@ class GenerateRecurringMeetings extends Command
                         }
                     }
 
+                    if ($isTest) {
+                        $this->info("🧪 [TEST] Meeting '{$template->meeting_name}' telah BENAR-BENAR dibuat di database untuk tanggal {$today->toDateString()}.");
+                    } else {
+                        $this->info("✅ Meeting '{$template->meeting_name}' berhasil di-generate untuk tanggal {$today->toDateString()}.");
+                    }
+                    
                     $generatedCount++;
+                } else {
+                    $this->info("⚠ Meeting '{$template->meeting_name}' sudah ada untuk tanggal {$today->toDateString()}. (Skip)");
+                }
+            } else {
+                if ($slug) {
+                    $this->info("❌ Meeting '{$template->meeting_name}' tidak masuk kriteria jadwal pada tanggal {$today->toDateString()}.");
                 }
             }
         }

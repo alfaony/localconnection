@@ -38,9 +38,29 @@
                             <div class="info-box bg-light mb-4 p-3 border rounded">
                                 <div class="info-box-content">
                                     <h3 class="info-box-text font-weight-bold text-primary mb-1">{{ $meeting->meeting_name }}</h3>
-                                    <span class="info-box-number mb-2">
+                                    @php
+                                        $recModel = $meeting->meetingRecurrence ?? App\Models\MeetingRecurrence::find($meeting->meeting_recurrence_id);
+                                        $recText = '';
+                                        if($recModel) {
+                                            $typeMap = ['daily' => 'Harian', 'monthly' => 'Bulanan', 'yearly' => 'Tahunan'];
+                                            $recText = 'Rutin ' . ($typeMap[$recModel->recurring_type] ?? '');
+                                            if($recModel->recurring_type == 'daily' && !empty($recModel->recurring_daily_days)) {
+                                                $recText .= ' (' . implode(', ', $recModel->recurring_daily_days) . ')';
+                                            } elseif ($recModel->recurring_type == 'monthly' && $recModel->recurring_monthly_date) {
+                                                $recText .= ' (Tanggal ' . $recModel->recurring_monthly_date . ')';
+                                            } elseif ($recModel->recurring_type == 'yearly' && $recModel->recurring_yearly_month && $recModel->recurring_yearly_date) {
+                                                $months = [1=>'Januari',2=>'Februari',3=>'Maret',4=>'April',5=>'Mei',6=>'Juni',7=>'Juli',8=>'Agustus',9=>'September',10=>'Oktober',11=>'November',12=>'Desember'];
+                                                $recText .= ' (Setiap ' . $recModel->recurring_yearly_date . ' ' . ($months[$recModel->recurring_yearly_month] ?? '') . ')';
+                                            }
+                                        }
+                                    @endphp
+                                    <span class="info-box-number mb-2 d-inline-block">
                                         <i class="fas fa-tag mr-1 text-muted"></i>
                                         {{ $meeting->meeting_type == 'offline' ? 'Rapat Offline' : 'Rapat Online' }}
+                                        
+                                        @if($recModel)
+                                            <span class="badge bg-secondary ml-2"><i class="fas fa-sync-alt"></i> {{ $recText }}</span>
+                                        @endif
                                     </span>
                                     <div class="text-muted" style="max-height: 50vh; overflow-y: auto;">
                                         <i class="fas fa-clipboard-list mr-1"></i>

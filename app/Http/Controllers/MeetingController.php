@@ -329,15 +329,16 @@ class MeetingController extends Controller
 
             $meeting->update($validated);
             
-            $recurrence = MeetingRecurrence::where('meeting_id', $meeting->id)->first();
+            // Cek apakah ada recurrence asli atau recurrence dari parent meeting-nya
+            $recurrence = MeetingRecurrence::where('meeting_id', $meeting->id)
+                ->orWhere('id', $meeting->meeting_recurrence_id)
+                ->first();
             
-            // "ketika edit ubah recurring ke daily maka secara otomatis recurring tidak berjalan kembali"
-            // We interpret this as: if the user unchecks `is_recurring` (meaning they want to cancel recurring)
-            // or if they change the base logic where they actually remove recurrence,
-            // we will set is_active to false.
+            // Konsep Master Berpindah (Shiftable Master)
             if ($request->is_recurring) {
                 if ($recurrence) {
                     $recurrence->update([
+                        'meeting_id' => $meeting->id, // meeting ini jadi master baru untuk generasi masa depan!
                         'recurring_type' => $request->recurring_type,
                         'recurring_daily_days' => $request->recurring_daily_days,
                         'recurring_monthly_date' => $request->recurring_monthly_date,
