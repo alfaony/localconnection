@@ -197,7 +197,7 @@ class Kernel extends ConsoleKernel
         }
 
         // Run Scheduler
-        $schedule->command('schedule:employee-checkin')->dailyAt('07:00');
+        $schedule->command('schedule:employee-checkin')->dailyAt('04:00');
 
         $employeeCheckings = EmployeeChecking::where('is_active', true)
             ->where('is_dayoff', false)
