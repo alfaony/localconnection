@@ -33,8 +33,8 @@ return new class extends Migration
             $table->integer('price_sell')->nullable()->change();
         });
 
-        Schema::table('invoice_products', function (Blueprint $table) {
-            $table->integer('price_sell')->nullable()->change();
-        });
+        // Schema::table('invoice_products', function (Blueprint $table) {
+        //     $table->integer('price_sell')->nullable()->change();
+        // });
     }
 };
