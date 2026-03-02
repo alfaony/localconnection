@@ -104,10 +104,10 @@ class SubscriptionController extends Controller
         // Check for existing pending payments
         $pendingPayment = $subscription->payments()->whereIn('status', ['pending', 'unpaid'])->latest()->first();
 
-        // Check slot availability (if subscription expired, and masterAccount has no slots, we need to find another)
+        // Check slot availability (if subscription expired, or masterAccount is inactive/full)
         $hasFreeSlot = true;
-        if ($subscription->status === 'expired') {
-            $masterAccount = $subscription->masterAccount;
+        $masterAccount = $subscription->masterAccount;
+        if ($subscription->status === 'expired' || !$masterAccount || $masterAccount->status !== 'active') {
             if (!$masterAccount || !$masterAccount->hasSlotsAvailable()) {
                 $hasFreeSlot = $this->subscriptionService->checkSlotsAvailability(
                     $softwareId,
@@ -169,9 +169,9 @@ class SubscriptionController extends Controller
                 }
             }
 
-            // If subscription is expired, must re-check slot availability
+            // If subscription is expired or master account is inactive, must re-check slot availability
             // (slot was released when it expired — cannot assume it's still available)
-            if ($subscription->status === 'expired') {
+            if ($subscription->status === 'expired' || !$subscription->masterAccount || $subscription->masterAccount->status !== 'active') {
                 // Refresh master account in case it changed
                 $subscription->load('masterAccount');
                 $masterAccount = $subscription->masterAccount;
@@ -216,7 +216,7 @@ class SubscriptionController extends Controller
                 DB::commit();
 
                 return redirect()
-                    ->route('customer-subscription.show', $subscription->id)
+                    ->route('customer-checkout.payment.pending', ['order' => $subscription->order_number])
                     ->with('success', 'Pesanan perpanjangan berhasil dibuat! Silakan transfer ke rekening yang tersedia, lalu upload bukti pembayaran.');
 
             } elseif ($gateway === 'xendit') {
