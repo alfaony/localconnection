@@ -56,6 +56,7 @@ return [
 
     'checking_setting' => 
     [
+        'times_per_day' => env('CHECKIN_TIMES_PER_DAY', 4),
         'duration' => env('CHECKIN_DURATION', 120),
         'duration_minutes' => env('CHECKIN_DURATION_MINUTES', 2),
         'times' => env('CHECKIN_TIME', 10),
@@ -88,6 +89,34 @@ return [
     'google' =>
     [
         'redirect_uri' => env('GOOGLE_REDIRECT_URI', 'http://localhost:8000/google/oauth/callback'),
+        'redirect_url_public' => env('GOOGLE_REDIRECT_URI_PUBLIC', 'http://localhost:8000/meeting/public/oauth/callback'),
         'max_description_length' => env('GOOGLE_MAX_DESCRIPTION_LENGTH', 8000),
+    ],
+    
+    'internet_custom' =>
+    [
+        'end_billing_of_days' => env('END_BILLING_OF_DAYS', 5),
+        'max_billing_date' => env('MAX_BILLING_DATE', 20), // Jika > 20, normalisasi ke tanggal 1
+        'default_tax_rate' => env('DEFAULT_TAX_RATE', 11), // Default PPN 11%
+        'tutorial_payment' => env('TUTORIAL_PAYMENT', null),
+    ],
+    'used_laptop_charge' =>
+    [
+        'expedition_charge' => env('USED_LAPTOP_EXPEDITION_CHARGE', 60000),
+        'totebag_charge' => env('USED_LAPTOP_TOTE_BAG_CHARGE', 46421),
+        'totebag_cover_charge' => env('USED_LAPTOP_TOTE_BAG_COVER_CHARGE', 3800),
+    ],
+
+    'keloola_pay' =>
+    [
+        'base_url' => env('KELOOLOA_PAY_BASE_URL', 'https://pay.keloola.xyz'),
+    ],
+    'n8n' => [
+        'base_url' => env('N8N_BASE_URL', 'https://n8n.keloola.xyz'),
+        'ktp_webhook_path' => env('N8N_KTP_WEBHOOK_PATH', '/webhook-test/e-kyc-hikari'),
+    ],
+
+    'openai' => [
+        'nominal_threshold' => env('KELOOLA_OPENAI_NOMINAL_TRAHOLD', 100000000),
     ],
 ];

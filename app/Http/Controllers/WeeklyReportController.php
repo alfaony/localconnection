@@ -75,7 +75,7 @@ class WeeklyReportController extends Controller
         $path = null;
         if ($request->hasFile('file')) 
         {
-            $path = $request->file('file')->store('weekly_reports', 'public');
+            $path = $request->file('file')->store('weekly_reports');
         }
 
         WeeklyReport::create([
@@ -151,7 +151,7 @@ class WeeklyReportController extends Controller
         $path = $weeklyReport->file;
         if ($request->hasFile('file')) 
         {
-            $path = $request->file('file')->store('weekly_reports', 'public');
+            $path = $request->file('file')->store('weekly_reports');
         }
 
         $weeklyReport->update([

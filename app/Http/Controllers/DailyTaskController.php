@@ -38,6 +38,8 @@ use App\Models\SettingCompany;
 use App\Models\Division;
 use App\Models\DivisionQuotaLock;
 use App\Models\RecurringRule;
+use App\Models\Project;
+use App\Models\DirectPoint;
 
 use App\Helpers\InboxHelper;
 use Ramsey\Uuid\Uuid;
@@ -102,14 +104,6 @@ class DailyTaskController extends Controller
                     $q->where('name', $userFilter);
                 });
             }
-            // else
-            // {
-            //     $query->where(function($query) 
-            //     {
-            //         $query->where('assignment_user_id',Auth::user()->id)->orWhere('user_id',Auth::user()->id);
-            //     }
-            //     );
-            // }
         }
         
         else
@@ -120,9 +114,28 @@ class DailyTaskController extends Controller
         // Filter berdasarkan status
         if ($statusFilter) 
         {
-            $query->whereHas('taskStatus', function ($q) use ($statusFilter) {
-                $q->where('name', $statusFilter);
-            });
+            // Check if status is 'complete_by_date' (manual injection)
+            if ($statusFilter === 'complete_by_date') 
+            {
+                // Filter by completion date from status records
+                $query->whereHas('statusRecords', function ($q) use ($start_date, $end_date) {
+                    $q->whereHas('taskStatus', function ($sq) {
+                        $sq->where('name', ParamSchema::COMPLATE);
+                    });
+                    
+                    // Apply date range to completion date if provided
+                    if ($start_date && $end_date) {
+                        $q->whereBetween('date', [$start_date, $end_date]);
+                    }
+                });
+            } 
+            else 
+            {
+                // Original status filter logic
+                $query->whereHas('taskStatus', function ($q) use ($statusFilter) {
+                    $q->where('name', $statusFilter);
+                });
+            }
         }else
         {
             $query->whereHas('taskStatus', function ($query)
@@ -135,7 +148,8 @@ class DailyTaskController extends Controller
         }
 
         // Filter berdasarkan tanggal
-        if ($start_date && $end_date) 
+        // Skip default date range filter if status is 'complete_by_date' (already applied in status filter)
+        if ($start_date && $end_date && $statusFilter !== 'complete_by_date') 
         {
             $query->byDateRange($start_date, $end_date);
         }
@@ -154,8 +168,8 @@ class DailyTaskController extends Controller
         
         // Filter berdasarkan project
         if ($dailyTaskProjects) {
-            $query->whereHas('project', function ($q) use ($dailyTaskProjects) {
-                $q->where('name', $dailyTaskProjects);
+            $query->whereHas('dataProject', function ($q) use ($dailyTaskProjects) {
+                $q->where('id', $dailyTaskProjects);
             });
         }
 
@@ -172,11 +186,17 @@ class DailyTaskController extends Controller
             'upcoming' => 'Upcoming'
         ];
         $users = User::byCompany(Auth::user()->company_id)->get(); // Ambil semua user, bisa disesuaikan
-        $taskStatuss = TaskStatus::bySort()->get(); // Ambil semua status tugas
-        $dailyTaskProjects = DailyTaskProject::byCompany(Auth::user()->company_id)->get(); 
+        $taskStatuss = TaskStatus::bySort(true)->get(); // Ambil semua status tugas
+        $dailyTaskProjects = Project::byCompany(Auth::user()->company_id)->get(); 
+
+        // permission
+        $isShow = Access::can('show','dailytasks');
+        $isEdit = Access::can('edit','dailytasks');
+        $isDestroy = Access::can('destroy','dailytasks');
+        $isApprovement = Access::can('approvement','dailytasks');
 
         // Kembalikan view dengan data
-        return view('dailytask.index', compact('dailyTasks', 'taskTimeFrame', 'users', 'taskStatuss', 'divisions','dailyTaskProjects'));
+        return view('dailytask.index', compact('dailyTasks', 'taskTimeFrame', 'users', 'taskStatuss', 'divisions','dailyTaskProjects', 'isShow', 'isEdit', 'isDestroy', 'isApprovement'));
     }
 
     public function create()
@@ -322,7 +342,7 @@ class DailyTaskController extends Controller
                         $extension = $file->getClientOriginalExtension();
                         $fileName = $originalName . '_' . $timestamp . '_' . $randomString . '.' . $extension;
     
-                        $path = $file->storeAs('media', $fileName, 'public');
+                        $path = $file->storeAs('media', $fileName);
                         $mediaType = $file->getClientMimeType();
     
                         DailyTaskMedia::create([
@@ -418,8 +438,11 @@ class DailyTaskController extends Controller
             $daysMap = config('custom.day_name_code');
             $isOverdue = $dailytask->isOverdue();
 
+            // Get users for backlog assignment form
+            $users = User::byCompany(Auth::user()->company_id)->get();
+
             // Handle AJAX request
-            $htmlContent = view('dailytask.sidebar', compact('dailytask', 'daysMap', 'isOverdue', 'doing', 'approvement','dailytaskNext','dailytaskChildCount', 'divisions'))->render();
+            $htmlContent = view('dailytask.sidebar', compact('dailytask', 'daysMap', 'isOverdue', 'doing', 'approvement','dailytaskNext','dailytaskChildCount', 'divisions', 'users'))->render();
             $htmlHeadContact = view('dailytask.sidebarhead', compact('dailytask'))->render();
             $htmlTableContent = view('dailytask.element-table', compact('dailytask'))->render();
             $htmlTableContentDashboard = view('dailytask.element-table-dashboard', compact('dailytask'))->render();
@@ -443,8 +466,15 @@ class DailyTaskController extends Controller
             $types = DailyTaskType::get();
             $categories = DailyTaskCategory::byCompany(Auth::user()->company_id)->get();
 
+            // Permission
+            $isCustomfieldupdate = Access::can('customfieldupdate', 'daily_task_projects');
+            $isCustomfielddestroy = Access::can('customfielddestroy', 'daily_task_projects');
+            $isCustomfieldstore = Access::can('customfieldstore', 'daily_task_projects');
+
+            $isDeleteMedia = Access::can('deletemedia', 'dailytasks');
+
             DB::commit();
-            return view('dailytask.show', compact('dailytask', 'users', 'types', 'categories', 'subTasks', 'showProject', 'doing', 'approvement', 'daysMap'));
+            return view('dailytask.show', compact('dailytask', 'users', 'types', 'categories', 'subTasks', 'showProject', 'doing', 'approvement', 'daysMap','divisions', 'isDeleteMedia'));
 
         } catch (\Exception $e) {
             // dd($e);
@@ -830,7 +860,7 @@ class DailyTaskController extends Controller
                     $extension = $file->getClientOriginalExtension();
                     $fileName = $originalName . '_' . $timestamp . '_' . $randomString . '.' . $extension;
 
-                    $path = $file->storeAs('media', $fileName, 'public');
+                    $path = $file->storeAs('media', $fileName);
                     $mediaType = $file->getClientMimeType();
 
                     DailyTaskMedia::create([
@@ -848,7 +878,9 @@ class DailyTaskController extends Controller
             $endDate = Carbon::parse($dailytask->end_date)->endOfDay();
             $submitDate = Carbon::parse($dailytask->submit)->startOfDay();
 
-            $dailytask->status_submit = ($submitDate->lessThanOrEqualTo($endDate)) ? ParamSchema::ONTIME : ParamSchema::LATE;
+            if($dailytask->status_submit != ParamSchema::PINALTY_NOT_PROGRESS){
+                $dailytask->status_submit = ($submitDate->lessThanOrEqualTo($endDate)) ? ParamSchema::ONTIME : ParamSchema::LATE;
+            }
 
             $this->message($dailytask->id, 'report', ' Membuat Laporan Tugas ' . $dailytask->name);
             $this->statusrecord($dailytask, $inReview);
@@ -930,7 +962,7 @@ class DailyTaskController extends Controller
                     $fileName = $originalName . '_' . $timestamp . '_' . $randomString . '.' . $extension;
         
                     // Store the file with the new name
-                    $path = $file->storeAs('media', $fileName, 'public');
+                    $path = $file->storeAs('media', $fileName);
                     $mediaType = $file->getClientMimeType();
         
                     DailyTaskMedia::create([
@@ -959,7 +991,7 @@ class DailyTaskController extends Controller
         $media = DailyTaskMedia::findOrFail($id);
 
         // Delete the file from storage
-        Storage::disk('public')->delete($media->file_path);
+        Storage::delete($media->file_path);
 
         // Delete the record from the database
         $media->delete();
@@ -980,28 +1012,37 @@ class DailyTaskController extends Controller
         DB::beginTransaction();
         $dailytask = DailyTask::byCompany(Auth::user()->company_id)->where('slug', $slug)->firstOrFail();
         try {
-            if($request->point > 0)
-            {
-                $request->validate([
-                    'point' => 'required|integer|min:1',
-                    'division_id' => 'required|exists:divisions,id',
-                ]);
-
-                $check = $this->checkDivisionQuota(new Request([
-                    'division_id' => $request->division_id,
-                    'point' => $request->point
-                ]));
-
-                if ($check->original['status'] !== 'ok') 
+            // Backend protection: Prevent point updates when status_submit is PINALTY_NOT_PROGRESS
+            if ($dailytask->status_submit == ParamSchema::PINALTY_NOT_PROGRESS) {
+                // Do not allow point changes for penalty tasks
+                // Keep the existing point value
+                $pointToSave = $dailytask->point;
+            } else {
+                // Normal flow: Allow point updates
+                if($request->point > 0)
                 {
-                    return response()->json(['success' => false, 'message' => $check->original['message']]);
-                }
+                    $request->validate([
+                        'point' => 'required|integer|min:1',
+                        'division_id' => 'required|exists:divisions,id',
+                    ]);
 
-                $dailytask->division_id = $request->division_id;
-                $dailytask->division_quota_lock_id = $check->original['quota_lock_id'];
+                    $check = $this->checkDivisionQuota(new Request([
+                        'division_id' => $request->division_id,
+                        'point' => $request->point
+                    ]));
+
+                    if ($check->original['status'] !== 'ok') 
+                    {
+                        return response()->json(['success' => false, 'message' => $check->original['message']]);
+                    }
+
+                    $dailytask->division_id = $request->division_id;
+                    $dailytask->division_quota_lock_id = $check->original['quota_lock_id'];
+                }
+                $pointToSave = $request->point ?? 0;
             }
                 
-            $dailytask->point = $request->point ?? 0;
+            $dailytask->point = $pointToSave;
             $dailytask->task_status_id = $taskStatuss->id;
             $dailytask->approved = $taskStatuss->name == ParamSchema::COMPLATE ? true : false;
 
@@ -1039,6 +1080,7 @@ class DailyTaskController extends Controller
             return redirect()->route('dailytask.show', $dailytask->slug)->with('approvement', true);
 
         } catch (\Throwable $th) {
+            // dd($th);
             Log::error($th->getMessage());
             DB::rollback();
 
@@ -1151,7 +1193,7 @@ class DailyTaskController extends Controller
             $fileName = $originalName . '_' . $timestamp . '_' . $randomString . '.' . $extension;
 
             // Store the file with the new name
-            $path = $file->storeAs('comment', $fileName, 'public');
+            $path = $file->storeAs('comment', $fileName);
         }
 
         $directUrl = route('dailytask.show', ['dailytask' => $dailytask->slug]);
@@ -1251,7 +1293,11 @@ class DailyTaskController extends Controller
                 $this->sentInbox($dailyTaskHead->assignment_user_id,Auth::user()->name.' Membuat Sub Tugas ' . $dailyTask->name .' pada tugas '.$dailyTaskHead->name, route('dailytask.show', ['dailytask' => $dailyTask->slug]));
             }
 
-            $this->sentInbox($dailyTask->assignment_user_id, Auth::user()->name. ' Menugaskan ' . $dailyTask->name, route('dailytask.show', ['dailytask' => $dailyTask->slug]));
+            if($dailyTask->assignment_user_id)
+            {
+                $this->sentInbox($dailyTask->assignment_user_id, Auth::user()->name. ' Menugaskan ' . $dailyTask->name, route('dailytask.show', ['dailytask' => $dailyTask->slug]));
+            }
+
             $this->message($dailyTask->id,'create','Membuat Tugas '.$dailyTask->name);
             $this->statusrecord($dailyTask, $status);
 
@@ -1315,8 +1361,8 @@ class DailyTaskController extends Controller
             'objective_id' => 'exists:objectives,id',
             'project_id' => 'exists:daily_task_projects,id',
             'category_id' => 'exists:daily_task_categories,id',
-            'data_project_id' => 'required|array',
-            'data_project_id.*' => 'required|uuid|exists:projects,id',
+            'data_project_id' => 'nullable|array',
+            'data_project_id.*' => 'nullable|uuid|exists:projects,id',
         ]);
 
         DB::beginTransaction();
@@ -1326,6 +1372,7 @@ class DailyTaskController extends Controller
 
             return redirect()->route('dailytask.index')->with('import', true);
         } catch (\Exception $e) {
+            // dd($e);
             DB::rollback();
             $errors = explode("\n", $e->getMessage());
             return redirect()->back()->withErrors($errors)->withInput();
@@ -1637,6 +1684,14 @@ class DailyTaskController extends Controller
         return true;
     }
 
+/**
+ * Sends a message to the specified user through the inbox.
+ *
+ * @param mixed $to The recipient user ID or array of user IDs.
+ * @param string $message The message content to be sent.
+ * @param string $directUrl The direct URL associated with the message.
+ */
+
     public function sentInbox($to,$message,$directUrl)
     {
         $inboxHelper = new InboxHelper();
@@ -1662,9 +1717,22 @@ class DailyTaskController extends Controller
 
         $point = (int) $request->point;
         $divisionId = $request->division_id;
-        $month = now()->month;
-        $year = now()->year;
 
+        $now = Carbon::now();
+        $setting = SettingCompany::byCompany(Auth::user()->company_id)->get()->pluck('field_value','field_title');
+        $periodStartDay = $setting && $setting['range_start_date'] ? (int) $setting['range_start_date'] : 21;
+        
+        // Calculate period month and year
+        if ($now->day >= $periodStartDay) {
+            // Periode bulan depan: ambil angka bulan saja, JANGAN pakai addMonth() 
+            // karena akan overflow (misal 29 Jan + 1 month = 1 Mar, bukan Feb)
+            $month = $now->month == 12 ? 1 : $now->month + 1;
+            $year = $now->month == 12 ? $now->year + 1 : $now->year;
+
+        } else {
+            $month = $now->month;
+            $year = $now->year;
+        }
         if ($point <= 0) 
         {
             return response()->json([
@@ -1703,7 +1771,15 @@ class DailyTaskController extends Controller
             })
             ->sum('point');
 
-        $sisa = $quota->locked_quota - $used;
+        $directPointsUsed = DirectPoint::where('division_quota_lock_id', $quota->id)
+            ->where('status', DirectPoint::STATUS_APPROVED)
+            ->get()
+            ->sum(function($dp) {
+                return $dp->approved_point ?? $dp->point;
+            });
+
+
+        $sisa = $quota->locked_quota - $used - $directPointsUsed;
 
         if ($point > $sisa) {
             return response()->json([
@@ -1837,6 +1913,68 @@ class DailyTaskController extends Controller
             $dailyTask->save();
 
             $this->message($dailyTask->id, 'trash', 'System Memisahkan Tugas ' . $dailyTask->name . ' dari recurring');
+        }
+    }
+
+    /**
+     * Assign backlog task to user with dates
+     */
+    public function assignBacklog(Request $request, $slug)
+    {
+        $request->validate([
+            'user_id' => 'required|exists:users,id',
+            'start_date' => 'required|date',
+            'end_date' => 'required|date|after_or_equal:start_date',
+        ]);
+
+        try {
+            DB::beginTransaction();
+
+            $dailytask = DailyTask::where('slug', $slug)->firstOrFail();
+            
+            // Check if user belongs to the same company
+            $user = User::where('id', $request->user_id)
+                ->where('company_id', Auth::user()->company_id)
+                ->firstOrFail();
+
+            // Update task
+            $dailytask->assignment_user_id = $request->user_id;
+            $dailytask->start_date = $request->start_date;
+            $dailytask->end_date = $request->end_date;
+            
+            // Change status from backlog to todo
+            $todo = TaskStatus::where('name', ParamSchema::TODO)->firstOrFail();
+            $dailytask->task_status_id = $todo->id;
+            
+            $dailytask->save();
+
+            // Send notification
+            $directUrl = route('dailytask.show', ['dailytask' => $dailytask->slug]);
+            $this->sentInbox(
+                $request->user_id, 
+                Auth::user()->name . ' assigned backlog task: ' . $dailytask->name . ' to you', 
+                $directUrl
+            );
+
+            // Log the change
+            $this->message($dailytask->id, 'edit', 'Assigned backlog task ' . $dailytask->name . ' to ' . $user->name);
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'data' => $dailytask,
+                'message' => 'Backlog task assigned successfully'
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollback();
+            Log::error('Backlog assignment error: ' . $e->getMessage());
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to assign backlog task: ' . $e->getMessage()
+            ], 500);
         }
     }
 }

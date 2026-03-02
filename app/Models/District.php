@@ -35,4 +35,9 @@ class District extends Model
     {
         return $this->hasOne(City::class, 'default_district_id', 'id');
     }
+
+    public function districtCoverages()
+    {
+        return $this->hasMany(CoverageService::class, 'district_id');
+    }
 }

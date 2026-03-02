@@ -73,14 +73,22 @@ class LetterSubmissionController extends Controller
         // Mengambil semua jenis surat yang ada
         $letterTypes = LetterType::filterByUserStatus()->get();
         $positions = Position::byCompany(Auth::user()->company_id)->get();
-        $lastPositon = Auth::user()->last_position ? Position::where('id',Auth::user()->last_position->position_id)->get() : null;
+        if(Access::can('created_for','letter_submissions'))
+        {
+            $lastPositon = Position::byCompany(Auth::user()->company_id)->get() ?? [];
+        }else
+        {
+            $lastPositon = Auth::user()->last_position ? Position::where('id',Auth::user()->last_position->position_id)->get() : [];
+        }
+
         $twoMonthsLater = Carbon::now()->addMonths(2)->format('Y-m-d');
 
 
         $company = SettingCompany::byCompany(Auth::user()->company_id)->get()->pluck('field_value','field_title');
+        $users = User::byCompany(Auth::user()->company_id)->get();
 
         // Melempar data jenis surat ke view create
-        return view('letter_submission.create', compact('letterTypes','positions','company','lastPositon','twoMonthsLater'));
+        return view('letter_submission.create', compact('letterTypes','positions','company','lastPositon','twoMonthsLater', 'users'));
     }
 
     /**
@@ -99,7 +107,7 @@ class LetterSubmissionController extends Controller
             ]);
             
             $signatureImage = $request->input('signature_image');
-            if ($signatureImage) 
+            if ($signatureImage && !$request->user_id) 
             {
                 // Decode the base64 image
                 $imageData = base64_decode(preg_replace('#^data:image/\w+;base64,#i', '', $signatureImage));
@@ -128,8 +136,9 @@ class LetterSubmissionController extends Controller
 
             $letterSubmission = new LetterSubmission();
             $letterSubmission->letter_type_id = $request->letter_type_id;
-            $letterSubmission->status = NULL;
-            $letterSubmission->user_id = Auth::id();
+            $letterSubmission->status = $request->user_id ? 0: null;
+            $letterSubmission->user_id = $request->user_id ? $request->user_id : Auth::user()->id;
+            $letterSubmission->created_by = $request->user_id ? Auth::user()->id : null;
             $letterSubmission->field = json_encode($fieldData);
 
             $letterSubmission->number_result = $number['number_result'];
@@ -153,6 +162,11 @@ class LetterSubmissionController extends Controller
             $this->updateProfile($request, $letterSubmission->user);
 
             $this->sendNotification($letterSubmission, 'store', Auth::user()->company_id);
+
+            if($request->user_id)
+            {
+                $this->sentInbox([$request->user_id],"Pengajuan Surat Untuk Anda Telah Dibuat silahkan dilihat & di tanda tangani", route('letter-submission.edit', $letterSubmission->id)); 
+            }
 
             // $request->salary ? $this->updateSalary($request, $letterSubmission) : null;
 
@@ -187,6 +201,17 @@ class LetterSubmissionController extends Controller
         // }else
         // {
         // }
+
+        $isCreator = false;
+        if ($letterSubmission->created_by) {
+            // Jika ada created_by, cek apakah sama dengan user yang login
+            $isCreator = ($letterSubmission->created_by == Auth::id());
+        } else 
+        {
+            // Jika tidak ada created_by, cek apakah user_id sama dengan user yang login
+            $isCreator = ($letterSubmission->user_id == Auth::id());
+        }
+
         $positions = Position::byCompany($user->company_id)->get();
         
         $lastPositon = isset($letterSubmission->convert_field['position_old_id']) ? Position::where('id',$letterSubmission->convert_field['position_old_id'] )->get() : null;
@@ -196,12 +221,11 @@ class LetterSubmissionController extends Controller
 
         $company = SettingCompany::byCompany($user->company_id)->get()->pluck('field_value','field_title');
 
-        return view('letter_submission.edit', compact('letterSubmission', 'letterTypes','positions', 'company', 'user','lastPositon', 'lastestPosition','salary','userPosition','twoMonthsLater'));
+        return view('letter_submission.edit', compact('letterSubmission', 'letterTypes','positions', 'company', 'user','lastPositon', 'lastestPosition','salary','userPosition','twoMonthsLater', 'isCreator'));
     }
 
     public function update(LetterSubmissionRequest $request, $id)
     {
-
         DB::beginTransaction();
         try {
             // Temukan letter submission berdasarkan ID
@@ -484,7 +508,7 @@ class LetterSubmissionController extends Controller
         {
             $file = $request->file('id_card_image');
             $fileName = uniqid() . '.' . $file->getClientOriginalExtension();
-            $filePath = 'public/id_cards/' . $fileName;
+            $filePath = 'id_cards/' . $fileName;
 
             // Simpan file ke storage
             Storage::put($filePath, file_get_contents($file));

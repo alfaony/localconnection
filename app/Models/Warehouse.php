@@ -38,13 +38,19 @@ class Warehouse extends Model
         return $this->belongsTo(User::class)->withTrashed();
     }
 
+    public function zones()
+    {
+        return $this->hasMany(Zone::class);
+    }
+
     public function scopeByCompany($query,$companyId)
     {
         if($companyId && Auth::user()->role->name != RoleSchema::ROOT)
         {
-            return $query->whereHas('user', function ($query) use ($companyId) 
+            $companyIds = auth()->user()->accessibleCompanies->pluck('id')->push($companyId)->unique();
+            return $query->whereHas('user', function ($query) use ($companyIds) 
             {
-                $query->where('company_id', $companyId);
+                $query->whereIn('company_id', $companyIds);
             });
         }
     }

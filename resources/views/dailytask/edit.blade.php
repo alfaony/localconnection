@@ -187,6 +187,7 @@
                                         <input class="thriveEditor form-control" id="description_description" data-ids="description" name="description" placeholder="yang akan dicetak di perjanjian" value="{{ $dailytask->description }}"/>
                                     </div>
                                 </div>
+                                {{-- 
                                 @if(@$dailytask->approved)
 
                                 @canAccess('approvement','dailytasks')
@@ -220,6 +221,7 @@
                                 @endcanAccess
                                 
                                 @endif
+                                --}}
                             </div>
                             
                             <div class="text-right">
@@ -316,6 +318,7 @@
         }
     });
 </script>
+{{-- 
 @canAccess('approvement','dailytasks')
 @canAccess('checkDivisionQuota','dailytasks')
 <script>
@@ -409,6 +412,7 @@
 </script>
 @endcanAccess
 @endcanAccess
+--}}
 
 <script>
     

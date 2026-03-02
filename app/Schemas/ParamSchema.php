@@ -50,6 +50,8 @@ class ParamSchema
 
     const LATE = "late";
 
+    const PINALTY_NOT_PROGRESS = "penalty_not_progress";
+
     const RECURRING = "Recurring";
 
     const MULTISELECT = "multi_select";
@@ -59,6 +61,7 @@ class ParamSchema
     const TODO = "todo";
 
     const BACKLOG="backlog";
+    
     const FILEREPORT = "file_report";
 
     const FILETASK = "file_task";
@@ -104,6 +107,7 @@ class ParamSchema
     const PENANGGUNGJAWAB = "penanggung_jawab";
 
     const TARGET_CHECKIN = 10;
+    const TARGET_ABSENCE = 4;
 
     const DRAF = "draft";
 
@@ -120,4 +124,34 @@ class ParamSchema
     const INTERNAL = "internal";
 
     const EXTERNAL = "external";
+
+    const UP = 'UP';
+
+    // Schemas
+    const PERJANJIAN_INTERNET = "perjanjian_berlangganan_internet";
+
+    // Status Interent
+    const PENDING = "pending";
+    const WAITING_PAYMENT_SUBSCRIPTION = "waiting_payment_subscription";
+    const WAITING_PAYMENT_CONFIRMATION = "waiting_payment_confirmation";
+    const PROCESS_INSTALLATION = "process_installation";
+    const INSTALLED = "installed";
+    const ACTIVE = "active";
+    const EXPIRED = "expired";
+    const CANCELLED = "cancelled";
+    const SUSPENDED = "suspended";
+    const REACTIVATED = "reactivated";
+    const CUSTOMER_EXISTING = "customer_existing";
+    const INACTIVE = "inactive";
+
+    // Promo
+    const PROMO_FREE_MONTH = "free_months";
+
+    const WFO = "wfo";
+    const WFH = "wfh";
+    const SHIFT = "shift";
+
+    // Platform
+    const APK = "apk";
+    const WEB = "web";
 }

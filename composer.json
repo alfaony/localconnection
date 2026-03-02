@@ -10,6 +10,7 @@
         "barryvdh/laravel-dompdf": "^3.0",
         "dcblogdev/laravel-xero": "^1.1",
         "doctrine/dbal": "^3.7",
+        "evilfreelancer/routeros-api-php": "^1.5",
         "google/apiclient": "^2.0",
         "guzzlehttp/guzzle": "^7.2",
         "jeroennoten/laravel-adminlte": "^3.9",
@@ -20,14 +21,22 @@
         "laravel/sanctum": "^3.0",
         "laravel/tinker": "^2.7",
         "laravel/ui": "^4.2",
+        "league/csv": "^9.27",
+        "league/flysystem-aws-s3-v3": "^3.30",
         "livewire/livewire": "^2.12",
         "maatwebsite/excel": "^3.1",
+        "midtrans/midtrans-php": "^2.6",
+        "milon/barcode": "^12.0",
+        "predis/predis": "*",
         "pusher/pusher-php-server": "^7.2",
         "ramsey/uuid": "^4.7",
+        "sentry/sentry-laravel": "^4.15",
         "setasign/fpdf": "^1.8",
         "setasign/fpdi": "^2.6",
         "silvanix/wablas": "*",
-        "spatie/laravel-activitylog": "^4.7"
+        "simplesoftwareio/simple-qrcode": "^4.2",
+        "spatie/laravel-activitylog": "^4.7",
+        "xendit/xendit-php": "^7.0"
     },
     "require-dev": {
         "fakerphp/faker": "^1.9.1",
@@ -46,7 +55,8 @@
             "App\\Helpers\\": "app/Helpers/"
         },
         "files": [
-            "app/Helpers/datatables/index.php"
+            "app/Helpers/datatables/index.php",
+            "app/Helpers/Helper.php"
         ]
     },
     "autoload-dev": {

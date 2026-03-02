@@ -10,11 +10,11 @@
 <div class="container-fluid">
     <div class="card">
         <div class="card-header">
-            <h3 class="card-title">Galeri Foto {{ $type == 'check_in' ? 'Pagi' : 'Sore' }}</h3>
+            <h3 class="card-title">Galeri Foto/Video {{ $type == 'check_in' ? 'Pagi' : 'Sore' }}</h3>
         </div>
         <div class="card-body">
             @if($photos->isEmpty())
-                <p class="text-center">Belum ada foto yang diunggah untuk sesi ini.</p>
+                <p class="text-center">Belum ada foto/video yang diunggah untuk sesi ini.</p>
             @else
                 <div class="mb-4">
                     <p><strong>Petugas:</strong> {{ $securityCheck->user ? $securityCheck->user->name : '' }}</p> <!-- Ganti $operatorName dengan variabel yang sesuai dari Controller Anda -->
@@ -24,7 +24,14 @@
                     @foreach($photos as $photo)
                     <div class="col-md-4 col-sm-6 mb-4">
                         <div class="card">
-                            <img src="{{ Storage::url($photo->path) }}" class="card-img-top" alt="Foto Cctv">
+                            @if($photo->file_type == 'video')
+                                <video width="100%" controls class="card-img-top">
+                                    <source src="{{ s3_asset(true,10,$photo->path) }}" type="video/mp4">
+                                    Browser Anda tidak mendukung tag video.
+                                </video>
+                            @else
+                                <img src="{{ s3_asset(true,10,$photo->path) }}" class="card-img-top" alt="Foto Cctv">
+                            @endif
                             <div class="card-body">
                                 <p class="card-text">{{ $photo->description ?? 'No description available' }}</p>
                             </div>

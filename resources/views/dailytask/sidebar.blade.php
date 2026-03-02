@@ -46,8 +46,8 @@
         <p class="form-control-plaintext"><strong>Status Submit:</strong></p>
     </div>
     <div class="col-md-6">
-        <p class="form-control-plaintext {{ $dailytask->status_submit == 'late' ? 'text-danger' : 'text-success' }}">
-            {{ ucfirst($dailytask->status_submit) }}
+        <p class="form-control-plaintext">
+            {!! $dailytask->status_submit_icon !!}
         </p>
     </div>
 </div>
@@ -72,6 +72,100 @@
         </p>
     </div>
 </div>
+
+<!-- Backlog Assignment Form -->
+@canAccess('assignBacklog','dailytasks')
+@if($dailytask->taskStatus->name == \App\Schemas\ParamSchema::BACKLOG)
+<div class="row mt-3">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0"><i class="fa fa-user-plus"></i> Assign Backlog Task</h5>
+            </div>
+            <div class="card-body">
+                <form id="backlogAssignForm" data-slug="{{ $dailytask->slug }}">
+                    @csrf
+                    <div class="form-group">
+                        <label for="backlog_user_id">Assign to User *</label>
+                        <select name="user_id" id="backlog_user_id" class="form-control select2" required>
+                            <option value="" disabled selected>-- Pilih User --</option>
+                            @foreach($users as $user)
+                                <option value="{{ $user->id }}" {{ $dailytask->assignment_user_id == $user->id ? 'selected' : '' }}>
+                                    {{ $user->name }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div class="form-group mt-2">
+                        <label for="backlog_start_date">Start Date *</label>
+                        <input type="date" name="start_date" id="backlog_start_date" class="form-control" 
+                               value="{{ $dailytask->start_date }}" required>
+                    </div>
+
+                    <div class="form-group mt-2">
+                        <label for="backlog_end_date">End Date *</label>
+                        <input type="date" name="end_date" id="backlog_end_date" class="form-control" 
+                               value="{{ $dailytask->end_date }}" required>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary mt-3">
+                        <i class="fa fa-save"></i> Save Assignment
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+@endcanAccess
+
+@canAccess('assignBacklog','dailytasks')
+<script>
+// Auto-fill end_date when start_date changes
+document.getElementById('backlog_start_date').addEventListener('change', function() {
+    document.getElementById('backlog_end_date').value = this.value;
+});
+
+// Handle form submission
+$('#backlogAssignForm').on('submit', function(e) {
+    e.preventDefault();
+    const slug = $(this).data('slug');
+    const formData = {
+        _token: $('input[name="_token"]', this).val(),
+        user_id: $('#backlog_user_id').val(),
+        start_date: $('#backlog_start_date').val(),
+        end_date: $('#backlog_end_date').val()
+    };
+    let url = "{{ route('dailytask.assignBacklog',':slug') }}";
+    url = url.replace(':slug', slug);
+
+    $.ajax({
+        url: url,
+        type: 'POST',
+        data: formData,
+        success: function(response) {
+            Swal.fire({
+                icon: 'success',
+                title: 'Success',
+                text: response.message || 'Backlog task assigned successfully',
+                timer: 1000,
+                showConfirmButton: false
+            }).then(() => {
+                reloadPopupContent(response.data.slug); // Function to reload the popup content
+            });
+        },
+        error: function(xhr) {o
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: xhr.responseJSON?.message || 'Failed to assign backlog task'
+            });
+        }
+    });
+});
+</script>
+@endcanAccess
+@endif
 
 <!-- Tipe -->
 <div class="form-group row mb-3">
@@ -199,7 +293,7 @@
                                           <i class="fa fa-ellipsis-v"></i>
                                       </button>
                                       <div class="dropdown-menu">
-                                          <a class="dropdown-item" href="{{ asset('storage/' . $media->file_path) }}" target="_blank">
+                                          <a class="dropdown-item" href="{{ s3_asset(true,10, $media->file_path) }}" target="_blank">
                                               <i class="fa fa-download"></i> Lihat
                                           </a>
                                       </div>
@@ -302,7 +396,7 @@
                                                             <i class="fa fa-ellipsis-v"></i>
                                                         </button>
                                                         <div class="dropdown-menu">
-                                                            <a class="dropdown-item" href="{{ asset('storage/' . $media->file_path) }}" target="_blank">
+                                                            <a class="dropdown-item" href="{{ s3_asset(true,10, $media->file_path) }}" target="_blank">
                                                                 <i class="fa fa-download"></i> Lihat
                                                             </a>
                                                         </div>
@@ -340,7 +434,8 @@
             @canAccess('checkDivisionQuota','dailytasks')
             <div class="form-group mt-2">
                 <label for="point">Poin</label>
-                <input type="number" name="point" id="pointInput" class="form-control" placeholder="Masukkan Poin">
+                <input type="number" name="point" id="pointInput" class="form-control" placeholder="Masukkan Poin" value="{{ $dailytask->point }}" 
+                    {{ $dailytask->status_submit == \App\Schemas\ParamSchema::PINALTY_NOT_PROGRESS ? 'readonly' : '' }}>
             </div>
 
             <div id="divisionSection" class="form-group mt-2 d-none">
@@ -415,7 +510,7 @@
                                                             <i class="fa fa-ellipsis-v"></i>
                                                         </button>
                                                         <div class="dropdown-menu">
-                                                            <a class="dropdown-item" href="{{ asset('storage/' . $media->file_path) }}" target="_blank">
+                                                            <a class="dropdown-item" href="{{ s3_asset(true,10, $media->file_path) }}" target="_blank">
                                                                 <i class="fa fa-download"></i> Lihat
                                                             </a>
                                                         </div>

@@ -6,6 +6,7 @@ use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
 use Illuminate\Http\Exceptions\PostTooLargeException;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Support\Facades\Http;
+use Sentry\Laravel\Integration;
 
 use Throwable;
 
@@ -49,6 +50,11 @@ class Handler extends ExceptionHandler
     public function register()
     {
         $this->reportable(function (Throwable $e) {
+
+            // dd($e);
+            if (app()->bound('sentry') && config("sentry.environment") == 'production') {
+                Integration::captureUnhandledException($e);
+            }
             $data = [
                 'content' => $e->getMessage(),
                 'title' => 'Line: '.$e->getLine(),

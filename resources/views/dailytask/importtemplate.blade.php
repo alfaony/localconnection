@@ -47,7 +47,7 @@
                         <div class="form-group">
                             <label for="project_id">Pilih Main Proyek</label>
                             @canAccess('getcustomfield','daily_task_projects')
-                            <select class="form-control select2 project-select" name="project_id" required>
+                            <select class="form-control select2 project-select" name="project_id">
                                 <option value="" disabled selected>-- Pilih --</option>
                                 @foreach($projects as $project)
                                     <option value="{{ $project->id }}">{{ ucfirst($project->name) }}</option>

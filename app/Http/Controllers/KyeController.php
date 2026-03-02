@@ -7,11 +7,13 @@ use App\Models\User;
 use App\Models\SettingCompany;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 
-use App\Http\Requests\KyeRequest;
+use App\Jobs\ExportKyeJob;
 use App\Schemas\RoleSchema;
+use App\Http\Requests\KyeRequest;
 
 use App\Helpers\InboxHelper;
 use App\Helpers\EmailNotifHelper;
@@ -39,8 +41,9 @@ class KyeController extends Controller
         {
             return redirect()->route('kye.show', Auth::user()->kye->id)->with('error', 'Catatan KYE sudah ada.');
         }
+        $maritalStatus = config('custom.merital_status');
 
-        return view('kye.createOrEdit');
+        return view('kye.createOrEdit', compact('maritalStatus'));
     }
 
     // Store KYE Data
@@ -62,9 +65,9 @@ class KyeController extends Controller
             // if ($request->ktp_family) {
             //     $data['ktp_family'] = $this->saveBase64ImageToStorage($request->ktp_family, 'ktp_family_photos');
             // }
-            if ($request->house_photo) {
-                $data['house_photo'] = $this->saveBase64ImageToStorage($request->house_photo, 'house_photos');
-            }
+            // if ($request->house_photo) {
+            //     $data['house_photo'] = $this->saveBase64ImageToStorage($request->house_photo, 'house_photos');
+            // }
             
             if ($request->skck) 
             {
@@ -74,13 +77,25 @@ class KyeController extends Controller
             if ($request->ktp_family) 
             {
                 $data['ktp_family'] = 'ktp_family/' . uniqid() . '.' . $request->file('ktp_family')->getClientOriginalExtension();
-                Storage::put('public/' . $data['ktp_family'], file_get_contents($request->file('ktp_family')->getRealPath()));
+                Storage::put($data['ktp_family'], file_get_contents($request->file('ktp_family')->getRealPath()));
             }
 
             if ($request->skck) 
             {
                 $data['skck'] = 'skck_files/' . uniqid() . '.' . $request->file('skck')->extension();
-                Storage::put('public/' . $data['skck'], file_get_contents($request->file('skck')->getRealPath()));
+                Storage::put($data['skck'], file_get_contents($request->file('skck')->getRealPath()));
+            }
+
+            if ($request->house_photo) 
+            {
+                $data['house_photo'] = 'house_photos/' . uniqid() . '.' . $request->file('house_photo')->extension();
+                Storage::put($data['house_photo'], file_get_contents($request->file('house_photo')->getRealPath()));
+            }
+
+            if ($request->npwp_photo) 
+            {
+                $data['npwp_photo'] = 'npwp_photo/' . uniqid() . '.' . $request->file('npwp_photo')->extension();
+                Storage::put($data['npwp_photo'], file_get_contents($request->file('npwp_photo')->getRealPath()));
             }
 
             $data['user_id'] = Auth::user()->id;
@@ -123,6 +138,7 @@ class KyeController extends Controller
             return redirect()->route('kye.show', $kye)->with('success', 'Data KYE berhasil ditambahkan.');
         } catch (\Throwable $th) {
             //throw $th;
+            Log::error($th);
             // dd($th);
             return redirect()->route('kye.create')->with('error', 'Terjadi kesalahan saat menyimpan data KYE.');
         }
@@ -132,11 +148,12 @@ class KyeController extends Controller
     public function edit($id)
     {
         $kye = KYE::findOrFail($id);
+        $maritalStatus = config('custom.merital_status');
         if(!$kye->isEdit())
         {
             return redirect()->route('kye.show',$kye->id)->with('error', 'KYE Tidak dapat di Ubah.');
         }
-        return view('kye.createOrEdit', compact('kye'));
+        return view('kye.createOrEdit', compact('kye', 'maritalStatus'));
     }
     
     /**
@@ -146,7 +163,7 @@ class KyeController extends Controller
     {
         $kye = KYE::findOrFail($id);
         $status = config('custom.status_kye');
-
+        
         return view('kye.show', compact('kye','status'));
     }
 
@@ -173,9 +190,15 @@ class KyeController extends Controller
             //     ? $this->saveBase64ImageToStorage($request->ktp_family, 'ktp_family_photos')
             //     : $kye->ktp_family;
 
-            $data['house_photo'] = $request->house_photo
-                ? $this->saveBase64ImageToStorage($request->house_photo, 'house_photos')
-                : $kye->house_photo;
+            // $data['house_photo'] = $request->house_photo
+            //     ? $this->saveBase64ImageToStorage($request->house_photo, 'house_photos')
+            //     : $kye->house_photo;
+            if ($request->house_photo) 
+            {
+                $data['house_photo'] = 'house_photos/' . uniqid() . '.' . $request->file('house_photo')->extension();
+                Storage::put($data['house_photo'], file_get_contents($request->file('house_photo')->getRealPath()));
+            }
+            
             if ($request->skck) 
             {
                 if (isset($kye->skck)) 
@@ -184,7 +207,7 @@ class KyeController extends Controller
                 }
                 
                 $data['skck'] = 'skck_files/' . uniqid() . '.' . $request->file('skck')->extension();
-                Storage::put('public/' . $data['skck'], file_get_contents($request->file('skck')->getRealPath()));
+                Storage::put($data['skck'], file_get_contents($request->file('skck')->getRealPath()));
             }
 
             if ($request->ktp_family) 
@@ -194,7 +217,17 @@ class KyeController extends Controller
                     Storage::delete('public/' . $kye->ktp_family);
                 }
                 $data['ktp_family'] = 'ktp_family/' . uniqid() . '.' . $request->file('ktp_family')->getClientOriginalExtension();
-                Storage::put('public/' . $data['ktp_family'], file_get_contents($request->file('ktp_family')->getRealPath()));
+                Storage::put($data['ktp_family'], file_get_contents($request->file('ktp_family')->getRealPath()));
+            }
+
+            if ($request->npwp_photo) 
+            {
+                if(isset($kye->npwp_photo))
+                {
+                    Storage::delete('public/' . $kye->npwp_photo);   
+                }
+                $data['npwp_photo'] = 'npwp_photo/' . uniqid() . '.' . $request->file('npwp_photo')->extension();
+                Storage::put($data['npwp_photo'], file_get_contents($request->file('npwp_photo')->getRealPath()));
             }
 
             $user = User::findOrFail($kye->user_id);
@@ -238,7 +271,9 @@ class KyeController extends Controller
 
             return redirect()->route('kye.show', $kye)->with('success', 'Data KYE berhasil diperbarui.');
         } catch (\Throwable $th) {
+            // dd($request->all());
             // dd($th);
+            Log::error($th);
             // Log error untuk debugging
             return redirect()->back()->with('error', 'Terjadi kesalahan saat memperbarui data KYE.');
         }
@@ -301,6 +336,36 @@ class KyeController extends Controller
 
         return response()->json(['message' => 'Email tersedia.'], 200);
     }
+
+    /**
+     * Export KYE data to Excel
+     */
+    public function export(Request $request)
+    {
+        try {
+            $filters = [
+                'search' => $request->input('search'),
+                'status' => $request->input('status'),
+                'start_date' => $request->input('start_date'),
+                'end_date' => $request->input('end_date'),
+            ];
+
+            // Dispatch job
+            $companyIds = auth()->user()->accessibleCompanies->pluck('id')->push(Auth::user()->company_id)->unique();
+            ExportKyeJob::dispatch($filters, Auth::user(), $companyIds);
+
+            return redirect()->back()->with('storeWithMessage', 'Export KYE sedang diproses. Anda akan menerima notifikasi setelah selesai.');
+
+        } catch (\Exception $e) {
+            // dd($e);
+            Log::error('Failed to dispatch export KYE job', [
+                'error' => $e->getMessage(),
+                'user_id' => Auth::id()
+            ]);
+
+            return redirect()->back()->with('error', 'Gagal memulai export KYE.');
+        }
+    }
     protected function saveBase64ImageToStorage($base64Image, $folder)
     {
         $fileName = uniqid() . '.png';
@@ -310,7 +375,7 @@ class KyeController extends Controller
 
         // Use Storage facade to save the file in the public directory
         $filePath = "$folder/$fileName";
-        Storage::put("public/$filePath", $imageData);
+        Storage::put("$filePath", $imageData);
 
         return $filePath; // Return the file path as is
     }

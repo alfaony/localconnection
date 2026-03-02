@@ -96,5 +96,24 @@ class DatabaseSeeder extends Seeder
         $this->call(PermissionForAllowCheckDivisionQuota::class);
         $this->call(PermissionForRoleSprinter::class);
         $this->call(PermissionForMenuMeetingSeeder::class);
+        $this->call(PermissionForMenuMomSeeder::class);
+        $this->call(PermissionForMenuUsedComputer::class);
+        $this->call(PermissionForMenuInternetSeeder::class);
+        $this->call(PermissionForMenuRouterSeeder::class);
+        $this->call(PermissionForMenuWebhookSettingSeeder::class);
+        $this->call(PermissionForMenuOfficeAttendance::class);
+        $this->call(PermissionForProductStoreSeeder::class);
+        $this->call(PermissionForMenuPunishmentUserSeeder::class);
+        $this->call(PermissionForMenuKasirSeeder::class);
+        $this->call(PermissionForGetLocationSeeder::class);
+        $this->call(PermissionForMenuWfoRuleSeeder::class);
+        $this->call(MobilePermissionSeeder::class);
+        $this->call(PermissionForMenuChangeAssignBacklogSeeder::class);
+        $this->call(RolePermissionSeeder::class);
+        $this->call(PermissionForProjectExportSeeder::class);
+        $this->call(PartnerParameterTypeSeeder::class);
+        $this->call(PermissionForMenuPartnerParameterType::class);
+        $this->call(PermissionForMenuDirectPointSeeder::class);
+        
     }
 }

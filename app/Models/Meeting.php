@@ -39,7 +39,10 @@ class Meeting extends Model
         'pic_name',
         'status',
         'attachment',
-        'attachment_link'
+        'attachment_link',
+        'public_token',
+        'public_token_generated_at',
+        'public_code',
     ];
 
     protected $casts = [
@@ -77,6 +80,11 @@ class Meeting extends Model
         return $this->belongsToMany(User::class, 'meeting_user')
                 ->withPivot(['is_attended','join_time']);
     }
+    public function participantRelasion()
+    {
+        return $this->belongsToMany(User::class, 'meeting_user')
+                ->withPivot(['is_attended','join_time']);
+    }
 
     public function user()
     {
@@ -101,6 +109,7 @@ class Meeting extends Model
                 'id' => $user->id,
                 'name' => $user->name,
                 'email' => $user->email,
+                'email_gmail' => $user->email_gmail,
                 'status' => ParamSchema::INTERNAL,
                 'is_attended' => $user->pivot->is_attended,
                 'join_time' => $user->pivot->join_time
@@ -113,6 +122,7 @@ class Meeting extends Model
             return [
                 'id' => $email,
                 'email' => $email,
+                'email_gmail' => null,
                 'name' => $email . ' (External)',
                 'status' => ParamSchema::EXTERNAL
             ];

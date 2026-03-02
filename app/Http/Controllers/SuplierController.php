@@ -78,7 +78,7 @@ class SuplierController extends Controller
                 // Hapus file lama jika ada        
                 $file = $request->file('file');
                 $filename = time() . '_' . $file->getClientOriginalName();
-                $filePath = $file->storeAs('suplier', $filename, 'public');
+                $filePath = $file->storeAs('suplier', $filename);
                 $suplier->file = $filename;
             }
             $suplier->save();
@@ -172,7 +172,7 @@ class SuplierController extends Controller
                 // Hapus file lama jika ada        
                 $file = $request->file('file');
                 $filename = time() . '_' . $file->getClientOriginalName();
-                $filePath = $file->storeAs('suplier', $filename, 'public');
+                $filePath = $file->storeAs('suplier', $filename);
                 $suplier->file = $filename;
             }
             $suplier->save();

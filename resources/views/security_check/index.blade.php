@@ -46,33 +46,33 @@
                         <tr>
                             <td>{{ \Carbon\Carbon::parse($check->date)->format('d-m-Y') }}</td> 
                             <td>
-                                @canAccess('show','security_checks')
+                                @if($isShow)
                                 @if($check->clock_in)
                                 <a href="{{ route('security-check.show', $check->slug) }}?type=check_in" >{{ $check->clock_in }}</a>
                                 @endif
-                                @endcanAccess
+                                @endif
                             </td>
                             <td>
-                                @canAccess('show','security_checks')
+                                @if($isShow)
                                 @if($check->clock_out)
                                 <a href="{{ route('security-check.show', $check->slug) }}?type=check_out" >{{ $check->clock_out }}</a>
                                 @else
                                     Belum Tersedia
                                 @endif
-                                @endcanAccess
+                                @endif
                             </td>
                             @if(Auth::user()->role->name == \App\Schemas\RoleSchema::BM)
                             <td>
                                 {{ $check->user ? $check->user->name : '' }}
                             </td> 
                             <td>
-                                @canAccess('destroy','security_checks')
+                                @if($isDestroy)
                                 <form action="{{ route('security-check.destroy', $check->slug) }}" method="POST" style="display: inline-block;">
                                     @csrf
                                     @method('DELETE')
                                     <button type="submit" class="btn btn-danger" onclick="return confirm('Are you sure?')"><i class="fa fa-trash"></i></button>
                                 </form>
-                                @endcanAccess
+                                @endif
                             </td>
                             @endif
                         </tr>

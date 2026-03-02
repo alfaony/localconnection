@@ -36,12 +36,25 @@ class ExportBastJob implements ShouldQueue
     public function handle()
     {
         $exportFormat = $this->format === 'csv' ? \Maatwebsite\Excel\Excel::CSV : \Maatwebsite\Excel\Excel::XLSX;
+        
         try {
-            Excel::store(new BastExport($this->company_id), $this->filename, 'public', $exportFormat);
-            Log::info("File successfully stored at: " . Storage::url($this->filename));
+            Log::info("Starting BAST export: {$this->filename}");
+            
+            Excel::store(new BastExport($this->company_id), $this->filename, null, $exportFormat);
+            
+            // Verify file exists after export
+            if (Storage::exists($this->filename)) {
+                Log::info("BAST export completed successfully: " . s3_asset(true, 10, $this->filename));
+            } else {
+                Log::error("BAST export failed: File not found after export");
+            }
+            
         } catch (\Exception $e) {
-            // dd($e);
-            Log::error("Error storing file: " . $e->getMessage());
+            Log::error("Error exporting BAST: " . $e->getMessage());
+            Log::error("Stack trace: " . $e->getTraceAsString());
+            
+            // Re-throw to trigger job retry
+            throw $e;
         }
     }
 }

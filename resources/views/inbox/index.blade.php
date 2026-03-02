@@ -11,14 +11,14 @@
             Tidak ada pesan yang ditemukan.
         </div>
     @else
-        @if($unreadMessage->count() > 0)
+        @if($unreadCount > 0)
             <div class="alert alert-warning" role="alert">
-                Anda memiliki {{ $unreadMessage->count() }} pesan belum dibaca.
+                Anda memiliki {{ $unreadCount }} pesan belum dibaca.
             </div>
         @endif
         <div class="list-group">
             @foreach ($inboxMessages as $message)
-                @canAccess('show','inboxes')
+                @if($isShow)
                 <a href="{{ route('inbox.show', $message->id) }}" 
                    class="list-group-item list-group-item-action {{ $message->is_read ? 'bg-light text-muted' : 'bg-white unread-message' }} mb-3 shadow-sm" 
                    style="border-radius: 10px; overflow: hidden;">
@@ -44,7 +44,7 @@
                         <i class="fas fa-envelope text-primary float-right mt-2"></i>
                     @endif
                 </a>
-                @endcanAccess
+                @endif
             @endforeach
         </div>
         

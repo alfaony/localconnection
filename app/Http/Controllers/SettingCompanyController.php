@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\SettingCompany;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Cache;
 
 
 class SettingCompanyController extends Controller
@@ -49,24 +50,53 @@ class SettingCompanyController extends Controller
             $request->request->add(['status_punihsment_task_doing' => "0"]);
         }
         
+
+        // Clear Cache
+        $this->clearCache("midtrans",Auth::user()->company_id);
+        $this->clearCache("xendit",Auth::user()->company_id);
+
+
+        
+        // Boolean
+        $boolean = ['xendit_pay_with_ppn','midtrans_pay_with_ppn','manual_payment_status'];
+        foreach ($boolean as $field) {
+            $request->request->add([$field => $request->has($field) ? "1" : "0"]);
+        }
+
         DB::beginTransaction();
         try {
             $settings = SettingCompany::byCompany(Auth::user()->company_id)->get();
-
+            $arrayExsist = ['header_store_image'];
+            $cacheKey = "xendit_settings_".Auth::user()->company_id;
+            Cache::forget($cacheKey);
             foreach ($settings as $setting) 
             {
                 $title = $setting->field_title;
-                if ($request->has($title)) 
+                if ($request->has($title) && !in_array($title, $arrayExsist)) 
                 {
                     $fieldValue = $request->input($title);
-
                     if ($request->hasFile($title)) {
                         $file = $request->file($title);
                         $filename = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
                         $extension = $file->getClientOriginalExtension();
                         $filenameToStore = $filename . '_' . time() . '.' . $extension;
 
-                        $filePath = $file->storeAs('company', $filenameToStore, 'public');
+                        $filePath = $file->storeAs('company', $filenameToStore);
+                        $fieldValue = $filePath;
+                    }
+                    $setting->user_id = Auth::user()->id;
+                    $setting->update(['field_value' => $fieldValue]);
+                }
+                if ($request->has($title) && in_array($title, $arrayExsist)) 
+                {
+                    $fieldValue = $request->input($title);
+                    if ($request->hasFile($title)) {
+                        $file = $request->file($title);
+                        $filename = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
+                        $extension = $file->getClientOriginalExtension();
+                        $filenameToStore = $filename . '_' . time() . '.' . $extension;
+
+                        $filePath = $file->storeAs('company_storage_file', $filenameToStore);
                         $fieldValue = $filePath;
                     }
                     $setting->user_id = Auth::user()->id;
@@ -79,8 +109,16 @@ class SettingCompanyController extends Controller
         } catch (\Throwable $th) {
             // dd($th);
             DB::rollback();
-            Log::error($th);
+            \Log::error($th);
             return redirect()->route('setting-company.index')->with('store',false);
         }
+    }
+
+    /**
+     * Clear Cache
+     */
+    public static function clearCache($menu,$companyId)
+    {
+        Cache::forget("{$menu}_settings_{$companyId}");
     }
 }

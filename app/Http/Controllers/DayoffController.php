@@ -79,6 +79,14 @@ class DayoffController extends Controller
             'file' => 'nullable|file|max:2048',
         ]);
 
+        $currentYear = now()->year;
+        $startDate = Carbon::parse($request->date_start);
+        $endDate = Carbon::parse($request->date_end);
+        if ($startDate->year > $currentYear || $endDate->year > $currentYear) 
+        {
+            return redirect()->back()->withErrors(['msg' => 'Tanggal cuti tidak boleh melebihi tahun ini.']);
+        }
+
         $user = auth()->user();
         if (!$user->dayoff_active) 
         {
@@ -98,8 +106,9 @@ class DayoffController extends Controller
         $type = DayoffType::where('id', $request->dayoff_type_id)->firstOrFail();
         $daysRequested = Carbon::parse($request->date_start)->diffInDays(Carbon::parse($request->date_end)) + 1;
 
-        // Cek tumpang tindih
+        // Cek tumpang tindih (hanya cuti yang tidak direject)
         $hasOverlap = Dayoff::where('user_id', $user->id)
+            ->whereNull('rejected_at')
             ->where(function ($query) use ($request) {
                 $query->whereBetween('date_start', [$request->date_start, $request->date_end])
                     ->orWhereBetween('date_end', [$request->date_start, $request->date_end])
@@ -189,6 +198,15 @@ class DayoffController extends Controller
             'reason' => 'nullable|string',
             'file' => 'nullable|file|max:2048',
         ]);
+
+        $currentYear = now()->year;
+        $startDate = Carbon::parse($request->date_start);
+        $endDate = Carbon::parse($request->date_end);
+        if ($startDate->year > $currentYear || $endDate->year > $currentYear) 
+        {
+            return redirect()->back()->withErrors(['msg' => 'Tanggal cuti tidak boleh melebihi tahun ini.']);
+        }
+
         $request->merge(['dayoff_type_id' => $cuti->dayoff_type_id, 'exclude_id' => $cuti->id]);
         
         $checkInfo = $this->checkInfo($request)->getOriginalContent();
@@ -202,8 +220,9 @@ class DayoffController extends Controller
             return redirect()->back()->withErrors(['msg' => 'Maaf, Anda memiliki jadwal cuti yang tumpang tindih dengan cuti lain. Mohon perbaiki jadwal cuti Anda.']);
         }
         
-
         $filePath = $cuti->file ?? NULL;
+        $type = DayoffType::findOrFail($request->dayoff_type_id);
+        
         if ($request->hasFile('file') && $type->permission_required) 
         {
             $filePath = $request->file('file')->store('public/dayoff-files');
@@ -289,6 +308,7 @@ class DayoffController extends Controller
         $pendingDuration = Dayoff::where('user_id', $user->id)
             ->where('dayoff_type_id', $type->id)
             ->whereNull('rejected_at')
+            ->whereYear('created_at', now()->year)
             ->where(function ($q) {
                 $q->whereNull('approved_hr_at')->orWhereNull('approved_finance_at');
             })
@@ -305,6 +325,7 @@ class DayoffController extends Controller
         $sisaAfter = $sisa === 'Unlimited' ? 'Unlimited' : $sisa - $durasi;
 
         $hasOverlap = Dayoff::where('user_id', $user->id)
+            ->whereNull('rejected_at')
             ->when($excludeId, fn($q) => $q->where('id', '!=', $excludeId))
             ->where(function ($query) use ($dateStart, $dateEnd) {
                 $query->whereBetween('date_start', [$dateStart, $dateEnd])
@@ -331,6 +352,7 @@ class DayoffController extends Controller
         try {
             $request->validate([
                 'action_type' => 'required|in:reject,approve',
+                'reason_reject' => 'required_if:action_type,reject|string|max:500',
             ]);
 
             $actionType = $request->input('action_type');
@@ -366,6 +388,7 @@ class DayoffController extends Controller
                 {
                     $cuti->update([
                         'rejected_at' => now(),
+                        'reason_reject' => $request->input('reason_reject'),
                     ]);
                 }
                 
@@ -394,6 +417,12 @@ class DayoffController extends Controller
     {
         DB::beginTransaction();
         try {
+            $request->validate([
+                'action_type' => 'required|in:reject,approve',
+                'reason_reject' => 'required_if:action_type,reject|string|max:500',
+            ]);
+
+            $actionType = $request->input('action_type');
             $ids = json_decode($request->input('cuti_ids'), true) ?? [];
     
             if (empty($ids)) {
@@ -415,12 +444,23 @@ class DayoffController extends Controller
     
             foreach ($cutis as $cuti) 
             {
-                $cuti->update([
-                    'approval_hr_user_id' => auth()->id(),
-                    'approved_hr_at' => now(),
-                ]);
+                if ($actionType === 'approve')
+                {
+                    $cuti->update([
+                        'approval_hr_user_id' => auth()->id(),
+                        'approved_hr_at' => now(),
+                    ]);
+                }
+
+                if ($actionType === 'reject')
+                {
+                    $cuti->update([
+                        'rejected_at' => now(),
+                        'reason_reject' => $request->input('reason_reject'),
+                    ]);
+                }
     
-                if(!$this->approve($cuti))
+                if(!$this->approve($cuti) && $actionType === 'approve')
                 {
                     DB::rollback();
                     return back()->withErrors(['msg' => 'Terjadi Kesalahan Saat Menyetujui']);
@@ -548,6 +588,7 @@ class DayoffController extends Controller
             ->whereNull('approved_hr_at')
             ->whereNull('approval_hr_user_id')
             ->whereNull('rejected_at')
+            ->whereYear('created_at', now()->year)
             ->whereHas('user.divisions', function ($query) use ($divisionIds) {
                 $query->whereIn('divisions.id', $divisionIds);
             })
@@ -558,9 +599,11 @@ class DayoffController extends Controller
 
     public function infoApprovementFinance()
     {
-        $total = Dayoff::byCompany(Auth::user()->company_id)->whereNull('approved_finance_at')
+        $total = Dayoff::byCompany(Auth::user()->company_id)
+            ->whereNull('approved_finance_at')
             ->whereNull('approval_finance_user_id')
             ->whereNull('rejected_at')
+            ->whereYear('created_at', now()->year)
             ->count();
 
         return response()->json(['total' => $total]);
@@ -570,10 +613,11 @@ class DayoffController extends Controller
     {
         $filename = 'laporan_cuti_' . time() . '.' . ($format === 'csv' ? 'csv' : 'xlsx');
         $exportFormat = $format === 'csv' ? \Maatwebsite\Excel\Excel::CSV : \Maatwebsite\Excel\Excel::XLSX;
+        $filename = "public/exports/" . $filename;
         
         ExportDayoffJob::dispatch($request->all(), $filename, Auth::user()->company_id, Auth::user(), Access::can('hrApprovement', 'dayoffs'), Access::can('financeApprovement', 'dayoffs'), $exportFormat, $request->start_date, $request->end_date);
 
-        session(['export_filename_dayoff' => 'public/exports/' . $filename]);
+        session(['export_filename_dayoff' => $filename]);
 
         return redirect()->back()->with('export', true);
     }
@@ -582,11 +626,17 @@ class DayoffController extends Controller
     {
         $filename = session('export_filename_dayoff');
 
-        if ($filename && Storage::exists($filename)) {
-            return response()->json([
-                'ready' => true,
-                'download_url' => Storage::url($filename),
-            ]);
+        try {
+            if ($filename && Storage::exists($filename)) {
+                return response()->json([
+                    'ready' => true,
+                    'download_url' => s3_asset(true,10,$filename),
+                ]);
+            }
+        } catch (\Throwable $e) {
+            \Log::error('Export check failed: ' . $e->getMessage());
+
+            return response()->json(['ready' => false,'filename' => $filename]);
         }
 
         return response()->json([

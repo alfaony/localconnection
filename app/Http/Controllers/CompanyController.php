@@ -59,6 +59,9 @@ class CompanyController extends Controller
             $fieldHeadLetter = ['header' => '', 'footer' => ''];
             $fieldXero = ['client_id' => '', 'client_secret' => '', 'webhook_key' => ''];
             $fieldBank = ['rekening_number' => null,'atas_nama' => null,'nama_bank' => null,'cabang_bank' => null];
+            $fieldInternet = ['internet_icon' => '','internet_company_name' => '','internet_company_address' => '','internet_phone' => '','internet_footer_message' => '', 'internet_message_blast' => ''];
+            $fieldMidtrans = ['server_key_midtrans' => '', 'client_key_midtrans' => '', 'environment_midtrans' => 'sandbox','midtrans_pay_with_ppn' => '0'];
+            $fieldXendit = ['public_key' => '', 'secret_key' => '', 'webhook_token' => '','environment'=>'','xendit_pay_with_ppn'=>'0'];
 
             // non Setting
             $Assetfields = ['Kartu Akses','⁠Kunci gembok','Kunci pintu','Kunci motor','Kunci mobil','Kunci lemari','Kunci brangkas','Kunci ruangan','kunci Lain'];
@@ -67,6 +70,18 @@ class CompanyController extends Controller
             $fieldPunishment = ['point_punishment_task_todo' => null, 'point_punishment_weekly_report' => null];
             $fieldWablas = ['server_wablas' => null,'token_wablas' => null, 'webhook_key_wablas' => null];
             $fieldGoogle = ['google_client_id' => null,'google_client_secret' => null, 'google_redirect_uri' => null, 'google_refresh_token' => null, 'google_access_token' => null,'google_expires_at' => null , 'google_token_created_at' => null];
+            $fieldStore = ['default_tax' => null,'header_store_image' => null,'footer_store_message' => null,'store_name'=>null, "store_address" =>null];
+             $fieldPunishmentFormat = [
+                'range_start_date' => "21", // Range date
+                'range_end_date' => "20", // Range date
+                'presence_checkin' => 70, // Presence check-in
+                'punishment_point_wfh' => 10, // Punishment point WFH
+                'punishment_point_wfo' => 10, // Punishment point WFH
+                'overdue_task' => 40, // Overdue task
+                'entry_time' => "08:00", // Entry time
+                'tolerance' => 20, // Tolerance basis
+                'checkin_onday' => 4, // Check-in on the same day
+            ];
     
             foreach ($fieldProfile as $key => $value) 
             {
@@ -158,6 +173,46 @@ class CompanyController extends Controller
                 $field->save();        
             }
 
+            foreach ($fieldPunishmentFormat as $key => $value) 
+            {
+                $field = new SettingCompany();
+                $field->user_id = $user->id;
+                $field->menu="punishment_role";
+                $field->field_title = $key;
+                $field->field_value = $value;
+                $field->save();        
+            }
+
+            foreach ($fieldStore as $key => $value) 
+            {
+                $field = new SettingCompany();
+                $field->user_id = $user->id;
+                $field->menu="store";
+                $field->field_title = $key;
+                $field->field_value = $value;
+                $field->save();        
+            }
+
+            foreach ($fieldInternet as $key => $value) 
+            {
+                $field = new SettingCompany();
+                $field->user_id = $user->id;
+                $field->menu="internet_customer_setting";
+                $field->field_title = $key;
+                $field->field_value = $value;
+                $field->save();        
+            }
+
+            foreach ($fieldMidtrans as $key => $value) 
+            {
+                $field = new SettingCompany();
+                $field->user_id = $user->id;
+                $field->menu="midtrans_internet_customer";
+                $field->field_title = $key;
+                $field->field_value = $value;
+                $field->save();        
+            }
+
             foreach ($Assetfields as $key => $value) 
             {
                 $asset = new AssetType();
@@ -165,7 +220,18 @@ class CompanyController extends Controller
                 $asset->user_id = $user->id;
                 $asset->save();
             }
+
+            foreach ($fieldXendit as $key => $value) 
+            {
+                $field = new SettingCompany();
+                $field->user_id = $user->id;
+                $field->menu="xendit_internet_customer";
+                $field->field_title = $key;
+                $field->field_value = $value;
+                $field->save();        
+            }
             
+            $this->saveMasterCheck($company->id);            
 
             DB::commit();
             return redirect()->back()->with('store',true);
@@ -217,5 +283,50 @@ class CompanyController extends Controller
     {
         $company->delete();
         return redirect()->back()->with('delete',true);
+    }
+
+    protected function saveMasterCheck($companyId)
+    {
+        $components = [
+            'Monitor',
+            'Keyboard',
+            'Battery',
+            'Camera',
+            'Charger',
+            'Mouse Pad',
+            'Body',
+            'Speaker',
+            'Wifi',
+        ];
+
+        $itemComponents = [
+          'Kondisi fisik',
+          '⁠Kondisi nyala',
+          '⁠Kondisi kardus', 
+          '⁠Kondisi perlengkapan',  
+        ];
+
+        foreach ($components as $component) 
+        {
+            $masterCheckItem = \App\Models\MasterCheckItem::where('company_id', $companyId)->where('name', $component)->first();
+            if (!$masterCheckItem) {
+                \App\Models\MasterCheckItem::create([
+                    'company_id' => $companyId,
+                    'name' => $component,
+                ]);
+            }
+
+            // foreach ($itemComponents as $itemComponent) 
+            // {
+            //     $masterCheck = \App\Models\MasterCheck::where('company_id', $companyId)->where('name', $itemComponent)->first();
+            //     if (!$masterCheck) {
+            //         \App\Models\MasterCheck::create([
+            //             'company_id' => $companyId,
+            //             'name' => $itemComponent,
+            //             'type' => 'item_type',
+            //         ]);
+            //     }
+            // }
+        }
     }
 }

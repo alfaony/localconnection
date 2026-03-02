@@ -477,6 +477,16 @@
             if (!userConfirm) {
                 return false;
             }
+            
+            let rejectReason = window.prompt('Masukkan alasan penolakan:');
+            if (!rejectReason || rejectReason.trim() === '') {
+                alert('Alasan penolakan harus diisi!');
+                return false;
+            }
+            
+            // Add hidden input for reject reason
+            $('#form-hr').find('input[name="reason_reject"]').remove();
+            $('#form-hr').append('<input type="hidden" name="reason_reject" value="' + rejectReason + '">');
         }
 
         $('#cuti_ids_input_hr').val(JSON.stringify(selected));
@@ -527,6 +537,16 @@
             if (!userConfirm) {
                 return false;
             }
+            
+            let rejectReason = window.prompt('Masukkan alasan penolakan:');
+            if (!rejectReason || rejectReason.trim() === '') {
+                alert('Alasan penolakan harus diisi!');
+                return false;
+            }
+            
+            // Add hidden input for reject reason
+            $('#form-finance').find('input[name="reason_reject"]').remove();
+            $('#form-finance').append('<input type="hidden" name="reason_reject" value="' + rejectReason + '">');
         }
 
         $('#cuti_ids_input').val(JSON.stringify(selected));

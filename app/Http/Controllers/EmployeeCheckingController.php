@@ -52,7 +52,7 @@ class EmployeeCheckingController extends Controller
         $manualCheck = $this->checkingDivision(Auth::user());
 
         // Load data pengguna
-        $userSelect = User::where('is_checkin',true)->byCompany(Auth::user()->company_id)->get();
+        $userSelect = User::where('is_checkin',true)->isActive()->byCompany(Auth::user()->company_id)->get();
 
         // Nullable variabel
         $employeeCheckings = collect();
@@ -82,7 +82,7 @@ class EmployeeCheckingController extends Controller
                 ->paginate(10);
                 break;
             case 'point_checkin':                
-                $users = User::where('is_checkin', true)->withCheckinCounts($userId, $start, $end, $today)->get();
+                $users = User::where('is_checkin', true)->isActive()->withCheckinCounts($userId, $start, $end, $today)->get();
 
                 // Kalkulasi point_percentage dan sorting di sisi PHP
                 $users = $users->map(function ($user) {
@@ -126,124 +126,152 @@ class EmployeeCheckingController extends Controller
 
         // Verifikasi reCAPTCHA
         $recaptcha = $request->input('recaptcha');
-        $response = Http::get('https://www.google.com/recaptcha/api/siteverify', [
-            'secret' => config('captcha.secret'),
-            'response' => $recaptcha,
-        ]);
+        // $response = Http::get('https://www.google.com/recaptcha/api/siteverify', [
+        //     'secret' => config('captcha.secret'),
+        //     'response' => $recaptcha,
+        // ]);
 
-        if (!$response->json()['success']) 
-        {
-            return response()->json(['Verification reCAPTCHA verification failed.'], 422);
-        }
+        try {
+            $response = Http::timeout(5) // Set timeout 5 detik
+                ->retry(2, 100) // Retry 2x dengan delay 100ms
+                ->get('https://www.google.com/recaptcha/api/siteverify', [
+                    'secret' => config('captcha.secret'),
+                    'response' => $recaptcha,
+                ]);
 
-        // Validasi bahwa $local_id sesuai dengan jadwal dan user yang melakukan check-in
-
-        if (!$employeeChecking) 
-        {
-            return response()->json('Invalid check-in schedule.', 422);
-        }
-
-        // Pastikan check-in dilakukan dalam waktu yang diperbolehkan
-        
-        if($source == 'auto_checkin')
-        {
-            // Konversi waktu terjadwal ke format timestamp
-            $scheduledStartTime = strtotime($employeeChecking->scheduled_time);
-            $scheduledEndTime = strtotime($employeeChecking->scheduled_timeout);
-            $currentTime = time();
-
-            // Hitung batas waktu check-in yang diperbolehkan
-            $checkinWindowEnd = $scheduledStartTime + config('services.checking_setting.duration');
-
-            // Periksa apakah waktu saat ini berada di luar jendela waktu check-in yang diperbolehkan
-            if ($currentTime < $scheduledEndTime && ($currentTime < $scheduledStartTime || $currentTime > $checkinWindowEnd)) 
-            {
-                return response()->json('Check-in time is outside the allowed window.', 422);
+            if (!$response->successful() || !$response->json()['success']) {
+                return response()->json(['message' => 'reCAPTCHA verification failed.'], 422);
             }
+        } catch (\Illuminate\Http\Client\ConnectionException $e) {
+            // Log error untuk monitoring
+            Log::error('reCAPTCHA timeout: ' . $e->getMessage(), [
+                'user_id' => Auth::id(),
+                'recaptcha_token' => substr($recaptcha, 0, 50) // Log partial token
+            ]);
+            
+            \App\Jobs\HandleErrorEmployeeCheckin::dispatch($employeeChecking);
+
+            // Beri response user-friendly
+            return response()->json('Connection timeout. Please try again.', 503);
         }
 
-        if ($source == 'manual_checkin') 
-        {
-            $lastScheduledCheckin = EmployeeChecking::where('user_id', $employeeChecking->user_id)->where('is_active', false)->whereDate('scheduled_time', Carbon::today())->orderBy('updated_at', 'desc')->first();
+        try {
+            // Validasi bahwa $local_id sesuai dengan jadwal dan user yang melakukan check-in
     
-            if ($lastScheduledCheckin) 
+            if (!$employeeChecking) 
             {
-                $lastCheckinTime = Carbon::parse($lastScheduledCheckin->checkin_start_time);
-                $currentCheckinTime = Carbon::now();
-                $timeDifference = $currentCheckinTime->diffInMinutes($lastCheckinTime);
+                return response()->json('Invalid check-in schedule.', 422);
+            }
     
-                if ($timeDifference < 30) {
-                    return response()->json('Check-in gagal: Anda harus menunggu 30 menit sebelum melakukan check-in manual berikutnya.', 422);
+            // Pastikan check-in dilakukan dalam waktu yang diperbolehkan
+            
+            if($source == 'auto_checkin')
+            {
+                // Konversi waktu terjadwal ke format timestamp
+                $scheduledStartTime = strtotime($employeeChecking->scheduled_time);
+                $scheduledEndTime = strtotime($employeeChecking->scheduled_timeout);
+                $currentTime = time();
+    
+                // Hitung batas waktu check-in yang diperbolehkan
+                $checkinWindowEnd = $scheduledStartTime + config('services.checking_setting.duration');
+    
+                // Periksa apakah waktu saat ini berada di luar jendela waktu check-in yang diperbolehkan
+                if ($currentTime < $scheduledEndTime && ($currentTime < $scheduledStartTime || $currentTime > $checkinWindowEnd)) 
+                {
+                    return response()->json('Check-in time is outside the allowed window.', 422);
                 }
             }
-        }
-
-        // Simpan foto jika ada
-        if ($request->hasFile('photo')) 
-        {
-            $photoPath = $request->file('photo')->store('checkin_photos', 'public');
-            $employeeChecking->photo_path = Storage::url($photoPath);
-        }
-
-        // Update latitude dan longitude jika ada
-        if ($request->filled('latitude')) 
-        {
-            $employeeChecking->location_latitude = $request->input('latitude');
-        }
-        if ($request->filled('longitude')) {
-            $employeeChecking->location_longitude = $request->input('longitude');
-        }
-
-        $user = Auth::user();
-
-        // Update fcm_id pada user_status terkait
-        // if ($user->status) {
-        //     $user->status->update([
-        //         'last_scheduled_checkin' => Carbon::now(),
-        //     ]);
-        // } else 
-        // {
-        //     // Jika UserStatus belum ada, buat satu dan simpan fcm_id
-        //     $user->status()->create([
-        //         'last_scheduled_checkin' => Carbon::now(),
-        //     ]);
-        // }
-        $recorded = UserStatus::where('user_id', $user->id)->where('fcm_id', $request->input('fcm_token'))->first();
-        if ($recorded)
-        {
-            $recorded->last_scheduled_checkin = Carbon::now();
-            $recorded->save();
-        }
-
-        // Update status check-in
-        $employeeChecking->is_active = false;
-        $employeeChecking->is_completed = true;
-        $employeeChecking->checkin_start_time = Carbon::now();
-
-        if($source == 'manual_checkin')
-        {
-            // $employeeChecking->scheduled_time = Carbon::now();
-            // $employeeChecking->scheduled_timeout = Carbon::now();
+    
+            if ($source == 'manual_checkin') 
+            {
+                $lastScheduledCheckin = EmployeeChecking::where('user_id', $employeeChecking->user_id)->where('is_active', false)->whereDate('scheduled_time', Carbon::today())->orderBy('updated_at', 'desc')->first();
+        
+                if ($lastScheduledCheckin) 
+                {
+                    $lastCheckinTime = Carbon::parse($lastScheduledCheckin->checkin_start_time);
+                    $currentCheckinTime = Carbon::now();
+                    $timeDifference = $currentCheckinTime->diffInMinutes($lastCheckinTime);
+        
+                    if ($timeDifference < 30) {
+                        return response()->json('Check-in gagal: Anda harus menunggu 30 menit sebelum melakukan check-in manual berikutnya.', 422);
+                    }
+                }
+            }
+    
+            // Simpan foto jika ada
+            if ($request->hasFile('photo')) 
+            {
+                $photoPath = $request->file('photo')->store('checkin_photos');
+                $employeeChecking->photo_path = $photoPath;
+            }
+    
+            // Update latitude dan longitude jika ada
+            if ($request->filled('latitude')) 
+            {
+                $employeeChecking->location_latitude = $request->input('latitude');
+            }
+            if ($request->filled('longitude')) {
+                $employeeChecking->location_longitude = $request->input('longitude');
+            }
+    
+            $user = Auth::user();
+    
+            // Update fcm_id pada user_status terkait
+            // if ($user->status) {
+            //     $user->status->update([
+            //         'last_scheduled_checkin' => Carbon::now(),
+            //     ]);
+            // } else 
+            // {
+            //     // Jika UserStatus belum ada, buat satu dan simpan fcm_id
+            //     $user->status()->create([
+            //         'last_scheduled_checkin' => Carbon::now(),
+            //     ]);
+            // }
+            $recorded = UserStatus::where('user_id', $user->id)->where('fcm_id', $request->input('fcm_token'))->first();
+            if ($recorded)
+            {
+                $recorded->last_scheduled_checkin = Carbon::now();
+                $recorded->save();
+            }
+    
+            // Update status check-in
+            $employeeChecking->is_active = false;
+            $employeeChecking->is_completed = true;
             $employeeChecking->checkin_start_time = Carbon::now();
+    
+            if($source == 'manual_checkin')
+            {
+                // $employeeChecking->scheduled_time = Carbon::now();
+                // $employeeChecking->scheduled_timeout = Carbon::now();
+                $employeeChecking->checkin_start_time = Carbon::now();
+            }
+            $employeeChecking->save();
+    
+            // Update data di Firebase
+            if($this->firebaseDatabase)
+            {
+                $payload = 
+                [
+                    'created_at' => $employeeChecking->created_at,
+                    'updated_at' => $employeeChecking->updated_at,
+                    'local_id' => $employeeChecking->id,
+                    'scheduled_time' => $employeeChecking->scheduled_time,
+                    'is_active' => false,
+                ];
+    
+                $this->firebaseDatabase->getReference('employee_checkins/' . $employeeChecking->user_id . '/' . $employeeChecking->id)->remove();
+            }
+    
+            return response()->json(['message' => 'Check-in updated successfully']);
+        } catch (\Throwable $th) {
+            //throw $th;
+            Log::error($th->getMessage());
+            
+            \App\Jobs\HandleErrorEmployeeCheckin::dispatch($employeeChecking);
+
+            return response()->json(['message' => 'Check-in updated successfully']);
         }
-        $employeeChecking->save();
-
-        // Update data di Firebase
-        if($this->firebaseDatabase)
-        {
-            $payload = 
-            [
-                'created_at' => $employeeChecking->created_at,
-                'updated_at' => $employeeChecking->updated_at,
-                'local_id' => $employeeChecking->id,
-                'scheduled_time' => $employeeChecking->scheduled_time,
-                'is_active' => false,
-            ];
-
-            $this->firebaseDatabase->getReference('employee_checkins/' . $employeeChecking->user_id . '/' . $employeeChecking->id)->remove();
-        }
-
-        return response()->json(['message' => 'Check-in updated successfully']);
     }
 
     /**
@@ -286,9 +314,17 @@ class EmployeeCheckingController extends Controller
                 ->orderBy('updated_at', 'desc')
                 ->first();
 
-            if ($currentCheckinTime->hour < 8 || $currentCheckinTime->hour >= 17) {
-                return response()->json(['status' => false, 'message' => 'Check-in hanya diizinkan antara jam 08:00 dan 17:00'], 200);
-            }
+                $startTime = Carbon::parse($user->start_time); // Misalnya '08:00:00'
+                $endTime = Carbon::parse($user->end_time);     // Misalnya '17:00:00'
+
+                // $currentCheckinTime diasumsikan sudah berupa Carbon instance (misalnya Carbon::now())
+                if ($currentCheckinTime->lt($startTime) || $currentCheckinTime->gte($endTime)) 
+                {
+                    return response()->json([
+                        'status' => false,
+                        'message' => 'Check-in hanya diizinkan antara jam ' . $startTime->format('H:i') . ' dan ' . $endTime->format('H:i')
+                    ], 200);
+                }
 
             if ($lastScheduledCheckin) {
                 $lastCheckinTime = Carbon::parse($lastScheduledCheckin->checkin_start_time);
@@ -318,7 +354,7 @@ class EmployeeCheckingController extends Controller
     {
         // Determine file name and format
         try {
-            $filename = 'quotes_' . time() . '.' . ($format === 'csv' ? 'csv' : 'xlsx');
+            $filename = 'employee_checkin_' . time() . '.' . ($format === 'csv' ? 'csv' : 'xlsx');
             $exportFormat = $format === 'csv' ? \Maatwebsite\Excel\Excel::CSV : \Maatwebsite\Excel\Excel::XLSX;
     
             $userId = $request->input('user_id');
@@ -329,10 +365,10 @@ class EmployeeCheckingController extends Controller
             $role = Auth::user()->role->name ?? NULL; 
             
             // Queue the export and store the job file name in session
-            EmployeeCheckingExportJob::dispatch($filename, $exportFormat, Auth::user()->company_id, $userId, $start, $end, $today, $sort, $role);
+            EmployeeCheckingExportJob::dispatch($filename, $exportFormat, Auth::user(), $userId, $start, $end, $today, $sort, $role);
     
     
-            $filename = "public/" . $filename;
+            // $filename = "public/" . $filename;
             session(['export_filename_checkin' => $filename]);
             $filename = session('export_filename_checkin');
     
@@ -348,14 +384,19 @@ class EmployeeCheckingController extends Controller
     public function checkExportStatus()
     {
         $filename = session('export_filename_checkin');
-
-        if ($filename && Storage::exists($filename)) {
-            // Provide the download URL if file exists
-            $downloadUrl = Storage::url($filename);
-            return response()->json(['ready' => true, 'download_url' => $downloadUrl]);
+        try {
+            if ($filename && Storage::exists($filename)) {
+                // Provide the download URL if file exists
+                $downloadUrl = s3_asset(true,10,$filename);
+                return response()->json(['ready' => true, 'download_url' => $downloadUrl]);
+            }
+            
+            return response()->json(['ready' => false,'filename' => $filename]);
+        } catch (\Throwable $th) {
+            //throw $th;
+            return response()->json(['ready' => false,'filename' => $filename]);
         }
     
-        return response()->json(['ready' => false,'filename' => $filename]);
     }
 
     public function clearsession()

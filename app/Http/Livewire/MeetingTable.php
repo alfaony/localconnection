@@ -8,6 +8,7 @@ use App\Models\SettingCompany;
 use App\Models\Meeting;
 use Livewire\Component;
 use Livewire\WithPagination;
+use App\Services\GoogleService;
 
 class MeetingTable extends Component
 {
@@ -32,7 +33,7 @@ class MeetingTable extends Component
             ->get()
             ->pluck('field_value', 'field_title');
         $this->googleReadyChecked = !empty($settings['google_client_id']) && !empty($settings['google_client_secret']);
-        $this->googleConnected = !empty($settings['google_access_token']) && !empty($settings['google_refresh_token']);
+        $this->googleConnected = GoogleService::checkGoogleConnection($companyId);
     }
 
     public function render()

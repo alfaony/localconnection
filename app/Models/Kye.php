@@ -43,7 +43,13 @@ class Kye extends Model
         'bank_name',
         'account_number',
         'approval_status',
-        'approval_note'
+        'approval_note',
+        'call_name',
+        'gender',
+        'marital_status',
+        'number_of_children',
+        'npwp_photo',
+        'address_domisili',
     ];
 
     protected $casts = [
@@ -86,9 +92,10 @@ class Kye extends Model
     {
         if($companyId && Auth::user()->role->name != RoleSchema::ROOT)
         {
-            return $query->whereHas('user', function ($query) use ($companyId)
+            $companyIds = auth()->user()->accessibleCompanies->pluck('id')->push($companyId)->unique();
+            return $query->whereHas('user', function ($query) use ($companyIds)
             {
-                $query->where('company_id', $companyId);
+                $query->whereIn('company_id', $companyIds);
             });
         }
     }

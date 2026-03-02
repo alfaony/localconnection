@@ -18,6 +18,8 @@ class ChatMessage extends Model
         'attachment',
     ];
 
+    protected $appends = ['attachment_url'];
+
     public function itemRequest()
     {
         return $this->belongsTo(ItemRequest::class)->withTrashed();
@@ -27,4 +29,12 @@ class ChatMessage extends Model
     {
         return $this->belongsTo(User::class, 'user_id')->withTrashed();
     }
+
+    public function getAttachmentUrlAttribute()
+    {
+        if (!$this->attachment) return null;
+
+        return s3_asset(true, 10, $this->attachment);
+    }
+
 }

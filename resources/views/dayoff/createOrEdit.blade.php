@@ -79,6 +79,7 @@
                         </span>
                         <input type="date" name="date_start" class="form-control " 
                                id="date_start" value="{{ old('date_start', optional($cuti)->date_start) }}" 
+                                max="{{ now()->endOfYear()->format('Y-m-d') }}"
                                required>
                     </div>
                 </div>
@@ -91,6 +92,7 @@
                         </span>
                         <input type="date" name="date_end" class="form-control " 
                                id="date_end" value="{{ old('date_end', optional($cuti)->date_end) }}" 
+                               max="{{ now()->endOfYear()->format('Y-m-d') }}"
                                required >
                     </div>
                 </div>
@@ -162,6 +164,8 @@
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
 <script>
+    let validationTimeout;
+    
     function updateInfoBox(info) 
     {
         $('#cuti-sisa-awal').text(info.quota === 'Unlimited' ? 'Unlimited' : `${info.quota} hari`);
@@ -212,6 +216,9 @@
     }
 
     function fetchInfo() {
+        console.log("CHANESSS");
+        
+
         toggleReasonField();
 
         let typeId = $('#dayoff_type_id').val();
@@ -227,14 +234,24 @@
             return;
         }
 
-        $.get(`{{ route('dayoff.checkInfo') }}`, {
-            dayoff_type_id: typeId,
-            date_start: start,
-            date_end: end,
-            exclude_id: excludeId
-        }, function (res) {
-            updateInfoBox(res);
-        });
+        // Clear previous timeout
+        if (validationTimeout) {
+            clearTimeout(validationTimeout);
+        }
+
+        // Debounce API call to prevent excessive requests
+        validationTimeout = setTimeout(function() {
+            $.get(`{{ route('dayoff.checkInfo') }}`, {
+                dayoff_type_id: typeId,
+                date_start: start,
+                date_end: end,
+                exclude_id: excludeId
+            }, function (res) {
+                updateInfoBox(res);
+            }).fail(function() {
+                console.error('Failed to fetch day-off info');
+            });
+        }, 300); // 300ms debounce
     }
 
     function previewFile() 
@@ -245,7 +262,11 @@
     }
 
     $(document).ready(function () {
-        $('#dayoff_type_id, #date_start, #date_end').on('change', fetchInfo);
+        // Trigger validation on both change and input events
+        $('#dayoff_type_id').on('change', fetchInfo);
+        $('#date_start, #date_end').on('change ', fetchInfo);
+        
+        // Initial fetch on page load
         fetchInfo();
     });
 </script>

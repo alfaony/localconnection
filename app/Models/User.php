@@ -12,7 +12,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Auth;
 use Ramsey\Uuid\Uuid;
 use Illuminate\Database\Eloquent\Casts\Attribute;
-
+use Illuminate\Support\Facades\Storage;
 use App\Schemas\ParamSchema;
 use App\Schemas\RoleSchema;
 
@@ -89,9 +89,10 @@ class User extends Authenticatable
         'custom_rest_times' => 'array', // This will automatically decode JSON into an array   
         'ip_addresses' => 'array',   
         'dayoff_active' => 'boolean',
+        'wfo_working_days' => 'array',  // ← Tambahkan ini
     ];
 
-    protected $appends = ['point_checkin', 'today_percentage', 'point_percentage'];
+    // protected $appends = ['point_checkin', 'today_percentage', 'point_percentage'];
 
     public function role()
     {
@@ -106,6 +107,11 @@ class User extends Authenticatable
     public function attendances()
     {
         return $this->hasMany(Attendance::class);
+    }
+
+    public function wfoRules()
+    {
+        return $this->hasOne(WfoRule::class, 'user_id', 'id');
     }
 
     public function taskAssigns()
@@ -151,6 +157,11 @@ class User extends Authenticatable
     public function request()
     {
         return $this->hasMany(ItemRequest::class, 'user_id');
+    }
+
+    public function usedItems()
+    {
+        return $this->hasMany(UsedItem::class);
     }
     
     public function getFirstDivisionAttribute()
@@ -217,6 +228,48 @@ class User extends Authenticatable
     {
         return json_decode($this->failure, true) ?? [];
     }
+
+    public function shouldWorkToday()
+    {
+        if (!$this->wfo_check_in || is_null($this->wfo_working_days)) {
+            return false;
+        }
+
+        $today = strtolower(now()->format('l')); // now()->format('l'); // Get day name: Monday, Tuesday, etc.
+        return $this->wfo_working_days[$today] ?? false;
+    }
+
+    public function getPhotoIdentityAttribute($value)
+    {
+        if($this->id_card_image)
+        {
+            return Storage::url($this->id_card_image);
+        }
+        return null;
+    }
+
+    /**
+     * Accessor for is_active - returns true if user has divisions
+     */
+    // public function isActive(): bool
+    // {
+    //    return $this->divisions()->count() > 0 ? true : false;
+    // }
+
+    /**
+     * Check if user should work on a specific date
+     */
+    public function shouldWorkOnDate($date)
+    {
+        if (!$this->wfo_check_in || is_null($this->wfo_working_days)) {
+            return false;
+        }
+
+        $dayName = \Carbon\Carbon::parse($date)->format('l');
+        
+        return $this->wfo_working_days[$dayName] ?? false;
+    }
+
     public function salary()
     {
         return $this->hasMany(UserSalary::class);
@@ -225,6 +278,11 @@ class User extends Authenticatable
     public function dayoffs()
     {
         return $this->hasMany(Dayoff::class);
+    }
+
+    public function agreementLetter()
+    {
+        return $this->hasMany(AgreementLetter::class,'user_created_id');
     }
 
     public function kye()
@@ -330,8 +388,10 @@ class User extends Authenticatable
             ->whereDate('date_start', '<=', $today)
             ->whereDate('date_end', '>=', $today)
             ->whereNull('rejected_at')
-            ->whereNotNull('approved_hr_at')
-            ->whereNotNull('approved_finance_at')
+            ->where(function ($query) {
+                $query->whereNotNull('approved_hr_at')
+                    ->orWhereNotNull('approved_finance_at');
+            })
             ->exists();
     }
 
@@ -419,6 +479,14 @@ class User extends Authenticatable
         }
     }
 
+    public function scopeByCompanyPublic($query,$companyId)
+    {
+        if($companyId)
+        {
+            return $query->where("company_id",$companyId);
+        }
+    }
+
     public function scopeByCompanyJob($query,$companyId, $role)
     {
         if($companyId && $role && $role != RoleSchema::ROOT)
@@ -486,5 +554,44 @@ class User extends Authenticatable
         // {
         //     return $query->where('id', Auth::user()->id);
         // }
+    }
+
+    // public function scopeByCompanyAccess($query,$user,$companyId, $role)
+    // {
+    //     if($companyId && $role && $role != RoleSchema::ROOT) 
+    //     {
+    //         $companyIds = $user->accessibleCompanies->pluck('id')->push($companyId)->unique();
+
+    //         return $query->whereHas('user', function ($query) use ($companyIds) 
+    //         {
+    //             $query->whereIn('company_id', $companyIds);
+    //         });
+    //     }
+    // }
+    
+    /**
+     * Scope to get only active users (users with divisions)
+     */
+    public function scopeIsActive($query)
+    {
+        return $query->whereHas('divisions');
+    }
+    
+    /**
+     * Scope to get only inactive users (users without divisions)
+     */
+    public function scopeIsNotActive($query)
+    {
+        return $query->whereDoesntHave('divisions');
+    }
+    public function scopeByCompanyAccess($query, $user, $companyId, $role)
+    {
+        if ($companyId && $role && $role != RoleSchema::ROOT) {
+            $companyIds = $user->accessibleCompanies->pluck('id')->push($companyId)->unique();
+
+            return $query->whereIn('company_id', $companyIds);
+        }
+
+        return $query;
     }
 }

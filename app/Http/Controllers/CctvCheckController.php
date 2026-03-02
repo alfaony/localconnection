@@ -76,7 +76,7 @@ class CctvCheckController extends Controller
                 foreach ($request->file('photos') as $key => $photo) {
                     $file = $photo;
                     $filename = time() . '_' . $file->getClientOriginalName();
-                    $path = $file->storeAs('security', $filename, 'public');
+                    $path = $file->storeAs('security', $filename);
                     
                     $photoCheck = new CctvCheckPhoto();
                     $photoCheck->cctv_check_id = $check->id;
@@ -133,7 +133,7 @@ class CctvCheckController extends Controller
                 foreach ($request->file('photos') as $key =>  $photo) {
                     $file = $photo;
                     $filename = time() . '_' . $file->getClientOriginalName();
-                    $path = $file->storeAs('security', $filename, 'public');
+                    $path = $file->storeAs('security', $filename);
                     
                     $photoCheck = new CctvCheckPhoto();
                     $photoCheck->cctv_check_id = $check->id;

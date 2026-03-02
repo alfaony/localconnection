@@ -41,7 +41,17 @@
                         <!-- Menampilkan laporan yang sudah ada -->
                         <div>
                             <p><strong>Catatan:</strong> {!! $taskAssign->taskReport->note !!}</p>
-                            <img src="{{ Storage::url('task/' .$taskAssign->taskReport->picture) }}" class="img-fluid mb-2" alt="Foto Laporan">
+                            @if($taskAssign->taskReport->picture)
+                                <p><strong>Foto:</strong></p>
+                                <img src="{{ s3_asset(true,10,'task/' .$taskAssign->taskReport->picture) }}" class="img-fluid mb-2" alt="Foto Laporan">
+                            @endif
+                            @if($taskAssign->taskReport->video)
+                                <p><strong>Video:</strong></p>
+                                <video width="100%" controls class="mb-2">
+                                    <source src="{{ s3_asset(true,10,'task/' .$taskAssign->taskReport->video) }}" type="video/mp4">
+                                    Browser Anda tidak mendukung tag video.
+                                </video>
+                            @endif
                         </div>
                     @else
                     @canAccess('report','task_assigns')
@@ -49,8 +59,8 @@
                         @csrf
                         @method('put')
                         <div class="mb-3">
-                            <label for="photo" class="form-label">Ambil Foto</label>
-                            <input type="file" class="form-control" id="photo" name="photo" accept="image/*" capture="environment" onchange="compressAndPreviewImage();" required>
+                            <label for="photo" class="form-label">Ambil Foto (Opsional)</label>
+                            <input type="file" class="form-control" id="photo" name="photo" accept="image/*" capture="environment" onchange="compressAndPreviewImage();">
                             <small class="text-muted">Klik untuk mengambil foto menggunakan kamera.</small>
                             <img id="photo-preview" src="#" alt="Photo Preview" style="display:none;" class="img-fluid mt-3"/>
                             @error('photo')
@@ -59,6 +69,22 @@
                                 </span>
                             @enderror
                         </div>
+                        <div class="mb-3">
+                            <label for="video" class="form-label">Upload Video (Opsional)</label>
+                            <input type="file" class="form-control" id="video" name="video" accept="video/mp4,video/mov,video/avi,video/wmv" onchange="previewVideo();">
+                            <small class="text-muted">Upload video (max 50MB). Format: MP4, MOV, AVI, WMV</small>
+                            <video id="video-preview" width="100%" controls style="display:none;" class="mt-3"></video>
+                            @error('video')
+                                <span class="invalid-feedback" role="alert">
+                                    <strong>{{ $message }}</strong>
+                                </span>
+                            @enderror
+                        </div>
+                        @error('file')
+                            <div class="alert alert-danger">
+                                <strong>{{ $message }}</strong>
+                            </div>
+                        @enderror
                         <div class="mb-3">
                             <label for="note" class="form-label">Catatan</label>
                             <input type="text" class="thriveEditor form-control" id="description_note" data-ids="note"  name="note">
@@ -117,6 +143,7 @@ function compressAndPreviewImage() {
 
     if (!fileInput.files[0]) {
         preview.src = "";
+        preview.style.display = 'none';
         return;
     }
 
@@ -156,6 +183,22 @@ function compressAndPreviewImage() {
             }, 'image/jpeg', 0.6); // Lowering quality setting here
         }
     }
+}
+
+function previewVideo() {
+    const fileInput = document.getElementById('video');
+    const preview = document.getElementById('video-preview');
+
+    if (!fileInput.files[0]) {
+        preview.src = "";
+        preview.style.display = 'none';
+        return;
+    }
+
+    const file = fileInput.files[0];
+    const fileURL = URL.createObjectURL(file);
+    preview.src = fileURL;
+    preview.style.display = 'block';
 }
 </script>
 

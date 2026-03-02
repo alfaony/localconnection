@@ -52,15 +52,15 @@ $no = ($customer->currentPage() - 1) * $customer->perPage() + 1;
                 </div>
                 <div class="form-group">
                     <label>Direktur:</label>
-                    <input type="text" class="form-control" placeholder="Anton" name="director" value="{{ old('director') ?? @$customerEdit->director }}" required>
+                    <input type="text" class="form-control" placeholder="Anton" name="director" value="{{ old('director') ?? @$customerEdit->director }}">
                 </div>
                 <div class="form-group">
                     <label>Penanggung Jawab:</label>
-                    <input type="text" class="form-control" placeholder="Hendra" name="pic" value="{{ old('pic') ?? @$customerEdit->pic }}" required>
+                    <input type="text" class="form-control" placeholder="Hendra" name="pic" value="{{ old('pic') ?? @$customerEdit->pic }}">
                 </div>
                 <div class="form-group">
                     <label>Pemberi Pekerjaan:</label>
-                    <input type="text" class="form-control" placeholder="Michele" name="assignor" value="{{ old('assignor') ?? @$customerEdit->assignor }}" required>
+                    <input type="text" class="form-control" placeholder="Michele" name="assignor" value="{{ old('assignor') ?? @$customerEdit->assignor }}">
                 </div>
                 <div class="form-group">
                     <label>Alamat:</label>

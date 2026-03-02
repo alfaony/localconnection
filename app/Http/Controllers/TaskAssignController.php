@@ -206,8 +206,14 @@ class TaskAssignController extends Controller
      {
         $validatedData = $request->validate([
             'note' => 'required|string', // Validasi untuk catatan
-            'photo' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048' // Validasi untuk foto, max 2MB
+            'photo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:10240', // Validasi untuk foto, max 10MB
+            'video' => 'nullable|mimes:mp4,mov,avi,wmv|max:51200' // Validasi untuk video, max 50MB
         ]);
+        
+        // Pastikan minimal salah satu (foto atau video) harus diupload
+        if (!$request->hasFile('photo') && !$request->hasFile('video')) {
+            return redirect()->back()->withErrors(['file' => 'Minimal upload satu file (foto atau video)'])->withInput();
+        }
     
         $inReview = TaskStatus::where('name',ParamSchema::INREVIEW)->firstOrFail();
 
@@ -222,15 +228,25 @@ class TaskAssignController extends Controller
             $taskReport->note = $validatedData['note'];
             $taskReport->task_assign_id = $taskAssign->id;
             $taskReport->user_id = Auth::user()->id;
+            
             // Menangani file foto jika diupload
             if ($request->hasFile('photo')) 
             {
-                // Hapus file lama jika ada        
                 $file = $request->file('photo');
                 $filename = time() . '_' . $file->getClientOriginalName();
-                $filePath = $file->storeAs('task', $filename, 'public');
+                $filePath = $file->storeAs('task', $filename);
                 $taskReport->picture = $filename;
             }
+            
+            // Menangani file video jika diupload
+            if ($request->hasFile('video')) 
+            {
+                $file = $request->file('video');
+                $filename = time() . '_video_' . $file->getClientOriginalName();
+                $filePath = $file->storeAs('task', $filename);
+                $taskReport->video = $filename;
+            }
+            
             $taskReport->save();
             DB::commit();
             return redirect()->route('task-assign.index')->with('report', true);

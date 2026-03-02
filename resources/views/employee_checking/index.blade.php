@@ -165,7 +165,7 @@
                                             <span class="badge bg-info"><i class="fa fa-hospital"></i></span>
                                                 Izin
                                             @else
-                                                @if($checking->isToday())
+                                                @if($checking->isToday($checking->user->start_time, $checking->user->end_time ))
                                                     <span class="badge bg-warning"><i class="fa fa-clock"></i></span>
                                                 @else
                                                     <span class="badge bg-danger"><i class="fa fa-times"></i></span>
@@ -203,7 +203,7 @@
                                                                 <div class="mb-3 text-center">
                                                                     <label class="font-weight-bold"><i class="fa fa-camera"></i> Foto Check-In:</label>
                                                                     <div class="border rounded p-3">
-                                                                        <img src="{{ asset($checking->photo_path) }}" alt="Foto Check-In" class="img-fluid rounded">
+                                                                        <img src="{{ s3_asset(true,10,$checking->photo_path) }}" alt="Foto Check-In" class="img-fluid rounded">
                                                                     </div>
                                                                 </div>
                                                             @endif
@@ -253,7 +253,7 @@
                                                 <span class="badge bg-danger"><i class="fa fa-times"></i></span>
                                             @endif
                                         @else
-                                            @if($checking->isToday())
+                                            @if($checking->isToday(Auth::user()->start_time, Auth::user()->end_time))
                                             @if($checking->user_id == Auth::user()->id)                    
                                                 @if($checking->is_active && (!$nextChecking || !$nextChecking->is_active))
                                                     <button class="btn btn-info btn-sm" type="button"
@@ -284,14 +284,14 @@
                             @endforelse
                         </tbody>
                     </table>
+                    <!-- Pagination Links -->
+                     @if(count($employeeCheckings) > 0)
+                    <div class="d-flex justify-content-center mt-4">
+                        {{ $employeeCheckings->withQueryString()->links('vendor.pagination.bootstrap-4') }}
+                    </div>
+                    @endif
                 </div>
 
-                <!-- Pagination Links -->
-                 @if(count($employeeCheckings) > 0)
-                <div class="d-flex justify-content-center mt-4">
-                    {{ $employeeCheckings->withQueryString()->links('vendor.pagination.bootstrap-4') }}
-                </div>
-                @endif
             </div>
             @endif
             @if(request('tab') == 'point_checkin')

@@ -27,6 +27,27 @@
                         @endforeach
                     </select>
                 </div>
+                <div class="form-group">
+                    <label for="type"><i class="fas fa-list mr-1"></i>Type Supplier</label>
+                    <select name="type" id="supplier_type_id" class="form-control select2" style="width: 100%;">
+                        <option value="">-- Pilih Tipe --</option>
+                        @foreach($types as $type)
+                            <option value="{{ $type->id }}" @selected(old('type', $itemRequest->supplier_type_id ?? '') == $type->id)>
+                                {{ $type->name }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="product_supplier_id">Pilih Product Supplier</label>
+                    <select id="product_supplier_id" name="product_supplier_id[]" class="form-control select2" multiple>
+                        @foreach($productSuppliers as $productSupplier)
+                            <option value="{{ $productSupplier->id }}" @selected(in_array($productSupplier->id, old('product_supplier_id', isset($itemRequest) && $itemRequest->potentialVendors ? $itemRequest->potentialVendors->pluck('product_supplier_id')->toArray() : [])))>
+                                {{ $productSupplier->store_name  ." - ". $productSupplier->owner_name}}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
 
                 <div class="form-group">
                     <label for="item_name"><i class="fas fa-tag mr-1"></i>Nama Barang</label>
@@ -77,11 +98,22 @@
                         </span>
                     @enderror
                 </div>
+                <div class="form-group">
+                    <label for="sprinter_ids"><i class="fas fa-user-friends mr-1"></i>Sprinter</label>
+                    <select name="assigned_pic_id" id="sprinter_ids" class="form-control select2" style="width: 100%;">
+                        <option value="" disabled selected>-- Pilih Sprinter --</option>
+                        @foreach($sprinters->pluck('name', 'id') as $id => $name)
+                            <option value="{{ $id }}" @if(isset($itemRequest) && $itemRequest->assigned_pic_id == $id) selected @endif>
+                                {{ $name }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
                 <div class="form-group mt-3">
                     <label for="picture">Foto Pendukung (opsional)</label>
                     @if (!empty($itemRequest?->picture))
                         <div class="mb-2">
-                            <img src="{{ asset('storage/' . $itemRequest->picture) }}" class="img-thumbnail"
+                            <img src="{{ s3_asset(true,10, $itemRequest->picture) }}" class="img-thumbnail"
                                 style="max-width: 250px;">
                         </div>
                     @endif
@@ -127,10 +159,53 @@
     <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
     <script src="{{ asset('js/thriveEditor.js') }}"></script>
     <script>
+        function loadProductSuppliers() {
+            const supplierCategoryId = $('#supplier_category_id').val();
+            const supplierTypeId = $('#supplier_type_id').val();
+
+            if (supplierCategoryId && supplierTypeId) {
+                $.ajax({
+                    url: '{{ route("item-request.fetch-suppliers") }}',
+                    method: 'POST',
+                    data: {
+                        supplier_category_id: supplierCategoryId,
+                        supplier_type_id: supplierTypeId,
+                        _token: '{{ csrf_token() }}'
+                    },
+                    success: function (res) {
+                        if(res.success) {
+                            const $select = $('#product_supplier_id');
+                            const selectedId = '{{ old("product_supplier_id", isset($itemRequest) ? $itemRequest->product_supplier_id : '') }}';
+                            $select.empty();
+                            if (res.data && res.data.length > 0) {
+                                res.data.forEach(item => {
+                                    const isSelected = item.id == selectedId ? 'selected' : '';
+                                    $select.append(`<option value="${item.id}" ${isSelected}>${item.store_name + ' - ' + item.owner_name}</option>`);
+                                });
+                            }
+
+                            $select.select2({
+                                width: 'resolve',
+                            });
+
+                        } else {
+                            alert("Product Supplier Tidak Ditemukan");
+                        }
+                    },
+                    error: function () {
+                        alert('Gagal memuat product supplier');
+                    }
+                });
+            }
+        }
+
+        $('#supplier_category_id, #supplier_type_id').on('change', loadProductSuppliers);
+    </script>
+    <script>
         $(document).ready(function() {
             // Initialize Select2
             $('.select2').select2({
-                placeholder: '-- Pilih Kategori --',
+                placeholder: '-- Pilih --',
                 allowClear: true
             });
         });
@@ -186,7 +261,7 @@
             border: 1px solid #007bff !important;
         }
 
-        .select2-selection__choice__remove
+        
         {
             color: #fe0700 !important;
             border: 1px solid #007bff !important;

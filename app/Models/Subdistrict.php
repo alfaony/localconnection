@@ -31,8 +31,18 @@ class Subdistrict extends Model
         return $this->hasOne(PostalCode::class,'subdistrict_id', 'id');
     }
 
+    public function coverageService()
+    {
+        return $this->hasOne(CoverageService::class, 'subdistrict_id');
+    }
+
     public function asDefaultDistrict()
     {
         return $this->hasOne(District::class, 'default_subdistrict_id', 'id');
+    }
+
+    public function subdistrictCoverages()
+    {
+        return $this->hasMany(CoverageService::class, 'subdistrict_id');
     }
 }

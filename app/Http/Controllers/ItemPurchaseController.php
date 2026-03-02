@@ -11,6 +11,7 @@ use App\Models\ItemPurchase;
 use App\Models\Payment;
 use App\Models\ItemRequest;
 use App\Models\User;
+use App\Models\UserStatus;
 use App\Models\ProductSupplier;
 use App\Models\PotentialVendor;
 
@@ -23,6 +24,7 @@ use App\Schemas\RoleSchema;
 
 use App\Events\ChatMessageSent;
 use App\Jobs\ItemRequestClose;
+use App\Services\ItemRequestNotificationService;
 
 class ItemPurchaseController extends Controller
 {
@@ -153,7 +155,7 @@ class ItemPurchaseController extends Controller
         try {
             $itemPurchase = ItemPurchase::where('id', $id)->firstOrFail();
     
-            $path = $request->file('proof_image')->store('bukti_transfer', 'public');
+            $path = $request->file('proof_image')->store('bukti_transfer');
     
             Payment::create([
                 'company_id' => auth()->user()->company_id,
@@ -177,7 +179,22 @@ class ItemPurchaseController extends Controller
                 $this->sentInbox($itemPurchase->itemRequest->user_id,$message, $directUrl, $itemPurchase->itemRequest->id);
             }
 
-            
+            // Kirim Notifikasi ke PIC
+            $fcmTokens = UserStatus::where('user_id', $itemPurchase->itemRequest->assigned_pic_id)
+                ->pluck('fcm_id')
+                ->filter()
+                ->unique()
+                ->values()
+                ->toArray();
+
+            app(ItemRequestNotificationService::class)->send(
+                $fcmTokens,
+                [
+                    'event'      => 'item_request_paid',
+                    'request_id' => $itemPurchase->item_request_id,
+                    'item_name'  => $itemPurchase->itemRequest->item_name,
+                ]
+            );
             DB::commit();
             return response()->json(['success' => true]);
         } catch (\Throwable $th) {

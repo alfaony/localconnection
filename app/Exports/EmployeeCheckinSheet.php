@@ -17,8 +17,9 @@ class EmployeeCheckinSheet implements FromView, WithTitle
     protected $today;
     protected $sort;
     protected $role;
+    protected $user;
 
-    public function __construct($company_id, $userId, $start, $end, $today, $sort, $role)
+    public function __construct($user, $company_id, $userId, $start, $end, $today, $sort, $role)
     {
         $this->company_id = $company_id;
         $this->userId = $userId;
@@ -27,6 +28,7 @@ class EmployeeCheckinSheet implements FromView, WithTitle
         $this->today = $today;
         $this->sort = $sort;
         $this->role = $role;
+        $this->user = $user;
     }
 
     public function title(): string
@@ -36,14 +38,21 @@ class EmployeeCheckinSheet implements FromView, WithTitle
 
     public function view(): View
     {
-        $users = User::where('is_checkin', true)->withCheckinCountsJob($this->company_id, $this->userId, $this->start, $this->end, $this->today, $this->role)->get();
+        $query = User::select('id', 'name')
+            ->where('is_checkin', true)
+            ->byCompanyAccess($this->user, $this->company_id, $this->role)
+            ->with(['employeeCheckings' => function ($query) {
+                $query->select('id', 'user_id', 'scheduled_time', 'checkin_start_time', 'is_completed', 'is_dayoff', 'is_permission')
+                    ->whereBetween('scheduled_time', [$this->start, $this->end])
+                    ->orderBy('scheduled_time');
+            }]);
 
-        $users = $users->map(function ($user) {
-            $user->point_percentage = $user->point_percentage;
-            return $user;
-        })->sortBy([
-            ['point_percentage', $this->sort]
-        ]);
+        if ($this->userId) 
+        {
+            $query->where('id', $this->userId);
+        }
+
+        $users = $query->get();
 
         return view('export.employee_checkin', [
             'users' => $users

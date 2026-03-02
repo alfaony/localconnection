@@ -9,10 +9,14 @@ use Illuminate\Support\Facades\DB;
 use App\Events\ChatMessageSent;
 
 use App\Models\User;
+use App\Models\UserStatus;
 use App\Models\Company;
 use App\Models\Delivery;
 use App\Models\ItemRequest;
+use App\Models\SupplierType;
 use App\Models\SettingCompany;
+use App\Models\ProductSupplier;
+use App\Models\PotentialVendor;
 use App\Models\SupplierCategory;
 
 use App\Jobs\SentMessageToVendor;
@@ -26,6 +30,7 @@ use App\Services\WorkflowService;
 use App\Services\Weblas\Device;
 use App\Services\Weblas\Message;
 use App\Services\Weblas\WablasClient;
+use App\Services\ItemRequestNotificationService;
 
 
 class ItemRequestController extends Controller
@@ -40,19 +45,24 @@ class ItemRequestController extends Controller
     {                
         $settingCompany = SettingCompany::byCompany(Auth::user()->company_id)->where('menu','wablas')->get()->pluck('field_value','field_title');
         $client = new WablasClient($settingCompany['server_wablas'], $settingCompany['token_wablas'], $settingCompany['webhook_key_wablas']);
+        $types = SupplierType::byCompany(Auth::user()->company_id)->get();
+        $productSuppliers = collect();
+
         $shareWa = $client->status() ?? false;
 
-        $existsSprinter = User::where('company_id', Auth::user()->company_id)
+        $sprinters = User::where('company_id', Auth::user()->company_id)
             ->whereHas('role.permissions', function ($q) {
                 $q->where('method', 'as_sprinter')
                 ->where('table', 'item_requests');
             })
-            ->exists();
+            ->get();
+
+        $existsSprinter = $sprinters->count() > 0;
 
         
         // $statusShareWa = 
         $categories = SupplierCategory::byCompany(Auth::user()->company_id)->get();
-        return view('item_request.createOrEdit', compact('categories', 'shareWa', 'existsSprinter'));
+        return view('item_request.createOrEdit', compact('categories', 'shareWa', 'existsSprinter','types','sprinters', 'productSuppliers'));
     }
 
     public function store(Request $request)
@@ -65,21 +75,24 @@ class ItemRequestController extends Controller
             'qty'=> "required|numeric|min:1"
         ]);
 
+        // dd(collect($request->product_supplier_id));
+        // dd($request->all());
         // $userCandidate = $this->findCandidate(Auth::user()->company_id);
 
         if ($request->hasFile('picture')) 
         {
-            $validated['picture'] = $request->file('picture')->store('item_pictures', 'public');
+            $validated['picture'] = $request->file('picture')->store('item_pictures');
         }
 
         // $validated['assigned_pic_id'] = $userCandidate->id;
         $validated['user_id'] = auth()->id();
         $validated['company_id'] = auth()->user()->company_id;
         $validated['status'] = 'REQUESTED';
+        $validated['supplier_type_id'] = $request->type;
 
         $item = ItemRequest::create($validated);
 
-        dispatch(new ProcessItemRequestCreated($item->id));
+        dispatch(new ProcessItemRequestCreated($item->id, $request->assigned_pic_id, $request->product_supplier_id));
 
         $settingCompany = SettingCompany::byCompany(Auth::user()->company_id)->where('menu','wablas')->get()->pluck('field_value','field_title');
 
@@ -87,25 +100,56 @@ class ItemRequestController extends Controller
         {
             dispatch(new SentMessageToVendor($item));
         }
+
+        //Kirim ke mobile app 
+        if ($request->assigned_pic_id) {
+            $fcmTokens = UserStatus::where('user_id', $request->assigned_pic_id)
+            ->pluck('fcm_id')
+            ->filter()
+            ->unique()
+            ->values()
+            ->toArray();
+
+            app(ItemRequestNotificationService::class)->send(
+                $fcmTokens,
+                [
+                    'event'       => 'item_request_created',
+                    'request_id' => $item->id,
+                    'sprinter_id'     => $request->assigned_pic_id,
+                    'item_name'       => $item->item_name,
+                    'message'         => "Permintaan barang {$item->item_name}",
+                ]
+            );
+        }
         return redirect()->route('item-request.show',$item->id)->with('success', 'Request submitted.');
     }
 
     public function edit(ItemRequest $itemRequest)
     {
+        if(!$itemRequest->action_permission) 
+        {
+            return redirect()->back()->with('error', 'Anda tidak memiliki akses untuk mengedit data ini.');
+        }
+
         $categories = SupplierCategory::byCompany(Auth::user()->company_id)->get();
 
         $settingCompany = SettingCompany::byCompany(Auth::user()->company_id)->where('menu','wablas')->get()->pluck('field_value','field_title');
         $client = new WablasClient($settingCompany['server_wablas'], $settingCompany['token_wablas'], $settingCompany['webhook_key_wablas']);
+        $types = SupplierType::byCompany(Auth::user()->company_id)->get();
+        $productSuppliers = ProductSupplier::byCompany(Auth::user()->company_id)->get();
+
         $shareWa = $client->status() ?? false;
 
-        $existsSprinter = User::where('company_id', Auth::user()->company_id)
+        $sprinters = User::where('company_id', Auth::user()->company_id)
             ->whereHas('role.permissions', function ($q) {
                 $q->where('method', 'as_sprinter')
                 ->where('table', 'item_requests');
             })
-            ->exists();
+            ->get();
 
-        return view('item_request.createOrEdit', compact('itemRequest', 'categories', 'shareWa','existsSprinter'));
+        $existsSprinter = $sprinters->count() > 0;
+
+        return view('item_request.createOrEdit', compact('itemRequest', 'categories', 'shareWa','existsSprinter','types', 'sprinters', 'productSuppliers'));
     }
 
     public function show(ItemRequest $itemRequest)
@@ -122,6 +166,41 @@ class ItemRequestController extends Controller
             'estimated_price' => 'required|numeric|min:1',
             'qty' => 'required|numeric|min:1',
         ]);
+        
+                // Kelola PotentialVendor berdasarkan product_supplier_id
+        if (!empty($request->product_supplier_id)) 
+        {
+            $inputVendorIds = $request->product_supplier_id ?? [];
+
+            // Step 1: Ambil ID existing dari relasi
+            $existingVendorIds = $itemRequest->potentialVendors->pluck('product_supplier_id')->toArray();
+
+            // Step 2: Simpan atau update data baru
+            foreach ($inputVendorIds as $vendorId) {
+                PotentialVendor::firstOrCreate([
+                    'company_id' => $itemRequest->company_id,
+                    'item_request_id' => $itemRequest->id,
+                    'product_supplier_id' => $vendorId,
+                ], [
+                    'responded' => false
+                ]);
+            }
+
+            // Step 3: Hapus data lama yang tidak ada dalam input baru
+            $vendorsToDelete = array_diff($existingVendorIds, $inputVendorIds);
+
+            if (!empty($vendorsToDelete)) {
+                PotentialVendor::where('item_request_id', $itemRequest->id)
+                    ->whereIn('product_supplier_id', $vendorsToDelete)
+                    ->delete();
+            }
+        } 
+        // else 
+        // {
+        //     $itemRequest->potentialVendors()->delete();
+        // }
+        
+        $validated['supplier_type_id'] = $request->type;
 
         $settingCompany = SettingCompany::byCompany(Auth::user()->company_id)->where('menu','wablas')->get()->pluck('field_value','field_title');
 
@@ -129,19 +208,20 @@ class ItemRequestController extends Controller
         {
             dispatch(new SentMessageToVendor($itemRequest));
         }
+        
 
         if ($request->hasFile('picture')) 
         {
             if ($itemRequest->picture) {
                 Storage::delete($itemRequest->picture);
             }
-            $validated['picture'] = $request->file('picture')->store('item_pictures', 'public');
+            $validated['picture'] = $request->file('picture')->store('item_pictures');
         }
 
         // dispatch(new ProcessItemRequestCreated($itemRequest->id));
         $itemRequest->update($validated);
 
-        return redirect()->route('item-request.index')->with('success', 'Request updated.');
+        return redirect()->route('item-request.show',$itemRequest->id)->with('success', 'Request updated.');
     }
 
     public function destroy(ItemRequest $itemRequest)
@@ -150,6 +230,12 @@ class ItemRequestController extends Controller
         {
             return redirect()->route('item-request.index')->with('error', 'Error: Request sudah selesai, tidak dapat dihapus.');
         }
+
+        if(!$itemRequest->action_permission) 
+        {
+            return redirect()->back()->with('error', 'Anda tidak memiliki akses untuk mengedit data ini.');
+        }
+        
         $itemRequest->delete();
         return redirect()->route('item-request.index')->with('success', 'Request deleted.');
     }
@@ -182,7 +268,7 @@ class ItemRequestController extends Controller
         if(Access::can('show','item_requests') && Access::can('workflow','item_requests'))
         {
             $pdf = [
-                'name' => 'show',
+                'name' => 'Show',
                 'route' => 'item-request.show',
                 'id' => true,
             ];
@@ -219,9 +305,15 @@ class ItemRequestController extends Controller
 
         foreach ($data->data as $index => $item) 
         {
+            $item->item_name = '<a href="'.route('item-request.show',$item->id).'">'.$item->item_name.'</a>';
             $item->estimated_price = 'Rp. '.number_format($item->estimated_price, 0,',','.'); // Format angka dengan 2 desimal
             $item->status = $item->status_badge;
+            if(!$item->action_permission)
+            {
+                $item->action = '<span class="badge badge-danger"><i class="fas fa-times"></i></span>';
+            }
         }
+
         
         return response()->json($data);
     }
@@ -271,11 +363,11 @@ class ItemRequestController extends Controller
        DB::beginTransaction();
        try {
         if ($request->hasFile('airwillbill_photo')) {
-            $airwillbillPath = $request->file('airwillbill_photo')->store('airwillbill', 'public');
+            $airwillbillPath = $request->file('airwillbill_photo')->store('airwillbill');
         } else {
             $airwillbillPath = null;
         }
-        $deliveryPhotoPath = $request->hasFile('delivery_photo') ? $request->file('delivery_photo')->store('delivery_photo', 'public') : null;
+        $deliveryPhotoPath = $request->hasFile('delivery_photo') ? $request->file('delivery_photo')->store('delivery_photo') : null;
 
         if(!$itemRequest->delivery)
         {
@@ -479,5 +571,30 @@ class ItemRequestController extends Controller
             $directUrl
         );
         return;
+    }
+    /**
+     * Handle AJAX request to fetch ProductSuppliers based on supplier_category_id and supplier_type_id.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function fetchProductSupplier(Request $request)
+    {
+        $request->validate([
+            'supplier_category_id' => 'required|exists:supplier_categories,id',
+            'supplier_type_id' => 'required|exists:supplier_types,id',
+        ]);
+    
+       $suppliers = ProductSupplier::byCompany(Auth::user()->company_id)
+        ->where('supplier_type_id', $request->supplier_type_id)
+        ->whereHas('supplierCategories', function ($query) use ($request) {
+            $query->where('supplier_category_id', $request->supplier_category_id);
+        })
+        ->get();
+    
+        return response()->json([
+            'success' => true,
+            'data' => $suppliers
+        ]);
     }
 }

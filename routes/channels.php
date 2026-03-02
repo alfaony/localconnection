@@ -27,3 +27,25 @@ Broadcast::channel('chat.item-request.{id}', function ($user, $id) {
 Broadcast::channel('user.{id}', function ($user, $id) {
     return (int) $user->id === (int) $id;
 });
+
+// QR untuk tampilan laptop
+Broadcast::channel('office.barcode.{companyId}', function ($user, $companyId) {
+    // return (int) $user->company_id === (int) $companyId;
+    return true;
+});
+
+// Notifikasi ke user yang melakukan scan
+Broadcast::channel('office.scan.{userId}', function ($user, $userId) {
+    // return (int) $user->id === (int) $userId;
+    return true;
+});
+
+// AskBos – hasil AI dikirim langsung ke user via broadcast
+Broadcast::channel('ask-bos.{userId}', function ($user, $userId) {
+    return $user->id === $userId;
+});
+
+// AskBos (channel baru) – public channel, tidak butuh auth
+Broadcast::channel('bos.user.{userId}', function ($user, $userId) {
+    return (int) $user->id === (int) $userId;
+});

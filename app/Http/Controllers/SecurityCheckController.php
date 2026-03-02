@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
 
 use App\Schemas\ParamSchema;
+use App\Helpers\Access;
 use Carbon\Carbon;
 
 class SecurityCheckController extends Controller
@@ -20,7 +21,13 @@ class SecurityCheckController extends Controller
         $checks = SecurityCheck::byCompany(Auth::user()->company_id)->with('photos')->orderby('created_at','desc')->paginate(10);
         $today = SecurityCheck::byCompany(Auth::user()->company_id)->where('date',Carbon::now()->format('Y-m-d'))->first();
 
-        return view('security_check.index', compact('checks','today'));
+        // permission
+        $isShow = Access::can('show','security_checks');
+        $isDestroy = Access::can('destroy','security_checks');
+
+
+
+        return view('security_check.index', compact('checks','today', 'isShow', 'isDestroy'));
     }
 
     public function create()
@@ -31,7 +38,7 @@ class SecurityCheckController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'photos.*' => 'required|image|max:10240', // 10MB Max
+            'photos.*' => 'required|file|mimes:jpeg,png,jpg,gif,mp4,mov,avi,wmv|max:51200', // 50MB Max
             'descriptions.*' => 'required|string|max:225', 
         ]);
 
@@ -51,12 +58,17 @@ class SecurityCheckController extends Controller
                 foreach ($request->file('photos') as $key => $photo) {
                     $file = $photo;
                     $filename = time() . '_' . $file->getClientOriginalName();
-                    $path = $file->storeAs('security', $filename, 'public');
+                    $path = $file->storeAs('security', $filename);
+                    
+                    // Deteksi tipe file
+                    $mimeType = $file->getMimeType();
+                    $fileType = str_starts_with($mimeType, 'video/') ? 'video' : 'image';
                     
                     $photoCheck = new SecurityCheckPhoto();
                     $photoCheck->security_check_id = $check->id;
                     $photoCheck->description = $description[$key];
                     $photoCheck->path = $path;
+                    $photoCheck->file_type = $fileType;
                     $photoCheck->status_of_day = ParamSchema::CHECKIN;
                     $photoCheck->save();
                 }
@@ -95,7 +107,7 @@ class SecurityCheckController extends Controller
     public function update(Request $request, $slug)
     {
         $request->validate([
-            'photos.*' => 'required|image|max:10240', // 10MB Max
+            'photos.*' => 'required|file|mimes:jpeg,png,jpg,gif,mp4,mov,avi,wmv|max:51200', // 50MB Max
             'descriptions.*' => 'required|string|max:225', 
         ]);
 
@@ -115,12 +127,17 @@ class SecurityCheckController extends Controller
                 foreach ($request->file('photos') as $key => $photo) {
                     $file = $photo;
                     $filename = time() . '_' . $file->getClientOriginalName();
-                    $path = $file->storeAs('security', $filename, 'public');
+                    $path = $file->storeAs('security', $filename);
+                    
+                    // Deteksi tipe file
+                    $mimeType = $file->getMimeType();
+                    $fileType = str_starts_with($mimeType, 'video/') ? 'video' : 'image';
                     
                     $photoCheck = new SecurityCheckPhoto();
                     $photoCheck->security_check_id = $check->id;
                     $photoCheck->description = $description[$key];
                     $photoCheck->path = $path;
+                    $photoCheck->file_type = $fileType;
                     $photoCheck->status_of_day = ParamSchema::CHECKOUT;
                     $photoCheck->save();
                 }

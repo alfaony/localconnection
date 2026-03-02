@@ -32,6 +32,25 @@ class DailyTaskStoreRequest extends FormRequest
             'name.*' => 'required|string|max:255',
             'description' => 'nullable|array',
             'description.*' => 'nullable|string',
+
+            'recurring' => 'nullable|array',
+            'recurring.*.frequency' => 'required|string|in:DAILY,WEEKLY,MONTHLY,YEARLY',
+            'recurring.*.until' => 'nullable|date',
+
+            // WEEKLY: require by_day with values MO..SU
+            'recurring.*.by_day' => 'required_if:recurring.*.frequency,WEEKLY|array|min:1',
+            'recurring.*.by_day.*' => 'required_with:recurring.*.by_day|string|in:MO,TU,WE,TH,FR,SA,SU',
+
+            // MONTHLY: require by_month_day (1-31). by_month optional (1-12)
+            'recurring.*.by_month_day' => 'required_if:recurring.*.frequency,MONTHLY|array|min:1',
+            'recurring.*.by_month_day.*' => 'required_with:recurring.*.by_month_day|integer|min:1|max:31',
+            'recurring.*.by_month' => 'nullable|array',
+            'recurring.*.by_month.*' => 'required_with:recurring.*.by_month|integer|min:1|max:12',
+
+            // YEARLY: require by_month (1-12)
+            'recurring.*.by_month' => 'required_if:recurring.*.frequency,YEARLY|array|min:1',
+            'recurring.*.by_month.*' => 'required_if:recurring.*.frequency,YEARLY|integer|min:1|max:12',
+
             'attachments_*.*' => 'nullable|file|max:10240' // 10 MB max
         ];
     }
@@ -72,7 +91,28 @@ class DailyTaskStoreRequest extends FormRequest
             'description.array' => 'Deskripsi harus berupa array.',
             'description.*.string' => 'Setiap deskripsi harus berupa string.',
             'attachments_*.*.file' => 'Attachments harus berupa file.',
-            'attachments_*.*.max' => 'Attachments tidak boleh lebih dari 10 MB.'
+            'attachments_*.*.max' => 'Attachments tidak boleh lebih dari 10 MB.',
+            'recurring.array' => 'Recurring harus berupa array.',
+            'recurring.*.frequency.required' => 'Frequency wajib diisi.',
+            'recurring.*.frequency.in' => 'Frequency harus salah satu dari: DAILY, WEEKLY, MONTHLY, YEARLY.',
+            'recurring.*.until.required' => 'Tanggal akhir (until) wajib diisi.',
+            'recurring.*.until.date' => 'Tanggal akhir (until) tidak valid.',
+            
+            'recurring.*.by_day.required_if' => 'Field by_day wajib diisi untuk frequency WEEKLY.',
+            'recurring.*.by_day.array' => 'by_day harus berupa array.',
+            'recurring.*.by_day.*.in' => 'by_day hanya boleh berisi: MO, TU, WE, TH, FR, SA, SU.',
+            
+            'recurring.*.by_month_day.required_if' => 'Field by_month_day wajib diisi untuk frequency MONTHLY.',
+            'recurring.*.by_month_day.array' => 'by_month_day harus berupa array.',
+            'recurring.*.by_month_day.*.integer' => 'by_month_day harus berupa angka.',
+            'recurring.*.by_month_day.*.min' => 'by_month_day minimal 1.',
+            'recurring.*.by_month_day.*.max' => 'by_month_day maksimal 31.',
+            
+            'recurring.*.by_month.required_if' => 'Field by_month wajib diisi untuk frequency YEARLY.',
+            'recurring.*.by_month.array' => 'by_month harus berupa array.',
+            'recurring.*.by_month.*.integer' => 'by_month harus berupa angka.',
+            'recurring.*.by_month.*.min' => 'by_month minimal 1.',
+            'recurring.*.by_month.*.max' => 'by_month maksimal 12.',
         ];
     }
 }

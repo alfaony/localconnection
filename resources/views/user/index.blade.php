@@ -9,15 +9,7 @@ $totalUser = $totalUser + 1; // Get the total number of projects
 @section('content')
 
 <div class="col-md-12">
-    @if(Session::get('store'))
-    <div class="alert alert-success mt-3">Pengguna Berhasil Ditambahkan</div>
-    @endif
-    @if(Session::get('update'))
-    <div class="alert alert-success mt-3">Pengguna Berhasil Diperbarui</div>
-    @endif
-    @if(Session::get('delete'))
-    <div class="alert alert-success mt-3">Pengguna Berhasil Dihapus</div>
-    @endif
+    @include('components.alert')
     @if ($errors->any())
         <div class="alert alert-danger">
             <ul>
@@ -41,6 +33,9 @@ $totalUser = $totalUser + 1; // Get the total number of projects
 
             <label for="email">Email:</label>
             <input type="email" id="email" name="email" placeholder="Budiman@gmail.com" value="{{ old('email') ?? @$userEdit->email }}" required>
+
+            <label for="email">Email Gmail:</label>
+            <input type="email" id="email" name="email_gmail" placeholder="Budiman@gmail.com" value="{{ old('email_gmail') ?? @$userEdit->email_gmail }}">
 
             <label for="phone">Phone:</label>
             <input type="text" id="phone" name="phone" placeholder="08568989080" value="{{ old('phone') ?? @$userEdit->phone }}" oninput="this.value = this.value.replace(/[^0-9]/g, ''); this.value = this.value.replace(/^((0|62)[0-9]*)$/, '$1');" >
@@ -110,12 +105,15 @@ $totalUser = $totalUser + 1; // Get the total number of projects
                 </div>
             </div>
             <div class="form-group mt-2 mb-1">
-                <label for="checkin-settings">Setting Check-In:</label>
-                
+                <label for="is_checkin">Metode Absensi</label>
                 <!-- Check-In Setting -->
-                <div class="form-check">
-                    <input type="checkbox" class="form-check-input" name="is_checkin" id="is_checkin" value="1" >
-                    <label class="form-check-label" for="is_checkin">Enable Check-In</label>
+                <div class="form-group">
+                    <select name="is_checkin" id="is_checkin" class="form-control">
+                        <option value="">-- Pilih Metode Check-In --</option>
+                        <option value="wfo" {{ old('is_checkin', @$userEdit->is_checkin ?? '') == 'wfo' ? 'selected' : '' }}>WFO Check-In</option>
+                        <option value="wfh" {{ old('is_checkin', @$userEdit->is_checkin ?? '') == 'wfh' ? 'selected' : '' }}>WFH Check-In</option>
+                        <option value="shift" {{ old('is_checkin', @$userEdit->is_checkin ?? '') == 'shift' ? 'selected' : '' }}>Shift Kehadiran</option>
+                    </select>
                 </div>
 
                 <!-- Additional Settings - Visible only if is_checkin is enabled -->
@@ -171,6 +169,29 @@ $totalUser = $totalUser + 1; // Get the total number of projects
                                     placeholder="Selesai" value="{{ old("custom_rest_times.$day.end") ?? @$userEdit->custom_rest_times[$value]['end'] }}">
                             </div>
                         @endforeach
+                    </div>
+                </div>
+
+                <!-- WFO Working Days Settings -->
+                <div id="wfoSettings" style="display: none;">
+                    <div class="form-group mt-3">
+                        <label class="font-weight-bold">Hari Kerja WFO:</label>
+                        <div class="border p-3 rounded bg-light">
+                            @foreach(config('custom.daysOfWeek') as $dayName => $dayValue)
+                            <div class="form-check">
+                                <input 
+                                    class="form-check-input" 
+                                    type="checkbox" 
+                                    name="wfo_working_days[{{ $dayValue }}]" 
+                                    id="wfo-day-{{ $dayValue }}"
+                                    value="1"
+                                    {{ old("wfo_working_days.$dayValue", @$userEdit->wfo_working_days[$dayValue] ?? false) ? 'checked' : '' }}>
+                                <label class="form-check-label" for="wfo-day-{{ $dayValue }}">
+                                    {{ $dayName }}
+                                </label>
+                            </div>
+                            @endforeach
+                        </div>
                     </div>
                 </div>
             </div>
@@ -288,6 +309,9 @@ $totalUser = $totalUser + 1; // Get the total number of projects
             <label for="email">Email:</label>
             <input type="email" id="email" name="email" placeholder="Budiman@gmail.com" value="{{ old('email') ?? @$userEdit->email }}" required>
 
+            <label for="email">Email Gmail:</label>
+            <input type="email" id="email" name="email_gmail" placeholder="Budiman@gmail.com" value="{{ old('email_gmail') ?? @$userEdit->email_gmail }}">
+
             <label for="phone">Phone:</label>
             <input type="text" id="phone" name="phone" placeholder="08568989080" value="{{ old('phone') ?? @$userEdit->phone }}" oninput="this.value = this.value.replace(/[^0-9]/g, ''); this.value = this.value.replace(/^((0|62)[0-9]*)$/, '$1');" >
 
@@ -364,12 +388,15 @@ $totalUser = $totalUser + 1; // Get the total number of projects
                 </div>
             </div>
             <div class="form-group mt-2 mb-1">
-                <label for="checkin-settings">Setting Check-In:</label>
-                
+                <label for="is_checkin">Metode Absensi</label>
                 <!-- Check-In Setting -->
-                <div class="form-check">
-                    <input type="checkbox" class="form-check-input" name="is_checkin" id="is_checkin" value="1" {{ @$userEdit->is_checkin ? 'checked' : '' }}>
-                    <label class="form-check-label" for="is_checkin">Enable Check-In</label>
+                <div class="form-group">
+                    <select name="is_checkin" id="is_checkin" class="form-control">
+                        <option value="">-- Pilih Metode Check-In --</option>
+                        <option value="wfo" {{ @$userEdit->wfo_check_in ? 'selected' : '' }}>WFO Check-In</option>
+                        <option value="wfh" {{ @$userEdit->is_checkin ? 'selected' : '' }}>WFH / Hybrid Check-In</option>
+                        <option value="shift" {{ @$userEdit->is_shift_attendance ? 'selected' : '' }}>Shift Kehadiran</option>
+                    </select>
                 </div>
 
                 <!-- Additional Settings - Visible only if is_checkin is enabled -->
@@ -426,6 +453,28 @@ $totalUser = $totalUser + 1; // Get the total number of projects
                             </div>
                         @endforeach
                     </div>                    
+                </div>
+
+                <div id="wfoSettings" style="display: none;">
+                    <div class="form-group mt-3">
+                        <label class="font-weight-bold">Hari Kerja WFO:</label>
+                        <div class="border p-3 rounded bg-light">
+                            @foreach(config('custom.daysOfWeek') as $dayName => $dayValue)
+                            <div class="form-check">
+                                <input 
+                                    class="form-check-input" 
+                                    type="checkbox" 
+                                    name="wfo_working_days[{{ $dayValue }}]" 
+                                    id="wfo-day-{{ $dayValue }}"
+                                    value="1"
+                                    {{ old("wfo_working_days.$dayValue", @$userEdit->wfo_working_days[$dayValue] ?? false) ? 'checked' : '' }}>
+                                <label class="form-check-label" for="wfo-day-{{ $dayValue }}">
+                                    {{ $dayName }}
+                                </label>
+                            </div>
+                            @endforeach
+                        </div>
+                    </div>
                 </div>
             </div>
             <div class="form-group mt-2 ">
@@ -532,6 +581,12 @@ $totalUser = $totalUser + 1; // Get the total number of projects
             </div>
         </form>
 
+        @canAccess('KyeExport','kyes')
+        <a href="{{ route('kye.KyeExport',request()->all()) }}" class="btn btn-primary">
+            <i class="fas fa-file-export"></i> Export Key
+        </a>
+        @endcanAccess
+
         <table class="table table-bordered">
             <tr>
                 <th>No</th>
@@ -558,14 +613,23 @@ $totalUser = $totalUser + 1; // Get the total number of projects
                     <form method="post" action="{{ route('user.destroy',$a) }}">
                         @csrf
                         @method('delete')
+                        @canAccess('index','kyes')
+                        @canAccess('show','kyes')
+                        @if($a->kye)
+                        <a href="{{ route('kye.show', $a->kye->id) }}" class="btn btn-sm btn-warning mb-1" title="Lihat Detail KYE" data-toggle="tooltip" data-placement="top" style="color: white;">
+                            <i class="fa fa-file"></i>
+                        </a>
+                        @endif
+                        @endcanAccess
+                        @endcanAccess
                         @canAccess('edit_profile_all_user','users')
-                        <a href="{{ route('user.profileEdit', $a->slug) }}" class="btn btn-info btn-sm"><i class="fa fa-user"></i></a>
+                        <a href="{{ route('user.profileEdit', $a->slug) }}" class="btn btn-info btn-sm mb-1"><i class="fa fa-user"></i></a>
                         @endcanAccess
                         @canAccess('edit','users')
-                        <a href="{{ route('user.edit',$a->slug) }}" class="btn btn-primary btn-sm"><i class="fa fa-edit"></i></a>
+                        <a href="{{ route('user.edit',$a->slug) }}" class="btn btn-primary btn-sm mb-1"><i class="fa fa-edit"></i></a>
                         @endcanAccess
                         @canAccess('destroy','users')
-                        <button onclick="return window.confirm('{{ __('Apakah Anda Yakin ? ') }}')" class="btn btn-danger btn-sm"><i class="fa fa-trash"></i></button>
+                        <button onclick="return window.confirm('{{ __('Apakah Anda Yakin ? ') }}')" class="btn btn-danger btn-sm mb-1"><i class="fa fa-trash"></i></button>
                         @endcanAccess
                     </form>
                 </td>
@@ -715,15 +779,16 @@ $totalUser = $totalUser + 1; // Get the total number of projects
 <script>
     function toggleAdditionalSettings() 
     {
-        const isCheckinChecked = document.getElementById('is_checkin').checked;
-        document.getElementById('additionalSettings').style.display = isCheckinChecked ? 'block' : 'none';
+        const isCheckinValue = document.getElementById('is_checkin').value;
+        const showSettings = isCheckinValue === 'wfh';
+        document.getElementById('additionalSettings').style.display = showSettings ? 'block' : 'none';
 
         // Set required attributes for time fields based on is_checkin state
-        document.getElementById('start_time').required = isCheckinChecked;
-        document.getElementById('end_time').required = isCheckinChecked;
-        document.getElementById('rest_time').required = isCheckinChecked;
+        document.getElementById('start_time').required = showSettings;
+        document.getElementById('end_time').required = showSettings;
+        document.getElementById('rest_time').required = showSettings;
     }
-    // Show/hide additional settings based on "Enable Check-In" checkbox
+    // Show/hide additional settings based on "Metode Check-In" select
     document.getElementById('is_checkin').addEventListener('change', toggleAdditionalSettings);
 
     // Initialize display and required attributes on page load
@@ -784,6 +849,31 @@ $totalUser = $totalUser + 1; // Get the total number of projects
         // Update 'salary' input with non-formatted number
         document.getElementById(inputNonFormat).value = parseInt(numStr);
     }
+</script>
+
+<script>
+    function toggleAdditionalSettings() 
+    {
+        const isCheckinValue = document.getElementById('is_checkin').value;
+        const showWfhSettings = isCheckinValue === 'wfh';
+        const showWfoSettings = isCheckinValue === 'wfo';
+        
+        document.getElementById('additionalSettings').style.display = showWfhSettings ? 'block' : 'none';
+        document.getElementById('wfoSettings').style.display = showWfoSettings ? 'block' : 'none';
+
+        // Set required attributes for time fields based on is_checkin state
+        document.getElementById('start_time').required = showWfhSettings;
+        document.getElementById('end_time').required = showWfhSettings;
+        document.getElementById('rest_time').required = showWfhSettings;
+    }
+    
+    // Show/hide additional settings based on "Metode Check-In" select
+    document.getElementById('is_checkin').addEventListener('change', toggleAdditionalSettings);
+
+    // Initialize display and required attributes on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        toggleAdditionalSettings();
+    });
 </script>
 @stop
 

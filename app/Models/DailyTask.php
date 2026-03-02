@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use Ramsey\Uuid\Uuid;
 use Carbon\Carbon;
@@ -38,7 +39,7 @@ class DailyTask extends Model
 
     public function setNameAttribute($value)
     {
-       if ($this->name != $value || $this->slug == '') {
+       if ($this->slug == '' || $this->slug == null) {
             $this->attributes['name'] = $value;
             $this->attributes['slug'] = $this->createUniqueSlug($value);
         } else {
@@ -59,6 +60,23 @@ class DailyTask extends Model
         }
 
         return $slug;
+    }
+
+
+    /**
+     * Determine if the current user can take action on this task.
+     * @return bool
+     */
+    public function isAction()
+    {
+        $user = Auth::user();
+        return ($this->user_id == $user->id) ||
+        (
+            isset($user->role) &&
+            $user->role->name == \App\Schemas\RoleSchema::MANAGER &&
+            $this->taskStatus &&
+            $this->taskStatus->name == \App\Schemas\ParamSchema::COMPLATE
+        );
     }
 
     public function assign()
@@ -158,6 +176,34 @@ class DailyTask extends Model
     public function recurringRule()
     {
         return $this->belongsTo(RecurringRule::class)->withTrashed();
+    }
+
+    public function momTask()
+    {
+        return $this->hasOne(MomTask::class, 'daily_task_id','id');
+    }
+
+    public function punishmentUser()
+    {
+        return $this->hasOne(PunishmentUser::class, 'dailytask_id');
+    }
+
+    public function getStatusSubmitIconAttribute()
+    {
+        if (!$this->status_submit) {
+            return 'Tidak Diketahui';
+        }
+
+        switch ($this->status_submit) {
+            case ParamSchema::ONTIME:
+                return '<span class="text-success"><i class="fas fa-check-circle mr-1"></i> On Time</span>';
+            case ParamSchema::LATE:
+                return '<span class="text-danger"><i class="fas fa-exclamation-circle mr-1"></i> Late</span>';
+            case ParamSchema::PINALTY_NOT_PROGRESS:
+                return '<span class="text-danger"><i class="fas fa-times-circle mr-1"></i> Penalty Not Progress</span>';
+            default:
+                return '<span class="text-muted"><i class="fas fa-clock mr-1"></i> Tidak Diketahui</span>';
+        }
     }
 
     public function getDateRangeSubmitAttribute()

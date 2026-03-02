@@ -27,7 +27,16 @@ class SupplierCategory extends Model
     public function scopeByCompany($query,$companyId)
     {
         if($companyId)
-        {
+        {   
+            $companyIds = auth()->user()->accessibleCompanies->pluck('id')->push($companyId)->unique();
+            $query->whereIn('company_id', $companyIds);
+        }
+    }
+
+    public function scopeByCompanyJob($query,$companyId)
+    {
+        if($companyId)
+        {   
             $query->where('company_id', $companyId);
         }
     }

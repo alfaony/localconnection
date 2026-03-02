@@ -126,7 +126,7 @@ class CityController extends Controller
         } else 
         {
             $cities = City::where('name', 'like', "%$query%")
-                ->whereHas('province', fn($q) => $q->where('name', 'like', "%$query%"))
+                // ->whereHas('province', fn($q) => $q->where('name', 'like', "%$query%"))
                 ->limit(10)
                 ->get();
         }

@@ -12,6 +12,10 @@ class VerifyCsrfToken extends Middleware
      * @var array<int, string>
      */
     protected $except = [
+        'api/test',
+        'keloola-pay/webhook',
+        'xendit/webhook',
+        'midtrans/webhook',
         'wablas/webhook',
         'xero/webhook', // Tambahkan endpoint webhook di sini
     ];

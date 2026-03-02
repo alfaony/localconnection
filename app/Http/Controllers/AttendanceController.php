@@ -88,7 +88,7 @@ class AttendanceController extends Controller
             // Hapus file lama jika ada        
             $file = $request->file('pic_in');
             $filename = time() . '_' . $file->getClientOriginalName();
-            $filePath = $file->storeAs('attendance', $filename, 'public');
+            $filePath = $file->storeAs('attendance', $filename);
         }
 
         Attendance::create([
@@ -127,7 +127,7 @@ class AttendanceController extends Controller
             // Hapus file lama jika ada        
             $file = $request->file('pic_out');
             $filename = time() . '_' . $file->getClientOriginalName();
-            $filePath = $file->storeAs('attendance', $filename, 'public');
+            $filePath = $file->storeAs('attendance', $filename);
         }
 
         $attendance->update([
