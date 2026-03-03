@@ -14,7 +14,7 @@ class AskBosController extends Controller
     protected $openAiService;
     public function index(ServiceOpenAi $openAiService)
     {
-        $users = User::byCompany(Auth::user()->company_id)->get();
+        $users = User::byCompany(Auth::user()->company_id)->isActive()->get();
         return view('ask_bos.index', compact('users'));
     }
 
