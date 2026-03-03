@@ -456,7 +456,8 @@ class SubscriptionService
     public function autoExpireUnpaidSubscriptions(bool $dryRun = false, ?string $id = null, bool $force = false): array
     {
         // Find unpaid/pending payments that have passed their `expired_at` deadline
-        $query = \App\Models\SubscriptionPayment::whereIn('status', ['pending', 'unpaid']);
+        $query = \App\Models\SubscriptionPayment::whereIn('status', ['pending', 'unpaid'])
+            ->whereNull('manual_transfer_proof');
         if (!$force) {
             $query->where('expired_at', '<', now());
         }

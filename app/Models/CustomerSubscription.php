@@ -207,7 +207,10 @@ class CustomerSubscription extends Model
         $hours = (int) env('SLOT_RESERVATION_HOURS', 1);
         return $query->where('payment_status', 'unpaid')
             ->whereIn('status', ['active', 'pending'])
-            ->where('created_at', '<', Carbon::now()->subHours($hours));
+            ->where('created_at', '<', Carbon::now()->subHours($hours))
+            ->whereDoesntHave('payments', function ($q) {
+                $q->whereNotNull('manual_transfer_proof');
+            });
     }
 
     /**
@@ -218,6 +221,11 @@ class CustomerSubscription extends Model
     {
         if ($this->payment_status !== 'unpaid' || !$this->created_at) {
             return null;
+        }
+
+        $hasProof = $this->payments()->whereNotNull('manual_transfer_proof')->exists();
+        if ($hasProof) {
+            return 'Menunggu Konfirmasi';
         }
 
         $now = Carbon::now();
@@ -238,6 +246,12 @@ class CustomerSubscription extends Model
         if (!$this->created_at || $this->payment_status !== 'unpaid') {
             return false;
         }
+        
+        $hasProof = $this->payments()->whereNotNull('manual_transfer_proof')->exists();
+        if ($hasProof) {
+            return false;
+        }
+
         return Carbon::now()->gte($this->slot_deadline);
     }
 

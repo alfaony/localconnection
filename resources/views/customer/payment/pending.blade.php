@@ -17,7 +17,7 @@
                 </p>
 
                 {{-- Auto-cancel deadline warning --}}
-                @if($subscription->payment_status == 'unpaid' && $subscription->slot_deadline)
+                @if($subscription->payment_status == 'unpaid' && $subscription->slot_deadline && !$payment->manual_transfer_proof)
                 <div class="mt-3 mx-auto p-3 rounded-lg" style="max-width: 500px; background: {{ $subscription->isSlotExpired() ? '#fee2e2' : '#fef9c3' }}; border: 1px solid {{ $subscription->isSlotExpired() ? '#f87171' : '#facc15' }};">
                     @if($subscription->isSlotExpired())
                         <div style="color: #dc2626; font-weight: 600; font-size: 14px;">

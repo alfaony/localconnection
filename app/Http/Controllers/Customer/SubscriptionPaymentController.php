@@ -147,6 +147,7 @@ class SubscriptionPaymentController extends Controller
 
             // Update payment record
             $payment->update([
+                'expired_at' => null,
                 'manual_transfer_proof' => $path,
                 'manual_transfer_sender_name' => $request->sender_name,
                 'manual_transfer_sender_bank' => $request->sender_bank,
