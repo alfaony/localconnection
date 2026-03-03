@@ -77,7 +77,7 @@ class InternetCustomerShow extends Component
             'city',
             'district',
             'subdistrict',
-            'internetPackage',
+            'internetPackage.regions',  // eager-load regions untuk harga per wilayah
             'partnershipAgreement',
             'userCustomer',
             'purchases',
@@ -101,8 +101,9 @@ class InternetCustomerShow extends Component
 
         $this->status_active = $this->customer->status != ParamSchema::INACTIVE ? true : false;
         $this->availablePackages = InternetPackage::byCompany(Auth::user()->company_id)
-        ->where('is_active', true)
-        ->get();
+            ->where('is_active', true)
+            ->with('regions')
+            ->get();
     }
 
     // ========================================
@@ -673,15 +674,22 @@ class InternetCustomerShow extends Component
 
     public function openEditPackageModal()
     {
-        // Load available packages
+        // Load available packages — filter berdasarkan wilayah customer
+        // Sehingga admin hanya bisa pilih paket yang berlaku di wilayah customer
         $this->availablePackages = InternetPackage::where('company_id', $this->customer->company_id)
             ->where('is_active', true)
             ->where('id', '!=', $this->customer->internet_package_id)
+            ->with('regions')
+            ->forRegion(
+                $this->customer->province_id,
+                $this->customer->city_id,
+                $this->customer->district_id
+            )
             ->get();
-        
+
         // Reset form
         $this->new_package_id = null;
-        
+
         // Open modal
         $this->dispatchBrowserEvent('show-edit-package-modal');
     }

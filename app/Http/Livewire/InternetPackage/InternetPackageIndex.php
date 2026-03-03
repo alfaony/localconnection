@@ -59,6 +59,7 @@ class InternetPackageIndex extends Component
         return view('livewire.internet-package.internet-package-index', [
             'isCheck' => $isCheck,
             'packages' => InternetPackage::query()
+                ->with('regions')  // eager-load regions untuk badge wilayah
                 ->byCompany(Auth::user()->company_id)
                 ->when($this->search, function ($query) {
                     $query->where('name', 'like', '%'.$this->search.'%')
