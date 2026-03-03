@@ -193,7 +193,7 @@ class MasterAccountController extends Controller
                 ->with('store', 'Master Account berhasil diupdate');
         } catch (\Throwable $th) {
             //throw $th;
-            dd($th);
+            // dd($th);
             \Log::error($th->getMessage());
             return redirect()
                 ->back()

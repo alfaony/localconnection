@@ -55,7 +55,7 @@ class MidtransController extends Controller
             }
 
         } catch (\Exception $e) {
-            dd($e);
+            // dd($e);
             $this->logging($request, 500, $e);
 
             Log::error('Midtrans webhook processing failed', [

@@ -247,7 +247,7 @@ class SubscriptionPaymentService
             ];
 
         } catch (\Exception $e) {
-            dd($e);
+            // dd($e);
 
             Log::error('Manual transfer payment failed', [
                 'company_id' => $this->companyId,

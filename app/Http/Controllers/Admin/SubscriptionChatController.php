@@ -160,7 +160,7 @@ class SubscriptionChatController extends Controller
                 ],
             ]);
         } catch (\Throwable $th) {
-            dd($th);
+            // dd($th);
             Log::error('Admin SubscriptionChat store error: ' . $th->getMessage());
             return response()->json(['error' => 'Gagal mengirim pesan.'], 500);
         }
