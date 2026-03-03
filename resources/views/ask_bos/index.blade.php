@@ -90,7 +90,10 @@
                         <input type="hidden" name="consultVendor" id="consultVendorSave"/>
         
                         <ul class="list-group">
-                            <li class="list-group-item"><b>Analisis:</b> <span id="analysisResult">-</span></li>
+                            <li class="list-group-item">
+                                <b>Analisis:</b>
+                                <div id="analysisResult" style="white-space: pre-line; margin-top: 4px;">-</div>
+                            </li>
                             <li class="list-group-item"><b>Trust Score:</b> <span id="trustScoreResult">-</span></li>
                             <li class="list-group-item"><b>Execution Score:</b> <span id="executionScoreResult">-</span></li>
                         </ul>
@@ -218,28 +221,32 @@
         disableStats      : true,
     });
 
+    // ── Helper: tampilkan analisa dengan newline rapi ──────────────────────
+    function setAnalysis(text) {
+        const el = document.getElementById('analysisResult');
+        // Ubah literal \n (dari JSON string) menjadi newline sebenarnya
+        el.innerText = (text || '-').replace(/\\n/g, '\n');
+    }
+
     // ── Listen hasil AI dari broadcast ──────────────────────────────────────
-    window.Echo.private(`ask-bos.${userId}`)
-        .listen('AskBosResponseReady', (e) => {
+    // Channel: bos.user.{userId} (public Channel — bukan PrivateChannel)
+    // Event  : .bos.response.ready (dot prefix = custom broadcastAs name)
+    window.Echo.channel(`bos.user.${userId}`)
+        .listen('.bos.response.ready', (e) => {
             setLoading(false);
 
-            document.getElementById('analysisResult').innerText      = e.analysis;
-            document.getElementById('trustScoreResult').innerText    = e.trust_score;
-            document.getElementById('executionScoreResult').innerText = e.execution_score;
-
-            document.getElementById('analysisResultSave').value      = e.analysis;
-            document.getElementById('trustScoreResultSave').value    = e.trust_score;
-            document.getElementById('executionScoreResultSave').value = e.execution_score;
-
-            if (e.trust_score !== 0 || e.execution_score !== 0) {
-                document.getElementById('submitDecision').style.display = 'block';
+            // Handle error flag dari backend (job gagal permanen)
+            if (e.is_error) {
+                setAnalysis('Terjadi kesalahan saat memproses.');
+                showToast('❌ Gagal mendapatkan hasil analisa.');
+                return;
             }
 
-            // Notifikasi suara
-            document.getElementById('notification-sound')?.play();
-
-            // Toast singkat
-            showToast('✅ Hasil analisa B.O.S sudah siap!');
+            // FIX: karena Pusher (10KB limit) payload-nya dikurangi,
+            // kita gunakan cache_key-nya untuk fetch full data lewat HTTP (AJAX).
+            if (e.cache_key) {
+                fetchFromCache(e.cache_key);
+            }
         });
 
     // ── Helper: loading state ────────────────────────────────────────────────
@@ -270,12 +277,16 @@
     }
 
     // ── Fallback: ambil hasil dari cache secara manual ───────────────────────
-    function fetchFromCache() {
+    function fetchFromCache(cacheKey = null) {
         const btn = document.getElementById('reloadBtn');
         btn.disabled = true;
         btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> Memuat...';
 
-        fetch("{{ route('check.response') }}")
+        const url = cacheKey 
+            ? "{{ route('check.response') }}?cache_key=" + cacheKey 
+            : "{{ route('check.response') }}";
+
+        fetch(url)
             .then(r => r.json())
             .then(data => {
                 if (data.status === 'waiting') {
@@ -287,7 +298,7 @@
 
                 // Hasil ditemukan di cache — tampilkan
                 setLoading(false);
-                document.getElementById('analysisResult').innerText       = data.analysis;
+                setAnalysis(data.analysis);
                 document.getElementById('trustScoreResult').innerText     = data.trust_score;
                 document.getElementById('executionScoreResult').innerText = data.execution_score;
                 document.getElementById('analysisResultSave').value       = data.analysis;
@@ -359,7 +370,7 @@
             })
             .then(r => r.json())
             .catch(() => {
-                document.getElementById('analysisResult').innerText = 'Terjadi kesalahan saat memproses.';
+                setAnalysis('Terjadi kesalahan saat memproses.');
                 setLoading(false);
             });
         });

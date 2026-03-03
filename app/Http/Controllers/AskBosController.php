@@ -14,7 +14,7 @@ class AskBosController extends Controller
     protected $openAiService;
     public function index(ServiceOpenAi $openAiService)
     {
-        $users = User::byCompany(Auth::user()->company_id)->get();
+        $users = User::byCompany(Auth::user()->company_id)->isActive()->get();
         return view('ask_bos.index', compact('users'));
     }
 
@@ -67,14 +67,21 @@ class AskBosController extends Controller
      * Fallback: ambil hasil dari cache jika broadcast gagal.
      * Dipanggil manual via tombol "Reload" di halaman.
      */
-    public function checkResponse()
+    public function checkResponse(Request $request)
     {
         $userId   = auth()->id();
-        $response = Cache::get("ai_response_{$userId}", null);
+        $cacheKey = $request->input('cache_key');
 
-        if ($response) {
-            Cache::forget("ai_response_{$userId}");
-            return response()->json($response);
+        if (!$cacheKey) {
+            $cacheKey = Cache::get("latest_ai_response_{$userId}");
+        }
+
+        if ($cacheKey) {
+            $response = Cache::get($cacheKey, null);
+            if ($response) {
+                // Return payload utuh (bisa diambil ulang selama masih ada di cache 10 menit)
+                return response()->json($response);
+            }
         }
 
         return response()->json(['status' => 'waiting'], 202);

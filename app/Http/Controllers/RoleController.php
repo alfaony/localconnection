@@ -300,7 +300,7 @@ class RoleController extends Controller
             'warehouses', 'sensors', 'racks', 'zones', 'wilayahs', 'providers',
             'shipping_rates', 'provinces', 'cities', 'districts', 'subdistricts',
             'postal_codes', 'shipping_calculations', 'ask_bos', 'decisions', 'kyes',
-            'partnership_agreements', 'product_suppliers', 'dayoffs', 'office_media',
+            'partnership_agreements', 'product_suppliers', 'dayoffs', 'office_media','partners',
             'weekly_reports', 'dashboard_weekly_reports', 'vehicles', 'subscribe_letters',
             'flowcharts', 'item_requests', 'item_purchases', 'chat_messages', 'meetings',
             'product_categories', 'companies', 'moms', 'master_check_items', 'used_laptops',

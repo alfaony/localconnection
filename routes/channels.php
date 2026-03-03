@@ -65,3 +65,8 @@ Broadcast::channel('subscription.chat.{subscriptionId}', function ($user, $subsc
 Broadcast::channel('ask-bos.{userId}', function ($user, $userId) {
     return $user->id === $userId;
 });
+
+// AskBos (channel baru) – public channel, tidak butuh auth
+Broadcast::channel('bos.user.{userId}', function ($user, $userId) {
+    return (int) $user->id === (int) $userId;
+});

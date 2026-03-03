@@ -4,40 +4,54 @@ namespace App\Events;
 
 use Illuminate\Broadcasting\Channel;
 use Illuminate\Broadcasting\InteractsWithSockets;
-use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
 class AskBosResponseReady implements ShouldBroadcast
 {
-    use Dispatchable, SerializesModels;
+    use Dispatchable, InteractsWithSockets, SerializesModels;
 
-    public string $userId;
-    public string $analysis;
-    public int    $trustScore;
-    public int    $executionScore;
+    public function __construct(
+        public readonly int|string $userId,
+        public readonly string     $analysis,
+        public readonly int        $trustScore,
+        public readonly ?int       $executionScore,  // nullable — tidak semua prompt generate ini
+        public readonly ?string    $cacheKey,        // FIX #3 — frontend fetch dari key yang benar
+        public readonly bool       $isError = false, // flag untuk frontend handle error state
+    ) {}
 
-    public function __construct(string $userId, string $analysis, int $trustScore, int $executionScore)
+    /**
+     * Channel broadcasting — private per user.
+     * Hanya user yang bersangkutan yang menerima event ini.
+     */
+    public function broadcastOn(): Channel
     {
-        $this->userId         = $userId;
-        $this->analysis       = $analysis;
-        $this->trustScore     = $trustScore;
-        $this->executionScore = $executionScore;
+        return new Channel("bos.user.{$this->userId}");
     }
 
-    public function broadcastOn(): PrivateChannel
+    /**
+     * Nama event yang diterima frontend (JavaScript).
+     */
+    public function broadcastAs(): string
     {
-        // Mirip pola office.scan.{userId}
-        return new PrivateChannel('ask-bos.' . $this->userId);
+        return 'bos.response.ready';
     }
 
+    /**
+     * Data yang dikirim ke frontend via WebSocket.
+     */
     public function broadcastWith(): array
     {
         return [
-            'analysis'       => $this->analysis,
-            'trust_score'    => $this->trustScore,
-            'execution_score'=> $this->executionScore,
+            // FIX: Hapus payload analysis dari broadcast untuk menghindari error Pusher (Payload too large > 10KB)
+            // Frontend akan menggunakan cache_key untuk mengambil payload utuh via endpoint AJAX (checkResponse).
+            'analysis'        => null,
+            'trust_score'     => $this->trustScore,
+            'execution_score' => $this->executionScore,  // null jika tidak di-generate AI
+            'cache_key'       => $this->cacheKey,
+            'is_error'        => $this->isError,
+            'timestamp'       => now()->toISOString(),
         ];
     }
 }
