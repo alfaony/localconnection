@@ -165,10 +165,10 @@
 
         <!-- Action Buttons -->
         <div class="d-flex justify-content-end gap-3 mb-5">
-            <a href="{{ route('subscription.index') }}" class="btn btn-outline-secondary btn-lg px-4 shadow-sm">
+            <a href="{{ route('subscription.index') }}" class="btn btn-outline-secondary btn-md px-4 shadow-sm mb-1 mr-1">
                 <i class="fas fa-arrow-left me-2"></i>Batal
             </a>
-            <button type="submit" class="btn btn-primary btn-lg px-5 shadow-sm" id="btnSubmit">
+            <button type="submit" class="btn btn-primary btn-md px-5 shadow-sm mb-1" id="btnSubmit">
                 <i class="fas fa-check-circle me-2"></i>Create Subscription
             </button>
         </div>
