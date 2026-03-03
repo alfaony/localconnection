@@ -131,15 +131,21 @@
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
+                    'Accept': 'application/json',
                     'X-CSRF-Token': csrfToken
                 },
                 body: JSON.stringify({ fcm_token: fcmToken || null })
             })
             .then(response => {
                 if (response.ok) {
-                    // Clear Local Storage and redirect after successful logout
+                    // Clear Local Storage
                     localStorage.removeItem('fcm_token');
-                    window.location.href = '/login';
+                    
+                    return response.json().then(data => {
+                        window.location.href = data.redirect_url || '/login';
+                    }).catch(() => {
+                        window.location.href = response.redirected ? response.url : '/login';
+                    });
                 } else {
                     console.error('Logout failed');
                 }

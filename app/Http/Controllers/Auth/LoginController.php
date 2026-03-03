@@ -14,6 +14,7 @@ use App\Models\SettingCompany;
 use App\Models\ScheduleOb;
 use Illuminate\Support\Facades\Auth;
 use App\Models\UserStatus;
+use Illuminate\Validation\ValidationException;
 
 class LoginController extends Controller
 {
@@ -122,9 +123,31 @@ class LoginController extends Controller
     //     return redirect()->intended($this->redirectPath());
     // }
 
+    protected function authenticated(Request $request, $user)
+    {
+        $prohibitedRoles = [
+            RoleSchema::CUSTOMER_SOFTWARE,
+        ];
+
+        if ($user->role && in_array($user->role->name, $prohibitedRoles)) {
+            Auth::logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+
+            throw ValidationException::withMessages([
+                $this->username() => ['Akun dengan role ini tidak diizinkan masuk melalui halaman ini.'],
+            ]);
+        }
+    }
+
     //*
     public function logout(Request $request)
     {
+        // Ambil user sebelum logout untuk cek role
+        $user = Auth::user();
+        $isCustomerSoftware = $user && $user->role?->name === RoleSchema::CUSTOMER_SOFTWARE;
+        $companySlug = $isCustomerSoftware ? $user->company?->slug : null;
+
         // Ambil `fcm_id` dari request
         $fcmId = $request->input('fcm_token');
 
@@ -141,7 +164,17 @@ class LoginController extends Controller
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return redirect('/login')->with('status', 'Logout berhasil');
+        // Customer Software diarahkan ke halaman login perusahaan mereka
+        $redirectUrl = url('/login');
+        if ($isCustomerSoftware && $companySlug) {
+            $redirectUrl = route('public.software-sharing.login', $companySlug);
+        }
+
+        if ($request->expectsJson() || $request->header('Content-Type') === 'application/json' || $request->ajax()) {
+            return response()->json(['redirect_url' => $redirectUrl]);
+        }
+
+        return redirect($redirectUrl)->with('status', 'Logout berhasil');
     }
 
 

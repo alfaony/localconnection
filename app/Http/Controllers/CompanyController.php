@@ -71,16 +71,42 @@ class CompanyController extends Controller
             $fieldWablas = ['server_wablas' => null,'token_wablas' => null, 'webhook_key_wablas' => null];
             $fieldGoogle = ['google_client_id' => null,'google_client_secret' => null, 'google_redirect_uri' => null, 'google_refresh_token' => null, 'google_access_token' => null,'google_expires_at' => null , 'google_token_created_at' => null];
             $fieldStore = ['default_tax' => null,'header_store_image' => null,'footer_store_message' => null,'store_name'=>null, "store_address" =>null];
-             $fieldPunishmentFormat = [
-                'range_start_date' => "21", // Range date
-                'range_end_date' => "20", // Range date
-                'presence_checkin' => 70, // Presence check-in
-                'punishment_point_wfh' => 10, // Punishment point WFH
-                'punishment_point_wfo' => 10, // Punishment point WFH
-                'overdue_task' => 40, // Overdue task
-                'entry_time' => "08:00", // Entry time
-                'tolerance' => 20, // Tolerance basis
-                'checkin_onday' => 4, // Check-in on the same day
+            $fieldPunishmentFormat = [
+            'range_start_date' => "21", // Range date
+            'range_end_date' => "20", // Range date
+            'presence_checkin' => 70, // Presence check-in
+            'punishment_point_wfh' => 10, // Punishment point WFH
+            'punishment_point_wfo' => 10, // Punishment point WFH
+            'overdue_task' => 40, // Overdue task
+            'entry_time' => "08:00", // Entry time
+            'tolerance' => 20, // Tolerance basis
+            'checkin_onday' => 4, // Check-in on the same day
+            ];
+
+            $fieldSoftwareSharing = [
+                'software_sharing_icon' => '',
+                'software_sharing_company_name' => '',
+                'software_sharing_company_address' => '',
+                'software_sharing_phone' => '',
+                'software_sharing_footer_message' => '',
+                'software_sharing_headline_message' => '',
+                'software_sharing_headline_support_message' => '',
+                'software_sharing_term_and_condition' => '',
+                'software_sharing_message_blast' => '',
+                'software_sharing_manual_payment_status' => '',
+                'software_sharing_nama_bank' => '',
+                'software_sharing_atas_nama' => '',
+                'software_sharing_cabang_bank' => '',
+                'software_sharing_rekening_number' => '',
+                'ppn_default_software_sharing' => '11',
+            ];
+
+            $fieldSoftwareSubscriptionXendit = ['public_key_software_subscription' => '', 'secret_key_software_subscription' => '', 'webhook_token_software_subscription' => '','xendit_pay_with_ppn_software_software_subscription'=>'0'];
+            $fieldSoftwareSubscriptionMidtrans = [
+                'server_key_midtrans_software_sharing' => '', 
+                'client_key_midtrans_software_sharing' => '', 
+                'environment_midtrans_software_sharing' => 'sandbox',
+                'midtrans_pay_with_ppn_software_sharing' => '0'
             ];
     
             foreach ($fieldProfile as $key => $value) 
@@ -226,6 +252,36 @@ class CompanyController extends Controller
                 $field = new SettingCompany();
                 $field->user_id = $user->id;
                 $field->menu="xendit_internet_customer";
+                $field->field_title = $key;
+                $field->field_value = $value;
+                $field->save();        
+            }
+
+            foreach ($fieldSoftwareSharing as $key => $value) 
+            {
+                $field = new SettingCompany();
+                $field->user_id = $user->id;
+                $field->menu="software_sharing_setting";
+                $field->field_title = $key;
+                $field->field_value = $value;
+                $field->save();        
+            }
+
+            foreach ($fieldSoftwareSubscriptionXendit as $key => $value) 
+            {
+                $field = new SettingCompany();
+                $field->user_id = $user->id;
+                $field->menu="xendit_software_subscription";
+                $field->field_title = $key;
+                $field->field_value = $value;
+                $field->save();        
+            }
+
+            foreach ($fieldSoftwareSubscriptionMidtrans as $key => $value) 
+            {
+                $field = new SettingCompany();
+                $field->user_id = $user->id;
+                $field->menu="midtrans_software_sharing";
                 $field->field_title = $key;
                 $field->field_value = $value;
                 $field->save();        
