@@ -200,6 +200,14 @@ class CustomerSubscription extends Model
     }
 
     /**
+     * Get Lastest Payment
+     */
+    public function lastestPayment()
+    {
+        return $this->hasOne(SubscriptionPayment::class, 'subscription_id')->latestOfMany('created_at');
+    }
+
+    /**
      * Scope: unpaid subscriptions whose slot reservation has expired (created_at + 24h < now).
      */
     public function scopeSlotExpired($query)

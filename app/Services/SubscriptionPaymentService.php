@@ -168,6 +168,7 @@ class SubscriptionPaymentService
         $externalId = $this->externalIdOverride ?? $data['xendit_external_id'];
         // Reset override after use
         $this->externalIdOverride = null;
+        $hours = config('services.subscription.slot_reservation_hours', 1);
 
         return SubscriptionPayment::create([
             'company_id'        => $data['company_id'],
@@ -181,7 +182,7 @@ class SubscriptionPaymentService
             'payment_method'    => $data['payment_method'] ?? null,
             'xendit_external_id'=> $externalId,
             'status'            => $data['status'] ?? 'pending',
-            'expired_at'        => $data['expired_at'] ?? now()->addHours(24),
+            'expired_at'        => $data['expired_at'] ?? now()->addHours($hours),
         ]);
     }
 

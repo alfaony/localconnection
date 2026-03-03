@@ -239,7 +239,6 @@ class CheckoutController extends Controller
         $subscription = CustomerSubscription::where('order_number', $order)
             ->with(['package', 'masterAccount.software'])
             ->firstOrFail();
-
         return view('customer.payment.success', compact('subscription'));
     }
 

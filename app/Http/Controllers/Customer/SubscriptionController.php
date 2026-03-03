@@ -221,7 +221,7 @@ class SubscriptionController extends Controller
 
             } elseif ($gateway === 'xendit') {
                 $ppnCalc = $paymentService->calculatePpn($package->harga, $gateway);
-
+                $hours = config('services.subscription.slot_reservation_hours', 1);
                 $payment = SubscriptionPayment::create([
                     'company_id'         => $subscription->company_id,
                     'subscription_id'    => $subscription->id,
@@ -232,7 +232,7 @@ class SubscriptionController extends Controller
                     'payment_gateway'    => 'xendit',
                     'xendit_external_id' => $subscription->order_number . '-RNW-' . time(),
                     'status'             => 'pending',
-                    'expired_at'         => now()->addHours(24),
+                    'expired_at'         => now()->addHours($hours),
                 ]);
 
                 $xenditService = new SubscriptionXenditService($subscription->company_id);
@@ -250,6 +250,7 @@ class SubscriptionController extends Controller
 
             } elseif ($gateway === 'midtrans') {
                 $ppnCalc = $paymentService->calculatePpn($package->harga, $gateway);
+                $hours = config('services.subscription.slot_reservation_hours', 1);
 
                 $payment = SubscriptionPayment::create([
                     'company_id'         => $subscription->company_id,
@@ -261,7 +262,7 @@ class SubscriptionController extends Controller
                     'payment_gateway'    => 'midtrans',
                     'xendit_external_id' => $subscription->order_number . '-RNW-' . time(),
                     'status'             => 'pending',
-                    'expired_at'         => now()->addHours(24),
+                    'expired_at'         => now()->addHours($hours),
                 ]);
 
                 $midtransService = new MidtransService($subscription->company_id);

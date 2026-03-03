@@ -10,9 +10,15 @@
         <div class="col-md-8">
             <div class="card card-success mt-5">
                 <div class="card-body text-center py-5">
-                    <i class="fas fa-check-circle fa-5x text-success mb-4"></i>
-                    <h1 class="text-success">Pembayaran Berhasil!</h1>
-                    <p class="lead">Terima kasih atas pembayaran Anda</p>
+                    @if($subscription && $subscription->lastestPayment->status !== 'paid')
+                        <i class="fas fa-hourglass-half fa-5x text-warning mb-4"></i>
+                        <h1 class="text-warning">Pembayaran Sedang Diproses</h1>
+                        <p class="lead">Sistem sedang memverifikasi pembayaran Anda</p>
+                    @else
+                        <i class="fas fa-check-circle fa-5x text-success mb-4"></i>
+                        <h1 class="text-success">Pembayaran Berhasil!</h1>
+                        <p class="lead">Terima kasih atas pembayaran Anda</p>
+                    @endif
                     
                     @if($subscription)
                     <div class="mt-4">
@@ -41,7 +47,7 @@
                         </div>
                     </div>
 
-                    @if($subscription->payment_status == 'paid')
+                    @if($subscription->lastestPayment->status == 'paid')
                     <div class="alert alert-success mt-3">
                         <i class="fas fa-envelope"></i> Untuk credential bisa dilihat tatacara di laman, atau chat admin kami melalui room chat subscription
                     </div>
@@ -92,7 +98,7 @@
 @section('js')
 <script>
 $(document).ready(function() {
-    @if($subscription && $subscription->payment_status != 'paid')
+    @if($subscription && $subscription->lastestPayment->status != 'paid')
     // Auto check payment status every 10 seconds
     let checkCount = 0;
     const maxChecks = 12; // Check for 2 minutes (12 * 10 seconds)
