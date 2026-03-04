@@ -36,6 +36,7 @@
     <div class="col-md-3">
         <select id="filter_division" class="form-control">
             <option value="">-- Semua Divisi --</option>
+            <option value="External">External</option>
             @foreach($divisions as $div)
                 <option value="{{ $div->id }}">{{ $div->name }}</option>
             @endforeach

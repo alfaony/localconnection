@@ -138,6 +138,7 @@ $totalProjects = $totalProject + 1; // Get the total number of projects
             <div class="p-2">
                 <select name="division" class="form-control select2">
                     <option value="">-- Semua Divisi --</option>
+                    <option value="External" {{ request('division') == 'External' ? 'selected' : '' }}>External</option>
                     @foreach($divisions as $div)
                         <option value="{{ $div->id }}" {{ request('division') == $div->id ? 'selected' : '' }}>{{ $div->name }}</option>
                     @endforeach

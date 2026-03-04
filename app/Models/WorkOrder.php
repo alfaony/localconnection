@@ -121,10 +121,15 @@ class WorkOrder extends Model
     }
     public function scopeByDivision($query, $divisionId)
     {
-        if ($divisionId) {
+        if ($divisionId === 'External') {
+            return $query->whereHas('quote', function($q) {
+                $q->whereNull('division_budget_id');
+            });
+        } elseif ($divisionId) {
             return $query->whereHas('quote.divisionBudget', function ($q) use ($divisionId) {
                 $q->where('division_id', $divisionId);
             });
         }
+        return $query;
     }
 }
