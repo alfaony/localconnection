@@ -11,9 +11,20 @@ use Illuminate\Support\Facades\Auth;
 class ProjectsExport implements FromCollection, WithHeadings, WithMapping
 {
     private $rowNumber = 0;
+    protected $division_id;
+
+    public function __construct($division_id = null)
+    {
+        $this->division_id = $division_id;
+    }
+
     public function collection()
     {
-        return Project::byCompany(Auth::user()->company_id)->orderBy('created_at', 'desc')->get();
+        $query = Project::byCompany(Auth::user()->company_id)->orderBy('created_at', 'desc');
+        if ($this->division_id) {
+            $query->byDivision($this->division_id);
+        }
+        return $query->get();
     }
 
     // Menentukan judul kolom untuk file export

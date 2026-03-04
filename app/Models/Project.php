@@ -265,14 +265,22 @@ class Project extends Model
         }
     }
 
-    public function scopeByRole($query)
+    public function scopeByRole($query, $search = false)
     {
-        if(Auth::user()->role->name == RoleSchema::STAFF || Auth::user()->role->name == RoleSchema::PM)
+        if((Auth::user()->role->name == RoleSchema::STAFF || Auth::user()->role->name == RoleSchema::PM) && !$search)
         {
             return $query->where('user_id', Auth::user()->id);
         }
         {
             return $query->byCompany(Auth::user()->company_id);
+        }
+    }
+    public function scopeByDivision($query, $divisionId)
+    {
+        if ($divisionId) {
+            return $query->whereHas('workOrder.quote.divisionBudget', function ($q) use ($divisionId) {
+                $q->where('division_id', $divisionId);
+            });
         }
     }
 }

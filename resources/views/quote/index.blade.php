@@ -44,10 +44,10 @@
         @canAccess('export','quotes')
         @canAccess('checkExportStatus','quotes')
         @canAccess('clearsession','quotes')
-        <a href="{{ route('quote.export', ['format' => 'xlsx']) }}" class="btn btn-success">
+        <a href="javascript:void(0)" onclick="exportData('xlsx')" class="btn btn-success">
             <i class="fa fa-file-excel"></i>
         </a>
-        <a href="{{ route('quote.export', ['format' => 'csv']) }}" class="btn btn-primary">
+        <a href="javascript:void(0)" onclick="exportData('csv')" class="btn btn-primary">
             <i class="fa fa-file-csv"></i>
         </a>
         @endcanAccess
@@ -67,6 +67,17 @@
             </div>
         </div>
     </form> -->
+    <!-- Filter Division -->
+    <div class="row mb-3">
+        <div class="col-md-3">
+            <select id="filter_division" class="form-control">
+                <option value="">-- Semua Divisi --</option>
+                @foreach($divisions as $div)
+                    <option value="{{ $div->id }}">{{ $div->name }}</option>
+                @endforeach
+            </select>
+        </div>
+    </div>
     
     <!-- Tabel Pembelian -->
     <table class="table table-bordered" id="tableQuote">
@@ -121,6 +132,7 @@
 <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
 <script src="https://cdn.datatables.net/responsive/2.2.9/js/dataTables.responsive.min.js"></script>
 @if(Session::get('export'))
@@ -200,6 +212,9 @@
             ajax: {
                 url: '{{ route("quote.datatable")}}',
                 type: 'GET',
+                data: function(d) {
+                    d.division = $('#filter_division').val();
+                },
                 dataSrc: 'data'
             },
             columns: [
@@ -212,7 +227,24 @@
             ],
             // order: [[0, 'desc']],
         });
+
+        $('#filter_division').select2({
+            width: '100%',
+        });
+
+        $('#filter_division').change(function() {
+            table.ajax.reload();
+        });
     });
+
+    function exportData(format) {
+        let division = $('#filter_division').val();
+        let url = "{{ route('quote.export', ['format' => ':format']) }}".replace(':format', format);
+        if (division) {
+            url += "?division=" + division;
+        }
+        window.location.href = url;
+    }
 </script>
 <script>
     $(document).ready(function () {
@@ -232,6 +264,7 @@
 <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
 <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap4.min.css"> 
 <link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.2.9/css/responsive.dataTables.min.css">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css" rel="stylesheet" />
 <style>
    body {
             font-family: Arial, sans-serif;
@@ -265,6 +298,15 @@
             border-radius: 5px;
             cursor: pointer;
         }
+            .select2-selection__rendered {
+        line-height: 31px !important;
+    }
+    .select2-container .select2-selection--single {
+        height: 35px !important;
+    }
+    .select2-selection__arrow {
+        height: 34px !important;
+    }
 
 </style>
 @stop
