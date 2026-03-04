@@ -36,7 +36,8 @@ class QuoteController extends Controller
      */
     public function index(Request $request)
     {
-        return view('quote.index');
+        $divisions = \App\Models\Division::byCompany(Auth::user()->company_id)->get();
+        return view('quote.index', compact('divisions'));
     }
 
     /**
@@ -551,6 +552,11 @@ class QuoteController extends Controller
         // Fetch data for the DataTable
         $query = Quote::query();
         $query->with('customer')->byCompany(Auth::user()->company_id)->orderBy('quote_number', 'desc');
+
+        if (request()->has('division') && request()->division != '') {
+            $query->byDivision(request()->division);
+        }
+
         // Map column indexes to column names (this may vary based on your table structure)
         $columnNames = ['number_result', 'total', 'budget_transition', 'slug'];
 
@@ -645,9 +651,11 @@ class QuoteController extends Controller
         $filename = 'quotes_' . time() . '.' . ($format === 'csv' ? 'csv' : 'xlsx');
         $exportFormat = $format === 'csv' ? \Maatwebsite\Excel\Excel::CSV : \Maatwebsite\Excel\Excel::XLSX;
 
+        $division = $request->input('division');
+
         // Queue the export and store the job file name in session
         $filename = "public/" . $filename;
-        ExportQuoteJob::dispatch($filename, $exportFormat, Auth::user()->company_id);
+        ExportQuoteJob::dispatch($filename, $exportFormat, Auth::user()->company_id, $division);
 
         session(['export_filename_quote' => $filename]);
         $filename = session('export_filename_quote');

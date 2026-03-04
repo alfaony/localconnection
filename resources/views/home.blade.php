@@ -222,205 +222,6 @@
     </div>
 </div>
 
-@canAccess('softwareSharing','homes')
-<div class="row g-3">
-    <div class="col-lg-3 col-6">
-        <div class="small-box bg-success">
-            <div class="inner">
-                <h3 id="stat-active">
-                    <i class="fas fa-spinner fa-spin"></i>
-                </h3>
-                <p>Active Subscriptions</p>
-            </div>
-            <div class="icon">
-                <i class="fas fa-check-circle"></i>
-            </div>
-            @canAccess('index','customer_software')
-            <a href="{{ route('customer-software.index') }}" class="small-box-footer">
-                View All <i class="fas fa-arrow-circle-right"></i>
-            </a>
-            @endcanAccess
-        </div>
-    </div>
-
-    <div class="col-lg-3 col-6">
-        <div class="small-box bg-warning">
-            <div class="inner">
-                <h3 id="stat-expiring">
-                    <i class="fas fa-spinner fa-spin"></i>
-                </h3>
-                <p>Expiring Soon (7 days)</p>
-            </div>
-            <div class="icon">
-                <i class="fas fa-exclamation-triangle"></i>
-            </div>
-            <a href="{{ route('customer-subscription.index') }}" class="small-box-footer">
-                View Details <i class="fas fa-arrow-circle-right"></i>
-            </a>
-        </div>
-    </div>
-
-    <div class="col-lg-3 col-6">
-        <div class="small-box bg-danger">
-            <div class="inner">
-                <h3 id="stat-expired">
-                    <i class="fas fa-spinner fa-spin"></i>
-                </h3>
-                <p>Expired Subscriptions</p>
-            </div>
-            <div class="icon">
-                <i class="fas fa-times-circle"></i>
-            </div>
-            <a href="{{ route('customer-subscription.index') }}" class="small-box-footer">
-                View All <i class="fas fa-arrow-circle-right"></i>
-            </a>
-        </div>
-    </div>
-
-    <div class="col-lg-3 col-6">
-        <div class="small-box bg-info">
-            <div class="inner">
-                <h3 id="stat-softwares">
-                    <i class="fas fa-spinner fa-spin"></i>
-                </h3>
-                <p>Available Software</p>
-            </div>
-            <div class="icon">
-                <i class="fas fa-box"></i>
-            </div>
-            <a href="{{ route('customer-software.index') }}" class="small-box-footer">
-                Browse Catalog <i class="fas fa-arrow-circle-right"></i>
-            </a>
-        </div>
-    </div>
-</div>
-
-<div class="row g-3">
-    <!-- Active Subscriptions -->
-    <div class="col-md-8">
-        <div class="card">
-            <div class="card-header">
-                <h3 class="card-title">
-                    <i class="fas fa-check-circle"></i> My Active Subscriptions
-                </h3>
-                <div class="card-tools">
-                    <a href="{{ route('customer-subscription.index') }}" class="btn btn-sm btn-primary">
-                        View All
-                    </a>
-                </div>
-            </div>
-            <div class="card-body p-0" id="active-subscriptions-container">
-                <div class="text-center py-5">
-                    <i class="fas fa-spinner fa-spin fa-3x text-muted"></i>
-                    <p class="text-muted mt-3">Loading subscriptions...</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- Expired Subscriptions -->
-        <div class="card" id="expired-card" style="display: none;">
-            <div class="card-header">
-                <h3 class="card-title">
-                    <i class="fas fa-times-circle text-danger"></i> Recently Expired
-                </h3>
-            </div>
-            <div class="card-body p-0" id="expired-subscriptions-container">
-            </div>
-        </div>
-    </div>
-
-    <!-- Quick Actions & Info -->
-    <div class="col-md-4">
-        <!-- Quick Actions -->
-        <div class="card card-primary">
-            <div class="card-header">
-                <h3 class="card-title">
-                    <i class="fas fa-bolt"></i> Quick Actions
-                </h3>
-            </div>
-            <div class="card-body">
-                @canAccess('index','customer_software')
-                <a href="{{ route('customer-software.index') }}" class="btn btn-success btn-block mb-2">
-                    <i class="fas fa-shopping-cart"></i> Browse Software Catalog
-                </a>
-                @endcanAccess
-                @canAccess('index','customer_subscriptions')
-                <a href="{{ route('customer-software.index') }}" class="btn btn-info btn-block mb-2">
-                    <i class="fas fa-list"></i> My Subscriptions
-                </a>
-                @endcanAccess
-            </div>
-        </div>
-
-        <!-- Expiring Soon Alert -->
-        <div class="card card-warning" id="expiring-alert" style="display: none;">
-            <div class="card-header">
-                <h3 class="card-title">
-                    <i class="fas fa-exclamation-triangle"></i> Attention Needed
-                </h3>
-            </div>
-            <div class="card-body">
-                <p>
-                    <strong id="expiring-count">0</strong> subscription(s) will expire in the next 7 days.
-                </p>
-                @canAccess('index','customer_subscriptions')
-                <a href="{{ route('customer-subscription.index') }}" class="btn btn-warning btn-sm">
-                    <i class="fas fa-eye"></i> View & Renew
-                </a>
-                @endcanAccess
-            </div>
-        </div>
-
-        {{-- 
-        <!-- Help Card -->
-        <div class="card card-info">
-            <div class="card-header">
-                <h3 class="card-title">
-                    <i class="fas fa-question-circle"></i> Need Help?
-                </h3>
-            </div>
-            <div class="card-body">
-                <p class="mb-2">
-                    <i class="fas fa-book"></i> 
-                    <a href="#" class="text-dark">User Guide</a>
-                </p>
-                <p class="mb-2">
-                    <i class="fas fa-life-ring"></i> 
-                    <a href="#" class="text-dark">Contact Support</a>
-                </p>
-                <p class="mb-0">
-                    <i class="fas fa-question"></i> 
-                    <a href="#" class="text-dark">FAQ</a>
-                </p>
-            </div>
-        </div>
-
-        <!-- Account Info -->
-        <div class="card">
-            <div class="card-header">
-                <h3 class="card-title">
-                    <i class="fas fa-user"></i> Account Info
-                </h3>
-            </div>
-            <div class="card-body">
-                <p class="mb-2">
-                    <strong>Name:</strong><br>
-                    {{ auth()->user()->name }}
-                </p>
-                <p class="mb-2">
-                    <strong>Email:</strong><br>
-                    {{ auth()->user()->email }}
-                </p>
-                <p class="mb-0">
-                    <strong>Member Since:</strong><br>
-                    {{ auth()->user()->created_at->format('d M Y') }}
-                </p>
-            </div>
-        </div>
-        --}}
-    </div>
-</div>
-@endcanAccess
 <div class="row g-3">
     <!-- Rankings -->
     @canAccess('leaderboard','homes')
@@ -830,6 +631,205 @@
     </div>
 </div>
 
+@canAccess('softwareSharing','homes')
+<div class="row g-3">
+    <div class="col-lg-3 col-6">
+        <div class="small-box bg-success">
+            <div class="inner">
+                <h3 id="stat-active">
+                    <i class="fas fa-spinner fa-spin"></i>
+                </h3>
+                <p>Active Subscriptions</p>
+            </div>
+            <div class="icon">
+                <i class="fas fa-check-circle"></i>
+            </div>
+            @canAccess('index','customer_software')
+            <a href="{{ route('customer-software.index') }}" class="small-box-footer">
+                View All <i class="fas fa-arrow-circle-right"></i>
+            </a>
+            @endcanAccess
+        </div>
+    </div>
+
+    <div class="col-lg-3 col-6">
+        <div class="small-box bg-warning">
+            <div class="inner">
+                <h3 id="stat-expiring">
+                    <i class="fas fa-spinner fa-spin"></i>
+                </h3>
+                <p>Expiring Soon (7 days)</p>
+            </div>
+            <div class="icon">
+                <i class="fas fa-exclamation-triangle"></i>
+            </div>
+            <a href="{{ route('customer-subscription.index') }}" class="small-box-footer">
+                View Details <i class="fas fa-arrow-circle-right"></i>
+            </a>
+        </div>
+    </div>
+
+    <div class="col-lg-3 col-6">
+        <div class="small-box bg-danger">
+            <div class="inner">
+                <h3 id="stat-expired">
+                    <i class="fas fa-spinner fa-spin"></i>
+                </h3>
+                <p>Expired Subscriptions</p>
+            </div>
+            <div class="icon">
+                <i class="fas fa-times-circle"></i>
+            </div>
+            <a href="{{ route('customer-subscription.index') }}" class="small-box-footer">
+                View All <i class="fas fa-arrow-circle-right"></i>
+            </a>
+        </div>
+    </div>
+
+    <div class="col-lg-3 col-6">
+        <div class="small-box bg-info">
+            <div class="inner">
+                <h3 id="stat-softwares">
+                    <i class="fas fa-spinner fa-spin"></i>
+                </h3>
+                <p>Available Software</p>
+            </div>
+            <div class="icon">
+                <i class="fas fa-box"></i>
+            </div>
+            <a href="{{ route('customer-software.index') }}" class="small-box-footer">
+                Browse Catalog <i class="fas fa-arrow-circle-right"></i>
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3">
+    <!-- Active Subscriptions -->
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">
+                    <i class="fas fa-check-circle"></i> My Active Subscriptions
+                </h3>
+                <div class="card-tools">
+                    <a href="{{ route('customer-subscription.index') }}" class="btn btn-sm btn-primary">
+                        View All
+                    </a>
+                </div>
+            </div>
+            <div class="card-body p-0" id="active-subscriptions-container">
+                <div class="text-center py-5">
+                    <i class="fas fa-spinner fa-spin fa-3x text-muted"></i>
+                    <p class="text-muted mt-3">Loading subscriptions...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Expired Subscriptions -->
+        <div class="card" id="expired-card" style="display: none;">
+            <div class="card-header">
+                <h3 class="card-title">
+                    <i class="fas fa-times-circle text-danger"></i> Recently Expired
+                </h3>
+            </div>
+            <div class="card-body p-0" id="expired-subscriptions-container">
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions & Info -->
+    <div class="col-md-4">
+        <!-- Quick Actions -->
+        <div class="card card-primary">
+            <div class="card-header">
+                <h3 class="card-title">
+                    <i class="fas fa-bolt"></i> Quick Actions
+                </h3>
+            </div>
+            <div class="card-body">
+                @canAccess('index','customer_software')
+                <a href="{{ route('customer-software.index') }}" class="btn btn-success btn-block mb-2">
+                    <i class="fas fa-shopping-cart"></i> Browse Software Catalog
+                </a>
+                @endcanAccess
+                @canAccess('index','customer_subscriptions')
+                <a href="{{ route('customer-software.index') }}" class="btn btn-info btn-block mb-2">
+                    <i class="fas fa-list"></i> My Subscriptions
+                </a>
+                @endcanAccess
+            </div>
+        </div>
+
+        <!-- Expiring Soon Alert -->
+        <div class="card card-warning" id="expiring-alert" style="display: none;">
+            <div class="card-header">
+                <h3 class="card-title">
+                    <i class="fas fa-exclamation-triangle"></i> Attention Needed
+                </h3>
+            </div>
+            <div class="card-body">
+                <p>
+                    <strong id="expiring-count">0</strong> subscription(s) will expire in the next 7 days.
+                </p>
+                @canAccess('index','customer_subscriptions')
+                <a href="{{ route('customer-subscription.index') }}" class="btn btn-warning btn-sm">
+                    <i class="fas fa-eye"></i> View & Renew
+                </a>
+                @endcanAccess
+            </div>
+        </div>
+
+        {{-- 
+        <!-- Help Card -->
+        <div class="card card-info">
+            <div class="card-header">
+                <h3 class="card-title">
+                    <i class="fas fa-question-circle"></i> Need Help?
+                </h3>
+            </div>
+            <div class="card-body">
+                <p class="mb-2">
+                    <i class="fas fa-book"></i> 
+                    <a href="#" class="text-dark">User Guide</a>
+                </p>
+                <p class="mb-2">
+                    <i class="fas fa-life-ring"></i> 
+                    <a href="#" class="text-dark">Contact Support</a>
+                </p>
+                <p class="mb-0">
+                    <i class="fas fa-question"></i> 
+                    <a href="#" class="text-dark">FAQ</a>
+                </p>
+            </div>
+        </div>
+
+        <!-- Account Info -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">
+                    <i class="fas fa-user"></i> Account Info
+                </h3>
+            </div>
+            <div class="card-body">
+                <p class="mb-2">
+                    <strong>Name:</strong><br>
+                    {{ auth()->user()->name }}
+                </p>
+                <p class="mb-2">
+                    <strong>Email:</strong><br>
+                    {{ auth()->user()->email }}
+                </p>
+                <p class="mb-0">
+                    <strong>Member Since:</strong><br>
+                    {{ auth()->user()->created_at->format('d M Y') }}
+                </p>
+            </div>
+        </div>
+        --}}
+    </div>
+</div>
+@endcanAccess
 
 @canAccess('showScheduleOb','homes')
 <div class="card py-3">
@@ -1787,7 +1787,7 @@ function renderSubscriptions(subscriptions) {
     }
 
     let html = `
-        <div class="table-responsive">
+        <div class="table-responsive" style="max-height: 40vh; overflow-y: auto;">
             <table class="table table-striped">
                 <thead>
                     <tr>

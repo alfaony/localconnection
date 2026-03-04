@@ -129,11 +129,20 @@ $totalProjects = $totalProject + 1; // Get the total number of projects
             <div class="p-2">
                 <button type="submit" class="btn btn-primary"><i class="fa fa-search"></i></button>
                 @canAccess('export','projects')
-                <a href="{{ route('project.export') }}" class="btn btn-success"><i class="fa fa-file-excel"></i></a>
+                <a href="javascript:void(0)" onclick="exportProject()" class="btn btn-success"><i class="fa fa-file-excel"></i></a>
                 @endcanAccess
             </div>
             <div class="p-2">
-                <input type="text" name="search" class="form-control" placeholder="Search">
+                <input type="text" name="search" class="form-control" placeholder="Search" value="{{ request('search') }}">
+            </div>
+            <div class="p-2">
+                <select name="division" class="form-control select2">
+                    <option value="">-- Semua Divisi --</option>
+                    <option value="External" {{ request('division') == 'External' ? 'selected' : '' }}>External</option>
+                    @foreach($divisions as $div)
+                        <option value="{{ $div->id }}" {{ request('division') == $div->id ? 'selected' : '' }}>{{ $div->name }}</option>
+                    @endforeach
+                </select>
             </div>
             <div class="p-2">
             @php
@@ -147,8 +156,8 @@ $totalProjects = $totalProject + 1; // Get the total number of projects
             <div class="p-2">
                 <select name="status" class="form-control">
                     <option value="" disabled selected>-- Status --</option>
-                    <option value="open"  >Open</option>
-                    <option value="close" >Close</option>
+                    <option value="open" {{ request('status') == 'open' ? 'selected' : '' }}>Open</option>
+                    <option value="close" {{ request('status') == 'close' ? 'selected' : '' }}>Close</option>
                 </select>
             </div>
         </div>
@@ -490,6 +499,15 @@ $totalProjects = $totalProject + 1; // Get the total number of projects
             width: '100%',
         });
     });
+
+    function exportProject() {
+        let division = $('select[name="division"]').val();
+        let url = "{{ route('project.export') }}";
+        if (division) {
+            url += "?division=" + division;
+        }
+        window.location.href = url;
+    }
 
     $(document).ready(function () 
     {

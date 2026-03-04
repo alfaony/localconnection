@@ -15,14 +15,20 @@ class QuotesExport implements FromQuery, WithMapping, WithHeadings, WithChunkRea
 {
     use Exportable;
     protected $company_id;
+    protected $division_id;
 
-    public function __construct($company_id)
+    public function __construct($company_id, $division_id = null)
     {
         $this->company_id = $company_id;
+        $this->division_id = $division_id;
     }
     public function query()
     {
-        return Quote::query()->byCompany($this->company_id)->with('quoteProduct')->orderBy('quote_number', 'desc'); // Load related models if necessary
+        $query = Quote::query()->byCompany($this->company_id)->with('quoteProduct')->orderBy('quote_number', 'desc'); // Load related models if necessary
+        if ($this->division_id) {
+            $query->byDivision($this->division_id);
+        }
+        return $query;
     }
 
     public function headings(): array

@@ -42,7 +42,8 @@ class ReportProjectController extends Controller
      */
     public function index()
     {
-        return view('report_project.index');
+        $divisions = \App\Models\Division::byCompany(Auth::user()->company_id)->get();
+        return view('report_project.index', compact('divisions'));
     }
 
     /**
@@ -423,6 +424,10 @@ class ReportProjectController extends Controller
         $query = ReportProject::query();
         $query->byCompany(Auth::user()->company_id)->with('project','workOrder')->orderBy('is_approve', 'asc')->orderBy('created_at', 'desc');
 
+        if (request()->has('division') && request()->division != '') {
+            $query->byDivision(request()->division);
+        }
+
         // Map column indexes to column names (this may vary based on your table structure)
         $columnNames = ['date','is_approve','number_result', 'slug'];
 
@@ -533,6 +538,10 @@ class ReportProjectController extends Controller
         $query->byCompany(Auth::user()->company_id); // Filter by the company of the logged-in user
         $query->doesntHave('reportProject');
         $query->with('workOrder')->orderBy('created_at', 'desc');
+
+        if (request()->has('division') && request()->division != '') {
+            $query->byDivision(request()->division);
+        }
 
         // Map column indexes to column names (modify these based on your actual database structure)
         $columnNames = ['title', 'work_order_number', 'description'];
