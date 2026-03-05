@@ -102,7 +102,8 @@
                                         </span>
                                     @else
                                         @php
-                                            $regionList = $package->regions->map(fn($r) => $r->region_label)->implode('\n');
+                                            // Menggunakan '&#10;' untuk memberikan enter yang rapi di native/JS tooltip
+                                            $regionList = $package->regions->map(fn($r) => '• ' . $r->region_label)->implode('&#10;');
                                         @endphp
                                         <span class="badge badge-primary"
                                             data-toggle="tooltip"
