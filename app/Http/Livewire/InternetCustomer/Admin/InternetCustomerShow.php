@@ -100,10 +100,7 @@ class InternetCustomerShow extends Component
         }
 
         $this->status_active = $this->customer->status != ParamSchema::INACTIVE ? true : false;
-        $this->availablePackages = InternetPackage::byCompany(Auth::user()->company_id)
-            ->where('is_active', true)
-            ->with('regions')
-            ->get();
+        $this->availablePackages = [];
     }
 
     // ========================================
@@ -676,7 +673,7 @@ class InternetCustomerShow extends Component
     {
         // Load available packages — filter berdasarkan wilayah customer
         // Sehingga admin hanya bisa pilih paket yang berlaku di wilayah customer
-        $this->availablePackages = InternetPackage::where('company_id', $this->customer->company_id)
+        $packages = InternetPackage::where('company_id', $this->customer->company_id)
             ->where('is_active', true)
             ->where('id', '!=', $this->customer->internet_package_id)
             ->with('regions')
@@ -687,11 +684,34 @@ class InternetCustomerShow extends Component
             )
             ->get();
 
+        $formattedPackages = [];
+        foreach ($packages as $pkg) {
+            $priceData = $pkg->getPriceForRegion(
+                $this->customer->province_id,
+                $this->customer->city_id,
+                $this->customer->district_id
+            );
+            
+            $label = $pkg->name . ' - Rp ' . number_format($priceData['price_nett'], 0, ',', '.') . '/bulan';
+            if ($priceData['region_type'] !== 'global') {
+                $label .= ' (Wilayah)';
+            }
+            
+            $formattedPackages[] = [
+                'id' => $pkg->id,
+                'label' => $label
+            ];
+        }
+        
+        $this->availablePackages = $formattedPackages;
+
         // Reset form
         $this->new_package_id = null;
 
         // Open modal
-        $this->dispatchBrowserEvent('show-edit-package-modal');
+        $this->dispatchBrowserEvent('show-edit-package-modal', [
+            'packages' => $formattedPackages
+        ]);
     }
 
     public function savePackageChange()

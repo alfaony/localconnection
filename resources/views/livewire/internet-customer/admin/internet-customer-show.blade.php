@@ -856,21 +856,15 @@
                         </div>
 
                         {{-- New Package --}}
-                        <div class="mb-3">
+                        <div class="mb-3" wire:ignore>
                             <label class="form-label">
                                 Paket Baru <span class="text-danger">*</span>
                             </label>
-                            <select id="new_package_id" class="form-control @error('new_package_id') is-invalid @enderror" 
-                                    wire:model="new_package_id">
+                            <select id="new_package_id" class="form-control" style="width: 100%">
                                 <option value="">Pilih Paket Baru</option>
-                                @foreach($availablePackages as $package)
-                                    <option value="{{ $package->id }}">
-                                        {{ $package->name }} - Rp {{ number_format($package->price_nett, 0, ',', '.') }}/bulan
-                                    </option>
-                                @endforeach
                             </select>
                             @error('new_package_id')
-                                <div class="invalid-feedback">{{ $message }}</div>
+                                <div class="invalid-feedback d-block">{{ $message }}</div>
                             @enderror
                         </div>
                     </form>
@@ -1013,13 +1007,36 @@
                     });
             });
 
-            window.addEventListener('show-edit-package-modal', () => {
+            window.addEventListener('show-edit-package-modal', (event) => {
+                const packages = event.detail.packages || [];
+                
+                // Construct options HTML
+                let optionsHtml = '<option value="">Pilih Paket Baru</option>';
+                packages.forEach(pkg => {
+                    optionsHtml += `<option value="${pkg.id}">${pkg.label}</option>`;
+                });
+                
+                $('#new_package_id').html(optionsHtml);
                 new bootstrap.Modal(document.getElementById('editPackageModal')).show();
+                
+                // Initialize Select2 after modal opens
+                setTimeout(() => {
+                    $('#new_package_id').select2({
+                        placeholder: "Pilih Paket Baru",
+                        width: '100%',
+                        dropdownParent: $('#editPackageModal')
+                    }).on('change', function (e) {
+                        @this.set('new_package_id', $(this).val());
+                    });
+                }, 150);
             });
 
             window.addEventListener('hide-edit-package-modal', () => {
                 const modal = bootstrap.Modal.getInstance(document.getElementById('editPackageModal'));
                 if (modal) modal.hide();
+                
+                // Destroy logic if needed later
+                // $('#new_package_id').select2('destroy');
             });
 
             // Event untuk menampilkan modal edit data pribadi
