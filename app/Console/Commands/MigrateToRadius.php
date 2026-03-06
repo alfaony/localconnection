@@ -31,19 +31,16 @@ class MigrateToRadius extends Command
             $this->warn('🔍 DRY RUN MODE — tidak ada perubahan yang ditulis');
         }
 
+        $this->info('RADIUS_ENABLED = ' . (RadiusService::isEnabled() ? 'true ✅' : 'false ❌'));
+        $this->newLine();
+
         $errors = 0;
 
-        // ========================================
-        // STEP 1: Migrasi NAS (Router Mikrotik)
-        // ========================================
         if (!$onlyCustomers) {
             $errors += $this->migrateNas($dryRun);
             $this->newLine();
         }
 
-        // ========================================
-        // STEP 2: Migrasi Customer
-        // ========================================
         if (!$onlyNas) {
             $errors += $this->migrateCustomers($radius, $dryRun);
         }
@@ -51,9 +48,6 @@ class MigrateToRadius extends Command
         return $errors > 0 ? self::FAILURE : self::SUCCESS;
     }
 
-    /**
-     * Migrasi router Mikrotik ke tabel NAS
-     */
     protected function migrateNas(bool $dryRun): int
     {
         $this->info('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
@@ -68,31 +62,24 @@ class MigrateToRadius extends Command
 
         $success = 0;
         $errors = 0;
-
-        $headers = ['Router', 'IP (NAS)', 'Secret', 'Status'];
         $rows = [];
 
         foreach ($routers as $router) {
             try {
-                $nasName = $router->host;
-                $shortName = $router->name;
-
                 if ($dryRun) {
-                    $rows[] = [$shortName, $nasName, $secret, '🔍 dry-run'];
+                    $rows[] = [$router->name, $router->host, $secret, '🔍 dry-run'];
                 } else {
-                    // Upsert ke tabel nas (di database radius)
                     DB::connection('radius')->table('nas')->updateOrInsert(
-                        ['nasname' => $nasName],
+                        ['nasname' => $router->host],
                         [
-                            'shortname'   => $shortName,
+                            'shortname'   => $router->name,
                             'type'        => 'other',
                             'secret'      => $secret,
-                            'description' => "Router: {$shortName} (ID: {$router->id})",
+                            'description' => "Router: {$router->name} (ID: {$router->id})",
                         ]
                     );
-                    $rows[] = [$shortName, $nasName, $secret, '✅ synced'];
+                    $rows[] = [$router->name, $router->host, $secret, '✅ synced'];
                 }
-
                 $success++;
             } catch (\Throwable $th) {
                 $rows[] = [$router->name, $router->host, $secret, "❌ {$th->getMessage()}"];
@@ -100,18 +87,13 @@ class MigrateToRadius extends Command
             }
         }
 
-        $this->table($headers, $rows);
+        $this->table(['Router', 'IP (NAS)', 'Secret', 'Status'], $rows);
         $this->info("✅ NAS Success: {$success}");
-        if ($errors > 0) {
-            $this->error("❌ NAS Errors: {$errors}");
-        }
+        if ($errors > 0) $this->error("❌ NAS Errors: {$errors}");
 
         return $errors;
     }
 
-    /**
-     * Migrasi customer ke tabel radcheck, radusergroup, radgroupreply
-     */
     protected function migrateCustomers(RadiusService $radius, bool $dryRun): int
     {
         $this->info('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
@@ -119,18 +101,14 @@ class MigrateToRadius extends Command
         $this->info('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
 
         $customerId = $this->option('customer');
-
         $query = InternetCustomer::with(['internetPackage', 'router'])
             ->whereIn('status', ['installed', 'active', 'reactivated'])
             ->whereNotNull('username')
             ->whereNotNull('router_id');
 
-        if ($customerId) {
-            $query->where('id', $customerId);
-        }
+        if ($customerId) $query->where('id', $customerId);
 
         $customers = $query->get();
-
         $this->info("Ditemukan {$customers->count()} customer");
         $this->newLine();
 
@@ -144,14 +122,7 @@ class MigrateToRadius extends Command
         foreach ($customers as $cust) {
             try {
                 $pkg = $cust->internetPackage;
-
-                if (!$pkg) {
-                    $this->newLine();
-                    $this->warn("⏭️  Skip {$cust->username} — paket tidak ditemukan");
-                    $skipped++;
-                    $bar->advance();
-                    continue;
-                }
+                if (!$pkg) { $skipped++; $bar->advance(); continue; }
 
                 $map = PackageRouterProfile::where('router_id', $cust->router_id)
                       ->where('package_id', $pkg->id)->first();
@@ -159,39 +130,25 @@ class MigrateToRadius extends Command
 
                 if ($dryRun) {
                     $this->newLine();
-                    $this->line("  [{$cust->username}] → group: {$groupName}, pass: ***");
+                    $this->line("  [{$cust->username}] → group: {$groupName}");
                 } else {
                     $radius->ensureGroup($pkg, $groupName);
                     $radius->upsertUser($cust, $groupName);
                 }
-
                 $success++;
             } catch (\Throwable $th) {
                 $this->newLine();
-                $this->error("❌ Error {$cust->username}: {$th->getMessage()}");
-                Log::error('[radius:migrate] Error', [
-                    'customer' => $cust->username,
-                    'error'    => $th->getMessage(),
-                ]);
+                $this->error("❌ {$cust->username}: {$th->getMessage()}");
                 $errors++;
             }
-
             $bar->advance();
         }
 
         $bar->finish();
         $this->newLine(2);
-
-        $this->info("✅ Customer Success: {$success}");
-        $this->info("⏭️  Customer Skipped: {$skipped}");
-        if ($errors > 0) {
-            $this->error("❌ Customer Errors: {$errors}");
-        }
-
-        if ($dryRun) {
-            $this->newLine();
-            $this->warn('Ini hanya dry run. Jalankan tanpa --dry-run untuk apply.');
-        }
+        $this->info("✅ Success: {$success} | ⏭️ Skipped: {$skipped}");
+        if ($errors > 0) $this->error("❌ Errors: {$errors}");
+        if ($dryRun) { $this->newLine(); $this->warn('Dry run — jalankan tanpa --dry-run untuk apply.'); }
 
         return $errors;
     }

@@ -29,17 +29,11 @@ class RadAcct extends Model
         'acctstoptime'   => 'datetime',
     ];
 
-    /**
-     * Scope: session aktif (belum stop)
-     */
     public function scopeActive($query)
     {
         return $query->whereNull('acctstoptime');
     }
 
-    /**
-     * Scope: session berdasarkan username
-     */
     public function scopeForUser($query, string $username)
     {
         return $query->where('username', $username);

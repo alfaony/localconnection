@@ -57,8 +57,65 @@ class ProvisionCustomerJob implements ShouldQueue
                 $this->handleInstall($radius, $cust, $pkg, $groupName, $router);
             } elseif ($cust->status == ParamSchema::SUSPENDED) {
                 $this->handleSuspend($radius, $cust, $router);
-            } elseif ($cust->status == ParamSchema::REACTIVATED) {
-                $this->handleReactivate($radius, $cust, $pkg, $groupName, $router);
+            }
+            elseif ($cust->status == ParamSchema::REACTIVATED) 
+            {
+                $ros->disconnectIfActive($client, $cust->username);
+               $profile = $map->ros_profile ?? ('PKG_'.$pkg->id);
+
+                $ros->ensurePppProfile($client, $pkg, $profile, null, $cust->router_id, $poolName, $gateway);
+                
+                // upsert secret & pastikan enable dengan profil normal
+                $ros->upsertPppSecret($client, $cust, $profile, $cust->local_address);
+
+                // opsional: update meta untuk tracking
+                $row = $client->query(
+                    (new \RouterOS\Query('/ppp/secret/print'))->where('name', $cust->username)
+                )->read()[0] ?? null;
+
+                if ($row) 
+                {
+                    $meta = (array) $cust->meta;
+                    $meta['ros_secret'] = [
+                        'id'       => $row['.id'] ?? null,
+                        'disabled' => $row['disabled'] ?? 'no',
+                        'profile'  => $row['profile'] ?? $profile,
+                        'comment'  => $row['comment'] ?? null,
+                    ];
+                    $cust->meta = $meta;
+                    $cust->save();
+                }
+            }
+
+            // ==========================================
+            // RADIUS SYNC — jika RADIUS_ENABLED=true
+            // Sync data ke RADIUS DB setelah Direct API
+            // Kalau gagal, Direct API sudah handle → aman
+            // ==========================================
+            if (RadiusService::isEnabled()) {
+                try {
+                    $radiusService = app(RadiusService::class);
+                    $groupName = $profile;
+
+                    if ($cust->status == ParamSchema::INSTALLED) {
+                        $radiusService->ensureGroup($pkg, $groupName);
+                        $radiusService->upsertUser($cust, $groupName);
+                        Log::info('[ProvisionJob] RADIUS synced: INSTALLED ✅', ['customer' => $cust->username]);
+                    } elseif ($cust->status == ParamSchema::SUSPENDED) {
+                        $radiusService->suspendUser($cust->username);
+                        Log::info('[ProvisionJob] RADIUS synced: SUSPENDED ✅', ['customer' => $cust->username]);
+                    } elseif ($cust->status == ParamSchema::REACTIVATED) {
+                        $radiusService->ensureGroup($pkg, $groupName);
+                        $radiusService->reactivateUser($cust->username, $groupName);
+                        Log::info('[ProvisionJob] RADIUS synced: REACTIVATED ✅', ['customer' => $cust->username]);
+                    }
+                } catch (\Throwable $radiusErr) {
+                    // RADIUS gagal ≠ fatal → Direct API sudah jalan
+                    Log::warning('[ProvisionJob] RADIUS sync failed (Direct API sudah OK)', [
+                        'customer' => $cust->username,
+                        'error'    => $radiusErr->getMessage(),
+                    ]);
+                }
             }
 
         } catch (\Throwable $th) {

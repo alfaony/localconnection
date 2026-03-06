@@ -119,4 +119,8 @@ return [
     'openai' => [
         'nominal_threshold' => env('KELOOLA_OPENAI_NOMINAL_TRAHOLD', 100000000),
     ],
+
+    'radius' => [
+        'enabled' => env('RADIUS_ENABLED', false),
+    ],
 ];
