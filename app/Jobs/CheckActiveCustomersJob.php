@@ -3,8 +3,8 @@
 namespace App\Jobs;
 
 use App\Models\InternetCustomer;
-use App\Models\Router;
-use App\Services\RouterOSService;
+use App\Models\Radius\RadAcct;
+use App\Services\RadiusService;
 use App\Schemas\ParamSchema;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -15,7 +15,7 @@ use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
 
 /**
- * Job untuk check status customer di router
+ * Job untuk check status customer via RADIUS accounting
  * - Update last_updated_router jika masih aktif
  * - Set status REACTIVATED jika tidak aktif
  * - Dispatch provision job untuk reconnect
@@ -24,50 +24,35 @@ class CheckActiveCustomersJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    public $timeout = 600; // 10 minutes
+    public $timeout = 600;
     public $tries = 2;
 
     protected ?string $customerId;
 
-    /**
-     * Create a new job instance.
-     * 
-     * @param int|null $customerId - Check specific customer, or all if null
-     */
     public function __construct(?string $customerId = null)
     {
         $this->customerId = $customerId;
-        // $this->onQueue('customer-monitoring');
     }
 
-    /**
-     * Execute the job.
-     */
-    public function handle(RouterOSService $ros): void
+    public function handle(RadiusService $radius): void
     {
         Log::info('CheckActiveCustomersJob started', [
             'customer_id' => $this->customerId,
         ]);
 
         if ($this->customerId) {
-            // Check specific customer
             $customer = InternetCustomer::with('router')->find($this->customerId);
-            
             if ($customer) {
-                $this->checkCustomerStatus($ros, $customer);
+                $this->checkCustomerStatus($radius, $customer);
             }
         } else {
-            // Check all active customers
-            $this->checkAllActiveCustomers($ros);
+            $this->checkAllActiveCustomers($radius);
         }
 
         Log::info('CheckActiveCustomersJob completed');
     }
 
-    /**
-     * Check all active customers
-     */
-    protected function checkAllActiveCustomers(RouterOSService $ros): void
+    protected function checkAllActiveCustomers(RadiusService $radius): void
     {
         $customers = InternetCustomer::with('router')
             ->where('status', ParamSchema::ACTIVE)
@@ -79,7 +64,7 @@ class CheckActiveCustomersJob implements ShouldQueue
 
         foreach ($customers as $customer) {
             try {
-                $this->checkCustomerStatus($ros, $customer);
+                $this->checkCustomerStatus($radius, $customer);
             } catch (\Exception $e) {
                 Log::error('Failed to check customer', [
                     'customer_id' => $customer->id,
@@ -91,77 +76,55 @@ class CheckActiveCustomersJob implements ShouldQueue
         }
     }
 
-    /**
-     * Check customer status on router
-     */
-    protected function checkCustomerStatus(RouterOSService $ros, InternetCustomer $customer): void
+    protected function checkCustomerStatus(RadiusService $radius, InternetCustomer $customer): void
     {
         try {
-            $router = $customer->router;
-
-            if (!$router) {
-                Log::warning('Customer has no router', ['customer_id' => $customer->id]);
-                return;
-            }
-
-            // Connect to router
-            $client = $ros->client($router);
-
-            // Check if customer is active
-            $isActive = $ros->isUserActive($client, $customer->username);
+            // Cek session aktif via radacct (pengganti /ppp/active/print)
+            $isActive = $radius->isUserActive($customer->username);
 
             if ($isActive) {
-                // ✅ Customer is active - Update last_updated_router
-                $this->handleActiveCustomer($client, $customer);
+                $this->handleActiveCustomer($customer);
             } else {
-                // ❌ Customer is NOT active - Handle reconnection
                 $this->handleInactiveCustomer($customer);
             }
-
         } catch (\Exception $e) {
             $this->handleInactiveCustomer($customer);
-
             Log::error('Failed to check customer status', [
                 'customer_id' => $customer->id,
-                'customer_code' => $customer->code,
                 'error' => $e->getMessage()
             ]);
         }
     }
 
     /**
-     * ✅ Handle active customer - Update info
+     * ✅ Handle active customer — update info dari radacct
      */
-    protected function handleActiveCustomer($client, InternetCustomer $customer): void
+    protected function handleActiveCustomer(InternetCustomer $customer): void
     {
         try {
-            // Get active session info
-            $activeSession = $client->query(
-                (new \RouterOS\Query('/ppp/active/print'))
-                    ->where('name', $customer->username)
-            )->read();
+            // Ambil data session dari radacct
+            $session = RadAcct::where('username', $customer->username)
+                ->whereNull('acctstoptime')
+                ->orderByDesc('acctstarttime')
+                ->first();
 
-            if (empty($activeSession)) {
+            if (!$session) {
                 return;
             }
-            
-            $session = $activeSession[0];
-            // dd($session);
 
-            // Update customer info
             $customer->update([
-                'ip_address' => $session['address'] ?? $customer->ip_address,
-                'mac_address' => $session['caller-id'] ?? $customer->mac_address,
-                'last_updated_router' => now(),
+                'ip_address'           => $session->framedipaddress ?: $customer->ip_address,
+                'mac_address'          => $session->callingstationid ?: $customer->mac_address,
+                'last_updated_router'  => now(),
             ]);
 
-            Log::info('Customer active - Updated', [
-                'customer' => $customer->code,
-                'username' => $customer->username,
-                'ip' => $session['address'] ?? null,
-                'uptime' => $session['uptime'] ?? null,
+            Log::info('Customer active - Updated via RADIUS', [
+                'customer'  => $customer->code,
+                'username'  => $customer->username,
+                'ip'        => $session->framedipaddress,
+                'nas'       => $session->nasipaddress,
+                'uptime'    => $session->acctsessiontime ? gmdate('H:i:s', $session->acctsessiontime) : null,
             ]);
-
         } catch (\Exception $e) {
             Log::error('Failed to update active customer', [
                 'customer_id' => $customer->id,
@@ -171,21 +134,20 @@ class CheckActiveCustomersJob implements ShouldQueue
     }
 
     /**
-     * ❌ Handle inactive customer - Trigger reconnection
+     * ❌ Handle inactive customer — trigger reconnection
      */
     protected function handleInactiveCustomer(InternetCustomer $customer): void
     {
         Log::warning('Customer is INACTIVE', [
-            'customer' => $customer->code,
-            'username' => $customer->username,
+            'customer'     => $customer->code,
+            'username'     => $customer->username,
             'last_updated' => $customer->last_updated_router?->diffForHumans(),
         ]);
 
         try {
-            // Update status and clear connection info
             $customer->update([
-                'status' => ParamSchema::REACTIVATED,
-                'ip_address' => null,
+                'status'      => ParamSchema::REACTIVATED,
+                'ip_address'  => null,
                 'mac_address' => null,
             ]);
 
@@ -193,13 +155,11 @@ class CheckActiveCustomersJob implements ShouldQueue
                 'customer' => $customer->code
             ]);
 
-            // Dispatch provision job to reconnect
             dispatch(new ProvisionCustomerJob($customer->id));
 
             Log::info('ProvisionCustomerJob dispatched for reconnection', [
                 'customer' => $customer->code
             ]);
-
         } catch (\Exception $e) {
             Log::error('Failed to handle inactive customer', [
                 'customer_id' => $customer->id,
@@ -208,16 +168,11 @@ class CheckActiveCustomersJob implements ShouldQueue
         }
     }
 
-    /**
-     * Handle job failure
-     */
     public function failed(\Throwable $exception): void
     {
         Log::error('CheckActiveCustomersJob failed', [
-            'router_id' => $this->routerId,
             'customer_id' => $this->customerId,
             'error' => $exception->getMessage(),
-            'trace' => $exception->getTraceAsString()
         ]);
     }
 }

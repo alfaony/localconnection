@@ -20,6 +20,7 @@ use App\Models\Router;
 use App\Models\AddressPool;
 use App\Models\InternetPackage;
 
+use App\Services\RadiusService;
 use App\Services\MikrotikService;
 use App\Jobs\GenerateBillingJob;
 use App\Schemas\ParamSchema;
@@ -416,8 +417,17 @@ class InternetCustomerShow extends Component
             {
                 if($this->customer->router)
                 {
-                    $mikrotik = new MikrotikService($this->customer->router->id);
-                    $mikrotik->removeUser($this->customer->id);
+                    // 🟢 RADIUS primary
+                    try {
+                        $radius = app(RadiusService::class);
+                        $radius->suspendUser($this->customer->username);
+                        $radius->removeUser($this->customer->username);
+                    } catch (\Throwable $e) {
+                        // 🔴 Fallback Direct API
+                        \Illuminate\Support\Facades\Log::warning('[InternetCustomerShow] RADIUS failed, fallback', ['error' => $e->getMessage()]);
+                        $mikrotik = new MikrotikService($this->customer->router->id);
+                        $mikrotik->removeUser($this->customer->id);
+                    }
                 }
 
 

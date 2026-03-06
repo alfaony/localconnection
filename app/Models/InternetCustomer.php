@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Ramsey\Uuid\Uuid;
 use Illuminate\Support\Facades\Auth;
 use App\Schemas\RoleSchema;
+use App\Models\Radius\RadAcct;
 use App\Services\RouterOSService;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Facades\DB;
@@ -223,9 +224,21 @@ class InternetCustomer extends Model
 
     public function isActiveConneciton()
     {
-        $ros = new RouterOSService();
-        $client = $ros->client($this->router);
-        return $ros->isUserActive($client, $this->username);
+        // 🟢 RADIUS primary
+        try {
+            return RadAcct::where('username', $this->username)
+                ->whereNull('acctstoptime')
+                ->exists();
+        } catch (\Throwable $e) {
+            // 🔴 Fallback Direct API
+            try {
+                $ros = new RouterOSService();
+                $client = $ros->client($this->router);
+                return $ros->isUserActive($client, $this->username);
+            } catch (\Throwable $e2) {
+                return false;
+            }
+        }
     }
 
     public function candidateRouters()

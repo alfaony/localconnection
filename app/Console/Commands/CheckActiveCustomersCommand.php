@@ -36,7 +36,7 @@ class CheckActiveCustomersCommand extends Command
         if ($force) {
             $this->info("Running immediately (not queued)...");
             $job = new CheckActiveCustomersJob($customerId);
-            $job->handle(app(\App\Services\RouterOSService::class));
+            $job->handle(app(\App\Services\RadiusService::class));
             $this->info("Check completed!");
         } else {
             dispatch(new CheckActiveCustomersJob($customerId));

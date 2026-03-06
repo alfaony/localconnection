@@ -6,8 +6,8 @@ use App\Models\InternetCustomer;
 use App\Models\Router;
 use App\Models\PackageRouterProfile;
 
+use App\Services\RadiusService;
 use App\Services\RouterOSService;
-use App\Services\PoolResolver;
 use App\Schemas\ParamSchema;
 
 use Illuminate\Bus\Queueable;
@@ -18,11 +18,12 @@ use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
-use App\Jobs\ProvisionCustomerJob;
-
 /**
- * ✅ Job untuk memproses perpindahan router
- * Langsung komunikasi dengan MikroTik (tidak dispatch job lagi)
+ * ✅ DUAL-MODE: RADIUS primary + Direct API fallback
+ *
+ * - Disconnect dari router lama → Direct API
+ * - Auth update → RADIUS primary → Direct API fallback
+ * - PPP Profile di router baru → Direct API
  */
 class ProcessRouterMoveJob implements ShouldQueue
 {
@@ -39,14 +40,11 @@ class ProcessRouterMoveJob implements ShouldQueue
     protected $newLocalAddress;
     protected $newPoolId;
 
-    /**
-     * Create a new job instance.
-     */
     public function __construct(
-        $customerId, 
-        $oldRouterId, 
-        $newRouterId, 
-        $newUsername = null, 
+        $customerId,
+        $oldRouterId,
+        $newRouterId,
+        $newUsername = null,
         $newLocalAddress = null,
         $newPoolId = null
     ) {
@@ -56,209 +54,152 @@ class ProcessRouterMoveJob implements ShouldQueue
         $this->newUsername = $newUsername;
         $this->newLocalAddress = $newLocalAddress;
         $this->newPoolId = $newPoolId;
-        // $this->onQueue('router-provisioning');
     }
 
-    /**
-     * Execute the job - Handle directly with RouterOSService
-     */
-    public function handle(RouterOSService $ros)
+    public function handle(RadiusService $radius)
     {
         DB::beginTransaction();
-        
-        $customer = InternetCustomer::lockForUpdate()
-            ->findOrFail($this->customerId);
-        
-        // 1. Delete old router
-        $this->deleteFromOldRouter($ros, $customer);
-        
-        // 2. Update DB
-        $customer->update([
-            'router_id' => $this->newRouterId,
-            'username' => $this->newUsername ?? $customer->username,
-            'local_address' => $this->newLocalAddress,
-            'override_pool_id' => $this->newPoolId,
-            'ip_address' => null,
-            'mac_address' => null,
-            'status' => ParamSchema::REACTIVATED,
+
+        $customer = InternetCustomer::lockForUpdate()->findOrFail($this->customerId);
+
+        Log::info('[RouterMove] Starting move (dual-mode)', [
+            'customer'   => $customer->username,
+            'old_router' => $this->oldRouterId,
+            'new_router' => $this->newRouterId,
         ]);
-        
-        // 3. Create new router
-        $this->createOnNewRouter($ros, $customer);
-        
+
+        // 1. DIRECT API: Disconnect dari router lama
+        $this->disconnectFromOldRouter($customer);
+
+        // 2. DIRECT API: Hapus secret dari router lama
+        $this->removeSecretFromOldRouter($customer);
+
+        // 3. Update customer data di DB
+        $customer->update([
+            'router_id'        => $this->newRouterId,
+            'username'         => $this->newUsername ?? $customer->username,
+            'local_address'    => $this->newLocalAddress,
+            'override_pool_id' => $this->newPoolId,
+            'ip_address'       => null,
+            'mac_address'      => null,
+            'status'           => ParamSchema::REACTIVATED,
+        ]);
+
+        $customer = $customer->fresh();
+
+        // 4. Setup di router baru + RADIUS
+        $pkg = $customer->internetPackage;
+        $map = PackageRouterProfile::where('router_id', $this->newRouterId)
+              ->where('package_id', $pkg->id)->first();
+        $groupName = $map->ros_profile ?? ('PKG_' . $pkg->id);
+
+        // DIRECT API: Ensure PPP profile di router baru
+        $this->ensureProfileOnNewRouter($customer, $pkg, $groupName);
+
+        // RADIUS: Update auth → fallback Direct API
+        try {
+            $radius->ensureGroup($pkg, $groupName);
+            $radius->upsertUser($customer, $groupName);
+            Log::info('[RouterMove] RADIUS auth updated ✅', ['customer' => $customer->username]);
+        } catch (\Throwable $e) {
+            Log::warning('[RouterMove] RADIUS failed, fallback to Direct API', ['error' => $e->getMessage()]);
+            $this->fallbackCreateOnNewRouter($customer, $groupName);
+        }
+
         DB::commit();
 
-        ProvisionCustomerJob::dispatch($customer->id);
+        Log::info('[RouterMove] Completed (dual-mode)', [
+            'customer' => $customer->username,
+            'group'    => $groupName,
+        ]);
     }
 
-    /**
-     * ✅ STEP 1: Delete secret from old router via MikroTik API
-     */
-    protected function deleteFromOldRouter(RouterOSService $ros, InternetCustomer $customer)
+    protected function disconnectFromOldRouter(InternetCustomer $customer): void
     {
-        $oldRouter = Router::find($this->oldRouterId);
-
-        if (!$oldRouter) {
-            Log::warning('Old router not found', ['router_id' => $this->oldRouterId]);
-            return;
-        }
-
         try {
-            Log::info('Connecting to old router', [
-                'router' => $oldRouter->name,
-                'username' => $customer->username,
-            ]);
+            $oldRouter = Router::find($this->oldRouterId);
+            if (!$oldRouter) return;
 
+            $ros = app(RouterOSService::class);
+            $client = $ros->client($oldRouter);
+            $ros->disconnectIfActive($client, $customer->username);
+
+            Log::info('[RouterMove] Disconnected from old router ✅');
+        } catch (\Throwable $e) {
+            Log::warning('[RouterMove] Failed to disconnect from old router (non-fatal)', [
+                'error' => $e->getMessage(),
+            ]);
+        }
+    }
+
+    protected function removeSecretFromOldRouter(InternetCustomer $customer): void
+    {
+        try {
+            $oldRouter = Router::find($this->oldRouterId);
+            if (!$oldRouter) return;
+
+            $ros = app(RouterOSService::class);
             $client = $ros->client($oldRouter);
 
-            // Check if secret exists
-            $secret = $client->query(
-                (new \RouterOS\Query('/ppp/secret/print'))
-                    ->where('name', $customer->username)
-            )->read();
+            // Hapus secret berdasarkan comment (customer ID)
+            $q = (new \RouterOS\Query('/ppp/secret/print'))->where('comment', $customer->id);
+            $rows = $client->query($q)->read();
 
-            if (!empty($secret)) {
-                Log::info('Secret found on old router, deleting...', [
-                    'secret_id' => $secret[0]['.id'],
-                ]);
-
-                // Disconnect if active
-                $ros->disconnectIfActive($client, $customer->username);
-
-                // Delete secret
+            foreach ($rows as $row) {
                 $client->query(
-                    (new \RouterOS\Query('/ppp/secret/remove'))
-                        ->equal('.id', $secret[0]['.id'])
+                    (new \RouterOS\Query('/ppp/secret/remove'))->equal('.id', $row['.id'])
                 )->read();
-
-                Log::info('Secret deleted from old router successfully');
-            } else {
-                Log::info('Secret not found on old router (already removed)');
             }
 
-        } catch (\Exception $e) {
-            // Log but continue - old router might be offline
-            Log::error('Failed to delete from old router (continuing anyway)', [
-                'router' => $oldRouter->name,
+            Log::info('[RouterMove] Secret removed from old router ✅');
+        } catch (\Throwable $e) {
+            Log::warning('[RouterMove] Failed to remove secret from old router (non-fatal)', [
                 'error' => $e->getMessage(),
             ]);
         }
     }
 
-    /**
-     * ✅ STEP 2: Update customer data in database
-     */
-    protected function updateCustomerData(InternetCustomer $customer)
+    protected function ensureProfileOnNewRouter(InternetCustomer $customer, $pkg, string $groupName): void
     {
-        Log::info('Updating customer data', [
-            'customer' => $customer->code,
-            'new_router_id' => $this->newRouterId,
-            'new_username' => $this->newUsername,
-            'new_local_address' => $this->newLocalAddress,
-        ]);
-
-        // Refresh customer to get new router relation
-        // $customer->load('router');
-    }
-
-    /**
-     * ✅ STEP 3: Create secret on new router via MikroTik API
-     */
-    protected function createOnNewRouter(RouterOSService $ros, InternetCustomer $customer)
-    {
-        $newRouter = Router::find($this->newRouterId);
-
-        if (!$newRouter) {
-            throw new \Exception('New router not found');
-        }
-
-        Log::info('Connecting to new router', [
-            'router' => $newRouter->name,
-            'username' => $customer->username,
-        ]);
-
         try {
+            $newRouter = Router::find($this->newRouterId);
+            if (!$newRouter) return;
+
+            $ros = app(RouterOSService::class);
             $client = $ros->client($newRouter);
-            $pkg = $customer->internetPackage;
+            $ros->ensurePppProfile($client, $pkg, $groupName, null, $newRouter->id);
 
-            // Get profile mapping
-            $map = PackageRouterProfile::where('router_id', $newRouter->id)
-                  ->where('package_id', $pkg->id)
-                  ->first();
-
-            $profile = $map->ros_profile ?? ('PKG_'.$pkg->id);
-            $fup = $profile.'_FUP';
-
-            // Get pool info
-            $pool = PoolResolver::forCustomer($customer);
-            $poolName = $pool?->name;
-            $gateway = $pool?->gateway;
-
-            Log::info('Profile configuration', [
-                'profile' => $profile,
-                'pool' => $poolName,
-                'gateway' => $gateway,
-            ]);
-
-            // ========================================
-            // ✅ CRITICAL: Create profile FIRST
-            // ========================================
-            Log::info('Ensuring profile exists on new router...');
-            
-            $ros->ensurePppProfile(
-                $client,
-                $pkg,
-                $profile,
-                $fup,
-                $newRouter->id,
-                $poolName,
-                $gateway
-            );
-
-            Log::info('Profile ensured successfully', ['profile' => $profile]);
-
-            // ========================================
-            // ✅ THEN: Create secret with that profile
-            // ========================================
-            Log::info('Creating secret on new router', [
-                'username' => $customer->username,
-                'local_address' => $customer->local_address,
-                'profile' => $profile,
-            ]);
-
-            $ros->upsertPppSecret(
-                $client, 
-                $customer, 
-                $profile, 
-                $customer->local_address
-            );
-
-            Log::info('Secret created successfully with profile', [
-                'username' => $customer->username,
-                'profile' => $profile,
-            ]);
-
-        } catch (\Exception $e) {
-            Log::error('Failed to create on new router', [
-                'router' => $newRouter->name,
+            Log::info('[RouterMove] PPP profile ensured on new router ✅');
+        } catch (\Throwable $e) {
+            Log::warning('[RouterMove] Failed to ensure profile on new router (non-fatal)', [
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
             ]);
-
-            throw new \Exception('Failed to provision on new router: ' . $e->getMessage());
         }
     }
 
-    /**
-     * Handle job failure
-     */
+    protected function fallbackCreateOnNewRouter(InternetCustomer $customer, string $groupName): void
+    {
+        try {
+            $newRouter = Router::find($this->newRouterId);
+            if (!$newRouter) return;
+
+            $ros = app(RouterOSService::class);
+            $client = $ros->client($newRouter);
+            $ros->upsertPppSecret($client, $customer, $groupName, $customer->local_address);
+
+            Log::info('[RouterMove] Fallback Direct API on new router ✅');
+        } catch (\Throwable $e) {
+            Log::error('[RouterMove] Direct API fallback also failed', [
+                'error' => $e->getMessage(),
+            ]);
+        }
+    }
+
     public function failed(\Throwable $exception)
     {
-        Log::error('Router move job failed permanently', [
-            'customer_id' => $this->customerId,
-            'old_router_id' => $this->oldRouterId,
-            'new_router_id' => $this->newRouterId,
-            'error' => $exception->getMessage(),
+        Log::error('[RouterMove] Failed permanently', [
+            'customer_id'   => $this->customerId,
+            'error'         => $exception->getMessage(),
         ]);
     }
 }
