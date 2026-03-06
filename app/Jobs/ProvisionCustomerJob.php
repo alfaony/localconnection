@@ -176,10 +176,22 @@ class ProvisionCustomerJob implements ShouldQueue
     protected function handleSuspend(RadiusService $radius, InternetCustomer $cust, Router $router): void
     {
         try {
-            // 🟢 RADIUS: block auth + disconnect
+            // 🟢 RADIUS: pindahkan ke group ISOLIR (walled garden)
             $radius->suspendUser($cust->username);
 
-            Log::info('[ProvisionJob] SUSPENDED via RADIUS ✅', [
+            // 🔌 Disconnect session aktif agar reconnect dengan ISOLIR attributes
+            try {
+                $ros = app(RouterOSService::class);
+                $client = $ros->client($router);
+                $ros->disconnectIfActive($client, $cust->username);
+                Log::info('[ProvisionJob] Session disconnected for ISOLIR reconnect');
+            } catch (\Throwable $dcErr) {
+                Log::warning('[ProvisionJob] Disconnect failed (user will apply on next reconnect)', [
+                    'error' => $dcErr->getMessage(),
+                ]);
+            }
+
+            Log::info('[ProvisionJob] SUSPENDED via RADIUS → ISOLIR ✅', [
                 'customer' => $cust->username,
             ]);
         } catch (\Throwable $e) {
@@ -206,9 +218,21 @@ class ProvisionCustomerJob implements ShouldQueue
     protected function handleReactivate(RadiusService $radius, InternetCustomer $cust, InternetPackage $pkg, string $groupName, Router $router): void
     {
         try {
-            // 🟢 RADIUS: unblock + set group + disconnect old session
+            // 🟢 RADIUS: unblock + set group kembali ke paket asal
             $radius->ensureGroup($pkg, $groupName);
             $radius->reactivateUser($cust->username, $groupName);
+
+            // 🔌 Disconnect session ISOLIR agar reconnect dengan paket asal
+            try {
+                $ros = app(RouterOSService::class);
+                $client = $ros->client($router);
+                $ros->disconnectIfActive($client, $cust->username);
+                Log::info('[ProvisionJob] Session disconnected for reactivation reconnect');
+            } catch (\Throwable $dcErr) {
+                Log::warning('[ProvisionJob] Disconnect failed on reactivate (user will apply on next reconnect)', [
+                    'error' => $dcErr->getMessage(),
+                ]);
+            }
 
             Log::info('[ProvisionJob] REACTIVATED via RADIUS ✅', [
                 'customer' => $cust->username, 'group' => $groupName,

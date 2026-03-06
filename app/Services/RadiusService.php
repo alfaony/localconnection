@@ -70,16 +70,37 @@ class RadiusService
     }
 
     /**
-     * Suspend user — block authentication.
+     * Suspend user — WALLED GARDEN (Isolir)
+     * User tetap bisa connect tapi hanya akses web pembayaran.
+     * Rate-limit diperkecil, group diganti ke ISOLIR.
+     * Mikrotik firewall yang handle domain filtering.
      */
     public function suspendUser(string $username): void
     {
-        RadCheck::updateOrCreate(
-            ['username' => $username, 'attribute' => 'Auth-Type'],
-            ['op' => ':=', 'value' => 'Reject']
+        // Pastikan group ISOLIR ada dengan rate-limit kecil
+        RadGroupReply::updateOrCreate(
+            ['groupname' => 'ISOLIR', 'attribute' => 'Mikrotik-Rate-Limit'],
+            ['op' => ':=', 'value' => '512k/512k']
         );
 
-        Log::info('[RadiusService] suspendUser', ['username' => $username]);
+        // Assign ke pool-suspended yang sudah ada di Mikrotik
+        RadGroupReply::updateOrCreate(
+            ['groupname' => 'ISOLIR', 'attribute' => 'Framed-Pool'],
+            ['op' => ':=', 'value' => 'pool-suspended']
+        );
+
+        // Pindahkan user ke group ISOLIR
+        RadUserGroup::updateOrCreate(
+            ['username' => $username],
+            ['groupname' => 'ISOLIR', 'priority' => 1]
+        );
+
+        // Hapus Auth-Type Reject jika ada (dari sistem lama)
+        RadCheck::where('username', $username)
+            ->where('attribute', 'Auth-Type')
+            ->delete();
+
+        Log::info('[RadiusService] suspendUser → ISOLIR (walled garden)', ['username' => $username]);
     }
 
     /**
