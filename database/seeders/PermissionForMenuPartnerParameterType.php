@@ -30,6 +30,7 @@ class PermissionForMenuPartnerParameterType extends Seeder
             $partnerType = ['index','edit', 'create', 'update', 'show', 'destroy','toggleActive','store'];
             $partnerTarget = ['index','create','store','edit','update','destroy'];
             $partnerMonthlyReport = ['manage','create','store','edit','update','destroy'];
+            $partnerTypePartner = ['index','create','store','edit','update','destroy','show'];
             
             foreach ($partnerType as $method) 
             {
@@ -147,6 +148,30 @@ class PermissionForMenuPartnerParameterType extends Seeder
                     }else
                     {
                         PermissionRole::create(['role_id' => $role->id, 'permission_id' => $permission->id]);
+                    }
+                }
+            }
+
+            foreach ($partnerTypePartner as $method) 
+            {
+                // create permision
+                $permissionPartnerType = Permission::firstOrCreate([
+                    'name' => ucwords($method).' Partner Type (Jenis Mitra) - Master Data',
+                ],[
+                    'method' => $method,
+                    'table' => 'partner_types',
+                    'model' => 'PartnerType',
+                    'guard_name' => 'web'
+                ]);
+
+                foreach ($roles as $role) 
+                {
+                    if($method == 'destroy' && in_array($role->name, [RoleSchema::DIRECTOR,RoleSchema::ROOT, RoleSchema::ADMIN, RoleSchema::SYSTEM, RoleSchema::FINANCE, RoleSchema::STAFF_FINANCE]))
+                    {
+                        PermissionRole::create(['role_id' => $role->id, 'permission_id' => $permissionPartnerType->id]);
+                    }else
+                    {
+                        PermissionRole::create(['role_id' => $role->id, 'permission_id' => $permissionPartnerType->id]);
                     }
                 }
             }

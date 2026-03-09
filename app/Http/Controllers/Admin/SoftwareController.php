@@ -9,6 +9,10 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Storage;
+use App\Jobs\ProcessSoftwareImport;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Response;
+use League\Csv\Reader;
 
 class SoftwareController extends Controller
 {
@@ -214,5 +218,74 @@ class SoftwareController extends Controller
             'status' => $newStatus,
             'message' => 'Status software berhasil diupdate'
         ]);
+    }
+
+    /**
+     * Download import template
+     */
+    public function importTemplate()
+    {
+        $headers = [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => 'attachment; filename="Template_Import_Software.csv"',
+        ];
+
+        // Format is strictly exact with what the Job expects
+        $csvContent = "Nama Software,Tipe Paket,Deskripsi,Status,Email PIC\n";
+        $csvContent .= "Contoh POS,Basic,POS System for Retail,active,admin@example.com\n";
+        
+        return Response::make($csvContent, 200, $headers);
+    }
+
+    /**
+     * Handle the import request
+     */
+    public function import(Request $request)
+    {
+        $request->validate([
+            'file' => 'required|file|mimes:csv,txt|max:5120',
+        ]);
+
+        $file = $request->file('file');
+        
+        $fileContent = $file->get();
+        if (empty($fileContent)) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'File kosong.'
+            ], 400);
+        }
+
+        // Parse CSV
+        $csv = Reader::createFromString($fileContent);
+        $csv->setHeaderOffset(null);
+        
+        $csvData = iterator_to_array($csv->getRecords());
+
+        $companyId = Auth::user()->company_id;
+        $userId = auth()->id();
+
+        // Dispatch job
+        ProcessSoftwareImport::dispatch($csvData, $companyId, $userId);
+
+        return response()->json([
+            'status' => 'processing',
+            'message' => 'File sedang diproses di background. Silakan tunggu notifikasi progresnya.'
+        ]);
+    }
+
+    /**
+     * Fallback to check import status via Cache if websocket fails
+     */
+    public function importStatus(Request $request)
+    {
+        $userId = auth()->id();
+        $cacheKey = $request->input('cache_key') ?: "latest_software_import_{$userId}";
+
+        if (Cache::has($cacheKey)) {
+            return response()->json(Cache::get($cacheKey));
+        }
+
+        return response()->json(['status' => 'waiting'], 202);
     }
 }

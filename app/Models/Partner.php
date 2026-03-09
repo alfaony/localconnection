@@ -13,7 +13,7 @@ class Partner extends Model
     use HasFactory, HasUuids, SoftDeletes;
 
     protected $fillable = [
-        'company_id', 'pic_user_id', 'name', 'partner_type',
+        'company_id', 'pic_user_id', 'name', 'partner_type', 'partner_type_id',
         'industry', 'website', 'status', 'is_certified',
         'certification_level', 'certified_at', 'partnership_started_at','certification_file'
     ];
@@ -29,6 +29,11 @@ class Partner extends Model
         return $this->hasMany(PartnerTarget::class);
     }
 
+    public function partnerType()
+    {
+        return $this->belongsTo(PartnerType::class, 'partner_type_id');
+    }
+
     public function scopeActive($query)
     {
         return $query->where('status', 'active');
@@ -36,7 +41,10 @@ class Partner extends Model
 
     public function getPartnerTypeNameAttribute(): string
     {
-        return config('partners.partner_types')[$this->partner_type] ?? $this->partner_type;
+        if ($this->partnerType) {
+            return $this->partnerType->name;
+        }
+        return config('partners.partner_types')[$this->partner_type] ?? (string)$this->partner_type;
     }
 
     public function scopebyCompany($query, $companyId)

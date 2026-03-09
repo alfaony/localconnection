@@ -309,7 +309,7 @@ class RoleController extends Controller
             'barcodes', 'office_attendances', 'supplier_types', 'supplier_categories',
             'product_stores', 'category_product_stores', 'brand_product_stores',
             'punishment_users', 'sales', 'store_sellings', 'wfo_rules','partner_parameter_types','software','master_accounts','software_packages','subscriptions',
-            'customer_software','customer_checkouts','customer_subscriptions','subscription_payments','software_dashboards'
+            'customer_software','customer_checkouts','customer_subscriptions','subscription_payments','software_dashboards','partner_types'
         ];
     }
 }

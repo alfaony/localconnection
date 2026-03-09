@@ -46,8 +46,9 @@ class InternetCustomerForm extends Component
     public $paymentProofUploaded = false;
 
     // Step 1: Alamat & Paket
-    public $provinces;
-    public $internetPackages;
+    // internetPackages & provinces TIDAK dijadikan public property
+    // agar tidak konflik dengan data dari render() — Livewire akan serialisasi [] ke JS
+    // yang bisa menimpa hasil query terbaru dari render()
     public $province_id;
     public $city_id;
     public $district_id;
@@ -373,10 +374,7 @@ class InternetCustomerForm extends Component
         $this->company_id = $company->id;
         $this->company_name = $company->name;
         $this->company_slug = $company->slug;
-        $this->provinces = Province::whereHas('provinceCoverages')->get();
-        $this->internetPackages = InternetPackage::where('company_id', $this->company_id)
-            ->where('is_active', true)
-            ->get();
+        // provinces & internetPackages diload di render() agar selalu fresh dan tidak konflik dengan Livewire state
 
         // Check Xendit status
         try {
@@ -458,7 +456,11 @@ class InternetCustomerForm extends Component
             'cities' => $this->province_id ? City::where('province_id', $this->province_id)->whereHas('cityCoverages')->get() : [],
             'districts' => $this->city_id ? District::where('city_id', $this->city_id)->whereHas('districtCoverages')->get() : [],
             'subdistricts' => $this->district_id ? Subdistrict::where('district_id', $this->district_id)->whereHas('subdistrictCoverages')->get() : [],
-            'internetPackages' => InternetPackage::where('company_id',$this->company_id)->where('is_active', true)->get(),
+            'internetPackages' => InternetPackage::where('company_id',$this->company_id)
+                ->where('is_active', true)
+                ->with('regions')
+                ->forRegion($this->province_id, $this->city_id, $this->district_id)
+                ->get(),
         ])->extends('layouts.app_customer');
     }
 
@@ -469,12 +471,17 @@ class InternetCustomerForm extends Component
     {
         if (!$this->selectedPackage) return;
 
-        // Determine which price to use based on payment method and gateway settings
-        // All methods now use 'price' (gross price) as base
-        $basePrice = $this->selectedPackage->price;
-        
+        // Ambil harga sesuai wilayah customer yang sudah dipilih
+        // Prioritas: district > city > province > harga global paket
+        $priceData = $this->selectedPackage->getPriceForRegion(
+            $this->province_id,
+            $this->city_id,
+            $this->district_id
+        );
+        $basePrice = $priceData['price'];
+
         $this->monthlyPrice = $basePrice;
-        
+
         $calculation = InternetCustomerPurchase::calculateTotal(
             $this->monthlyPrice,
             $this->payment_months
@@ -483,26 +490,24 @@ class InternetCustomerForm extends Component
         $this->subtotal = $calculation['subtotal'];
         $this->discountPercentage = $calculation['discount_percentage'];
         $this->discountAmount = $calculation['discount_amount'];
-        
+
         // Amount before tax (after discount) - rounded for consistency
         $this->amountBeforeTax = round($calculation['total']);
-        
+
         // ALWAYS calculate and display PPN in UI for transparency
-        // The difference is what amount we send to the gateway:
-        // - PPN enabled: send amountBeforeTax (gateway will add PPN)
-        // - PPN disabled: send totalAmount (we already added PPN)
         $this->taxAmount = round(($this->amountBeforeTax * $this->taxRate) / 100);
         $this->totalAmount = round($this->amountBeforeTax + $this->taxAmount);
-        
-        Log::info('Pricing calculated', [
-            'payment_method' => $this->payment_method,
-            'base_price' => $basePrice,
-            'xendit_pay_with_ppn' => $this->xenditPayWithPpn,
+
+        Log::info('Pricing calculated (per region)', [
+            'payment_method'     => $this->payment_method,
+            'region_type'        => $priceData['region_type'],
+            'region_label'       => $priceData['region_label'],
+            'base_price'         => $basePrice,
+            'xendit_pay_with_ppn'  => $this->xenditPayWithPpn,
             'midtrans_pay_with_ppn' => $this->midtransPayWithPpn,
-            'amount_before_tax' => $this->amountBeforeTax,
-            'tax_amount' => $this->taxAmount,
-            'total_amount' => $this->totalAmount,
-            'note' => 'Total amount shown includes PPN. Gateway services will receive amountBeforeTax when PPN enabled.'
+            'amount_before_tax'  => $this->amountBeforeTax,
+            'tax_amount'         => $this->taxAmount,
+            'total_amount'       => $this->totalAmount,
         ]);
     }
 
@@ -668,7 +673,8 @@ class InternetCustomerForm extends Component
         }
         
         $this->step++;
-        $this->selectedPackage = InternetPackage::find($this->internet_package_id);
+        // Eager-load regions agar getPriceForRegion() bisa pakai harga wilayah
+        $this->selectedPackage = InternetPackage::with('regions')->find($this->internet_package_id);
         $this->calculatePricing();
         $this->calculatePeriod();
     }
