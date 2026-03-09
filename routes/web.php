@@ -120,6 +120,26 @@ use App\Http\Controllers\PartnerMonthlyReportController;
 use App\Http\Controllers\PartnerTargetController;
 use App\Http\Controllers\PartnerParameterTypeController;
 use App\Http\Controllers\PartnerTypeController;
+use App\Http\Controllers\Public\SoftwareSharingController;
+
+use App\Http\Controllers\Admin\{
+    DashboardController,
+    SoftwareController,
+    SoftwarePackageController,
+    MasterAccountController,
+    SubscriptionController as AdminSubscriptionController,
+    SubscriptionCustomerController,
+    SubscriptionChatController as AdminSubscriptionChatController
+};
+
+// Customer Controllers
+use App\Http\Controllers\Customer\{
+    SoftwareController as CustomerSoftwareController,
+    CustomerCheckoutController,
+    SubscriptionController as CustomerSubscriptionController,
+    SubscriptionPaymentController,
+    SubscriptionChatController as CustomerSubscriptionChatController
+};
 
 // LiveWired
 use App\Http\Livewire\DataCenter\Index;
@@ -207,17 +227,12 @@ Route::group(['prefix' => 'mom/external'], function ()
   Route::post('task/{token}/submit', [MomController::class, 'submitExternalTask'])->name('external.task.submit');
 });
 
-// Route::group(['prefix' => 'meeting/public'], function() {
-//     Route::get('oauth/callback', [MeetingController::class, 'handleGoogleCallbackPublic'])->name('meeting.public.callback');
-//     Route::view('error', 'meeting.public.error')->name('meeting.public.error');
-//     Route::get('join/{slug}/{token}', [MeetingController::class, 'redirectToGooglePublic'])->name('meeting.public.join');
-// });
 Route::prefix('meeting/public')->group(function () {
     Route::view('error', 'meeting.public_error')->name('meeting.public.error');
     Route::get('join/{slug}/{token}', [MeetingController::class, 'showPublicJoinForm'])->name('meeting.public.join');
     Route::post('join/{slug}/{token}', [MeetingController::class, 'submitPublicJoinForm'])->name('meeting.public.join.submit');
 });
-
+    
 Route::group(['middleware' => ['auth','web', 'ensure.xero.connected','role.permission']], function(){
   Route::get('xero',function(){
     
@@ -248,6 +263,7 @@ Route::group(['middleware' => ['auth','web', 'ensure.xero.connected','role.permi
 
 Auth::routes([
   'register' => false, // Registration Routes...
+  'verify'   => true,  // Email Verification Routes (verification.verify, dll.)
 ]);
 
 Route::get('/', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
@@ -262,8 +278,39 @@ Route::put('partnership-agreement/signatureShare/{id}',[PartnershipAgreementCont
 Route::get('used-laptop/showQr/{slug}', [UsedLaptopController::class,'showQr'])->name('used-laptop.show-qr');
 Route::get('used-item/showQr/{slug}', [UsedItemController::class,'showQr'])->name('used-item.show-qr');
 
+
+// ============================================================
+// PUBLIC SOFTWARE SHARING REGISTRATION
+// ============================================================
+Route::prefix('software-sharing')->name('public.software-sharing.')->group(function () {
+    // Root tanpa slug → cari company pertama lalu redirect
+    Route::get('/', [SoftwareSharingController::class, 'redirectToFirst'])->name('root');
+    // Catalog halaman utama (list semua software)
+    Route::get('{companySlug}', [SoftwareSharingController::class, 'index'])->name('index');
+    // Form registrasi akun baru
+    Route::get('{companySlug}/register', [SoftwareSharingController::class, 'showRegister'])->name('register');
+    Route::post('{companySlug}/register', [SoftwareSharingController::class, 'register'])->name('register.post');
+    // Form login
+    Route::get('{companySlug}/login', [SoftwareSharingController::class, 'showLogin'])->name('login');
+    Route::post('{companySlug}/login', [SoftwareSharingController::class, 'login'])->name('login.post');
+    // Resend verifikasi
+    Route::post('{companySlug}/resend-verification', [SoftwareSharingController::class, 'resendVerification'])->name('resend-verification');
+});
+
+// Email Verification untuk Customer Software (tanpa auth)
+Route::get('/customer-software/email/verify/{id}/{hash}', [SoftwareSharingController::class, 'verifyEmail'])
+    ->middleware(['signed'])
+    ->name('customer.email.verify');
+
+// Forgot Password untuk Customer Software
+Route::get('/software-sharing/{companySlug}/forgot-password', [SoftwareSharingController::class, 'showForgotPassword'])->name('customer.password.request');
+Route::post('/software-sharing/{companySlug}/forgot-password', [SoftwareSharingController::class, 'sendResetLink'])->name('customer.password.email');
+Route::get('/software-sharing/{companySlug}/reset-password/{token}', [SoftwareSharingController::class, 'showResetPassword'])->name('customer.password.reset.form');
+Route::post('/software-sharing/{companySlug}/reset-password', [SoftwareSharingController::class, 'resetPassword'])->name('customer.password.reset');
+
 Route::group(['middleware' => ['auth','role.permission','ip.restriction']], function()
 {
+  Route::get('home/softwareSharing', [App\Http\Controllers\HomeController::class, 'softwareSharing'])->name('home.softwareSharing');
   Route::get('home/meetingAgenda', [App\Http\Controllers\HomeController::class, 'meetingAgenda'])->name('home.meetingAgenda');
   Route::get('home/listDayoff', [App\Http\Controllers\HomeController::class, 'listDayoff'])->name('home.listDayoff');
   Route::get('home/dashboardReport', [App\Http\Controllers\HomeController::class, 'dashboardReport'])->name('home.dashboardReport');
@@ -736,14 +783,116 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
   Route::post('direct-point/{directPoint}/approve', [App\Http\Controllers\DirectPointController::class, 'approve'])->name('direct-point.approve');
   Route::post('direct-point/{directPoint}/reject', [App\Http\Controllers\DirectPointController::class, 'reject'])->name('direct-point.reject');
   Route::resource('direct-point', App\Http\Controllers\DirectPointController::class);
-});
 
+    // ========================================================================
+    // SOFTWARE MANAGEMENT
+    // ========================================================================
+    Route::get('software-dashboard', [DashboardController::class, 'index'])->name('software-dashboard.index');
+    Route::get('software/{software}/packages/create', [SoftwarePackageController::class, 'create'])->name('software.packages.create');
+    Route::get('software/{software}/packages/{package}/edit', [SoftwarePackageController::class, 'edit'])->name('software.packages.edit');
+    Route::resource('software', SoftwareController::class);
+    Route::post('software/{software}/toggleStatus', [SoftwareController::class, 'toggleStatus'])->name('software.toggleStatus');
+    
+    // ========================================================================
+    // SOFTWARE PACKAGES MANAGEMENT
+    // ========================================================================
+    Route::resource('software.packages', SoftwarePackageController::class)->except(['create', 'edit']);
+    
+    
+    // Toggle package status (AJAX)
+    Route::post('software/{software}/packages/{package}/toggleStatus', [SoftwarePackageController::class, 'toggleStatus'])->name('software.packages.toggleStatus');
+
+
+    // ========================================================================
+    // MASTER ACCOUNTS MANAGEMENT
+    // ========================================================================
+    Route::resource('master-account', MasterAccountController::class);
+    Route::post('master-account/{masterAccount}/toggle-status', [MasterAccountController::class, 'toggleStatus'])->name('master-account.toggle-status');
+    Route::get('master-account/{masterAccount}/customers', [MasterAccountController::class, 'customers'])->name('master-account.customers');
+
+    // ========================================================================
+    // subscription MANAGEMENT
+    // ========================================================================
+    Route::get('subscription', [AdminSubscriptionController::class, 'index'])->name('subscription.index');
+    Route::get('subscription/create-marketplace', [AdminSubscriptionController::class, 'createMarketplace'])->name('subscription.create-marketplace');
+    Route::post('subscription/store-marketplace', [AdminSubscriptionController::class, 'storeMarketplace'])->name('subscription.store-marketplace');
+    Route::post('subscription/check-user-email', [AdminSubscriptionController::class, 'checkUserEmail'])->name('subscription.check-user-email');
+    Route::get('subscription/{subscription}', [AdminSubscriptionController::class, 'show'])->name('subscription.show');
+    Route::get('subscription/{subscription}/edit-expiry', [AdminSubscriptionController::class, 'editExpiry'])->name('subscription.edit-expiry');
+    Route::put('subscription/{subscription}/update-expiry', [AdminSubscriptionController::class, 'updateExpiry'])->name('subscription.update-expiry');
+    Route::get('subscription/{subscription}/edit-master-account', [AdminSubscriptionController::class, 'editMasterAccount'])->name('subscription.edit-master-account');
+    Route::put('subscription/{subscription}/update-master-account', [AdminSubscriptionController::class, 'updateMasterAccount'])->name('subscription.update-master-account');
+    Route::post('subscription/{subscription}/suspend', [AdminSubscriptionController::class, 'suspend'])->name('subscription.suspend');
+    Route::post('subscription/{subscription}/activate', [AdminSubscriptionController::class, 'activate'])->name('subscription.activate');
+    Route::get('subscription/{subscription}/payments', [AdminSubscriptionController::class, 'payments'])->name('subscription.payments');
+    Route::post('subscription/manual-approve/{payment}/manual-approve', [AdminSubscriptionController::class, 'manualApprove'])->name('subscription.payments.manual-approve');
+
+    // ========================================================================
+    // SUBSCRIPTION CHAT (Admin)
+    // ========================================================================
+    Route::get('subscription/{subscription}/chat', [AdminSubscriptionChatController::class, 'index'])->name('subscription.chat.index');
+    Route::post('subscription/{subscription}/chat', [AdminSubscriptionChatController::class, 'store'])->name('subscription.chat.store');
+
+      // ========================================================================
+      // SOFTWARE CATALOG
+      // ========================================================================
+      Route::get('customer-software', [CustomerSoftwareController::class, 'index'])->name('customer-software.index');
+      Route::get('customer-software/{slug}', [CustomerSoftwareController::class, 'show'])->name('customer-software.show');
+
+      // ========================================================================
+      // CHECKOUT PROCESS
+      // ========================================================================   
+      Route::post('customer-checkout/{slug}/{package}', [CustomerCheckoutController::class, 'process'])->name('customer-checkout.process');
+      Route::get('customer-checkout/{slug}/{package}', [CustomerCheckoutController::class, 'show'])->name('customer-checkout.show');
+      Route::get('customer-checkout/payment/pending/{order}', [CustomerCheckoutController::class, 'paymentPending'])->name('customer-checkout.payment.pending');
+      Route::get('customer-checkout/payment/success/{order}', [CustomerCheckoutController::class, 'paymentSuccess'])->name('customer-checkout.payment.success');
+      Route::get('customer-checkout/payment/failed/{order}', [CustomerCheckoutController::class, 'paymentFailed'])->name('customer-checkout.payment.failed');
+
+            // Handle stuck/stale payment
+      Route::post('customer-checkout/payment/pending/{subscription}/cancel-pending-payment', [CustomerCheckoutController::class, 'cancelPending'])->name('customer-checkout.cancel-pending');
+      Route::get('customer-checkout/payment/pending/{subscription}/resume-payment', [CustomerCheckoutController::class, 'resumePayment'])->name('customer-checkout.resume-payment');
+      Route::get('customer-checkout/payment/pending/{subscription}/retry-payment', [CustomerCheckoutController::class, 'retryPayment'])->name('customer-checkout.retry-payment');
+
+      // ========================================================================
+      // MY subscription
+      // ========================================================================
+      Route::get('customer-subscription', [CustomerSubscriptionController::class, 'index'])->name('customer-subscription.index');
+      // View subscription detail (with credentials if active+paid)
+      Route::get('customer-subscription/{subscription}', [CustomerSubscriptionController::class, 'show'])->name('customer-subscription.show');
+      // Show renewal form
+      Route::get('customer-subscription/{subscription}/renew', [CustomerSubscriptionController::class, 'renew'])->name('customer-subscription.renew');
+      // Process renewal
+      Route::post('customer-subscription/{subscription}/renew', [CustomerSubscriptionController::class, 'processRenewal'])->name('customer-subscription.process-renewal');
+
+      // Cancel pending renewal
+      Route::post('customer-subscription/{subscription}/cancel-renewal-payment', [CustomerSubscriptionController::class, 'cancelRenewalPayment'])->name('customer-subscription.cancel-renewal-payment');
+      // Resume pending renewal
+      Route::get('customer-subscription/{subscription}/resume-renewal-payment', [CustomerSubscriptionController::class, 'resumeRenewalPayment'])->name('customer-subscription.resume-renewal-payment');
+
+      // View payment history for subscription
+      Route::get('customer-subscription/{subscription}/payments', [CustomerSubscriptionController::class, 'payments'])->name('customer-subscription.payments');
+
+      // ========================================================================
+      // PAYMENT HANDLING
+      // ========================================================================    
+      Route::get('subscription-payment/success', [SubscriptionPaymentController::class, 'success'])->name('subscription-payment.success');
+      // Payment failed (redirect from Xendit)
+      Route::get('subscription-payment/failed', [SubscriptionPaymentController::class, 'failed'])->name('subscription-payment.failed');
+      // Upload proof of transfer
+      Route::post('subscription-payment/{payment}/upload-proof', [SubscriptionPaymentController::class, 'uploadProof'])->name('subscription-payment.upload-proof');
+      // Check payment status (AJAX)
+      Route::get('subscription-payment/check-status/{orderNumber}', [SubscriptionPaymentController::class, 'checkStatus'])->name('subscription-payment.check-status');
+
+      // ========================================================================
+      // SUBSCRIPTION CHAT
+      // ========================================================================
+      Route::get('customer-subscription/{subscription}/chat', [CustomerSubscriptionChatController::class, 'index'])->name('customer-subscription.chat.index');
+      Route::post('customer-subscription/{subscription}/chat', [CustomerSubscriptionChatController::class, 'store'])->name('customer-subscription.chat.store');
+    });
 
   Route::get('internet-customer/registration/{companyId}', InternetCustomerForm::class)->name('internet-customer.create');
   Route::get('internet-customer/customer-active/{code}', CustomerShow::class)->name('internet-customer.customer.show');
-  
-// Route::middleware(['auth'])->group(function () {
-// });
+
 
 Route::get('error/{code?}', function ($code = 500) {
     return view('public_error', [

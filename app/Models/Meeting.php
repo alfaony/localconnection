@@ -21,6 +21,7 @@ class Meeting extends Model
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
+        'meeting_recurrence_id',
         'company_id',
         'project_id',
         'user_id',
@@ -194,6 +195,15 @@ class Meeting extends Model
                 });
             });
         }
+    }
+    public function meetingRecurrence()
+    {
+        return $this->hasOne(MeetingRecurrence::class, 'meeting_id');
+    }
+
+    public function generatedFromRecurrence()
+    {
+        return $this->belongsTo(MeetingRecurrence::class, 'meeting_recurrence_id');
     }
 }
 

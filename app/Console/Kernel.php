@@ -143,6 +143,28 @@ class Kernel extends ConsoleKernel
             ->dailyAt('23:45')
             ->withoutOverlapping(10)
             ->appendOutputTo(storage_path('logs/isolir.log'));
+
+        // =============== SUBSCRIPTION EXPIRY =================
+        // Notifikasi 7 hari, 3 hari, dan hari-H sekaligus
+        $schedule->command('subscription:notify-expiry --days=all')
+            ->timezone('Asia/Jakarta')
+            ->dailyAt('08:00')
+            ->withoutOverlapping(5)
+            ->appendOutputTo(storage_path('logs/subscription_expiry.log'));
+
+        // Expired: set status expired untuk subscription yang sudah melewati tanggal_expired
+        $schedule->command('subscription:expire-overdue')
+            ->timezone('Asia/Jakarta')
+            ->dailyAt('00:05')
+            ->withoutOverlapping(5);
+
+        // Auto-release: bebaskan slot dari subscription unpaid yang melewati deadline reservasi
+        $schedule->command('subscription:auto-release-slots')
+            ->timezone('Asia/Jakarta')
+            ->hourly()
+            ->withoutOverlapping(5)
+            ->appendOutputTo(storage_path('logs/subscription_auto_release.log'));
+        // =============== END SUBSCRIPTION EXPIRY =============
         // =============== END BILLING & ISOLIR ===============
 
         // Send billing reminder untuk customer yang end_billing_date = today (jam 17:00)
@@ -151,6 +173,7 @@ class Kernel extends ConsoleKernel
         $schedule->command('project:set-status-sent-time')->timezone('Asia/Jakarta')->dailyAt('00:00');
         $schedule->command('tasks:process-recurring')->timezone('Asia/Jakarta')->dailyAt('00:00');
         $schedule->command('recurring:generate')->timezone('Asia/Jakarta')->dailyAt('01:00');
+        $schedule->command('recurring:generate-meetings')->timezone('Asia/Jakarta')->dailyAt('01:10');
         $schedule->command('media:cleanup-temporary')->timezone('Asia/Jakarta')->dailyAt('00:00');
         $schedule->command('dayoff:reset-quota')->timezone('Asia/Jakarta')->yearlyOn(1, 1, '02:00');
         $schedule->command('weekly:check-compliance')->timezone('Asia/Jakarta')->mondays()->at('3:00');

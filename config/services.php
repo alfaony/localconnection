@@ -119,4 +119,9 @@ return [
     'openai' => [
         'nominal_threshold' => env('KELOOLA_OPENAI_NOMINAL_TRAHOLD', 100000000),
     ],
+
+    'subscription' =>
+    [
+        'slot_reservation_hours' => env('SLOT_RESERVATION_HOURS', 2),
+    ],
 ];

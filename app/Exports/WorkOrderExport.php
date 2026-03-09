@@ -12,14 +12,20 @@ use Maatwebsite\Excel\Concerns\WithChunkReading;
 class WorkOrderExport implements FromQuery, WithHeadings, WithMapping, WithChunkReading, ShouldQueue
 {
     protected $company_id;
+    protected $division_id;
 
-    public function __construct($company_id)
+    public function __construct($company_id, $division_id = null)
     {
         $this->company_id = $company_id;
+        $this->division_id = $division_id;
     }
     public function query()
     {
-        return WorkOrder::byCompany($this->company_id)->with('quote')->orderBy('work_order_number', 'desc');
+        $query = WorkOrder::byCompany($this->company_id)->with('quote')->orderBy('work_order_number', 'desc');
+        if ($this->division_id) {
+            $query->byDivision($this->division_id);
+        }
+        return $query;
     }
 
     public function headings(): array

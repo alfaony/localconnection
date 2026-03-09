@@ -142,6 +142,7 @@ class AppServiceProvider extends ServiceProvider
             $managementPenjualanMenuArray = Array();
             $managementMasterDataMenuArray = Array();
             $managementSettingMenuArray = Array();
+            $managementSoftwareMenuArray = Array();
 
             $managementUmumMenu = [
                 'punishment_users',
@@ -202,6 +203,10 @@ class AppServiceProvider extends ServiceProvider
 
             $managementSettingMenu = ['partner_types','setting_companies','roles','webhook_settings'];
 
+            $managementSoftwareMenu = [
+                'software_dashboards','software','master_accounts','subscriptions','',
+                'customer_software','customer_subscriptions'
+            ];
 
             $menus = [
                 'homes' => [
@@ -793,6 +798,42 @@ class AppServiceProvider extends ServiceProvider
                     'route' => 'partner-type.index',
                     'icon' => 'fa fa-tags',
                 ],
+                'software_dashboards' =>
+                [
+                    'text' => 'Dashboard Software',
+                    'route' => 'software-dashboard.index',
+                    'icon' => 'fa fa-tachometer-alt',
+                ],
+                'software' =>
+                [
+                    'text' => 'Software',
+                    'route' => 'software.index',
+                    'icon' => 'fa fa-cogs',
+                ],
+                'master_accounts' =>
+                [
+                    'text' => 'Master Account',
+                    'route' => 'master-account.index',
+                    'icon' => 'fa fa-user-tie',
+                ],
+                'subscriptions' =>
+                [
+                    'text' => 'Subscription',
+                    'route' => 'subscription.index',
+                    'icon' => 'fa fa-credit-card',
+                ],
+                'customer_subscriptions' =>
+                [
+                    'text' => 'My Subscription',
+                    'route' => 'customer-subscription.index',
+                    'icon' => 'fa fa-credit-card',
+                ],
+                'customer_software' =>
+                [
+                    'text' => 'Software Sharing List',
+                    'route' => 'customer-software.index',
+                    'icon' => 'fa fa-list',
+                ],
             ];
 
             // foreach ($listMenu as $role) 
@@ -1153,6 +1194,8 @@ class AppServiceProvider extends ServiceProvider
             //     ]
             // ];
 
+            // dd(Access::can('index','software_dashboards'));
+
             // ====== Helper: build submenu dari daftar role ======
             $buildSubmenu = function(array $roles) use ($menus) {
                 $result = [];
@@ -1180,6 +1223,7 @@ class AppServiceProvider extends ServiceProvider
             $managementPenjualanMenuArray     = $buildSubmenu($managementPenjualanMenu);
             $managementMasterDataMenuArray    = $buildSubmenu($managementMasterDataMenu);
             $managementSettingMenuArray       = $buildSubmenu($managementSettingMenu);
+            $managementSoftwareMenuArray      = $buildSubmenu($managementSoftwareMenu);
 
             // ====== Definisi section menu (judul + submenu) ======
             $sectionUmum = [
@@ -1200,6 +1244,11 @@ class AppServiceProvider extends ServiceProvider
             $sectionTokoOnline = [
                 'text'    => 'Manajemen Toko & Online Store',
                 'submenu' => $managementTokoOnlineMenuArray,
+            ];
+
+            $sectionSoftware = [
+                'text'    => 'Manajemen Software (Akun Sharing)',
+                'submenu' => $managementSoftwareMenuArray,
             ];
 
             $sectionProduction = [
@@ -1237,6 +1286,7 @@ class AppServiceProvider extends ServiceProvider
                 $sectionUmum,
                 $sectionKaryawan,
                 $sectionInternet,
+                $sectionSoftware,
                 $sectionTokoOnline,
                 $sectionProduction,
                 $sectionGedung,

@@ -32,6 +32,18 @@
     @endif
 </div>
 
+<div class="row mb-3 px-2 mt-2">
+    <div class="col-md-3">
+        <select id="filter_division" class="form-control">
+            <option value="">-- Semua Divisi --</option>
+            <option value="External">External</option>
+            @foreach($divisions as $div)
+                <option value="{{ $div->id }}">{{ $div->name }}</option>
+            @endforeach
+        </select>
+    </div>
+</div>
+
 <ul class="nav nav-tabs mb-4" id="myTab" role="tablist">
     @canAccess('dataTableJson','report_projects')
     <li class="nav-item">
@@ -124,6 +136,7 @@
 <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
 <script src="https://cdn.datatables.net/responsive/2.2.9/js/dataTables.responsive.min.js"></script>
 
@@ -137,6 +150,9 @@
             ajax: {
                 url: '{{ route("report-project.datatable")}}',
                 type: 'GET',
+                data: function(d) {
+                    d.division = $('#filter_division').val();
+                },
                 dataSrc: 'data'
             },
             columns: [
@@ -160,6 +176,9 @@
             ajax: {
                 url: '{{ route("report-project.dataTableJsonWorkOrderWithoutReportProject")}}',
                 type: 'GET',
+                data: function(d) {
+                    d.division = $('#filter_division').val();
+                },
                 dataSrc: 'data'
             },
             columns: [
@@ -172,6 +191,19 @@
     });
 </script>
 <script>
+    $('#filter_division').change(function() {
+        if ($.fn.DataTable.isDataTable('#datatableLaporanProject')) {
+            $('#datatableLaporanProject').DataTable().ajax.reload();
+        }
+        if ($.fn.DataTable.isDataTable('#dataTableJsonWorkOrderWithoutReportProject')) {
+            $('#dataTableJsonWorkOrderWithoutReportProject').DataTable().ajax.reload();
+        }
+    });
+
+    $('#filter_division').select2({
+        width: '100%',
+    });
+
     $(document).ready(function () {
         
         $("#btnCreateReportProject").click(function (e) 
@@ -188,6 +220,7 @@
 <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
 <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap4.min.css"> 
 <link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.2.9/css/responsive.dataTables.min.css">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css" rel="stylesheet" />
 
 <style>
    body {
@@ -220,6 +253,17 @@
         border: none;
         border-radius: 5px;
         cursor: pointer;
+    }
+    .select2-selection__rendered 
+    {
+        line-height: 31px !important;
+    }
+    .select2-container .select2-selection--single 
+    {
+        height: 35px !important;
+    }
+    .select2-selection__arrow {
+        height: 34px !important;
     }
 </style>
 @stop
