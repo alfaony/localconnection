@@ -197,10 +197,10 @@ class AppServiceProvider extends ServiceProvider
             ];
 
             $managementMasterDataMenu = [
-            'provinces','cities','districts','subdistricts','postal_codes','partner_parameter_types'
+            'provinces','cities','districts','subdistricts','postal_codes','partner_parameter_types','partner_types'
             ];
 
-            $managementSettingMenu = ['setting_companies','roles','webhook_settings'];
+            $managementSettingMenu = ['partner_types','setting_companies','roles','webhook_settings'];
 
 
             $menus = [
@@ -769,6 +769,12 @@ class AppServiceProvider extends ServiceProvider
                     'route' => 'partner-parameter-type.index',
                     'icon' => 'fa fa-list',
                 ],
+                'partner_types' =>
+                [
+                    'text' => 'Master Tipe Partner',
+                    'route' => 'partner-type.index',
+                    'icon' => 'fa fa-tags',
+                ],
                 'partners' =>
                 [
                     'text' => 'Mitra',
@@ -780,7 +786,13 @@ class AppServiceProvider extends ServiceProvider
                     'text' => 'Direct Point',
                     'route' => 'direct-point.index',
                     'icon' => 'fa fa-coins',
-                ]
+                ],
+                'partner_types' =>
+                [
+                    'text' => 'Master Tipe Partner',
+                    'route' => 'partner-type.index',
+                    'icon' => 'fa fa-tags',
+                ],
             ];
 
             // foreach ($listMenu as $role) 

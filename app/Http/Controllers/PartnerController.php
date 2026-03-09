@@ -3,9 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Models\Partner;
+use App\Models\PartnerType;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Str;
 
 class PartnerController extends Controller
 {
@@ -18,8 +20,8 @@ class PartnerController extends Controller
             $query->where('status', $request->status);
         }
 
-        if ($request->filled('partner_type')) {
-            $query->where('partner_type', $request->partner_type);
+        if ($request->filled('partner_type_id')) {
+            $query->where('partner_type_id', $request->partner_type_id);
         }
 
         if ($request->filled('search')) {
@@ -30,13 +32,14 @@ class PartnerController extends Controller
         }
 
         $partners = $query->byCompany(Auth::user()->company_id)->orderBy('name')->paginate(15);
+        $partnerTypes = PartnerType::where('company_id', Auth::user()->company_id)->where('is_active', true)->orderBy('name')->get();
 
-        return view('partners.index', compact('partners'));
+        return view('partners.index', compact('partners', 'partnerTypes'));
     }
 
     public function create()
     {
-        $partnerTypes = config('partners.partner_types');
+        $partnerTypes = PartnerType::where('company_id', Auth::user()->company_id)->where('is_active', true)->orderBy('name')->get();
         $statuses = config('partners.partner_status');
         $certificationLevels = config('partners.certification_levels');
         $users = User::byCompany(Auth::user()->company_id)->orderBy('name')->get();
@@ -46,10 +49,26 @@ class PartnerController extends Controller
 
     public function store(Request $request)
     {
+        $typeId = $request->partner_type_id;
+        if ($typeId && !Str::isUuid($typeId)) {
+            $newType = PartnerType::firstOrCreate([
+                'company_id' => Auth::user()->company_id,
+                'name' => $typeId,
+            ], [
+                'is_active' => true,
+            ]);
+            
+            if (!$newType->wasRecentlyCreated && !$newType->is_active) {
+                $newType->update(['is_active' => true]);
+            }
+            
+            $request->merge(['partner_type_id' => $newType->id]);
+        }
+
         $validated = $request->validate([
             'pic_user_id' => 'required|uuid',
             'name' => 'required|string|max:255',
-            'partner_type' => 'required|string',
+            'partner_type_id' => 'required|uuid|exists:partner_types,id',
             'industry' => 'nullable|string|max:255',
             'website' => 'nullable|url|max:255',
             'status' => 'required|in:active,inactive,suspended',
@@ -85,7 +104,7 @@ class PartnerController extends Controller
 
     public function edit(Partner $partner)
     {
-        $partnerTypes = config('partners.partner_types');
+        $partnerTypes = PartnerType::where('company_id', Auth::user()->company_id)->where('is_active', true)->orderBy('name')->get();
         $statuses = config('partners.partner_status');
         $certificationLevels = config('partners.certification_levels');
         $users = User::byCompany(Auth::user()->company_id)->orderBy('name')->get();
@@ -95,10 +114,26 @@ class PartnerController extends Controller
 
     public function update(Request $request, Partner $partner)
     {
+        $typeId = $request->partner_type_id;
+        if ($typeId && !Str::isUuid($typeId)) {
+            $newType = PartnerType::firstOrCreate([
+                'company_id' => Auth::user()->company_id,
+                'name' => $typeId,
+            ], [
+                'is_active' => true,
+            ]);
+            
+            if (!$newType->wasRecentlyCreated && !$newType->is_active) {
+                $newType->update(['is_active' => true]);
+            }
+            
+            $request->merge(['partner_type_id' => $newType->id]);
+        }
+
         $validated = $request->validate([
             'pic_user_id' => 'required|uuid',
             'name' => 'required|string|max:255',
-            'partner_type' => 'required|string',
+            'partner_type_id' => 'required|uuid|exists:partner_types,id',
             'industry' => 'nullable|string|max:255',
             'website' => 'nullable|url|max:255',
             'status' => 'required|in:active,inactive,suspended',

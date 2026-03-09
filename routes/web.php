@@ -119,6 +119,7 @@ use App\Http\Controllers\PartnerDashboardController;
 use App\Http\Controllers\PartnerMonthlyReportController;
 use App\Http\Controllers\PartnerTargetController;
 use App\Http\Controllers\PartnerParameterTypeController;
+use App\Http\Controllers\PartnerTypeController;
 
 // LiveWired
 use App\Http\Livewire\DataCenter\Index;
@@ -690,6 +691,7 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
   Route::resource('partner-parameter-type', PartnerParameterTypeController::class);
   Route::patch('partner-parameter-type/toggleActive/{parameterType}', [PartnerParameterTypeController::class, 'toggleActive'])->name('partner-parameter-type.toggle-active');
   
+  Route::resource('partner-type', PartnerTypeController::class)->except(['create', 'show', 'edit']);
   Route::resource('partner', PartnerController::class);
   
   Route::get('partner-dashboard/{partner}', [PartnerDashboardController::class, 'dashboard'])->name('partner.dashboard');
