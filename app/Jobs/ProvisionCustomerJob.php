@@ -53,12 +53,21 @@ class ProvisionCustomerJob implements ShouldQueue
             // ==========================================
             // Auth berdasarkan status
             // ==========================================
-            if ($cust->status == ParamSchema::INSTALLED) {
-                $this->handleInstall($radius, $cust, $pkg, $groupName, $router);
-            } elseif ($cust->status == ParamSchema::SUSPENDED) {
-                $this->handleSuspend($radius, $cust, $router);
-            } elseif ($cust->status == ParamSchema::REACTIVATED) {
-                $this->handleReactivate($radius, $cust, $pkg, $groupName, $router);
+            if (RadiusService::isEnabled()) {
+                // 🟢 RADIUS MODE: RADIUS primary + Direct API fallback
+                if ($cust->status == ParamSchema::INSTALLED) {
+                    $this->handleInstall($radius, $cust, $pkg, $groupName, $router);
+                } elseif ($cust->status == ParamSchema::SUSPENDED) {
+                    $this->handleSuspend($radius, $cust, $router);
+                } elseif ($cust->status == ParamSchema::REACTIVATED) {
+                    $this->handleReactivate($radius, $cust, $pkg, $groupName, $router);
+                }
+            } else {
+                // 🔴 DIRECT API MODE: langsung ke Mikrotik
+                Log::info('[ProvisionJob] RADIUS disabled → Direct API mode', [
+                    'customer' => $cust->username, 'status' => $cust->status,
+                ]);
+                $this->handleDirectApiOnly($cust, $groupName, $router);
             }
 
         } catch (\Throwable $th) {
@@ -186,6 +195,38 @@ class ProvisionCustomerJob implements ShouldQueue
                 'error' => $e->getMessage(),
             ]);
             $this->fallbackDirectApi($cust, $groupName, $router);
+        }
+    }
+
+    /**
+     * 🔴 DIRECT API ONLY: Ketika RADIUS_ENABLED=false
+     * Handle semua status langsung via Mikrotik API
+     */
+    protected function handleDirectApiOnly(InternetCustomer $cust, string $profileName, Router $router): void
+    {
+        try {
+            $ros = app(RouterOSService::class);
+            $client = $ros->client($router);
+
+            if ($cust->status == ParamSchema::SUSPENDED) {
+                // Suspend: disable secret + disconnect
+                $ros->disableSecret($client, $cust->username);
+                $ros->disconnectIfActive($client, $cust->username);
+                Log::info('[ProvisionJob] SUSPENDED via Direct API ✅', ['customer' => $cust->username]);
+            } else {
+                // Installed/Reactivated: upsert secret + disconnect old session
+                $ros->disconnectIfActive($client, $cust->username);
+                $ros->upsertPppSecret($client, $cust, $profileName, $cust->local_address);
+                Log::info('[ProvisionJob] ' . strtoupper($cust->status) . ' via Direct API ✅', [
+                    'customer' => $cust->username, 'profile' => $profileName,
+                ]);
+            }
+        } catch (\Throwable $e) {
+            Log::error('[ProvisionJob] Direct API failed', [
+                'customer' => $cust->username,
+                'status'   => $cust->status,
+                'error'    => $e->getMessage(),
+            ]);
         }
     }
 
