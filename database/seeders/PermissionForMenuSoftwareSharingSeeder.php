@@ -26,7 +26,7 @@ class PermissionForMenuSoftwareSharingSeeder extends Seeder
         DB::beginTransaction();
         try {   
             $softwareDashboard = ['index'];
-            $software = ['index','create','store','edit','update','destroy','show','toggleStatus','dashboard'];
+            $software = ['index','create','store','edit','update','destroy','show','toggleStatus','dashboard','importTemplate','import','importStatus'];
             $softwarePackages = ['index','create','store','edit','update','destroy','show','toggleStatus'];
             $masterAccount = ['index','edit', 'create','store','update', 'show', 'destroy','toggleStatus','customers'];
             $subscriptions = ['index','create','store','edit','update','destroy','show','toggleStatus','editExpiry','updateExpiry','editMasterAccount','updateMasterAccount','suspend','activate','payments','manual-approve','createMarketplace','checkUserEmail','storeMarketplace'];

@@ -21,12 +21,23 @@
     <div class="card">
         <div class="card-header">
             <div class="d-flex justify-content-between align-items-center">
-                <h3 class="card-title">Daftar Software</h3>
-                @canAccess('create', 'software')
-                <a href="{{ route('software.create') }}" class="btn btn-primary btn-sm">
-                    <i class="fas fa-plus"></i> Tambah Software
-                </a>
-                @endcanAccess
+                <div>
+                    @canAccess('importStatus', 'software')
+                    @canAccess('importTemplate', 'software')
+                    @canAccess('import', 'software')
+                    <button type="button" class="btn btn-success btn-sm mr-2" data-toggle="modal" data-target="#importModal">
+                        <i class="fas fa-file-excel"></i> Import Software
+                    </button>
+                    @endcanAccess
+                    @endcanAccess
+                    @endcanAccess
+
+                    @canAccess('create', 'software')
+                    <a href="{{ route('software.create') }}" class="btn btn-primary btn-sm">
+                        <i class="fas fa-plus"></i> Tambah Software
+                    </a>
+                    @endcanAccess
+                </div>
             </div>
         </div>
         <div class="card-body">
@@ -167,12 +178,68 @@
         @csrf
         @method('DELETE')
     </form>
+
+    {{-- Import Modal --}}
+    <div class="modal fade" id="importModal" tabindex="-1" role="dialog" aria-labelledby="importModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="importModalLabel">Import Software</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form id="importForm" enctype="multipart/form-data">
+                        @csrf
+                        @canAccess('importTemplate', 'software')
+                        <div class="form-group">
+                            <label>Download Template</label>
+                            <p>Silakan gunakan template berikut untuk memastikan format data benar.</p>
+                            <a href="{{ route('software.import.template') }}" class="btn btn-outline-info btn-sm">
+                                <i class="fas fa-download"></i> Download Template CSV
+                            </a>
+                        </div>
+                        @endcanAccess
+                        <hr>
+                        <div class="form-group">
+                            <label for="importFile">Upload File (CSV, Max 5MB)</label>
+                            <input type="file" class="form-control-file" id="importFile" name="file" accept=".csv" required>
+                        </div>
+                    </form>
+
+                    {{-- Progress Area --}}
+                    <div id="importProgressArea" style="display: none;" class="mt-4">
+                        <h6 id="importStatusText" class="text-primary text-center mb-2">Memproses...</h6>
+                        <div class="progress">
+                            <div id="importProgressBar" class="progress-bar progress-bar-striped progress-bar-animated bg-success" role="progressbar" style="width: 0%" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">0%</div>
+                        </div>
+                        
+                        {{-- Log --}}
+                        <div id="importErrorLog" class="alert alert-danger mt-3" style="display: none;">
+                            <ul id="importErrorList" class="mb-0 pl-3"></ul>
+                        </div>
+                    </div>
+                </div>
+                @canAccess('import','software')
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Tutup</button>
+                    <button type="button" class="btn btn-primary" id="btnProsesImport">Proses Import</button>
+                    <button type="button" class="btn btn-warning" id="btnReloadImport" style="display: none;" onclick="checkImportStatus()">Cek Status Final</button>
+                </div>
+                @endcanAccess
+            </div>
+        </div>
+    </div>
 @stop
 
 @section('css')
 @stop
 
 @section('js')
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/pusher-js@7.2.0/dist/web/pusher.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/laravel-echo/dist/echo.iife.js"></script>
 <script>
 $(document).ready(function() {
     // Toggle Status
@@ -230,6 +297,149 @@ $(document).ready(function() {
             }
         });
     });
+
+    // ============================================
+    // IMPORT FUNCTIONALITY & WEBSOCKET BROADCASTING
+    // ============================================
+    const userId = @json(auth()->id());
+    const host   = '{{ config('services.connection_reverb.host') }}';
+    const key    = '{{ config('services.connection_reverb.key') }}';
+    const port   = '{{ config('services.connection_reverb.port') }}';
+
+    window.Pusher = Pusher;
+    window.Echo = new Echo.default({
+        broadcaster       : 'reverb',
+        key               : key,
+        wsHost            : host,
+        wsPort            : 8080,
+        wssPort           : port,
+        forceTLS          : true,
+        enabledTransports : ['ws', 'wss'],
+        authEndpoint      : '/broadcasting/authorize',
+        disableStats      : true,
+    });
+
+    // Listen to broadcast events
+    window.Echo.channel(`bos.user.${userId}`)
+        .listen('.software.import.status', (e) => {
+            console.log("Import broadcast received:", e);
+            if (e.status === 'progress') {
+                $('#importStatusText').text(e.message);
+                $('#importProgressBar')
+                    .css('width', e.percent + '%')
+                    .attr('aria-valuenow', e.percent)
+                    .text(e.percent + '%');
+            } else if (e.status === 'completed') {
+                $('#importStatusText').removeClass('text-primary').addClass('text-success').text(e.message);
+                $('#importProgressBar')
+                    .css('width', '100%')
+                    .attr('aria-valuenow', 100)
+                    .text('100%')
+                    .removeClass('progress-bar-animated');
+                
+                $('#btnProsesImport').hide();
+                $('#btnReloadImport').hide();
+
+                if (e.failed_count > 0 && e.errors && e.errors.length > 0) {
+                    $('#importErrorLog').show();
+                    const list = $('#importErrorList');
+                    list.empty();
+                    e.errors.forEach(err => {
+                        list.append(`<li>${err}</li>`);
+                    });
+                }
+                
+                setTimeout(() => {
+                    toastr.success(e.message);
+                    window.location.reload();
+                }, 3000);
+            } else if (e.status === 'error') {
+                $('#importStatusText').removeClass('text-primary').addClass('text-danger').text(e.message);
+                $('#importProgressBar')
+                    .removeClass('bg-success progress-bar-animated').addClass('bg-danger');
+                $('#btnProsesImport').show().prop('disabled', false);
+                $('#btnReloadImport').hide();
+                toastr.error(e.message);
+            }
+        });
+
+    // Handle initial ajax call to trigger import job
+    $('#btnProsesImport').on('click', function() {
+        var formData = new FormData($('#importForm')[0]);
+        var fileInput = $('#importFile')[0];
+        
+        if (fileInput.files.length === 0) {
+            toastr.warning('Pilih file CSV terlebih dahulu');
+            return;
+        }
+
+        $(this).prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Loading...');
+        $('#importProgressArea').show();
+        $('#importStatusText').removeClass('text-success text-danger').addClass('text-primary').text('Mengupload file...');
+        $('#importProgressBar').css('width', '10%').text('10%').addClass('progress-bar-animated bg-success').removeClass('bg-danger');
+        $('#importErrorLog').hide();
+        $('#importErrorList').empty();
+
+        $.ajax({
+            url: "{{ route('software.import') }}",
+            type: 'POST',
+            data: formData,
+            contentType: false,
+            processData: false,
+            success: function(response) {
+                if(response.status === 'processing') {
+                    $('#importStatusText').text(response.message);
+                    toastr.info('Proses import dimulai di background');
+                    $('#btnProsesImport').hide();
+                    $('#btnReloadImport').show(); // Fallback button
+                }
+            },
+            error: function(xhr) {
+                $('#btnProsesImport').prop('disabled', false).text('Proses Import');
+                let errMsg = 'Gagal mengupload file';
+                if(xhr.responseJSON && xhr.responseJSON.message) {
+                    errMsg = xhr.responseJSON.message;
+                }
+                toastr.error(errMsg);
+                $('#importStatusText').removeClass('text-primary').addClass('text-danger').text(errMsg);
+                $('#importProgressBar').removeClass('bg-success bg-info bg-primary progress-bar-animated').addClass('bg-danger');
+            }
+        });
+    });
+
+    // Manual status check (fallback)
+    window.checkImportStatus = function(cacheKey = null) {
+        $('#btnReloadImport').prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Cek...');
+        
+        const url = cacheKey 
+            ? "{{ route('software.import.status') }}?cache_key=" + cacheKey 
+            : "{{ route('software.import.status') }}";
+
+        $.get(url, function(data) {
+            $('#btnReloadImport').prop('disabled', false).text('Cek Status Final');
+            if (data.status === 'waiting' || !data.success_count) {
+                toastr.info('Masih memproses, cek kembali dalam beberapa detik.');
+            } else {
+                // Manually trigger the completed logic
+                toastr.success('Import telah selesai.');
+                $('#importStatusText').removeClass('text-primary').addClass('text-success').text(data.message);
+                $('#importProgressBar').css('width', '100%').text('100%').removeClass('progress-bar-animated');
+                $('#btnReloadImport').hide();
+                $('#btnProsesImport').hide();
+
+                if (data.failed_count > 0 && data.errors) {
+                    $('#importErrorLog').show();
+                    const list = $('#importErrorList');
+                    list.empty();
+                    data.errors.forEach(err => {
+                        list.append(`<li>${err}</li>`);
+                    });
+                } else {
+                    setTimeout(() => window.location.reload(), 2000);
+                }
+            }
+        });
+    };
 });
 </script>
 @stop

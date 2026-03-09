@@ -788,6 +788,9 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
     // SOFTWARE MANAGEMENT
     // ========================================================================
     Route::get('software-dashboard', [DashboardController::class, 'index'])->name('software-dashboard.index');
+    Route::get('software/import/template', [SoftwareController::class, 'importTemplate'])->name('software.import.template');
+    Route::post('software/import', [SoftwareController::class, 'import'])->name('software.import');
+    Route::get('software/import/status', [SoftwareController::class, 'importStatus'])->name('software.import.status');
     Route::get('software/{software}/packages/create', [SoftwarePackageController::class, 'create'])->name('software.packages.create');
     Route::get('software/{software}/packages/{package}/edit', [SoftwarePackageController::class, 'edit'])->name('software.packages.edit');
     Route::resource('software', SoftwareController::class);
