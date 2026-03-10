@@ -1654,13 +1654,13 @@ createApp({
                                 }
 
                                 @page {
-                                    size: 56mm auto;
+                                    size: 48mm auto;
                                     margin: 0;
                                 }
 
                                 body {
                                     font-family: 'Courier New', monospace;
-                                    width: 56mm;
+                                    width: 48mm;
                                     margin: 0;
                                     padding: 3mm 2mm;
                                     font-size: 8px;
