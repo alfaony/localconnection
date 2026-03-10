@@ -300,7 +300,7 @@ class RoleController extends Controller
             'warehouses', 'sensors', 'racks', 'zones', 'wilayahs', 'providers',
             'shipping_rates', 'provinces', 'cities', 'districts', 'subdistricts',
             'postal_codes', 'shipping_calculations', 'ask_bos', 'decisions', 'kyes',
-            'partnership_agreements', 'product_suppliers', 'dayoffs', 'office_media',
+            'partnership_agreements', 'product_suppliers', 'dayoffs', 'office_media','partners',
             'weekly_reports', 'dashboard_weekly_reports', 'vehicles', 'subscribe_letters',
             'flowcharts', 'item_requests', 'item_purchases', 'chat_messages', 'meetings',
             'product_categories', 'companies', 'moms', 'master_check_items', 'used_laptops',
@@ -308,7 +308,8 @@ class RoleController extends Controller
             'internet_packages', 'internet_customers', 'promos', 'routers', 'webhook_settings',
             'barcodes', 'office_attendances', 'supplier_types', 'supplier_categories',
             'product_stores', 'category_product_stores', 'brand_product_stores',
-            'punishment_users', 'sales', 'store_sellings', 'wfo_rules','partner_parameter_types'
+            'punishment_users', 'sales', 'store_sellings', 'wfo_rules','partner_parameter_types','software','master_accounts','software_packages','subscriptions',
+            'customer_software','customer_checkouts','customer_subscriptions','subscription_payments','software_dashboards','partner_types'
         ];
     }
 }

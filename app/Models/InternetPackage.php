@@ -7,6 +7,8 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+
 class InternetPackage extends Model
 {
     use HasFactory, SoftDeletes;
@@ -64,5 +66,143 @@ class InternetPackage extends Model
     {
         $companyIds = Auth::user()->accessibleCompanies->pluck('id')->push($companyId)->unique();
         return $query->whereIn('company_id', $companyIds);
+    }
+
+    // ==================== REGION RELATIONS ====================
+
+    public function regions(): HasMany
+    {
+        return $this->hasMany(InternetPackageRegion::class);
+    }
+
+    public function regionProvinces(): HasMany
+    {
+        return $this->hasMany(InternetPackageRegion::class)->where('region_type', 'province');
+    }
+
+    public function regionCities(): HasMany
+    {
+        return $this->hasMany(InternetPackageRegion::class)->where('region_type', 'city');
+    }
+
+    public function regionDistricts(): HasMany
+    {
+        return $this->hasMany(InternetPackageRegion::class)->where('region_type', 'district');
+    }
+
+    /**
+     * Scope: tampilkan paket yang relevan untuk wilayah tertentu.
+     *
+     * Logika:
+     * - Paket GLOBAL (tanpa region aktif apapun) → selalu tampil
+     * - Paket REGION-SPESIFIK → hanya tampil jika ada region aktif yang cocok
+     *   dengan district, city, atau province si customer
+     *
+     * Prioritas: district > city > province > global
+     *
+     * CATATAN: doesntHave('regions') diganti dengan subquery is_active=true
+     * agar paket yang semua regionnya inactive tetap dianggap 'global'.
+     */
+    public function scopeForRegion($query, $provinceId = null, $cityId = null, $districtId = null)
+    {
+        // Cast ke int agar string '0' atau '' dari Select2 tidak dianggap valid
+        $provinceId  = (int) $provinceId  ?: null;
+        $cityId      = (int) $cityId      ?: null;
+        $districtId  = (int) $districtId  ?: null;
+
+        return $query->where(function ($q) use ($provinceId, $cityId, $districtId) {
+
+            // Paket global: tidak punya region aktif SAMA SEKALI
+            $q->whereDoesntHave('regions', fn ($r) => $r->where('is_active', true));
+
+            // Atau punya region aktif yang COCOK dengan wilayah customer
+            if ($districtId) {
+                $q->orWhereHas('regions', fn ($r) =>
+                    $r->where('region_type', 'district')
+                      ->where('region_id', $districtId)
+                      ->where('is_active', true)
+                );
+            }
+            if ($cityId) {
+                $q->orWhereHas('regions', fn ($r) =>
+                    $r->where('region_type', 'city')
+                      ->where('region_id', $cityId)
+                      ->where('is_active', true)
+                );
+            }
+            if ($provinceId) {
+                $q->orWhereHas('regions', fn ($r) =>
+                    $r->where('region_type', 'province')
+                      ->where('region_id', $provinceId)
+                      ->where('is_active', true)
+                );
+            }
+        });
+    }
+
+    /**
+     * Ambil harga paket untuk wilayah tertentu.
+     *
+     * Konsep baru (simpel):
+     * - Wilayah hanya mengontrol apakah paket MUNCUL di area tersebut
+     * - Harga SELALU menggunakan harga paket itu sendiri (price / price_nett)
+     * - Kalau butuh harga berbeda per wilayah → buat paket baru
+     *
+     * @return array ['price' => int, 'price_nett' => int, 'region_label' => string, 'region_type' => string]
+     */
+    public function getPriceForRegion($provinceId = null, $cityId = null, $districtId = null): array
+    {
+        // Cast ke int agar '' dari Select2 tidak dianggap valid
+        $districtId = (int) $districtId ?: null;
+        $cityId     = (int) $cityId     ?: null;
+        $provinceId = (int) $provinceId ?: null;
+
+        // Tentukan label wilayah (hanya untuk informasi)
+        $regionType  = 'global';
+        $regionLabel = 'Global';
+
+        if ($districtId) {
+            $region = $this->regions
+                ->where('region_type', 'district')
+                ->where('region_id', $districtId)
+                ->where('is_active', true)
+                ->first();
+            if ($region) {
+                $regionType  = 'district';
+                $regionLabel = $region->region_label;
+            }
+        }
+
+        if ($regionType === 'global' && $cityId) {
+            $region = $this->regions
+                ->where('region_type', 'city')
+                ->where('region_id', $cityId)
+                ->where('is_active', true)
+                ->first();
+            if ($region) {
+                $regionType  = 'city';
+                $regionLabel = $region->region_label;
+            }
+        }
+
+        if ($regionType === 'global' && $provinceId) {
+            $region = $this->regions
+                ->where('region_type', 'province')
+                ->where('region_id', $provinceId)
+                ->where('is_active', true)
+                ->first();
+            if ($region) {
+                $regionType  = 'province';
+                $regionLabel = $region->region_label;
+            }
+        }
+
+        // Harga SELALU dari paket — tidak ada harga khusus per wilayah
+        return [
+            'price'        => $this->price,
+            'price_nett'   => $this->price_nett,
+            'region_label' => $regionLabel,
+            'region_type'  => $regionType,
+        ];
     }
 }

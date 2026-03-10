@@ -182,7 +182,9 @@ return
         'oem' => 'OEM',
         'system_integrator' => 'System Integrator',
         'value_added_reseller' => 'Value Added Reseller (VAR)',
-    ],
+        'affiliate' => 'Affiliate',
+        'agency_partner' => "Agency Partner",
+      ],
 
     'partner_status' => [
         'active' => 'Active',

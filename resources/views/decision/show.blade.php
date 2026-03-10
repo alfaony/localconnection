@@ -15,14 +15,20 @@
 <div class="card">
     <div class="card-body" style="border: 1px solid #ccc; padding: 20px; background: #f8f9fa;">
         <div class="row">
-            <div class="col-md-6">
+            <div class="col-md-4">
                 <h4 class="text-muted">Trust Score</h4>
                 <h2><strong>{{ $decision->trust_score }}</strong></h2>
             </div>
-            <div class="col-md-6">
+            <div class="col-md-4">
                 <h4 class="text-muted">Execution Score</h4>
                 <h2><strong>{{ $decision->execution_score }}</strong></h2>
             </div>
+            @if($decision->nominal)
+            <div class="col-md-4">
+                <h4 class="text-muted">Nilai / Nominal</h4>
+                <h2><strong>Rp {{ number_format($decision->nominal, 0, ',', '.') }}</strong></h2>
+            </div>
+            @endif
         </div>
         
         @if(!$decision->is_approve)
@@ -153,6 +159,34 @@
                         <li>Pencapaian: {{ implode(', ', json_decode($decision->userConsult->achievement) ?? []) }}</li>
                         <li>Kegagalan: {{ implode(', ', json_decode($decision->userConsult->failure) ?? []) }}</li>
                     </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+    @endif
+
+    @if($decision->consult_vendor)
+    <div class="col-md-3">
+        <div class="card border-warning">
+            <div class="card-header bg-warning" id="headingFive">
+                <h2 class="mb-0">
+                    <button class="btn btn-link text-dark" type="button" data-toggle="collapse" data-target="#collapseFive" aria-expanded="true" aria-controls="collapseFive">
+                        <i class="fas fa-building mr-1"></i> Vendor Eksternal
+                    </button>
+                </h2>
+            </div>
+            <div id="collapseFive" class="collapse show" aria-labelledby="headingFive">
+                <div class="card-body">
+                    <ul>
+                        <li><strong>Nama Vendor:</strong> {{ $decision->consult_vendor }}</li>
+                        @if($decision->nominal)
+                        <li><strong>Nilai Kontrak:</strong> Rp {{ number_format($decision->nominal, 0, ',', '.') }}</li>
+                        @endif
+                    </ul>
+                    <div class="alert alert-warning py-1 px-2 mt-2 mb-0" style="font-size:0.85em;">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        Nilai melebihi threshold — pastikan due diligence vendor sudah dilakukan.
+                    </div>
                 </div>
             </div>
         </div>

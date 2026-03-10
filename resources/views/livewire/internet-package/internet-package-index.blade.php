@@ -72,6 +72,7 @@
                                 @endif
                             </th>
                             <th>Harga Nett</th>
+                            <th class="text-center">Wilayah</th>
                             <th class="text-center">Status</th>
                             <th class="text-center">Aksi</th>
                         </tr>
@@ -93,11 +94,32 @@
                                 </td>
                                 <td>Rp {{ number_format($package->price, 0, ',', '.') }}</td>
                                 <td>Rp {{ number_format($package->price_nett, 0, ',', '.') }}</td>
+                                {{-- WILAYAH BADGE --}}
+                                <td class="text-center">
+                                    @if($package->regions->isEmpty())
+                                        <span class="badge badge-secondary" title="Paket berlaku di semua wilayah">
+                                            <i class="fas fa-globe mr-1"></i> Global
+                                        </span>
+                                    @else
+                                        @php
+                                            // Menggunakan '&#10;' untuk memberikan enter yang rapi di native/JS tooltip
+                                            $regionList = $package->regions->map(fn($r) => '• ' . $r->region_label)->implode('&#10;');
+                                        @endphp
+                                        <span class="badge badge-primary"
+                                            data-toggle="tooltip"
+                                            data-placement="left"
+                                            title="{!! $regionList !!}"
+                                            style="cursor:pointer;">
+                                            <i class="fas fa-map-marker-alt mr-1"></i>
+                                            {{ $package->regions->count() }} Wilayah
+                                        </span>
+                                    @endif
+                                </td>
                                 <td class="text-center">
                                     <div class="form-check form-switch d-inline-block">
                                         @if($isCheck)
-                                        <input class="form-check-input" type="checkbox" 
-                                            id="status-{{ $package->id }}" 
+                                        <input class="form-check-input" type="checkbox"
+                                            id="status-{{ $package->id }}"
                                             wire:change="toggleStatus({{ $package->id }})"
                                             {{ $package->is_active ? 'checked' : '' }}>
                                         <label class="form-check-label" for="status-{{ $package->id }}">
@@ -106,21 +128,21 @@
                                         @else
                                         <span class="badge bg-{{ $package->is_active ? 'success' : 'danger' }}">
                                             {{ $package->is_active ? 'Aktif' : 'Tidak Aktif' }}
-                                        </span> 
+                                        </span>
                                         @endif
                                     </div>
                                 </td>
                                 <td class="text-center">
                                     @canAccess('edit', 'internet_packages')
-                                    <a href="{{ route('internet-package.edit', $package->id) }}" 
+                                    <a href="{{ route('internet-package.edit', $package->id) }}"
                                         class="btn btn-sm btn-warning" title="Edit">
                                         <i class="fas fa-edit"></i>
                                     </a>
                                     @endcanAccess
 
                                     @canAccess('destroy', 'internet_packages')
-                                    <button wire:click="delete({{ $package->id }})" 
-                                            class="btn btn-sm btn-danger" 
+                                    <button wire:click="delete({{ $package->id }})"
+                                            class="btn btn-sm btn-danger"
                                             title="Hapus"
                                             onclick="return confirm('Yakin menghapus paket?') || event.stopImmediatePropagation()">
                                         <i class="fas fa-trash"></i>

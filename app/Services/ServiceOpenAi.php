@@ -20,16 +20,27 @@ class ServiceOpenAi
         $this->model = env('KELOOLA_OPENAI_MODEL') ?? "gpt-3.5-turbo";
     }
 
-    public function askOpenAi($prompt)
+    public function askOpenAi($prompt, $systemPrompt = null)
     {
         try {
+            $payload = [
+                'prompt' => $prompt,
+                'model'  => $this->model
+            ];
+
+            if ($systemPrompt) {
+                $payload['system_prompt'] = $systemPrompt;
+            }
+
             $response = Http::withHeaders([
                 'Authorization' => 'Bearer ' . $this->apiKey,
                 'Content-Type' => 'application/json',
-            ])->post($this->apiUrl."/chatgpt-text", 
-            [
+            ])
+            ->timeout(120)        
+            ->retry(3, 5000)      
+            ->post($this->apiUrl . "/chatgpt-text", [
                 'prompt' => $prompt,
-                'model' => $this->model
+                'model'  => $this->model
             ]);
             $user = User::whereHas('role', function ($query) {
                 $query->where('name', RoleSchema::ROOT);

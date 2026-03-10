@@ -32,6 +32,8 @@ use App\Models\SettingCompany;
 // Change to API
 use App\Models\User;
 use App\Models\Dayoff;
+use App\Models\CustomerSubscription;
+use App\Models\Software;
 
 class HomeController extends Controller
 {
@@ -661,5 +663,95 @@ class HomeController extends Controller
         $meetings = $meetings->orderBy('start_date')->orderBy('start_time')->get();
 
         return response()->json($meetings);
+    }
+
+    public function softwareSharing(Request $request)
+    {
+        $user = auth()->user();
+
+        // Statistics
+        $activeSubscriptions = CustomerSubscription::where('user_id', $user->id)
+            ->where('status', 'active')
+            ->where('payment_status', 'paid')
+            ->count();
+
+        $expiringSoon = CustomerSubscription::where('user_id', $user->id)
+            ->where('status', 'active')
+            ->where('payment_status', 'paid')
+            ->whereBetween('tanggal_expired', [now(), now()->addDays(7)])
+            ->count();
+
+        $expiredSubscriptions = CustomerSubscription::where('user_id', $user->id)
+            ->where('status', 'expired')
+            ->count();
+
+        $totalSoftwares = Software::where('status', 'active')->count();
+
+        // Active Subscriptions
+        $mySubscriptions = CustomerSubscription::where('user_id', $user->id)
+            ->where('status', 'active')
+            ->where('payment_status', 'paid')
+            ->with(['software', 'package'])
+            ->latest()
+            ->get()
+            ->map(function($sub) {
+                return [
+                    'id' => $sub->id,
+                    'order_number' => $sub->order_number,
+                    'software' => [
+                        'id' => $sub->software->id,
+                        'nama' => $sub->software->nama_software,
+                        'logo_url' => $sub->software->logo_url ? asset('storage/' . $sub->software->logo_url) : null,
+                    ],
+                    'package' => [
+                        'nama' => $sub->package->nama_paket,
+                        'durasi' => $sub->package->durasi_hari,
+                    ],
+                    'tanggal_mulai' => Carbon::parse($sub->tanggal_mulai)->format('d M Y'),
+                    'tanggal_expired' => Carbon::parse($sub->tanggal_expired)->format('d M Y'),
+                    'days_until_expiry' => $sub->days_until_expiry,
+                    'is_expiring_soon' => $sub->isExpiringSoon(7),
+                    'status' => $sub->status,
+                    'payment_status' => $sub->payment_status,
+                    'detail_url' => route('customer-subscription.show', $sub->id),
+                    'renew_url' => route('customer-subscription.renew', $sub->id),
+                ];
+            });
+
+        // Recently Expired
+        $recentExpired = CustomerSubscription::where('user_id', $user->id)
+            ->where('status', 'expired')
+            ->with(['software', 'package'])
+            ->latest('tanggal_expired')
+            ->take(5)
+            ->get()
+            ->map(function($sub) {
+                return [
+                    'id' => $sub->id,
+                    'software' => [
+                        'id' => $sub->software->id,
+                        'nama' => $sub->software->nama_software,
+                    ],
+                    'package' => [
+                        'nama' => $sub->package->nama_paket,
+                    ],
+                    'tanggal_expired' => Carbon::parse($sub->tanggal_expired)->format('d M Y'),
+                    'software_url' => route('customer-software.show', $sub->software->slug),
+                ];
+            });
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'statistics' => [
+                    'active_subscriptions' => $activeSubscriptions,
+                    'expiring_soon' => $expiringSoon,
+                    'expired_subscriptions' => $expiredSubscriptions,
+                    'total_softwares' => $totalSoftwares,
+                ],
+                'subscriptions' => $mySubscriptions,
+                'recent_expired' => $recentExpired,
+            ]
+        ]);
     }
 }

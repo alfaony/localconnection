@@ -35,18 +35,18 @@
     <!-- Partner Type -->
     <div class="col-md-6">
         <div class="form-group">
-            <label for="partner_type">Partner Type <span class="text-danger">*</span></label>
-            <select class="form-control @error('partner_type') is-invalid @enderror" 
-                    id="partner_type" name="partner_type" required>
+            <label for="partner_type_id">Partner Type <span class="text-danger">*</span></label>
+            <select class="form-control @error('partner_type_id') is-invalid @enderror" 
+                    id="partner_type_id" name="partner_type_id" required>
                 <option value="">-- Select Type --</option>
-                @foreach($partnerTypes as $key => $value)
-                    <option value="{{ $key }}" 
-                        {{ old('partner_type', $partner->partner_type ?? '') == $key ? 'selected' : '' }}>
-                        {{ $value }}
+                @foreach($partnerTypes as $type)
+                    <option value="{{ $type->id }}" 
+                        {{ old('partner_type_id', $partner->partner_type_id ?? '') == $type->id ? 'selected' : '' }}>
+                        {{ $type->name }}
                     </option>
                 @endforeach
             </select>
-            @error('partner_type')
+            @error('partner_type_id')
                 <div class="invalid-feedback">{{ $message }}</div>
             @enderror
         </div>
@@ -198,10 +198,16 @@
             width: '100%'
         });
 
+        // Initialize Select2 with tags for Partner Type
+        $('#partner_type_id').select2({
+            placeholder: '-- Select Type --',
+            allowClear: true,
+            tags: true,
+            width: '100%'
+        });
+
         // Update custom file input label with filename
         $('#certification_file').on('change', function() {
-            console.log("okkkss");
-            
             const fileName = $(this).val().split('\\').pop();
             $(this).next('.custom-file-label').html(fileName || 'Choose file');
         });

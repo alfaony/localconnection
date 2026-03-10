@@ -77,7 +77,7 @@ class InternetCustomerShow extends Component
             'city',
             'district',
             'subdistrict',
-            'internetPackage',
+            'internetPackage.regions',  // eager-load regions untuk harga per wilayah
             'partnershipAgreement',
             'userCustomer',
             'purchases',
@@ -100,9 +100,7 @@ class InternetCustomerShow extends Component
         }
 
         $this->status_active = $this->customer->status != ParamSchema::INACTIVE ? true : false;
-        $this->availablePackages = InternetPackage::byCompany(Auth::user()->company_id)
-        ->where('is_active', true)
-        ->get();
+        $this->availablePackages = [];
     }
 
     // ========================================
@@ -673,17 +671,47 @@ class InternetCustomerShow extends Component
 
     public function openEditPackageModal()
     {
-        // Load available packages
-        $this->availablePackages = InternetPackage::where('company_id', $this->customer->company_id)
+        // Load available packages — filter berdasarkan wilayah customer
+        // Sehingga admin hanya bisa pilih paket yang berlaku di wilayah customer
+        $packages = InternetPackage::where('company_id', $this->customer->company_id)
             ->where('is_active', true)
             ->where('id', '!=', $this->customer->internet_package_id)
+            ->with('regions')
+            ->forRegion(
+                $this->customer->province_id,
+                $this->customer->city_id,
+                $this->customer->district_id
+            )
             ->get();
+
+        $formattedPackages = [];
+        foreach ($packages as $pkg) {
+            $priceData = $pkg->getPriceForRegion(
+                $this->customer->province_id,
+                $this->customer->city_id,
+                $this->customer->district_id
+            );
+            
+            $label = $pkg->name . ' - Rp ' . number_format($priceData['price_nett'], 0, ',', '.') . '/bulan';
+            if ($priceData['region_type'] !== 'global') {
+                $label .= ' (Wilayah)';
+            }
+            
+            $formattedPackages[] = [
+                'id' => $pkg->id,
+                'label' => $label
+            ];
+        }
         
+        $this->availablePackages = $formattedPackages;
+
         // Reset form
         $this->new_package_id = null;
-        
+
         // Open modal
-        $this->dispatchBrowserEvent('show-edit-package-modal');
+        $this->dispatchBrowserEvent('show-edit-package-modal', [
+            'packages' => $formattedPackages
+        ]);
     }
 
     public function savePackageChange()

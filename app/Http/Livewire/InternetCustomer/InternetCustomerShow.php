@@ -90,7 +90,7 @@ class InternetCustomerShow extends Component
             'city',
             'district',
             'subdistrict',
-            'internetPackage',
+            'internetPackage.regions',  // eager-load regions untuk harga per wilayah
             'partnershipAgreement',
             'userCustomer',
             'purchases',
@@ -234,22 +234,32 @@ class InternetCustomerShow extends Component
 
     protected function calculatePayment()
     {
-        // Use 'price' (gross price) as base for all payment methods
-        $this->monthlyPrice = $this->customer->internetPackage->price ?? 0;
-        
+        $package = $this->customer->internetPackage;
+        if (!$package) {
+            $this->monthlyPrice = 0;
+            return;
+        }
+
+        // Ambil harga sesuai wilayah customer: district > city > province > global
+        $priceData = $package->getPriceForRegion(
+            $this->customer->province_id,
+            $this->customer->city_id,
+            $this->customer->district_id
+        );
+        $this->monthlyPrice = $priceData['price'];
+
         $calculation = InternetCustomerPurchase::calculateTotal(
             $this->monthlyPrice,
             $this->payment_months
         );
 
-        $this->subtotal = $calculation['subtotal'];
+        $this->subtotal           = $calculation['subtotal'];
         $this->discountPercentage = $calculation['discount_percentage'];
-        $this->discountAmount = $calculation['discount_amount'];
-        $this->amountBeforeTax = round($calculation['total']);
-        
+        $this->discountAmount     = $calculation['discount_amount'];
+        $this->amountBeforeTax    = round($calculation['total']);
+
         // ALWAYS calculate and display PPN in UI
-        // Gateway PPN setting only determines what we send to gateway
-        $this->taxAmount = round(($this->amountBeforeTax * $this->taxRate) / 100);
+        $this->taxAmount   = round(($this->amountBeforeTax * $this->taxRate) / 100);
         $this->totalAmount = round($this->amountBeforeTax + $this->taxAmount);
     }
 

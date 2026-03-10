@@ -261,7 +261,8 @@ class ImportInternetCustomer extends Command
             }
             
             // Cari paket internet
-            $internetPackage = InternetPackage::where('name', 'like', '%' . $data['package_name'] . '%')
+            $internetPackage = InternetPackage::forRegion($province->id, $city->id, $district->id)
+                                             ->where('name', 'like', '%' . $data['package_name'] . '%')
                                              ->first();
             if (!$internetPackage || $data['package_name'] == '') {
                 DB::rollBack();
@@ -412,7 +413,8 @@ class ImportInternetCustomer extends Command
                 }
             }
 
-             $internetPackage = InternetPackage::where('name', 'like', '%' . $data['package_name'] . '%')
+             $internetPackage = InternetPackage::forRegion($existingInternetCustomer->province_id, $existingInternetCustomer->city_id, $existingInternetCustomer->district_id)
+                                             ->where('name', 'like', '%' . $data['package_name'] . '%')
                                              ->first();
             if (!$internetPackage || $data['package_name'] == '') {
                 DB::rollBack();

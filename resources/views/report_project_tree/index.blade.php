@@ -45,6 +45,7 @@
                             <label for="date_range">Divisi</label>
                             <select class="form-control select2" name="division_id">
                                 <option value="" selected>-- Divisi --</option>
+                                <option value="External" {{ request('division_id') == 'External' ? 'selected' : '' }}>External</option>
                                 @foreach($divisions as $division)
                                     <option value="{{ $division->id }}" {{ request('division_id') == $division->id ? 'selected' : '' }}>
                                         {{ $division->name }}

@@ -19,15 +19,17 @@ class ExportQuoteJob implements ShouldQueue
     protected $filename;
     protected $format;
     protected $company_id;
+    protected $division_id;
 
     /**
      * Create a new job instance.
      */
-    public function __construct($filename, $format, $company_id)
+    public function __construct($filename, $format, $company_id, $division_id = null)
     {
         $this->filename = $filename;
         $this->format = $format;
         $this->company_id = $company_id;
+        $this->division_id = $division_id;
     }
 
     /**
@@ -37,7 +39,7 @@ class ExportQuoteJob implements ShouldQueue
     {
         $exportFormat = $this->format === 'csv' ? \Maatwebsite\Excel\Excel::CSV : \Maatwebsite\Excel\Excel::XLSX;
         try {
-            $checkk = Excel::store(new QuotesExport($this->company_id), $this->filename, null, $exportFormat);
+            $checkk = Excel::store(new QuotesExport($this->company_id, $this->division_id), $this->filename, null, $exportFormat);
             Log::info("File successfully stored at: " . s3_asset(true,10,$this->filename));
         } catch (\Exception $e) {
             // dd($e);

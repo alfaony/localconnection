@@ -33,7 +33,8 @@ class WorkOrderController extends Controller
      */
     public function index(Request $request)
     {
-        return view('work_order.index');
+        $divisions = \App\Models\Division::byCompany(Auth::user()->company_id)->get();
+        return view('work_order.index', compact('divisions'));
     }
 
     /**
@@ -402,6 +403,10 @@ class WorkOrderController extends Controller
         $query = WorkOrder::query();
         $query->byCompany(Auth::user()->company_id)->with('quote')->orderBy('work_order_number', 'desc');
 
+        if (request()->has('division') && request()->division != '') {
+            $query->byDivision(request()->division);
+        }
+
         // OrderBy
         $query->orderBy('work_order_number', 'desc');
         
@@ -479,6 +484,11 @@ class WorkOrderController extends Controller
         // Fetch data for the DataTable
         $query = Quote::query();
         $query->byCompany(Auth::user()->company_id)->whereDoesntHave('workOrder')->orderBy('quote_number', 'desc');
+
+        if (request()->has('division') && request()->division != '') {
+            $query->byDivision(request()->division);
+        }
+
         // Map column indexes to column names (this may vary based on your table structure)
         $columnNames = ['number_result', 'total', 'budget_transition', 'slug'];
 
@@ -539,10 +549,10 @@ class WorkOrderController extends Controller
     {
         $filename = 'work_orders_' . time() . '.' . ($format === 'csv' ? 'csv' : 'xlsx');
         $exportFormat = $format === 'csv' ? \Maatwebsite\Excel\Excel::CSV : \Maatwebsite\Excel\Excel::XLSX;
-
+        $input = $request->get('division');
 
         $filename = "public/" . $filename;
-        ExportWorkOrderJob::dispatch($filename, $exportFormat, Auth::user()->company_id);
+        ExportWorkOrderJob::dispatch($filename, $exportFormat, Auth::user()->company_id, $input);
         session(['export_filename_workorder' => $filename]);
 
         return redirect()->back()->with('export', true);

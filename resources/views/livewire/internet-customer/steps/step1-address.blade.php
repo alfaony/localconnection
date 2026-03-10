@@ -77,13 +77,21 @@
     <select wire:model="internet_package_id" id="internet_package_id" class="form-select select2-single">
         <option value="">Pilih Paket Internet</option>
         @foreach($internetPackages as $package)
+            @php
+                $priceData = $package->getPriceForRegion($province_id, $city_id, $district_id);
+                $displayPrice = $priceData['price_nett'];
+                $isRegionPrice = $priceData['region_type'] !== 'global';
+            @endphp
             <option {{ $isAvailableArea ? '' : 'disabled'}} value="{{ $package->id }}">
-                {{ $package->name }} - Rp {{ number_format($package->price_nett, 0, ',', '.') }}
+                {{ $package->name }} -
+                Rp {{ number_format($displayPrice, 0, ',', '.') }}
+                @if($isRegionPrice) (Wilayah) @endif
             </option>
         @endforeach
     </select>
     @error('internet_package_id') <small class="text-danger">{{ $message }}</small> @enderror
 </div>
+
 
 <div class="d-flex justify-content-end mt-4">
     <button 
