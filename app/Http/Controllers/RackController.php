@@ -6,6 +6,7 @@ use App\Models\Rack;
 use App\Models\Zone;
 use App\Models\Sensor;
 use App\Models\RackSensor;
+use App\Models\ProductStore;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -193,6 +194,59 @@ class RackController extends Controller
             DB::rollBack();
             return back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
         }
+    }
+
+    public function show(Rack $rack)
+    {
+        $rack->load(['zone.warehouse', 'sensors', 'productStores']);
+
+        $availableProductStores = ProductStore::byCompany(Auth::user()->company_id)
+            ->whereNull('rack_id')
+            ->orderBy('name')
+            ->get(['id', 'name', 'code', 'barcode']);
+
+        return view('rack.show', compact('rack', 'availableProductStores'));
+    }
+
+    public function assignProductStore(Request $request, Rack $rack)
+    {
+        $request->validate([
+            'product_store_ids' => 'required|array|min:1',
+            'product_store_ids.*' => 'exists:product_stores,id',
+        ], [
+            'product_store_ids.required' => 'Pilih minimal satu product store',
+            'product_store_ids.min' => 'Pilih minimal satu product store',
+        ]);
+
+        // Hanya ambil product store milik company yg belum punya rack (anti-duplicate)
+        $toAssign = ProductStore::byCompany(Auth::user()->company_id)
+            ->whereNull('rack_id')
+            ->whereIn('id', $request->product_store_ids)
+            ->get();
+
+        if ($toAssign->isEmpty()) {
+            return back()->with('error', 'Product store yang dipilih sudah ter-assign ke rack lain atau tidak ditemukan.');
+        }
+
+        $toAssign->each(fn($ps) => $ps->update(['rack_id' => $rack->id]));
+
+        $count = $toAssign->count();
+        return back()->with('assign_success', "{$count} product store berhasil di-assign ke rack.");
+    }
+
+    public function unassignProductStore(Request $request, Rack $rack)
+    {
+        $request->validate([
+            'product_store_id' => 'required|exists:product_stores,id',
+        ]);
+
+        $productStore = ProductStore::byCompany(Auth::user()->company_id)
+            ->where('rack_id', $rack->id)
+            ->findOrFail($request->product_store_id);
+
+        $productStore->update(['rack_id' => null]);
+
+        return back()->with('unassign_success', 'Product store berhasil dilepas dari rack.');
     }
 
     public function destroy(Rack $rack)

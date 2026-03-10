@@ -198,8 +198,8 @@
                             <i class="fas fa-list"></i> Data Penjualan
                         </h5>
                         <div class="d-flex gap-2 align-items-center">
-                            <span class="badge bg-primary">Total: {{ $sales->total() }} transaksi</span>
-                            <span class="badge bg-success">
+                            <span class="badge bg-primary mr-2 mb-1">Total: {{ $sales->total() }} transaksi</span>
+                            <span class="badge bg-success mb-1">
                                 <i class="fas fa-calculator"></i> Total Jumlah Akhir: Rp {{ number_format($totalFinalAmount, 0, ',', '.') }}
                             </span>
                         </div>
@@ -389,6 +389,13 @@
         $('#userSelect').select2({
             theme: 'bootstrap-5',
             placeholder: 'Pilih User',
+            allowClear: true,
+            width: '100%',
+            dropdownParent: $('#filterPanel')
+        });
+
+        $('#paymentMethodSelect').select2({
+            theme: 'bootstrap-5',
             allowClear: true,
             width: '100%',
             dropdownParent: $('#filterPanel')
