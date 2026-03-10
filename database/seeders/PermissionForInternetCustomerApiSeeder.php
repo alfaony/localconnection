@@ -24,6 +24,8 @@ class PermissionForInternetCustomerApiSeeder extends Seeder
             ['table' => 'internet_customers', 'method' => 'approve', 'name' => 'Approve internet customer (API)'],
             ['table' => 'internet_customers', 'method' => 'close', 'name' => 'Close internet customer (API)'],
             ['table' => 'internet_customers', 'method' => 'completeInstallation', 'name' => 'Complete installation internet customer (API)'],
+            ['table' => 'internet_customers', 'method' => 'getInstallationResources', 'name' => 'Get Installation Resources (ODP & Router) (API)'],
+            ['table' => 'internet_customers', 'method' => 'getIpPoolsByRouter', 'name' => 'Get IP Pools by Router (API)'],
         ];
 
         foreach ($permissions as $permData) {

@@ -49,14 +49,6 @@ Route::post('login_flutter', [LoginController::class, 'login_flutter']);
 
 Route::post('n8n/ktp/result', [EkycController::class, 'receiveKtpResult']);
 
-Route::middleware('auth:sanctum')->prefix('internet-customers')->group(function () {
-    Route::get('/', [InternetCustomerApiController::class, 'index']);
-    Route::get('/{id}', [InternetCustomerApiController::class, 'show']);
-    Route::post('/{id}/approve', [InternetCustomerApiController::class, 'approve']);
-    Route::post('/{id}/close', [InternetCustomerApiController::class, 'close']);
-    Route::post('/{id}/complete-installation', [InternetCustomerApiController::class, 'completeInstallation']);
-});
-
 Route::group(['middleware' => ['auth:api','role.permission.api']], function() 
 {
 
@@ -75,6 +67,14 @@ Route::group(['middleware' => ['auth:api','role.permission.api']], function()
 
     Route::get('agreement-letter/downloadPdf/pdf/{slug}/',[AgreementLetterController::class,'downloadPdf'])->name('agreement-letter.download.pdf');;
     Route::resource('agreement-letter', AgreementLetterController::class);
+
+    Route::prefix('internet-customers')->group(function () {
+        Route::get('/', [InternetCustomerApiController::class, 'index']);
+        Route::get('/{id}', [InternetCustomerApiController::class, 'show']);
+        Route::post('/{id}/approve', [InternetCustomerApiController::class, 'approve']);
+        Route::post('/{id}/close', [InternetCustomerApiController::class, 'close']);
+        Route::post('/{id}/complete-installation', [InternetCustomerApiController::class, 'completeInstallation']);
+    });
 
     //Mobile
     Route::get('users/division/{divisionId}', [DailyTaskMobileController::class, 'getUsersByDivision'])
@@ -160,6 +160,8 @@ Route::group(['middleware' => ['auth:api','role.permission.api']], function()
         Route::post('/{id}/approve', 'approve');           
         Route::post('/{id}/close', 'close');               
         Route::post('/{id}/complete-installation', 'completeInstallation');
+        Route::get('/{id}/installation-resources', 'getInstallationResources');
+        Route::get('/get-ip-pools/by-router','getIpPoolsByRouter');
     });
 
     // SKAM Import API

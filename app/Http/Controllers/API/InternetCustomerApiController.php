@@ -13,8 +13,10 @@ use Illuminate\Support\Facades\Auth;
 use App\Models\InternetCustomer;
 use App\Models\InternetCustomerInstallation;
 use App\Models\InternetInstallationPhoto;
+use App\Models\CoverageServiceDistribution;
 use App\Models\InternetPackage;
 use App\Models\Router;
+use App\Models\AddressPool;
 
 use App\Jobs\ProvisionCustomerJob;
 use App\Jobs\SyncInstalledCustomersJob;
@@ -39,8 +41,8 @@ class InternetCustomerApiController extends Controller
             $search = $request->search;
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%$search%")
-                  ->orWhere('code', 'like', "%$search%")
-                  ->orWhere('grouping_id', 'like', "%$search%");
+                ->orWhere('code', 'like', "%$search%")
+                ->orWhere('grouping_id', 'like', "%$search%");
             });
         }
 
@@ -54,16 +56,52 @@ class InternetCustomerApiController extends Controller
 
         $customers = $query->orderBy('created_at', 'desc')->paginate(10);
 
+        $customData = $customers->getCollection()->transform(function ($customer) {
+            return [
+                'id'               => $customer->id,
+                'action_user_id'   => $customer->action_user_id,
+                'user_customer_id' => $customer->user_customer_id,
+                'company_id'       => $customer->company_id,
+                'code'             => $customer->code,
+                'code_cust'        => $customer->code_cust,
+                'name'             => $customer->name,
+                'address'          => $customer->address,
+                'is_paid'          => $customer->is_paid,
+                'status'           => $customer->status,
+                'created_at'       => $customer->created_at,
+                'internet_package' => $customer->internetPackage ? [
+                    'id'   => $customer->internetPackage->id,
+                    'name' => $customer->internetPackage->name,
+                ] : null,
+                'installation'     => $customer->installation,
+                'user_customer'    => [
+                    'id'   => $customer->userCustomer->id ?? null,
+                    'name' => $customer->userCustomer->name ?? null,
+                ],
+            ];
+        });
+
         return response()->json([
             'success' => true,
             'message' => 'List customer berhasil diambil',
-            'data'    => $customers
+            'data'    => [
+                'current_page' => $customers->currentPage(),
+                'last_page'    => $customers->lastPage(),
+                'data'         => $customData
+            ]
         ]);
     }
 
     public function show($id)
     {
         $customer = InternetCustomer::with([
+            'province:id,name',
+            'city:id,name',
+            'district:id,name',
+            'subdistrict:id,name',
+            'promo:id,name',
+            'odp:id,name',
+            'router:id,name',
             'internetPackage',
             'userCustomer',
             'installation',
@@ -83,6 +121,7 @@ class InternetCustomerApiController extends Controller
         try {
             $customer = InternetCustomer::findOrFail($id);
 
+            // Validasi status harus pending
             if ($customer->status !== ParamSchema::PENDING) {
                 return response()->json([
                     'success' => false,
@@ -91,29 +130,81 @@ class InternetCustomerApiController extends Controller
                 ], 422);
             }
 
-            $customer->update([
-                'status' => ParamSchema::APPROVED,
-            ]);
+            // Menjalankan logika instalasi & update status
+            $this->installation($customer);
 
             DB::commit();
 
-            return response()->json([
-                'success' => true,
-                'message' => "Customer {$customer->code} berhasil di-approve",
-                'data'    => $customer
+            // Log activity
+            Log::info('Customer pending approved via API', [
+                'customer_id'   => $customer->id,
+                'customer_code' => $customer->code,
+                'approved_by'   => Auth::id()
             ]);
 
-        } catch (\Throwable $e) {
+            return response()->json([
+                'success' => true,
+                'message' => "Pendaftaran pelanggan {$customer->code} telah disetujui",
+                'data'    => $customer->load('internetPackage') // Reload data terbaru
+            ]);
+
+        } catch (\Throwable $th) {
             DB::rollBack();
-            Log::error('Approve gagal', ['error' => $e->getMessage()]);
+            Log::error('Failed to approve pending customer via API', [
+                'customer_id' => $id,
+                'error'       => $th->getMessage()
+            ]);
 
             return response()->json([
                 'success' => false,
-                'message' => 'Gagal approve customer',
+                'message' => 'Gagal menyetujui pendaftaran: ' . $th->getMessage(),
                 'data'    => null
             ], 500);
         }
     }
+
+    private function installation($customer)
+    {
+        try {
+            $customer->update([
+                'status'         => ParamSchema::PROCESS_INSTALLATION,
+                'action_user_id' => Auth::id()
+            ]);
+
+            $userTechnical = optional($customer->subdistrict?->coverageService?->coverageServiceOds)
+                ->pluck('ods.user_assign_id')
+                ->unique()
+                ->filter() 
+                ->all();
+
+            $from = \App\Models\User::where('company_id', $customer->company_id)
+                    ->whereHas('role', function ($q) {
+                        $q->whereIn('name', [\App\Schemas\RoleSchema::ROOT, \App\Schemas\RoleSchema::ADMIN]);
+                    })
+                    ->first();
+
+            if (!empty($userTechnical) && $from) {
+                $message = "Pembayaran Langganan Internet Untuk Kode " . $customer->code . " Telah di Setujui. Silahkan segera lakukan Pemasangan";
+                
+                // Karena ini API, route directUrl bisa diarahkan ke URL web atau dikosongkan jika untuk mobile
+                $directUrl = config('app.url') . "/internet-customer/" . $customer->id;
+
+                foreach ($userTechnical as $tech) {
+                    // Pastikan fungsi sentInbox tersedia di controller ini atau di Trait
+                    $this->sentInbox($tech, $from->id, $message, $directUrl);
+                }
+            }
+        } catch (\Throwable $th) {
+            throw $th;
+        }
+    }
+
+
+    private function sentInbox($to, $from, $message, $url)
+    {
+
+    }
+
 
     public function close($id)
     {
@@ -242,5 +333,97 @@ class InternetCustomerApiController extends Controller
                 'data'    => $e->getMessage()
             ], 500);
         }
+    }
+
+    /**
+     * Get list of ODPs and Routers based on Customer's Location (Subdistrict)
+     * Digunakan sebelum melakukan completeInstallation
+     */
+    public function getInstallationResources($id)
+    {
+        $customer = InternetCustomer::with([
+            'subdistrict.coverageService.coverageServiceOds.ods.pops.routers'
+        ])->findOrFail($id);
+
+        $coverageService = $customer->subdistrict?->coverageService;
+
+        // 1. Ambil ODP (Optical Distribution)
+        $odps = [];
+        if ($coverageService) {
+            $odps = CoverageServiceDistribution::query()
+                ->where('coverage_service_id', $coverageService->id)
+                ->with('ods:id,name')
+                ->get()
+                ->pluck('ods')
+                ->filter()
+                ->unique('id')
+                ->map(fn($odp) => [
+                    'id' => $odp->id,
+                    'name' => $odp->name
+                ])
+                ->values();
+        }
+
+        // 2. Ambil Router terkait ODP/POP di wilayah tersebut
+        // Logic mengikuti openInstallationModal web
+        $routerIds = collect($coverageService?->coverageServiceOds ?? [])
+            ->flatMap(function ($csod) {
+                return collect($csod->ods?->pops ?? []) // Note: di model ods() adalah belongsTo ke OpticalDistribution
+                    ->flatMap(fn($pop) => collect($pop->routers ?? [])->pluck('id'));
+            })
+            ->unique()
+            ->values();
+
+        $routerQuery = \App\Models\Router::query();
+        
+        if ($routerIds->isNotEmpty()) {
+            $routerQuery->whereIn('id', $routerIds)
+                ->whereHas('pppoeServers', fn($q) => $q->whereNotNull('address_pool_id'))
+                ->whereHas('addressPools');
+        } else {
+            // Default jika tidak ada router spesifik wilayah, ambil yang punya PPPoE server
+            $routerQuery->whereHas('pppoeServers');
+        }
+
+        $routers = $routerQuery->orderBy('name')
+            ->get(['id', 'name', 'active_status'])
+            ->map(fn($r) => [
+                'id' => $r->id,
+                'name' => $r->name . ' (PPPoE: '.$r->pppoe_servers_count.')',
+                'is_online' => $r->active_status == 'online'
+            ]);
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'odps' => $odps,
+                'routers' => $routers
+            ]
+        ]);
+    }
+
+    /**
+     * Get IP Pools based on selected Router
+     * Dipanggil saat user Flutter memilih Router
+     */
+    public function getIpPoolsByRouter(Request $request)
+    {
+        $request->validate([
+            'router_id' => 'required|exists:routers,id'
+        ]);
+
+        $pools = \App\Models\AddressPool::query()
+            ->where('router_id', $request->router_id)
+            ->orderBy('name')
+            ->get(['id', 'name', 'cidr', 'gateway'])
+            ->map(fn($p) => [
+                'id'    => $p->id,
+                'label' => $p->name . ' — ' . $p->cidr . ($p->gateway ? ' (gw ' . $p->gateway . ')' : '')
+            ]);
+
+        return response()->json([
+            'success' => true,
+            'data' => $pools
+        ]);
     }
 }
