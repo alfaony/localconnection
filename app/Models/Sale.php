@@ -39,6 +39,7 @@ class Sale extends Model
         'tax_amount',
         'tax_value',
         'discount_amount',
+        'cash_deduction',
         'final_amount',
         'payment_method',
         'payment_details',
@@ -53,6 +54,7 @@ class Sale extends Model
         'total_amount' => 'decimal:2',
         'tax_amount' => 'decimal:2',
         'discount_amount' => 'decimal:2',
+        'cash_deduction' => 'decimal:2',
         'final_amount' => 'decimal:2',
     ];
 

@@ -535,6 +535,8 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
   Route::resource('warehouse', WarehouseController::class);
   Route::resource('sensor', SensorController::class);
   Route::resource('zone', ZoneController::class);
+  Route::post('rack/{rack}/assign-product-store', [RackController::class, 'assignProductStore'])->name('rack.assign-product-store');
+  Route::post('rack/{rack}/unassign-product-store', [RackController::class, 'unassignProductStore'])->name('rack.unassign-product-store');
   Route::resource('rack', RackController::class);
   
   Route::post('shipping-rate/validateCsv', [ShippingRateController::class, 'validateCsv'])->name('shipping-rate.validateCsv');
