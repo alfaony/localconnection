@@ -1679,8 +1679,11 @@ createApp({
                                 }
 
                                 .receipt-logo img {
-                                    max-width: 30mm;
+                                    width: 30mm;
                                     height: auto;
+                                    display: block;
+                                    margin: 0 auto;
+                                    object-fit: contain;
                                 }
 
                                 .company-name {
