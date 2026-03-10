@@ -216,7 +216,7 @@
                             <div class="receipt-logo mb-3">
                                 <img src="{{ s3_asset(true,10,$settingCompany['header_store_image']) }}" 
                                     alt="{{ $settingCompany['store_name'] ?? 'Store Logo' }}"
-                                    style="max-width: 80px; height: auto; border-radius: 8px;">
+                                    style="max-width: 75px; height: auto; border-radius: 8px;">
                             </div>
                             @endif
                             
@@ -1654,15 +1654,15 @@ createApp({
                                 }
 
                                 @page {
-                                    size: 48mm auto;
+                                    size: 46mm auto;
                                     margin: 0;
                                 }
 
                                 body {
                                     font-family: 'Courier New', monospace;
-                                    width: 48mm;
+                                    width: 46mm;
                                     margin: 0;
-                                    padding: 3mm 2mm;
+                                    padding: 2mm 2mm;
                                     font-size: 8px;
                                     line-height: 1.3;
                                     color: #000;
