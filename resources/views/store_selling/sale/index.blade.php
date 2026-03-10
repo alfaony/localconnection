@@ -1634,7 +1634,7 @@ createApp({
             
             try {
                 // Get settings from PHP (already loaded in blade template)
-                const headerImage = '{{ $settingCompany["header_store_image"] ?? "" }}';
+                const headerImage = '{{ !empty($settingCompany["header_store_image"]) ? s3_asset(true, 10, $settingCompany["header_store_image"]) : "" }}';
                 const footerMessage = `{!! $settingCompany["footer_store_message"] ?? "Terima kasih atas kunjungan Anda" !!}`;
                 const companyName = '{{ $settingCompany["store_name"] ?? config("app.name") }}';
                 const companyAddress = '{{ $settingCompany["store_address"] ?? "" }}';
@@ -1823,7 +1823,7 @@ createApp({
                             <div class="header">
                                 ${headerImage ? `
                                     <div class="receipt-logo">
-                                        <img src="storage/${headerImage}" alt="${companyName}">
+                                        <img src="${headerImage}" alt="${companyName}" crossorigin="anonymous">
                                     </div>
                                 ` : ''}
                                 
@@ -1915,11 +1915,34 @@ createApp({
                 
                 printWindow.document.write(receiptContent);
                 printWindow.document.close();
-                
-                // Wait for content to load before printing
+
+                // Wait for all images to load before printing
                 printWindow.onload = function() {
-                    printWindow.focus();
-                    printWindow.print();
+                    const images = printWindow.document.images;
+                    if (images.length === 0) {
+                        printWindow.focus();
+                        printWindow.print();
+                        return;
+                    }
+
+                    let loadedCount = 0;
+                    const total = images.length;
+                    const tryPrint = () => {
+                        loadedCount++;
+                        if (loadedCount >= total) {
+                            printWindow.focus();
+                            printWindow.print();
+                        }
+                    };
+
+                    for (let img of images) {
+                        if (img.complete) {
+                            tryPrint();
+                        } else {
+                            img.onload = tryPrint;
+                            img.onerror = tryPrint; // tetap print meski gambar gagal load
+                        }
+                    }
                 };
                 
             } catch (error) {
