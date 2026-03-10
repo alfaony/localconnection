@@ -216,7 +216,7 @@
                             <div class="receipt-logo mb-3">
                                 <img src="{{ s3_asset(true,10,$settingCompany['header_store_image']) }}" 
                                     alt="{{ $settingCompany['store_name'] ?? 'Store Logo' }}"
-                                    style="max-width: 120px; height: auto; border-radius: 8px;">
+                                    style="max-width: 80px; height: auto; border-radius: 8px;">
                             </div>
                             @endif
                             
@@ -1679,7 +1679,7 @@ createApp({
                                 }
 
                                 .receipt-logo img {
-                                    max-width: 40mm;
+                                    max-width: 30mm;
                                     height: auto;
                                 }
 
