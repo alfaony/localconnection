@@ -99,9 +99,9 @@
                 <div class="modal-body">
                     <div class="text-center mb-4">
                         <h4>Total Pembayaran</h4>
-                        <h2 class="text-primary">@{{ formatCurrency(grandTotal) }}</h2>
+                        <h2 class="text-primary">@{{ formatCurrency(paymentMethod === 'cash' ? cashRoundedTotal : grandTotal) }}</h2>
                     </div>
-                    
+
                     <div class="payment-details">
                         <div class="row">
                             <div class="col-6"><strong>Metode Pembayaran:</strong></div>
@@ -113,7 +113,7 @@
                         </div>
                         <div v-if="paymentMethod === 'cash'" class="row mt-1">
                             <div class="col-6"><strong>Kembalian:</strong></div>
-                            <div class="col-6 text-right">@{{ formatCurrency(cashAmount - grandTotal) }}</div>
+                            <div class="col-6 text-right">@{{ formatCurrency(cashAmount - cashRoundedTotal) }}</div>
                         </div>
                         <div v-if="customerEmail" class="row mt-2">
                             <div class="col-6"><strong>Email Customer:</strong></div>
@@ -754,13 +754,22 @@ createApp({
             return subtotal.value + tax.value;
         });
 
+        // For cash: round down to nearest 100 (ratusan)
+        const cashRoundedTotal = computed(() => {
+            return Math.floor(grandTotal.value / 100) * 100;
+        });
+
+        const cashDeduction = computed(() => {
+            return grandTotal.value - cashRoundedTotal.value;
+        });
+
         const canGoToStep2 = computed(() => {
             return cartItems.value.length > 0;
         });
 
         const canGoToStep3 = computed(() => {
             if (paymentMethod.value === 'cash') {
-                return cashAmount.value >= grandTotal.value;
+                return cashAmount.value >= cashRoundedTotal.value;
             } else if (paymentMethod.value === 'debit_credit') {
                 return (
                     paymentDetails.value.cardNumber &&
@@ -2000,6 +2009,8 @@ createApp({
             subtotal,
             tax,
             grandTotal,
+            cashRoundedTotal,
+            cashDeduction,
             canGoToStep2,
             canGoToStep3,
             setLoading,

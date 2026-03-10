@@ -88,6 +88,12 @@ class SaleController extends Controller
             $taxAmount = $totalAmount * ($saleData['tax_value'] / 100);
             $finalAmount = $totalAmount + $taxAmount;
 
+            // For cash payment, round down to nearest 100 (ratusan)
+            if ($saleData['payment_method'] === 'cash') {
+                $finalAmount = floor($finalAmount / 100) * 100;
+                $taxAmount = $finalAmount - $totalAmount;
+            }
+
             // Jika ada draft_id, maka update draft tersebut
             if (!empty($saleData['draft_id'])) {
                 $sale = Sale::where('id', $saleData['draft_id'])
