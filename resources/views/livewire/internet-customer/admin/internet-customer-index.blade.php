@@ -11,7 +11,7 @@
                     </button>
                 </h6>
                 <div class="ml-auto d-flex align-items-center gap-2">
-                    <a href="{{ route('internet-customer.create', Auth::user()->company->slug) }}" 
+                    <a href="{{ route('internet-customer.create', Auth::user()->company->slug) }}"
                     target="_blank"
                     id="share-link"
                     class="btn btn-sm btn-outline-primary">
@@ -21,6 +21,15 @@
                     <button class="btn btn-sm btn-outline-success ml-1" onclick="copyShareLink()">
                         Share Link Pendaftaran
                     </button>
+
+                    @canAccess('import', 'internet_customers')
+                    <button type="button"
+                            class="btn btn-sm btn-outline-warning ml-1"
+                            wire:click="toggleImportSection">
+                        <i class="fas fa-file-import mr-1"></i>
+                        {{ $showImportSection ? 'Tutup Import' : 'Import Instalasi' }}
+                    </button>
+                    @endcanAccess
                 </div>
             </div>
             <div class="card-body">
@@ -72,6 +81,238 @@
                 </div>
             </div>
         </div>
+        {{-- ── IMPORT SECTION ─────────────────────────────────────────────── --}}
+        @canAccess('import', 'internet_customers')
+        @if($showImportSection)
+        <div class="card shadow-sm mb-4 border-warning">
+            <div class="card-header bg-warning text-dark">
+                <h6 class="mb-0">
+                    <i class="fas fa-file-import mr-2"></i> Import Massal Instalasi Pelanggan
+                </h6>
+            </div>
+            <div class="card-body">
+
+                {{-- Panduan --}}
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle mr-1"></i>
+                    <strong>Panduan Import:</strong>
+                    <ol class="mb-0 mt-2">
+                        <li>Download template CSV terlebih dahulu</li>
+                        <li>Isi data sesuai format: <code>email, phone, username, password, grouping, serial_number, router, pppoe_pool, start_billing_date, end_billing_date</code></li>
+                        <li>Tanggal menggunakan format <code>YYYY-MM-DD</code></li>
+                        <li>Pastikan pelanggan sudah terdaftar di sistem (cari berdasarkan email/telepon)</li>
+                        <li>Pilih ODP, upload file CSV, lalu klik <strong>Mulai Import</strong></li>
+                    </ol>
+                </div>
+
+                {{-- Download Template --}}
+                <div class="mb-3">
+                    <button wire:click="downloadImportTemplate" class="btn btn-outline-secondary btn-sm">
+                        <i class="fas fa-download mr-1"></i> Download Template CSV
+                    </button>
+                </div>
+
+                @if(!$isImporting)
+                <form wire:submit.prevent="importCustomers">
+                    <div class="row">
+
+                        {{-- Pilih ODP --}}
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label font-weight-bold">
+                                <i class="fas fa-broadcast-tower mr-1 text-danger"></i>
+                                Pilih ODP <span class="text-danger">*</span>
+                            </label>
+                            <select wire:model="import_odp_id"
+                                    class="form-control @error('import_odp_id') is-invalid @enderror">
+                                <option value="">-- Pilih ODP --</option>
+                                @foreach($importAvailableOdps as $odp)
+                                    <option value="{{ $odp['id'] }}">{{ $odp['label'] }}</option>
+                                @endforeach
+                            </select>
+                            @error('import_odp_id')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                            <small class="text-muted">ODP ini akan diterapkan ke semua baris dalam file CSV.</small>
+                        </div>
+
+                        {{-- Upload File --}}
+                        <div class="col-md-5 mb-3">
+                            <label class="form-label font-weight-bold">
+                                <i class="fas fa-file-csv mr-1 text-success"></i>
+                                File CSV <span class="text-danger">*</span>
+                            </label>
+                            <input type="file"
+                                   class="form-control @error('csvFile') is-invalid @enderror"
+                                   wire:model="csvFile"
+                                   accept=".csv"
+                                   {{ $uploadingFile ? 'disabled' : '' }}>
+                            @error('csvFile')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                            <small class="text-muted">Format: CSV, Maks. 10 MB</small>
+
+                            {{-- Uploading state --}}
+                            @if($uploadingFile && !$isFileReady)
+                            <div class="mt-2" wire:poll.500ms="checkImportFileReady">
+                                <div class="alert alert-info py-2 mb-0 d-flex align-items-center">
+                                    <div class="spinner-border spinner-border-sm mr-2"></div>
+                                    <div>
+                                        <strong>Mengupload file…</strong>
+                                        <small class="d-block text-muted">Mohon tunggu</small>
+                                    </div>
+                                </div>
+                            </div>
+                            @endif
+
+                            {{-- File ready --}}
+                            @if($isFileReady && $csvFile)
+                            <div class="mt-2">
+                                <div class="alert alert-success py-2 mb-0 d-flex align-items-center">
+                                    <i class="fas fa-check-circle mr-2 text-success"></i>
+                                    <div class="flex-grow-1">
+                                        <strong>File siap diimport!</strong>
+                                        <small class="d-block">{{ $csvFile->getClientOriginalName() }}</small>
+                                    </div>
+                                    <button type="button"
+                                            class="btn btn-sm btn-outline-danger ml-2"
+                                            wire:click="resetImport">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            @endif
+                        </div>
+
+                        {{-- Tombol Import --}}
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label d-block">&nbsp;</label>
+                            <button type="submit"
+                                    class="btn btn-warning btn-block"
+                                    wire:loading.attr="disabled"
+                                    wire:target="importCustomers"
+                                    {{ (!$isFileReady || $uploadingFile) ? 'disabled' : '' }}>
+
+                                <span wire:loading wire:target="importCustomers">
+                                    <span class="spinner-border spinner-border-sm mr-1"></span>
+                                    Memproses…
+                                </span>
+                                <span wire:loading.remove wire:target="importCustomers">
+                                    @if($uploadingFile)
+                                        <span class="spinner-border spinner-border-sm mr-1"></span>
+                                        Menunggu file…
+                                    @elseif($isFileReady)
+                                        <i class="fas fa-upload mr-1"></i> Mulai Import
+                                    @else
+                                        <i class="fas fa-upload mr-1"></i> Upload & Import
+                                    @endif
+                                </span>
+                            </button>
+                        </div>
+                    </div>
+                </form>
+                @endif
+
+                {{-- ── PROGRESS SECTION (polled by JS, sama persis pola ProductStore) --}}
+                @if($isImporting && $importProgress)
+                <div class="mt-4">
+                    <hr>
+                    <h6 class="mb-3">
+                        <i class="fas fa-hourglass-split mr-1"></i> Progress Import
+                    </h6>
+
+                    {{-- Progress Bar --}}
+                    <div class="progress mb-3" style="height: 35px;">
+                        <div class="progress-bar progress-bar-striped progress-bar-animated
+                                    bg-{{ $this->getImportStatusColor($importProgress['status']) }}"
+                             role="progressbar"
+                             style="width: {{ $importProgress['percentage'] }}%"
+                             aria-valuenow="{{ $importProgress['percentage'] }}"
+                             aria-valuemin="0" aria-valuemax="100">
+                            <strong>{{ $importProgress['percentage'] }}%</strong>
+                        </div>
+                    </div>
+
+                    {{-- Stats --}}
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-3">
+                            <div class="card text-center">
+                                <div class="card-body py-3">
+                                    <span class="badge badge-{{ $this->getImportStatusColor($importProgress['status']) }} fs-6">
+                                        {{ strtoupper($importProgress['status'] ?? 'PROCESSING') }}
+                                    </span>
+                                    <div class="text-muted small mt-1">Status</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card text-center">
+                                <div class="card-body py-3">
+                                    <h4 class="mb-0">{{ $importProgress['total'] }}</h4>
+                                    <div class="text-muted small">Total Data</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card text-center border-success">
+                                <div class="card-body py-3">
+                                    <h4 class="mb-0 text-success">{{ $importProgress['success'] }}</h4>
+                                    <div class="text-muted small">Berhasil</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card text-center border-danger">
+                                <div class="card-body py-3">
+                                    <h4 class="mb-0 text-danger">{{ $importProgress['failed'] }}</h4>
+                                    <div class="text-muted small">Gagal</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="text-center mb-3">
+                        <small class="text-muted">
+                            <i class="fas fa-clock mr-1"></i>
+                            Terakhir update: {{ \Carbon\Carbon::parse($importProgress['updated_at'])->format('d/m/Y H:i:s') }}
+                        </small>
+                    </div>
+
+                    {{-- Error list --}}
+                    @if(!empty($importProgress['errors']) && count($importProgress['errors']) > 0)
+                    <div class="alert alert-warning">
+                        <h6 class="alert-heading">
+                            <i class="fas fa-exclamation-triangle mr-1"></i>
+                            Detail Gagal ({{ count($importProgress['errors']) }} baris)
+                        </h6>
+                        <div style="max-height: 250px; overflow-y: auto;">
+                            @foreach($importProgress['errors'] as $err)
+                                @if(is_array($err))
+                                <div class="border-bottom pb-2 mb-2">
+                                    <div class="d-flex align-items-start">
+                                        <span class="badge badge-danger mr-2 mt-1">Baris {{ $err['row'] ?? '?' }}</span>
+                                        <div>
+                                            <strong>{{ $err['message'] ?? 'Unknown error' }}</strong>
+                                            @if(isset($err['data']))
+                                                <br><small class="text-muted">Data: {{ $err['data'] }}</small>
+                                            @endif
+                                        </div>
+                                    </div>
+                                </div>
+                                @endif
+                            @endforeach
+                        </div>
+                    </div>
+                    @endif
+                </div>
+                @endif
+                {{-- ── END PROGRESS SECTION ────────────────────────────────── --}}
+
+            </div>
+        </div>
+        @endif
+        @endcanAccess
+        {{-- ── END IMPORT SECTION ──────────────────────────────────────────── --}}
+
         <div class="card shadow-lg">
             <div class="card-header bg-primary text-white">
                 <div class="d-flex justify-content-between align-items-center">
@@ -974,12 +1215,86 @@
                 timer: 3000,
                 timerProgressBar: true,
             });
-            
+
             Toast.fire({
                 icon: event.detail.type,
                 title: event.detail.message
             });
         });
+
+        // ── IMPORT PELANGGAN ─────────────────────────────────────────────────
+        let importProgressInterval = null;
+
+        window.addEventListener('import-started', event => {
+            Swal.fire({
+                icon: 'info',
+                title: 'Import Dimulai',
+                text: `Total ${event.detail.total_rows} data akan diimport`,
+                timer: 2000,
+                showConfirmButton: false,
+                toast: true,
+                position: 'top-end',
+            });
+        });
+
+        window.addEventListener('start-progress-check', event => {
+            if (importProgressInterval) {
+                clearInterval(importProgressInterval);
+            }
+            importProgressInterval = setInterval(() => {
+                @this.call('checkImportProgress');
+            }, 1000);
+        });
+
+        window.addEventListener('import-completed', event => {
+            if (importProgressInterval) {
+                clearInterval(importProgressInterval);
+                importProgressInterval = null;
+            }
+
+            const progress = event.detail.progress;
+
+            Swal.fire({
+                icon: progress.failed > 0 ? 'warning' : 'success',
+                title: 'Import Selesai!',
+                html: `
+                    <div class="text-start">
+                        <p class="mb-2"><strong>Rangkuman Import:</strong></p>
+                        <ul class="list-unstyled">
+                            <li>📊 <strong>Total Data:</strong> ${progress.total}</li>
+                            <li>✅ <strong>Berhasil:</strong> <span class="text-success">${progress.success}</span></li>
+                            <li>❌ <strong>Gagal:</strong> <span class="text-danger">${progress.failed}</span></li>
+                        </ul>
+                        ${progress.failed > 0 && progress.errors && progress.errors.length > 0 ? `
+                            <hr>
+                            <p class="text-warning mb-2"><strong>⚠️ Detail Baris Gagal:</strong></p>
+                            <div style="max-height: 200px; overflow-y: auto; text-align: left;">
+                                ${progress.errors.map(err => `
+                                    <small>
+                                        <strong>Baris ${err.row}:</strong> ${err.message}
+                                        ${err.data ? `<br><em class="text-muted">Data: ${err.data}</em>` : ''}
+                                    </small>
+                                    <hr class="my-1">
+                                `).join('')}
+                            </div>
+                        ` : ''}
+                    </div>
+                `,
+                confirmButtonText: 'OK',
+                allowOutsideClick: false,
+                width: '600px',
+            }).then(() => {
+                @this.call('$refresh');
+            });
+        });
+
+        window.addEventListener('beforeunload', () => {
+            if (importProgressInterval) {
+                clearInterval(importProgressInterval);
+            }
+        });
+        // ── END IMPORT PELANGGAN ─────────────────────────────────────────────
+
     });
 </script>
 @endpush
