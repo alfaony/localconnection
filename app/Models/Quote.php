@@ -148,4 +148,15 @@ class Quote extends Model
     {
         return $query->whereDate('date', '>=', Carbon::now());
     }
+    public function scopeByDivision($query, $divisionId)
+    {
+        if ($divisionId === 'External') {
+            return $query->whereNull('division_budget_id');
+        } elseif ($divisionId) {
+            return $query->whereHas('divisionBudget', function ($q) use ($divisionId) {
+                $q->where('division_id', $divisionId);
+            });
+        }
+        return $query;
+    }
 }

@@ -26,9 +26,9 @@ class ProjectController extends Controller
         $order = $request->order == 'asc' ? 'asc' : 'desc';
         $page = $request->input('page', 1); // Halaman saat ini
         $perPage = 10; // Jumlah item per halaman
+        $search = $request->filled('search') || $request->filled('division') || $request->filled('status') ? true : false;
 
-        $query = Project::byRole()
-            ->where(function ($query) use ($request) {
+        $query = Project::where(function ($query) use ($request) {
                 $searchTerm = '%' . $request->get('search') . '%';
                 
                 // Pencarian dalam judul proyek dan nomor work order
@@ -42,8 +42,11 @@ class ProjectController extends Controller
             })
             ->orderBy('created_at', $order);
 
+        if ($request->filled('division')) {
+            $query->byDivision($request->division);
+        }
         // Ambil semua proyek
-        $projects = $query->get();
+        $projects = $query->byRole($search)->get();
 
         // Hitung total sebelum filtering
 
@@ -64,13 +67,15 @@ class ProjectController extends Controller
             ['path' => $request->url(), 'query' => $request->query()] // URL dan query string untuk link pagination
         );
 
-        $totalProject = Project::byRole()->count();
+        $totalProject = Project::byRole($search)->count();
         $workOrder = WorkOrder::byCompany(Auth::user()->company_id)
         ->whereDoesntHave('project')
         ->orderBy('created_at','desc')
         ->get();
 
-        return view('project.index',compact('project','totalProject', 'workOrder'));
+        $divisions = \App\Models\Division::byCompany(Auth::user()->company_id)->get();
+
+        return view('project.index',compact('project','totalProject', 'workOrder', 'divisions'));
     }
 
     
@@ -114,7 +119,7 @@ class ProjectController extends Controller
      */
     public function edit($slug)
     {
-        $totalProject = Project::byRole()->count();
+        $totalProject = Project::byRole(true)->count();
         $projectEdit = Project::where('slug', $slug)->firstOrFail();
         $project = Project::byRole()->OrderBy('created_at','asc')->paginate(10);
         // $workOrder = WorkOrder::all();
@@ -164,7 +169,7 @@ class ProjectController extends Controller
      */
     public function update(ProjectRequest $request, $slug)
     {
-        $project = Project::byRole()->where('slug', $slug)->firstOrFail();
+        $project = Project::byRole(true)->where('slug', $slug)->firstOrFail();
 
         if($project->status_project == ParamSchema::CLOSE)
         {
@@ -201,7 +206,7 @@ class ProjectController extends Controller
      */
     public function destroy($slug)
     {
-        $project = Project::byRole()->where('slug', $slug)->firstOrFail();
+        $project = Project::byRole(true)->where('slug', $slug)->firstOrFail();
 
         if($project->status_project == ParamSchema::CLOSE)
         {
@@ -215,9 +220,10 @@ class ProjectController extends Controller
     /**
      * Export data
      */
-    public function export()
+    public function export(Request $request)
     {
-        return Excel::download(new ProjectsExport, 'projects.xlsx');
+        $divisionId = $request->get('division');
+        return Excel::download(new ProjectsExport($divisionId), 'projects.xlsx');
     }
 
     /**

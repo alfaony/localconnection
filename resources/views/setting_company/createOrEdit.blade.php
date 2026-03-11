@@ -150,6 +150,10 @@
                                     @if($data['nib_file']) 
                                         <div class="mb-2">
                                             <a href="{{ s3_asset(true,10,$data['nib_file']) }}"  class="btn btn-sm btn-primary"  download><i class="fa fa-file-pdf"></i> Download</a>
+                                            <div class="custom-control custom-checkbox d-inline ml-2">
+                                                <input type="checkbox" class="custom-control-input" id="nib_file_delete" name="nib_file_delete" value="1">
+                                                <label class="custom-control-label text-danger" for="nib_file_delete">Hapus File Ini</label>
+                                            </div>
                                         </div>
                                     @endif
                                     <input type="file" name="nib_file" class="form-control-file" accept=".pdf" >
@@ -163,6 +167,10 @@
                                     @if($data['acta_file']) 
                                         <div class="mb-2">
                                             <a href="{{ s3_asset(true,10,$data['acta_file']) }}"  class="btn btn-sm btn-primary" download><i class="fa fa-file-pdf"></i> Download</a>
+                                            <div class="custom-control custom-checkbox d-inline ml-2">
+                                                <input type="checkbox" class="custom-control-input" id="acta_file_delete" name="acta_file_delete" value="1">
+                                                <label class="custom-control-label text-danger" for="acta_file_delete">Hapus File Ini</label>
+                                            </div>
                                         </div>
                                     @endif
                                     <input type="file" name="acta_file" class="form-control-file" accept=".pdf" >
@@ -176,6 +184,10 @@
                                     @if($data['npwp_file']) 
                                         <div class="mb-2">
                                             <a href="{{ s3_asset(true,10,$data['npwp_file']) }}"  class="btn btn-sm btn-primary" download><i class="fa fa-file-pdf"></i> Download</a>
+                                            <div class="custom-control custom-checkbox d-inline ml-2">
+                                                <input type="checkbox" class="custom-control-input" id="npwp_file_delete" name="npwp_file_delete" value="1">
+                                                <label class="custom-control-label text-danger" for="npwp_file_delete">Hapus File Ini</label>
+                                            </div>
                                         </div>
                                     @endif
                                     <input type="file" name="npwp_file" class="form-control-file" accept=".pdf" >
@@ -261,6 +273,10 @@
                                     @if(isset($data['header']) && file_exists(public_path('storage/' . $data['header']))) 
                                         <div class="mb-2">
                                             <a href="{{ s3_asset(true,10,$data['header']) }}"  class="btn btn-sm btn-primary" download><i class="fa fa-download"></i> Header</a>
+                                            <div class="custom-control custom-checkbox d-inline ml-2">
+                                                <input type="checkbox" class="custom-control-input" id="header_delete" name="header_delete" value="1">
+                                                <label class="custom-control-label text-danger" for="header_delete">Hapus File Ini</label>
+                                            </div>
                                         </div>
                                     @endif
                                     <input type="file" name="header" class="form-control-file" accept="image/*">
@@ -273,6 +289,10 @@
                                     @if(isset($data['footer']) && file_exists(public_path('storage/' . $data['footer']))) 
                                         <div class="mb-2">
                                             <a href="{{ s3_asset(true,10,$data['footer']) }}"  class="btn btn-sm btn-primary" download><i class="fa fa-download"></i> Footer</a>
+                                            <div class="custom-control custom-checkbox d-inline ml-2">
+                                                <input type="checkbox" class="custom-control-input" id="footer_delete" name="footer_delete" value="1">
+                                                <label class="custom-control-label text-danger" for="footer_delete">Hapus File Ini</label>
+                                            </div>
                                         </div>
                                     @endif
                                     <input type="file" name="footer" class="form-control-file" accept="image/*">
@@ -634,6 +654,10 @@
                                     @if($data['header_store_image']) 
                                         <div class="mb-2">
                                             <a href="{{ s3_asset(true,10,$data['header_store_image']) }}"  class="btn btn-sm btn-primary"  download><i class="fa fa-file-pdf"></i> Download</a>
+                                            <div class="custom-control custom-checkbox d-inline ml-2">
+                                                <input type="checkbox" class="custom-control-input" id="header_store_image_delete" name="header_store_image_delete" value="1">
+                                                <label class="custom-control-label text-danger" for="header_store_image_delete">Hapus File Ini</label>
+                                            </div>
                                         </div>
                                     @endif
                                     <input type="file" name="header_store_image" class="form-control" accept="image/*">
@@ -869,6 +893,267 @@
                                     @error('internet_footer_message')
                                     <span class="text-danger text-sm">{{ $message }}</span>
                                     @enderror
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header" id="judulPayment">
+                            <h2 class="mb-0">
+                                <button class="btn btn-link btn-block text-left" type="button" data-toggle="collapse" data-target="#collapsePaymentSoftwareSubscription" aria-expanded="false" aria-controls="collapsePaymentSoftwareSubscription">
+                                    Setting Software Sharing
+                                </button>
+                            </h2>
+                        </div>
+
+                        <div id="collapsePaymentSoftwareSubscription" class="collapse" aria-labelledby="judulPayment" data-parent="#accordion">
+                            <div class="card-body">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h5>
+                                            Setting Software Sharing
+                                        </h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="alert alert-info">
+                                            <i class="fas fa-info-circle"></i> <strong>Info:</strong> Pengaturan ini khusus untuk invoice Software. Kosongkan field untuk menggun akan setting default perusahaan.
+                                        </div>
+                                        <!-- Logo/Icon -->
+                                        <div class="form-group">
+                                            <label for="software_sharing_icon">Logo/Icon Invoice</label>
+                                            @if(isset($data['software_sharing_icon']) && $data['software_sharing_icon'])
+                                                <div class="mb-2">
+                                                    <img src="{{ s3_asset(true, 10, $data['software_sharing_icon']) }}" style="max-width: 200px; max-height: 100px;" class="img-thumbnail">
+                                                </div>
+                                            @endif
+                                            <input type="file" name="software_sharing_icon" class="form-control-file" accept="image/*">
+                                            <small class="form-text text-muted">Logo akan tampil di header invoice</small>
+                                            @error('software_sharing_icon')
+                                            <span class="text-danger text-sm">{{ $message }}</span>
+                                            @enderror
+                                        </div>
+
+                                         <!-- PPN Default Software Sharing -->
+                                        <div class="form-group">
+                                            <label for="ppn_default_software_sharing">PPN Default Software Sharing (%)</label>
+                                            <input type="number" name="ppn_default_software_sharing" class="form-control" value="{{ old('ppn_default_software_sharing', $data['ppn_default_software_sharing'] ?? '11') }}" min="0" max="100" step="0.1" placeholder="Contoh: 11">
+                                            <small class="form-text text-muted">Persentase PPN default untuk software sharing (11% = Rp 11.000 untuk setiap Rp 100.000)</small>
+                                            @error('ppn_default_software_sharing')
+                                            <span class="text-danger text-sm">{{ $message }}</span>
+                                            @enderror
+                                        </div>
+
+                                        <!-- Company Name -->
+                                        <div class="form-group">
+                                            <label for="software_sharing_company_name">Nama Perusahaan untuk Invoice</label>
+                                            <input type="text" name="software_sharing_company_name" class="form-control" value="{{ old('software_sharing_company_name', $data['software_sharing_company_name'] ?? '') }}" placeholder="Kosongkan untuk menggunakan nama perusahaan default">
+                                            <small class="form-text text-muted">Nama perusahaan yang tertera di invoice</small>
+                                            @error('software_sharing_company_name')
+                                            <span class="text-danger text-sm">{{ $message }}</span>
+                                            @enderror
+                                        </div>
+
+                                        <!-- Address -->
+                                        <div class="form-group">
+                                            <label for="software_sharing_company_address">Alamat untuk Invoice</label>
+                                            <textarea name="software_sharing_company_address" class="form-control" rows="2" placeholder="Alamat lengkap perusahaan">{{ old('software_sharing_company_address', $data['software_sharing_company_address'] ?? '') }}</textarea>
+                                            <small class="form-text text-muted">Alamat lengkap yang tertera di invoice</small>
+                                            @error('software_sharing_company_address')
+                                            <span class="text-danger text-sm">{{ $message }}</span>
+                                            @enderror
+                                        </div>
+
+                                        <!-- Phone -->
+                                        <div class="form-group">
+                                            <label for="software_sharing_phone">Telepon untuk Invoice</label>
+                                            <input type="text" name="software_sharing_phone" class="form-control" value="{{ old('software_sharing_phone', $data['software_sharing_phone'] ?? '') }}" placeholder="Nomor telepon">
+                                            <small class="form-text text-muted">Nomor telepon yang tertera di invoice</small>
+                                            @error('software_sharing_phone')
+                                            <span class="text-danger text-sm">{{ $message }}</span>
+                                            @enderror
+                                        </div>
+
+                                        <!-- Footer Message -->
+                                        <div class="form-group">
+                                            <label for="software_sharing_footer_message">Pesan Footer Invoice</label>
+                                            <textarea name="software_sharing_footer_message" class="form-control" rows="3" placeholder="Terima kasih atas kepercayaan Anda...">{{ old('software_sharing_footer_message', $data['software_sharing_footer_message'] ?? '') }}</textarea>
+                                            <small class="form-text text-muted">Pesan terima kasih atau catatan yang tertera di footer invoice</small>
+                                            @error('software_sharing_footer_message')
+                                            <span class="text-danger text-sm">{{ $message }}</span>
+                                            @enderror
+                                        </div>
+
+                                        <!-- Headline Message -->
+                                        <div class="form-group">
+                                            <label for="software_sharing_headline_message">Headline Message</label>
+                                            <textarea name="software_sharing_headline_message" class="form-control" rows="3" placeholder="Terima kasih atas kepercayaan Anda...">{{ old('software_sharing_headline_message', $data['software_sharing_headline_message'] ?? '') }}</textarea>
+                                            <small class="form-text text-muted">Pesan terima kasih atau catatan yang tertera di footer invoice</small>
+                                            @error('software_sharing_headline_message')
+                                            <span class="text-danger text-sm">{{ $message }}</span>
+                                            @enderror
+                                        </div>
+
+                                        <!-- Headline Support Message -->
+                                        <div class="form-group">
+                                            <label for="software_sharing_headline_support_message">Headline Support Message</label>
+                                            <textarea name="software_sharing_headline_support_message" class="form-control" rows="3" placeholder="Terima kasih atas kepercayaan Anda...">{{ old('software_sharing_headline_support_message', $data['software_sharing_headline_support_message'] ?? '') }}</textarea>
+                                            <small class="form-text text-muted">Pesan terima kasih atau catatan yang tertera di footer invoice</small>
+                                            @error('software_sharing_headline_support_message')
+                                            <span class="text-danger text-sm">{{ $message }}</span>
+                                            @enderror
+                                        </div>
+
+                                        <!-- Term and Condition -->
+                                        <div class="form-group">
+                                            <label for="term_and_condition_software_sharing">Term and Condition</label>
+                                            <input class="thriveEditor form-control" id="description_software_sharing_term_and_condition" data-ids="software_sharing_term_and_condition" name="software_sharing_term_and_condition" rows="3" placeholder="yang akan dicetak di perjanjian" value="{{ old('software_sharing_term_and_condition', $data['software_sharing_term_and_condition'] ?? null) }}"/>
+                                            @error('software_sharing_term_and_condition')
+                                            <span class="text-danger text-sm">{{ $message }}</span>
+                                            @enderror
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h5>
+                                            Xendit Software Sharing
+                                        </h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="form-group">
+                                            <label for="secret_key_software_subscription">Secret Key</label>
+                                            <input type="text" name="secret_key_software_subscription" class="form-control" value="{{ old('secret_key_software_subscription', $data['secret_key_software_subscription'] ?? '') }}">
+                                        </div>
+        
+                                        <div class="form-group">
+                                            <label for="webhook_token_software_subscription">Webhook Token</label>
+                                            <input type="text" name="webhook_token_software_subscription" class="form-control" value="{{ old('webhook_token_software_subscription', $data['webhook_token_software_subscription'] ?? '') }}">
+                                        </div>
+                                        
+                                        <div class="form-group">
+                                            <div class="custom-control custom-switch">
+                                                <input type="checkbox" class="custom-control-input" id="xendit_pay_with_ppn_software_software_subscription" name="xendit_pay_with_ppn_software_software_subscription" value="1" {{ old('xendit_pay_with_ppn_software_software_subscription', $data['xendit_pay_with_ppn_software_software_subscription'] ?? '0') == '1' ? 'checked' : '' }}>
+                                                <label class="custom-control-label" for="xendit_pay_with_ppn_software_software_subscription">
+                                                    <strong>Gateway Auto-Calculate PPN</strong>
+                                                </label>
+                                            </div>
+                                            <small class="form-text text-muted">
+                                                <i class="fas fa-info-circle"></i> 
+                                                <strong>Enabled:</strong> Kirim net price (price_nett), gateway akan tambahkan PPN<br>
+                                                <strong>Disabled:</strong> Kirim gross price (price) yang sudah termasuk PPN
+                                            </small>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h5>
+                                            Midtrans Software Sharing
+                                        </h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="alert alert-info">
+                                            <i class="fas fa-info-circle"></i> <strong>Info:</strong> Konfigurasi Midtrans SNAP untuk pembayaran pelanggan internet. Dapatkan credentials dari <a href="https://dashboard.midtrans.com" target="_blank">Midtrans Dashboard</a>.
+                                        </div>
+
+                                        <div class="form-group">
+                                            <label for="server_key_midtrans_software_sharing">Server Key Midtrans</label>
+                                            <input type="text" name="server_key_midtrans_software_sharing" class="form-control" value="{{ old('server_key_midtrans_software_sharing', $data['server_key_midtrans_software_sharing'] ?? '') }}" placeholder="SB-Mid-server-... atau Mid-server-...">
+                                            <small class="form-text text-muted">Server Key dari Midtrans (Sandbox atau Production)</small>
+                                            @error('server_key_midtrans_software_sharing')
+                                            <span class="text-danger text-sm">{{ $message }}</span>
+                                            @enderror
+                                        </div>
+
+                                        <div class="form-group">
+                                            <label for="client_key_midtrans_software_sharing">Client Key Midtrans</label>
+                                            <input type="text" name="client_key_midtrans_software_sharing" class="form-control" value="{{ old('client_key_midtrans_software_sharing', $data['client_key_midtrans_software_sharing'] ?? '') }}" placeholder="SB-Mid-client-... atau Mid-client-...">
+                                            <small class="form-text text-muted">Client Key dari Midtrans (Sandbox atau Production)</small>
+                                            @error('client_key_midtrans_software_sharing')
+                                            <span class="text-danger text-sm">{{ $message }}</span>
+                                            @enderror
+                                        </div>
+
+                                        <div class="form-group">
+                                            <label for="environment_midtrans_software_sharing">Environment</label>
+                                            <select name="environment_midtrans_software_sharing" class="form-control">
+                                                <option value="sandbox" {{ old('environment_midtrans_software_sharing', $data['environment_midtrans_software_sharing'] ?? 'sandbox') == 'sandbox' ? 'selected' : '' }}>Sandbox (Testing)</option>
+                                                <option value="production" {{ old('environment_midtrans', $data['environment_midtrans'] ?? 'sandbox') == 'production' ? 'selected' : '' }}>Production (Live)</option>
+                                            </select>
+                                            <small class="form-text text-muted">
+                                                <strong>Sandbox:</strong> Untuk testing<br>
+                                                <strong>Production:</strong> Untuk transaksi live
+                                            </small>
+                                            @error('environment_midtrans')
+                                            <span class="text-danger text-sm">{{ $message }}</span>
+                                            @enderror
+                                        </div>
+
+                                        <div class="alert alert-warning">
+                                            <i class="fas fa-exclamation-triangle"></i> <strong>Webhook URL:</strong> <code>{{ url('/midtrans/notification') }}</code><br>
+                                            <small>Pastikan URL ini terdaftar di Midtrans Dashboard → Settings → Configuration → Notification URL</small>
+                                        </div>
+                                        
+                                        <div class="form-group">
+                                            <div class="custom-control custom-switch">
+                                                <input type="checkbox" class="custom-control-input" id="pay_with_ppn_midtrans_software_sharing" name="midtrans_pay_with_ppn_software_sharing" value="1" {{ old('midtrans_pay_with_ppn_software_sharing', $data['midtrans_pay_with_ppn_software_sharing'] ?? '0') == '1' ? 'checked' : '' }}>
+                                                <label class="custom-control-label" for="pay_with_ppn_midtrans_software_sharing">
+                                                    <strong>Gateway Auto-Calculate PPN</strong>
+                                                </label>
+                                            </div>
+                                            <small class="form-text text-muted">
+                                                <i class="fas fa-info-circle"></i> 
+                                                <strong>Enabled:</strong> Kirim net price (price_nett), Midtrans akan tambahkan PPN<br>
+                                                <strong>Disabled:</strong> Kirim gross price (price) yang sudah termasuk PPN
+                                            </small>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h5>
+                                            Rekening Software Sharing
+                                        </h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="form-group">
+                                            <div class="custom-control custom-switch">
+                                                <input type="checkbox" class="custom-control-input" id="software_sharing_manual_payment_status" name="software_sharing_manual_payment_status" value="1" {{ old('software_sharing_manual_payment_status', $data['software_sharing_manual_payment_status'] ?? '0') == '1' ? 'checked' : '' }}>
+                                                <label class="custom-control-label" for="software_sharing_manual_payment_status">
+                                                    <strong>Manual Payment Status</strong>
+                                                </label>
+                                            </div>
+                                            <small class="form-text text-muted">
+                                                <i class="fas fa-info-circle"></i> 
+                                                <strong>Enabled:</strong> Manual Payment Status<br>
+                                            </small>
+                                        </div>
+                                        
+                                        <div class="form-group">
+                                            <label for="software_sharing_nama_bank">Nama Bank</label>
+                                            <input type="text" name="software_sharing_nama_bank" class="form-control" value="{{ old('software_sharing_nama_bank', isset($data['software_sharing_nama_bank']) ? $data['software_sharing_nama_bank'] : '') }}">
+                                            @error('software_sharing_nama_bank')
+                                            <span class="text-danger text-sm">{{ $message }}</span>
+                                            @enderror
+                                        </div>
+
+                                        <div class="form-group">
+                                            <label for="software_sharing_atas_nama">Nama Pemilik Rekening (opsional)</label>
+                                            <input type="text" name="software_sharing_atas_nama" class="form-control" placeholder="opsional, kosongkan jika nama atas nama sama dengan nama perusahaan" value="{{ old('software_sharing_atas_nama', isset($data['software_sharing_atas_nama']) ? $data['software_sharing_atas_nama'] : '') }}">
+                                            @error('software_sharing_atas_nama')
+                                            <span class="text-danger text-sm">{{ $message }}</span>
+                                            @enderror
+                                        </div>
+
+                                        <div class="form-group">
+                                            <label for="software_sharing_cabang_bank">Cabang Bank</label>
+                                            <input type="text" name="software_sharing_cabang_bank" class="form-control" value="{{ old('software_sharing_cabang_bank', isset($data['software_sharing_cabang_bank']) ? $data['software_sharing_cabang_bank'] : '') }}">
+                                            @error('software_sharing_cabang_bank')
+                                            <span class="text-danger text-sm">{{ $message }}</span>
+                                            @enderror
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>

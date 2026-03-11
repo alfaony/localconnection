@@ -27,4 +27,5 @@ class RoleSchema
     const CUSTOMER_INTERNET = "Internet Customer";
     const SYSTEM_BOS = "Sistem";
     const SYSTEM_ADMIN = "System Admin";
+    const CUSTOMER_SOFTWARE = "Customer Software";
 }

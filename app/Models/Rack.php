@@ -32,6 +32,11 @@ class Rack extends Model
         return $this->belongsTo(Zone::class, 'zone_id');
     }
 
+    public function productStores()
+    {
+        return $this->hasMany(ProductStore::class, 'rack_id');
+    }
+
     public function sensors()
     {
         return $this->belongsToMany(Sensor::class, 'rack_sensor')

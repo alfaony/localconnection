@@ -60,6 +60,12 @@ class Company extends Model
     {
         return $this->hasMany(User::class);
     }
+
+    public function softwares()
+    {
+        return $this->hasMany(Software::class);
+    }
+
     public function accessibleUsers()
     {
         return $this->belongsToMany(User::class, 'company_user_access');

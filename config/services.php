@@ -123,4 +123,9 @@ return [
     'radius' => [
         'enabled' => env('RADIUS_ENABLED', false),
     ],
+    
+    'subscription' =>
+    [
+        'slot_reservation_hours' => env('SLOT_RESERVATION_HOURS', 2),
+    ],
 ];

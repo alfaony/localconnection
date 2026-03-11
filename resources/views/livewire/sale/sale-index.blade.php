@@ -32,7 +32,7 @@
                             </div>
 
                             <!-- Creator Filter -->
-                            <div class="col-md-6">
+                            <div class="col-md-4">
                                 <label class="form-label fw-bold">
                                     <i class="fas fa-user"></i> Dibuat Oleh
                                 </label>
@@ -43,6 +43,19 @@
                                             {{ $user->name }}
                                         </option>
                                     @endforeach
+                                </select>
+                            </div>
+
+                            <!-- Payment Method Filter -->
+                            <div class="col-md-2">
+                                <label class="form-label fw-bold">
+                                    <i class="fas fa-credit-card"></i> Metode Pembayaran
+                                </label>
+                                <select id="paymentMethodSelect" class="form-select">
+                                    <option value="">Semua Metode</option>
+                                    <option value="cash" {{ $temp_payment_method === 'cash' ? 'selected' : '' }}>Cash</option>
+                                    <option value="qris" {{ $temp_payment_method === 'qris' ? 'selected' : '' }}>QRIS</option>
+                                    <option value="debit_credit" {{ $temp_payment_method === 'debit_credit' ? 'selected' : '' }}>Debit / Credit</option>
                                 </select>
                             </div>
 
@@ -103,7 +116,7 @@
             </div>
 
             <!-- Active Filters Badges -->
-            @if($filter_search || $filter_start_date || $filter_end_date || $filter_start_time || $filter_end_time || $filter_user_id)
+            @if($filter_search || $filter_start_date || $filter_end_date || $filter_start_time || $filter_end_time || $filter_user_id || $filter_payment_method)
                 <div class="mb-3">
                     <div class="d-flex flex-wrap gap-2 align-items-center">
                         <span class="badge bg-secondary mr-1">Filter Aktif:</span>
@@ -156,8 +169,20 @@
                         @if($filter_end_time)
                             <span class="badge bg-info d-flex align-items-center gap-1 mr-1">
                                 Waktu Akhir: {{ $filter_end_time }}
-                                <i class="fas fa-times-circle badge-remove" 
-                                   data-filter="end_time" 
+                                <i class="fas fa-times-circle badge-remove"
+                                   data-filter="end_time"
+                                   style="cursor: pointer;"></i>
+                            </span>
+                        @endif
+
+                        @if($filter_payment_method)
+                            @php
+                                $pmLabels = ['cash' => 'Cash', 'qris' => 'QRIS', 'debit_credit' => 'Debit / Credit'];
+                            @endphp
+                            <span class="badge bg-info d-flex align-items-center gap-1 mr-1">
+                                Metode: {{ $pmLabels[$filter_payment_method] ?? $filter_payment_method }}
+                                <i class="fas fa-times-circle badge-remove"
+                                   data-filter="payment_method"
                                    style="cursor: pointer;"></i>
                             </span>
                         @endif
@@ -172,7 +197,12 @@
                         <h5 class="mb-0">
                             <i class="fas fa-list"></i> Data Penjualan
                         </h5>
-                        <span class="badge bg-primary">Total: {{ $sales->total() }} transaksi</span>
+                        <div class="d-flex gap-2 align-items-center">
+                            <span class="badge bg-primary mr-2 mb-1">Total: {{ $sales->total() }} transaksi</span>
+                            <span class="badge bg-success mb-1">
+                                <i class="fas fa-calculator"></i> Total Jumlah Akhir: Rp {{ number_format($totalFinalAmount, 0, ',', '.') }}
+                            </span>
+                        </div>
                     </div>
                 </div>
                 <div class="card-body">
@@ -364,6 +394,13 @@
             dropdownParent: $('#filterPanel')
         });
 
+        $('#paymentMethodSelect').select2({
+            theme: 'bootstrap-5',
+            allowClear: true,
+            width: '100%',
+            dropdownParent: $('#filterPanel')
+        });
+
         $('#userSelect').off('change').on('change', function() {
             // Skip jika sedang programmatic clear
             if ($(this).data('clearing')) {
@@ -426,6 +463,13 @@
                     @this.call('applyFilters');
                 });
                 break;
+            case 'payment_method':
+                @this.set('filter_payment_method', '').then(() => {
+                    @this.set('temp_payment_method', '');
+                    $('#paymentMethodSelect').val('');
+                    @this.call('applyFilters');
+                });
+                break;
         }
     }
 
@@ -436,6 +480,7 @@
         @this.set('temp_start_time', $('#tempStartTime').val());
         @this.set('temp_end_time', $('#tempEndTime').val());
         @this.set('temp_user_id', $('#userSelect').val());
+        @this.set('temp_payment_method', $('#paymentMethodSelect').val());
     }
 
     document.addEventListener('DOMContentLoaded', function() {
@@ -445,7 +490,7 @@
             $('#filterPanel').collapse('toggle');
         });
 
-        @if($filter_search || $filter_start_date || $filter_end_date || $filter_start_time || $filter_end_time || $filter_user_id)
+        @if($filter_search || $filter_start_date || $filter_end_date || $filter_start_time || $filter_end_time || $filter_user_id || $filter_payment_method)
             $('#filterPanel').collapse('show');
         @endif
 
@@ -481,6 +526,7 @@
             $('#tempEndDate').val(@this.temp_end_date);
             $('#tempStartTime').val(@this.temp_start_time);
             $('#tempEndTime').val(@this.temp_end_time);
+            $('#paymentMethodSelect').val(@this.temp_payment_method);
         });
 
         window.addEventListener('filters-applied', function() {
@@ -491,6 +537,7 @@
             $('#tempEndDate').val(@this.filter_end_date);
             $('#tempStartTime').val(@this.filter_start_time);
             $('#tempEndTime').val(@this.filter_end_time);
+            $('#paymentMethodSelect').val(@this.filter_payment_method);
         });
 
         window.addEventListener('filters-cleared', function() {
@@ -501,6 +548,7 @@
             $('#tempStartTime').val('');
             $('#tempEndTime').val('');
             $('#userSelect').val('').trigger('change.select2');
+            $('#paymentMethodSelect').val('');
         });
 
         window.addEventListener('confirm-delete', function(event) {

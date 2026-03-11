@@ -46,11 +46,11 @@
                     <input type="text" name="search" class="form-control" placeholder="Cari nama atau industri..." value="{{ request('search') }}">
                 </div>
                 <div class="col-md-2">
-                    <select name="partner_type" class="form-control">
+                    <select name="partner_type_id" class="form-control">
                         <option value="">Semua Tipe</option>
-                        @foreach(config('partners.partner_types') as $key => $value)
-                            <option value="{{ $key }}" {{ request('partner_type') == $key ? 'selected' : '' }}>
-                                {{ $value }}
+                        @foreach($partnerTypes as $type)
+                            <option value="{{ $type->id }}" {{ request('partner_type_id') == $type->id ? 'selected' : '' }}>
+                                {{ $type->name }}
                             </option>
                         @endforeach
                     </select>

@@ -230,7 +230,7 @@ $totalUser = $totalUser + 1; // Get the total number of projects
                 <select name="role" class="form-control mb-2 select2" required>
                     <option value="" selected disabled>Pilih</option>
                     @foreach($role as $a)
-                    <option value="{{ $a->id }}" {{ @$userEdit->role_id == $a->id ? 'selected' : '' }}> {{ $a->name }} </option>
+                    <option value="{{ $a->id }}" {{ @$userEdit->role_id == $a->id ? 'selected' : '' }}> {{ $a->name ?? '' }} </option>
                     @endforeach
                 </select>
             </div>
@@ -240,7 +240,7 @@ $totalUser = $totalUser + 1; // Get the total number of projects
                 <select name="approvement_user_id" class="form-control mb-2 user-select2">
                     <option value="" selected disabled>Pilih</option>
                     @foreach($users as $a)
-                    <option value="{{ $a->id }}" {{ @$userEdit->approvement_user_id == $a->id ? 'selected' : '' }}> {{ $a->name ." - ".  $a->company->name }} </option>
+                    <option value="{{ $a->id }}" {{ @$userEdit->approvement_user_id == $a->id ? 'selected' : '' }}> {{ $a->name ?? '' ." - ".  $a->company->name ?? '' }} </option>
                     @endforeach
                 </select>
             </div>
@@ -252,7 +252,7 @@ $totalUser = $totalUser + 1; // Get the total number of projects
                 <select name="company" class="form-control mb-2" required>
                     <option value="" selected disabled>Pilih</option>
                     @foreach($company as $a)
-                    <option value="{{ $a->id }}" {{ @$userEdit->company_id == $a->id ? 'selected' : '' }}> {{ $a->name }} </option>
+                    <option value="{{ $a->id }}" {{ @$userEdit->company_id == $a->id ? 'selected' : '' }}> {{ $a->name ?? '' }} </option>
                     @endforeach
                 </select>
             </div>
@@ -264,7 +264,7 @@ $totalUser = $totalUser + 1; // Get the total number of projects
                     @foreach($company as $a)
                     <option value="{{ $a->id }}" 
                         {{ in_array($a->id, old('company_access', @$userEdit?->accessibleCompanies->pluck('id')->toArray() ?? [])) ? 'selected' : '' }}>
-                        {{ $a->name }}
+                        {{ $a->name ?? '' }}
                     </option>
                     @endforeach
                 </select>
@@ -509,7 +509,7 @@ $totalUser = $totalUser + 1; // Get the total number of projects
                     @foreach($company as $a)
                     <option value="{{ $a->id }}" 
                         {{ in_array($a->id, old('company_access', @$userEdit?->accessibleCompanies->pluck('id')->toArray() ?? [])) ? 'selected' : '' }}>
-                        {{ $a->name }}
+                        {{ $a->name ?? '' }}
                     </option>
                     @endforeach
                 </select>
@@ -519,7 +519,7 @@ $totalUser = $totalUser + 1; // Get the total number of projects
             <select name="role" id="role-select" class="form-control mb-2 select2" required>
                 <option value="" selected disabled>Pilih</option>
                 @foreach($role as $a)
-                <option value="{{ $a->id }}" {{ @$userEdit->role_id == $a->id ? 'selected' : '' }} data-reportmandatory="{{  $a->is_mandatory_report}}"> {{ $a->name }} </option>
+                <option value="{{ $a->id }}" {{ @$userEdit->role_id == $a->id ? 'selected' : '' }} data-reportmandatory="{{  $a->is_mandatory_report}}"> {{ $a->name ?? '' }} </option>
                 @endforeach
             </select>
 
@@ -527,7 +527,7 @@ $totalUser = $totalUser + 1; // Get the total number of projects
             <select name="approvement_user_id" class="form-control mb-2 user-select2">
                 <option value="" selected disabled>Pilih</option>
                 @foreach($users as $a)
-                <option value="{{ $a->id }}" {{ @$userEdit->approvement_user_id == $a->id ? 'selected' : '' }}> {{ $a->name ." ( ".  $a->company->name." )"}} </option>
+                <option value="{{ $a->id }}" {{ @$userEdit->approvement_user_id == $a->id ? 'selected' : '' }}> {{ $a->name ?? '' ." ( ".  $a->company->name." )"}} </option>
                 @endforeach
             </select>
             @endif
@@ -537,7 +537,7 @@ $totalUser = $totalUser + 1; // Get the total number of projects
             <select name="company" class="form-control mb-2" required>
                 <option value="" selected disabled>Pilih</option>
                 @foreach($company as $a)
-                <option value="{{ $a->id }}" {{ @$userEdit->company_id == $a->id ? 'selected' : '' }}> {{ $a->name }} </option>
+                <option value="{{ $a->id }}" {{ @$userEdit->company_id == $a->id ? 'selected' : '' }}> {{ $a->name ?? '' }} </option>
                 @endforeach
             </select>
             @endif

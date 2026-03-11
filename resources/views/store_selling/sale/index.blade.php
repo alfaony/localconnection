@@ -99,9 +99,9 @@
                 <div class="modal-body">
                     <div class="text-center mb-4">
                         <h4>Total Pembayaran</h4>
-                        <h2 class="text-primary">@{{ formatCurrency(grandTotal) }}</h2>
+                        <h2 class="text-primary">@{{ formatCurrency(paymentMethod === 'cash' ? cashRoundedTotal : grandTotal) }}</h2>
                     </div>
-                    
+
                     <div class="payment-details">
                         <div class="row">
                             <div class="col-6"><strong>Metode Pembayaran:</strong></div>
@@ -113,7 +113,7 @@
                         </div>
                         <div v-if="paymentMethod === 'cash'" class="row mt-1">
                             <div class="col-6"><strong>Kembalian:</strong></div>
-                            <div class="col-6 text-right">@{{ formatCurrency(cashAmount - grandTotal) }}</div>
+                            <div class="col-6 text-right">@{{ formatCurrency(cashAmount - cashRoundedTotal) }}</div>
                         </div>
                         <div v-if="customerEmail" class="row mt-2">
                             <div class="col-6"><strong>Email Customer:</strong></div>
@@ -216,7 +216,7 @@
                             <div class="receipt-logo mb-3">
                                 <img src="{{ s3_asset(true,10,$settingCompany['header_store_image']) }}" 
                                     alt="{{ $settingCompany['store_name'] ?? 'Store Logo' }}"
-                                    style="max-width: 120px; height: auto; border-radius: 8px;">
+                                    style="max-width: 75px; height: auto; border-radius: 8px;">
                             </div>
                             @endif
                             
@@ -754,13 +754,22 @@ createApp({
             return subtotal.value + tax.value;
         });
 
+        // For cash: round down to nearest 100 (ratusan)
+        const cashRoundedTotal = computed(() => {
+            return Math.floor(grandTotal.value / 100) * 100;
+        });
+
+        const cashDeduction = computed(() => {
+            return grandTotal.value - cashRoundedTotal.value;
+        });
+
         const canGoToStep2 = computed(() => {
             return cartItems.value.length > 0;
         });
 
         const canGoToStep3 = computed(() => {
             if (paymentMethod.value === 'cash') {
-                return cashAmount.value >= grandTotal.value;
+                return cashAmount.value >= cashRoundedTotal.value;
             } else if (paymentMethod.value === 'debit_credit') {
                 return (
                     paymentDetails.value.cardNumber &&
@@ -1625,7 +1634,7 @@ createApp({
             
             try {
                 // Get settings from PHP (already loaded in blade template)
-                const headerImage = '{{ $settingCompany["header_store_image"] ?? "" }}';
+                const headerImage = '{{ !empty($settingCompany["header_store_image"]) ? s3_asset(true, 10, $settingCompany["header_store_image"]) : "" }}';
                 const footerMessage = `{!! $settingCompany["footer_store_message"] ?? "Terima kasih atas kunjungan Anda" !!}`;
                 const companyName = '{{ $settingCompany["store_name"] ?? config("app.name") }}';
                 const companyAddress = '{{ $settingCompany["store_address"] ?? "" }}';
@@ -1643,230 +1652,191 @@ createApp({
                                     padding: 0;
                                     box-sizing: border-box;
                                 }
-                                
+
                                 @page {
-                                    size: 80mm auto;
+                                    size: 46mm auto;
                                     margin: 0;
                                 }
-                                
-                                body { 
-                                    font-family: 'Courier New', monospace; 
-                                    width: 80mm;
-                                    margin: 0 auto;
-                                    padding: 10mm 5mm;
-                                    font-size: 11px; 
-                                    line-height: 1.4;
+
+                                body {
+                                    font-family: 'Courier New', monospace;
+                                    width: 46mm;
+                                    margin: 0;
+                                    padding: 2mm 2mm;
+                                    font-size: 8px;
+                                    line-height: 1.3;
                                     color: #000;
                                 }
-                                
-                                /* Header Section - Matching Modal */
-                                .header { 
-                                    text-align: center; 
-                                    margin-bottom: 15px;
+
+                                .header {
+                                    text-align: center;
+                                    margin-bottom: 4px;
                                 }
-                                
+
                                 .receipt-logo {
-                                    display: flex;
-                                    justify-content: center;
-                                    align-items: center;
-                                    margin-bottom: 10px;
+                                    text-align: center;
+                                    margin-bottom: 4px;
                                 }
-                                
+
                                 .receipt-logo img {
-                                    max-width: 120px;
+                                    width: 30mm;
                                     height: auto;
-                                    border-radius: 8px;
+                                    display: block;
+                                    margin: 0 auto;
+                                    object-fit: contain;
                                 }
-                                
+
                                 .company-name {
-                                    font-size: 14px;
+                                    font-size: 10px;
                                     font-weight: bold;
-                                    margin-bottom: 8px;
+                                    margin-bottom: 2px;
                                 }
-                                
+
                                 .receipt-address {
-                                    margin-top: 8px;
-                                    font-size: 10px;
-                                    color: #666;
+                                    font-size: 7px;
+                                    margin-top: 2px;
                                 }
-                                
+
                                 .receipt-title {
-                                    margin-top: 15px;
-                                    margin-bottom: 5px;
+                                    margin-top: 4px;
                                 }
-                                
+
                                 .receipt-title h6 {
-                                    font-size: 12px;
+                                    font-size: 9px;
                                     font-weight: bold;
-                                    margin-bottom: 5px;
+                                    margin-bottom: 2px;
                                 }
-                                
+
                                 .transaction-code {
+                                    font-size: 8px;
                                     font-weight: bold;
-                                    margin-bottom: 3px;
+                                    margin-bottom: 1px;
                                 }
-                                
+
                                 .date-time {
-                                    font-size: 10px;
-                                    color: #666;
+                                    font-size: 7px;
                                 }
-                                
+
                                 hr {
                                     border: none;
-                                    border-top: 1px solid #000;
-                                    margin: 10px 0;
+                                    border-top: 1px dashed #000;
+                                    margin: 4px 0;
                                 }
-                                
-                                /* Operator Section - Matching Modal */
+
                                 .receipt-operator {
-                                    margin-bottom: 15px;
+                                    margin-bottom: 4px;
                                 }
-                                
+
                                 .info-row {
                                     display: flex;
                                     justify-content: space-between;
-                                    margin-bottom: 3px;
-                                    font-size: 10px;
+                                    margin-bottom: 1px;
+                                    font-size: 8px;
                                 }
-                                
-                                .info-row strong {
-                                    font-weight: bold;
-                                }
-                                
-                                /* Items Section - Matching Modal */
+
                                 .receipt-items {
-                                    margin-bottom: 15px;
+                                    margin-bottom: 4px;
                                 }
-                                
-                                .receipt-item { 
-                                    margin-bottom: 10px;
+
+                                .receipt-item {
+                                    margin-bottom: 4px;
+                                    border-bottom: 1px dotted #999;
+                                    padding-bottom: 3px;
                                 }
-                                
-                                .item-header {
-                                    display: flex; 
-                                    justify-content: space-between;
-                                    margin-bottom: 2px;
+
+                                .receipt-item:last-child {
+                                    border-bottom: none;
                                 }
-                                
+
                                 .item-name {
+                                    font-size: 8px;
                                     font-weight: bold;
-                                    flex: 1;
-                                    padding-right: 10px;
+                                    word-break: break-word;
+                                    margin-bottom: 1px;
                                 }
-                                
+
+                                .item-row {
+                                    display: flex;
+                                    justify-content: space-between;
+                                    font-size: 7px;
+                                }
+
                                 .item-total {
                                     font-weight: bold;
                                     white-space: nowrap;
                                 }
-                                
-                                .item-details {
-                                    display: flex;
-                                    justify-content: space-between;
-                                    font-size: 9px;
-                                    color: #666;
-                                }
-                                
-                                /* Totals Section - Matching Modal */
+
                                 .receipt-totals {
-                                    margin-top: 15px;
+                                    margin-top: 2px;
                                 }
-                                
+
                                 .total-row {
                                     display: flex;
                                     justify-content: space-between;
-                                    margin-bottom: 4px;
-                                    font-size: 10px;
+                                    margin-bottom: 2px;
+                                    font-size: 8px;
                                 }
-                                
-                                .total-line { 
-                                    border-top: 2px solid #000; 
-                                    padding-top: 8px;
-                                    margin-top: 8px;
+
+                                .total-line {
+                                    border-top: 1px solid #000;
+                                    padding-top: 3px;
+                                    margin-top: 3px;
                                     font-weight: bold;
-                                    font-size: 11px;
+                                    font-size: 9px;
                                 }
-                                
-                                /* Footer Section - Matching Modal */
+
                                 .footer-section {
-                                    margin-top: 15px;
+                                    margin-top: 6px;
                                     text-align: center;
-                                }
-                                
-                                .footer-message {
-                                    font-size: 10px;
-                                    line-height: 1.5;
-                                }
-                                
-                                /* Print-specific styles */
-                                @media print {
-                                    body { 
-                                        margin: 0;
-                                        padding: 5mm 3mm;
-                                    }
-                                    .no-print { 
-                                        display: none; 
-                                    }
+                                    font-size: 7px;
                                 }
                             </style>
                         </head>
                         <body>
-                            <!-- Header dengan Logo - Matching Modal -->
                             <div class="header">
                                 ${headerImage ? `
                                     <div class="receipt-logo">
-                                        <img src="storage/${headerImage}" alt="${companyName}">
+                                        <img src="${headerImage}" alt="${companyName}" crossorigin="anonymous">
                                     </div>
                                 ` : ''}
-                                
                                 <div class="company-name"><strong>${companyName}</strong></div>
-                                
-                                ${companyAddress ? `
-                                    <div class="receipt-address">
-                                        <small>${companyAddress}</small>
-                                    </div>
-                                ` : ''}
-                                
+                                ${companyAddress ? `<div class="receipt-address">${companyAddress}</div>` : ''}
                                 <div class="receipt-title">
-                                    <h6><strong>STRUK PENJUALAN</strong></h6>
-                                    <p class="transaction-code"><strong>${transactionResult.value.transaction_code}</strong></p>
-                                    <small class="date-time">${new Date().toLocaleString('id-ID')}</small>
+                                    <h6>STRUK PENJUALAN</h6>
+                                    <p class="transaction-code">${transactionResult.value.transaction_code}</p>
+                                    <span class="date-time">${new Date().toLocaleString('id-ID')}</span>
                                 </div>
-                                <hr>
                             </div>
-                            
-                            <!-- Operator Info - Matching Modal -->
+
+                            <hr>
+
                             <div class="receipt-operator">
                                 <div class="info-row">
-                                    <div><strong>Kasir:</strong></div>
-                                    <div>{{ Auth::user()->name }}</div>
+                                    <span>Kasir:</span>
+                                    <span>{{ Auth::user()->name }}</span>
                                 </div>
                                 <div class="info-row">
-                                    <div><strong>Metode Bayar:</strong></div>
-                                    <div>${getPaymentMethodLabel(transactionResult.value.payment_method)}</div>
+                                    <span>Bayar:</span>
+                                    <span>${getPaymentMethodLabel(transactionResult.value.payment_method)}</span>
                                 </div>
-                                <hr>
                             </div>
-                            
-                            <!-- Items - Matching Modal -->
+
+                            <hr>
+
                             <div class="receipt-items">
                                 ${transactionResult.value.items.map(item => `
                                     <div class="receipt-item">
-                                        <div class="item-header">
-                                            <div class="item-name">
-                                                <strong>${item.product_store.name}</strong>
-                                            </div>
-                                            <div class="item-total">${formatCurrency(item.subtotal)}</div>
-                                        </div>
-                                        <div class="item-details">
-                                            <small>${item.quantity} x ${formatCurrency(item.unit_price)}</small>
+                                        <div class="item-name">${item.product_store.name}</div>
+                                        <div class="item-row">
+                                            <span>${item.quantity} x ${formatCurrency(item.unit_price)}</span>
+                                            <span class="item-total">${formatCurrency(item.subtotal)}</span>
                                         </div>
                                     </div>
                                 `).join('')}
                             </div>
-                            
+
                             <hr>
-                            
-                            <!-- Totals - Matching Modal -->
+
                             <div class="receipt-totals">
                                 <div class="total-row">
                                     <span>Subtotal:</span>
@@ -1881,7 +1851,7 @@ createApp({
                                     <strong>${formatCurrency(transactionResult.value.final_amount)}</strong>
                                 </div>
                                 ${transactionResult.value.payment_method === 'cash' ? `
-                                    <div class="total-row" style="margin-top: 8px;">
+                                    <div class="total-row" style="margin-top: 4px;">
                                         <span>Dibayar:</span>
                                         <span>${formatCurrency(transactionResult.value.payment_details?.cash_amount || cashAmount.value)}</span>
                                     </div>
@@ -1891,14 +1861,11 @@ createApp({
                                     </div>
                                 ` : ''}
                             </div>
-                            
-                            <!-- Footer Message - Matching Modal -->
+
+                            <hr>
+
                             <div class="footer-section">
-                                ${footerMessage ? `
-                                    <div class="footer-message">${footerMessage}</div>
-                                ` : `
-                                    <small>Terima kasih atas kunjungan Anda</small>
-                                `}
+                                ${footerMessage ? `<div>${footerMessage}</div>` : `<span>Terima kasih atas kunjungan Anda</span>`}
                             </div>
                         </body>
                     </html>
@@ -1906,11 +1873,34 @@ createApp({
                 
                 printWindow.document.write(receiptContent);
                 printWindow.document.close();
-                
-                // Wait for content to load before printing
+
+                // Wait for all images to load before printing
                 printWindow.onload = function() {
-                    printWindow.focus();
-                    printWindow.print();
+                    const images = printWindow.document.images;
+                    if (images.length === 0) {
+                        printWindow.focus();
+                        printWindow.print();
+                        return;
+                    }
+
+                    let loadedCount = 0;
+                    const total = images.length;
+                    const tryPrint = () => {
+                        loadedCount++;
+                        if (loadedCount >= total) {
+                            printWindow.focus();
+                            printWindow.print();
+                        }
+                    };
+
+                    for (let img of images) {
+                        if (img.complete) {
+                            tryPrint();
+                        } else {
+                            img.onload = tryPrint;
+                            img.onerror = tryPrint; // tetap print meski gambar gagal load
+                        }
+                    }
                 };
                 
             } catch (error) {
@@ -2000,6 +1990,8 @@ createApp({
             subtotal,
             tax,
             grandTotal,
+            cashRoundedTotal,
+            cashDeduction,
             canGoToStep2,
             canGoToStep3,
             setLoading,

@@ -19,7 +19,7 @@ class PermissionForMenuRackSeeder extends Seeder
      */
     public function run()
     {
-        $invoices = ['index','edit', 'create', 'update', 'show', 'destroy', 'store', 'downloadPdf', 'dataTableJson'];
+        $invoices = ['index','edit', 'create', 'update', 'show', 'destroy', 'store', 'downloadPdf', 'dataTableJson', 'assignProductStore', 'unassignProductStore'];
         $root = Role::where('name',RoleSchema::ROOT)->first();
         $admin = Role::where('name',RoleSchema::ADMIN)->first();
 
@@ -39,6 +39,8 @@ class PermissionForMenuRackSeeder extends Seeder
             PermissionRole::create(['role_id' => $root->id, 'permission_id' => $permission->id]);
             PermissionRole::create(['role_id' => $admin->id, 'permission_id' => $permission->id]);
         }
+
+        $this->call(ClearPermissionSeeder::class);
     }
 }
 

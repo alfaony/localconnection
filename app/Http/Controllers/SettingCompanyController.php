@@ -50,15 +50,16 @@ class SettingCompanyController extends Controller
             $request->request->add(['status_punihsment_task_doing' => "0"]);
         }
         
-
         // Clear Cache
         $this->clearCache("midtrans",Auth::user()->company_id);
         $this->clearCache("xendit",Auth::user()->company_id);
-
+        $this->clearCache("xendit_software_subscription",Auth::user()->company_id);
+        $this->clearCache("payment_gateway",Auth::user()->company_id);
+        $this->clearCache("payment_gateway_settings",Auth::user()->company_id);
 
         
         // Boolean
-        $boolean = ['xendit_pay_with_ppn','midtrans_pay_with_ppn','manual_payment_status'];
+        $boolean = ['xendit_pay_with_ppn','midtrans_pay_with_ppn','manual_payment_status','xendit_pay_with_ppn_software_subscription','software_sharing_manual_payment_status'];
         foreach ($boolean as $field) {
             $request->request->add([$field => $request->has($field) ? "1" : "0"]);
         }
@@ -67,11 +68,18 @@ class SettingCompanyController extends Controller
         try {
             $settings = SettingCompany::byCompany(Auth::user()->company_id)->get();
             $arrayExsist = ['header_store_image'];
-            $cacheKey = "xendit_settings_".Auth::user()->company_id;
-            Cache::forget($cacheKey);
             foreach ($settings as $setting) 
             {
                 $title = $setting->field_title;
+                
+                if ($request->has($title . '_delete') && $request->input($title . '_delete') == "1") {
+                    if ($setting->field_value && \Illuminate\Support\Facades\Storage::exists($setting->field_value)) {
+                        \Illuminate\Support\Facades\Storage::delete($setting->field_value);
+                    }
+                    $setting->user_id = Auth::user()->id;
+                    $setting->update(['field_value' => null]);
+                }
+
                 if ($request->has($title) && !in_array($title, $arrayExsist)) 
                 {
                     $fieldValue = $request->input($title);
@@ -107,7 +115,6 @@ class SettingCompanyController extends Controller
             DB::commit();
             return redirect()->route('setting-company.index')->with('store',true);
         } catch (\Throwable $th) {
-            // dd($th);
             DB::rollback();
             \Log::error($th);
             return redirect()->route('setting-company.index')->with('store',false);
