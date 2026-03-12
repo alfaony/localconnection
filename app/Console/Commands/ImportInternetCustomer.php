@@ -35,7 +35,7 @@ class ImportInternetCustomer extends Command
      *
      * @var string
      */
-    protected $signature = 'internet-customer:import 
+    protected $signature = 'import:internet-customer 
                             {file : Nama file Excel di storage/internet_customer/} 
                             {slug : Slug perusahaan}
                             {type : create atau update (default: create, nil = create)}
