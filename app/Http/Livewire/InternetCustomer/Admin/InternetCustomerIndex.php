@@ -464,9 +464,11 @@ class InternetCustomerIndex extends Component
 
     public function updatedCsvFile(): void
     {
-        $this->uploadingFile = true;
-        $this->isFileReady   = false;
         $this->resetValidation('csvFile');
+        // updatedCsvFile() is only called after Livewire has finished uploading
+        // the file to temp storage, so if $csvFile is set the file is already ready.
+        $this->isFileReady   = (bool) $this->csvFile;
+        $this->uploadingFile = false;
     }
 
     public function checkImportFileReady(): bool
@@ -552,6 +554,18 @@ class InternetCustomerIndex extends Component
                 $this->import_odp_id
             );
 
+            // Inisialisasi progress agar blade langsung tampil tanpa menunggu poll pertama
+            $this->importProgress = [
+                'batch_id'  => $this->importBatchId,
+                'processed' => 0,
+                'total'     => count($csvData) - 1,
+                'success'   => 0,
+                'failed'    => 0,
+                'percentage'=> 0,
+                'status'    => 'processing',
+                'errors'    => [],
+                'updated_at'=> now()->toDateTimeString(),
+            ];
             $this->isImporting   = true;
             $this->isFileReady   = false;
             $this->uploadingFile = false;
@@ -607,7 +621,7 @@ class InternetCustomerIndex extends Component
         ];
 
         if ($isDone) {
-            $this->isImporting = false;
+            // Tetap tampilkan progress section — JS yang akan hide setelah user dismiss SweetAlert
             $this->dispatchBrowserEvent('import-completed', [
                 'progress' => $this->importProgress,
             ]);

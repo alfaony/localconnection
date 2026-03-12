@@ -145,15 +145,15 @@
                                    class="form-control @error('csvFile') is-invalid @enderror"
                                    wire:model="csvFile"
                                    accept=".csv"
-                                   {{ $uploadingFile ? 'disabled' : '' }}>
+                                   wire:loading.attr="disabled"
+                                   wire:target="csvFile">
                             @error('csvFile')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                             <small class="text-muted">Format: CSV, Maks. 10 MB</small>
 
-                            {{-- Uploading state --}}
-                            @if($uploadingFile && !$isFileReady)
-                            <div class="mt-2" wire:poll.500ms="checkImportFileReady">
+                            {{-- Uploading state: shown by Livewire while XHR upload is in progress --}}
+                            <div class="mt-2" wire:loading wire:target="csvFile">
                                 <div class="alert alert-info py-2 mb-0 d-flex align-items-center">
                                     <div class="spinner-border spinner-border-sm mr-2"></div>
                                     <div>
@@ -162,7 +162,6 @@
                                     </div>
                                 </div>
                             </div>
-                            @endif
 
                             {{-- File ready --}}
                             @if($isFileReady && $csvFile)
@@ -189,18 +188,19 @@
                             <button type="submit"
                                     class="btn btn-warning btn-block"
                                     wire:loading.attr="disabled"
-                                    wire:target="importCustomers"
-                                    {{ (!$isFileReady || $uploadingFile) ? 'disabled' : '' }}>
+                                    wire:target="importCustomers,csvFile"
+                                    {{ !$isFileReady ? 'disabled' : '' }}>
 
                                 <span wire:loading wire:target="importCustomers">
                                     <span class="spinner-border spinner-border-sm mr-1"></span>
                                     Memproses…
                                 </span>
-                                <span wire:loading.remove wire:target="importCustomers">
-                                    @if($uploadingFile)
-                                        <span class="spinner-border spinner-border-sm mr-1"></span>
-                                        Menunggu file…
-                                    @elseif($isFileReady)
+                                <span wire:loading wire:target="csvFile">
+                                    <span class="spinner-border spinner-border-sm mr-1"></span>
+                                    Mengupload…
+                                </span>
+                                <span wire:loading.remove wire:target="importCustomers,csvFile">
+                                    @if($isFileReady)
                                         <i class="fas fa-upload mr-1"></i> Mulai Import
                                     @else
                                         <i class="fas fa-upload mr-1"></i> Upload & Import
@@ -212,8 +212,8 @@
                 </form>
                 @endif
 
-                {{-- ── PROGRESS SECTION (polled by JS, sama persis pola ProductStore) --}}
-                @if($isImporting && $importProgress)
+                {{-- ── PROGRESS SECTION: tampil selama importing atau setelah selesai --}}
+                @if($importProgress)
                 <div class="mt-4">
                     <hr>
                     <h6 class="mb-3">
@@ -1284,7 +1284,7 @@
                 allowOutsideClick: false,
                 width: '600px',
             }).then(() => {
-                @this.call('$refresh');
+                @this.call('resetImport');
             });
         });
 
