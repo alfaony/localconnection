@@ -84,12 +84,12 @@
                                 <div class="location-content">
                                     <small class="d-block opacity-75 mb-1">Warehouse</small>
                                     <h5 class="mb-0 font-weight-bold">
-                                        {{ $laptop->rack->zone->warehouse->name }}
+                                        {{ $laptop->rack?->zone?->warehouse?->name ?? 'Unknown' }}
                                     </h5>
-                                    @if($laptop->rack->zone->warehouse->address)
+                                    @if($laptop->rack?->zone?->warehouse?->address)
                                         <small class="d-block opacity-75 mt-1">
                                             <i class="fas fa-map-marker-alt mr-1"></i>
-                                            {{ Str::limit($laptop->rack->zone->warehouse->address, 30) }}
+                                            {{ Str::limit($laptop->rack?->zone?->warehouse?->address, 30) }}
                                         </small>
                                     @endif
                                 </div>
@@ -105,7 +105,7 @@
                                 <div class="location-content">
                                     <small class="d-block opacity-75 mb-1">Zone</small>
                                     <h5 class="mb-0 font-weight-bold">
-                                        {{ $laptop->rack->zone->name }}
+                                        {{ $laptop->rack?->zone?->name ?? 'Unknown' }}
                                     </h5>
                                     {{--
                                     @if($laptop->rack->zone->code)
@@ -127,7 +127,7 @@
                                 <div class="location-content">
                                     <small class="d-block opacity-75 mb-1">Rack</small>
                                     <h5 class="mb-0 font-weight-bold">
-                                        {{ $laptop->rack->name }}
+                                        {{ $laptop->rack?->name ?? 'Unknown' }}
                                     </h5>
                                     {{--
                                     <small class="d-block opacity-75 mt-1">
@@ -149,17 +149,17 @@
                         <div class="d-flex align-items-center justify-content-center flex-wrap">
                             <span class="badge badge-primary px-3 py-2 mr-2 mb-2">
                                 <i class="fas fa-warehouse mr-1"></i>
-                                {{ $laptop->rack->zone->warehouse->name }}
+                                {{ $laptop->rack?->zone?->warehouse?->name ?? 'Unknown' }}
                             </span>
                             <i class="fas fa-chevron-right text-muted mr-2 mb-2"></i>
                             <span class="badge badge-info px-3 py-2 mr-2 mb-2">
                                 <i class="fas fa-map-marker-alt mr-1"></i>
-                                {{ $laptop->rack->zone->name }}
+                                {{ $laptop->rack?->zone?->name ?? 'Unknown' }}
                             </span>
                             <i class="fas fa-chevron-right text-muted mr-2 mb-2"></i>
                             <span class="badge badge-secondary px-3 py-2 mb-2">
                                 <i class="fas fa-th mr-1"></i>
-                                {{ $laptop->rack->name }}
+                                {{ $laptop->rack?->name ?? 'Unknown' }}
                             </span>
                         </div>
                     </div>
