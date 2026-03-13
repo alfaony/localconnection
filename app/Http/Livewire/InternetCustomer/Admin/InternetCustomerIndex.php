@@ -19,7 +19,9 @@ use App\Models\CoverageServiceDistribution;
 
 use App\Jobs\ProvisionCustomerJob;
 use App\Jobs\GenerateInternetPurchaseCouponJob;
+use App\Jobs\ImportInternetCustomerJob;
 
+use App\Models\ImportProgress;
 use App\Models\InternetInstallationPhoto;
 
 use Illuminate\Support\Facades\Auth;
@@ -83,6 +85,17 @@ class InternetCustomerIndex extends Component
 
     public $canApprove;
     public $canTechnical;
+
+    // ── Import properties ──────────────────────────────────────────────────
+    public $csvFile;
+    public bool $isFileReady     = false;
+    public bool $uploadingFile   = false;
+    public ?string $importBatchId = null;
+    public ?array $importProgress = null;
+    public bool $isImporting     = false;
+    public bool $showImportSection = false;
+    public ?string $import_odp_id  = null;
+    public array $importAvailableOdps = [];
 
     protected $queryString = [
         'search' => ['except' => ''],
@@ -420,6 +433,235 @@ class InternetCustomerIndex extends Component
     }
         
 
+    // ── Import Methods ─────────────────────────────────────────────────────
+
+    public function mountImportOdps(): void
+    {
+        $this->importAvailableOdps = OpticalDistribution::byCompany(Auth::user()->company_id)
+            ->orderBy('name')
+            ->get(['id', 'name'])
+            ->map(fn($o) => ['id' => $o->id, 'label' => $o->name])
+            ->toArray();
+    }
+
+    public function toggleImportSection(): void
+    {
+        $this->showImportSection = !$this->showImportSection;
+
+        if (!$this->showImportSection) {
+            $this->resetImport();
+        }
+    }
+
+    public function resetImport(): void
+    {
+        $this->reset([
+            'csvFile', 'importBatchId', 'importProgress',
+            'isImporting', 'isFileReady', 'uploadingFile', 'import_odp_id',
+        ]);
+        $this->resetValidation(['csvFile', 'import_odp_id']);
+    }
+
+    public function updatedCsvFile(): void
+    {
+        $this->resetValidation('csvFile');
+        // updatedCsvFile() is only called after Livewire has finished uploading
+        // the file to temp storage, so if $csvFile is set the file is already ready.
+        $this->isFileReady   = (bool) $this->csvFile;
+        $this->uploadingFile = false;
+    }
+
+    public function checkImportFileReady(): bool
+    {
+        try {
+            if ($this->csvFile && $this->csvFile->exists()) {
+                $content = $this->csvFile->get();
+
+                if (!empty($content)) {
+                    $this->isFileReady  = true;
+                    $this->uploadingFile = false;
+
+                    $this->dispatchBrowserEvent('import-file-ready', [
+                        'filename' => $this->csvFile->getClientOriginalName(),
+                        'size'     => number_format($this->csvFile->getSize() / 1024, 2) . ' KB',
+                    ]);
+
+                    return true;
+                }
+            }
+
+            return false;
+        } catch (\Exception $e) {
+            Log::error('Import file check error', ['error' => $e->getMessage()]);
+            return false;
+        }
+    }
+
+    public function importCustomers(): void
+    {
+        $this->validate([
+            'import_odp_id' => 'required|exists:optical_distributions,id',
+            'csvFile'       => 'required|file|max:10240',
+        ], [
+            'import_odp_id.required' => 'Pilih ODP terlebih dahulu sebelum import',
+            'import_odp_id.exists'   => 'ODP tidak valid',
+            'csvFile.required'       => 'File CSV wajib diupload',
+            'csvFile.max'            => 'Ukuran file maksimal 10MB',
+        ]);
+
+        if (!$this->isFileReady || !$this->csvFile) {
+            $this->addError('csvFile', 'File belum siap. Silakan tunggu sebentar.');
+            return;
+        }
+
+        try {
+            if (!$this->csvFile->exists()) {
+                $this->addError('csvFile', 'File tidak ditemukan. Silakan upload ulang.');
+                return;
+            }
+
+            $fileContent = $this->csvFile->get();
+
+            if (empty($fileContent)) {
+                $this->addError('csvFile', 'File kosong atau corrupt.');
+                return;
+            }
+
+            $csv = \League\Csv\Reader::createFromString($fileContent);
+            $csv->setHeaderOffset(null);
+            $csvData = iterator_to_array($csv->getRecords());
+
+            if (count($csvData) <= 1) {
+                $this->addError('csvFile', 'File CSV kosong atau hanya berisi header.');
+                return;
+            }
+
+            $this->importBatchId = \Illuminate\Support\Str::uuid()->toString();
+
+            ImportProgress::create([
+                'batch_id'     => $this->importBatchId,
+                'processed'    => 0,
+                'total'        => count($csvData) - 1,
+                'total_import' => 0,
+                'errors'       => [],
+            ]);
+
+            ImportInternetCustomerJob::dispatch(
+                $csvData,
+                Auth::id(),
+                Auth::user()->company_id,
+                $this->importBatchId,
+                $this->import_odp_id
+            );
+
+            // Inisialisasi progress agar blade langsung tampil tanpa menunggu poll pertama
+            $this->importProgress = [
+                'batch_id'  => $this->importBatchId,
+                'processed' => 0,
+                'total'     => count($csvData) - 1,
+                'success'   => 0,
+                'failed'    => 0,
+                'percentage'=> 0,
+                'status'    => 'processing',
+                'errors'    => [],
+                'updated_at'=> now()->toDateTimeString(),
+            ];
+            $this->isImporting   = true;
+            $this->isFileReady   = false;
+            $this->uploadingFile = false;
+            $this->csvFile       = null;
+
+            $this->dispatchBrowserEvent('import-started', [
+                'total_rows' => count($csvData) - 1,
+            ]);
+
+            $this->dispatchBrowserEvent('start-progress-check');
+
+        } catch (\Exception $e) {
+            Log::error('Import internet customer error', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+            $this->addError('csvFile', 'Terjadi kesalahan: ' . $e->getMessage());
+            $this->isFileReady   = false;
+            $this->uploadingFile = false;
+        }
+    }
+
+    public function checkImportProgress(): void
+    {
+        if (!$this->importBatchId) {
+            return;
+        }
+
+        $progress = ImportProgress::where('batch_id', $this->importBatchId)->first();
+
+        if (!$progress) {
+            return;
+        }
+
+        $errors = $progress->errors;
+        if (!is_array($errors)) {
+            $errors = [];
+        }
+
+        $isDone = $progress->total > 0 && $progress->processed >= $progress->total;
+
+        $this->importProgress = [
+            'batch_id'    => $progress->batch_id,
+            'processed'   => $progress->processed,
+            'total'       => $progress->total,
+            'total_import'=> $progress->total_import,
+            'success'     => $progress->success,
+            'failed'      => $progress->failed,
+            'percentage'  => $progress->percentage,
+            'status'      => $isDone ? 'completed' : 'processing',
+            'errors'      => $errors,
+            'updated_at'  => $progress->updated_at->toDateTimeString(),
+        ];
+
+        if ($isDone) {
+            // Tetap tampilkan progress section — JS yang akan hide setelah user dismiss SweetAlert
+            $this->dispatchBrowserEvent('import-completed', [
+                'progress' => $this->importProgress,
+            ]);
+        }
+    }
+
+    public function downloadImportTemplate(): \Symfony\Component\HttpFoundation\StreamedResponse
+    {
+        return response()->streamDownload(function () {
+            $file = fopen('php://output', 'w');
+
+            fputcsv($file, [
+                'email', 'phone', 'code', 'username', 'password',
+                'grouping', 'serial_number', 'router',
+                'pppoe_pool', 'start_billing_date', 'end_billing_date',
+            ]);
+
+            fputcsv($file, [
+                'pelanggan@email.com', '081234567890', 'KL-0001', 'pppoe_user1', 'P@ssw0rd',
+                'GRPAB', 'SN-123456789', 'Router-Utama',
+                'Pool-Main', '2025-01-01', '2025-02-01',
+            ]);
+
+            fclose($file);
+        }, 'template_import_internet_customer.csv', [
+            'Content-Type' => 'text/csv',
+        ]);
+    }
+
+    public function getImportStatusColor(string $status): string
+    {
+        return match ($status) {
+            'queued'     => 'secondary',
+            'processing' => 'info',
+            'completed'  => 'success',
+            'failed'     => 'danger',
+            default      => 'secondary',
+        };
+    }
+
     // Search
     public function updatingSearch()
     {
@@ -558,6 +800,11 @@ class InternetCustomerIndex extends Component
         $this->dateTo = '';
     }
 
+    public function mount(): void
+    {
+        $this->mountImportOdps();
+    }
+
     public function render()
     {
         $user = Auth::user();
@@ -633,12 +880,12 @@ class InternetCustomerIndex extends Component
         $packages = InternetPackage::byCompany($user->company_id)->orderBy('name')->get();
 
         return view('livewire.internet-customer.admin.internet-customer-index', [
-            'finance_access'    => Access::can('as_finance', 'internet_customers'),
-            'technical_access'  => Access::can('as_technician', 'internet_customers'),
-            'internetCustomers' => $internetCustomers,
-            'packages'          => $packages,
-            'routers'           => $this->routers,
-            
+            'finance_access'       => Access::can('as_finance', 'internet_customers'),
+            'technical_access'     => Access::can('as_technician', 'internet_customers'),
+            'internetCustomers'    => $internetCustomers,
+            'packages'             => $packages,
+            'routers'              => $this->routers,
+            'importAvailableOdps'  => $this->importAvailableOdps,
         ])->extends('adminlte::page');
     }
 

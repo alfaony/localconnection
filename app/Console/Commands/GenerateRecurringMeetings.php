@@ -7,7 +7,9 @@ use App\Models\MeetingRecurrence;
 use App\Models\Meeting;
 use App\Models\NationalHoliday;
 use Carbon\Carbon;
-
+use App\Services\GoogleService;
+use App\Schemas\ParamSchema;
+use Illuminate\Support\Str;
 class GenerateRecurringMeetings extends Command
 {
     protected $signature = 'recurring:generate-meetings {slug?} {--date=} {--simulate} {--test}';
@@ -112,8 +114,35 @@ class GenerateRecurringMeetings extends Command
 
                     $newMeeting->meeting_recurrence_id = $recurrence->id;
                     $newMeeting->status = 'scheduled'; // Override status
+                    
+                    // Clear google event details initially so that it's generated anew
+                    if ($template->meeting_type === ParamSchema::GOOGLE_MEET || $template->meeting_type === 'online') {
+                         $newMeeting->google_meet_link = null;
+                         $newMeeting->google_event_id = null;
+                         $newMeeting->public_token = null;
+                         $newMeeting->public_code = null;
+                         $newMeeting->public_token_generated_at = null;
+                    }
+                    
                     $newMeeting->save();
 
+                    // Generate New Google Meet Event if needed
+                    if ($template->meeting_type === ParamSchema::GOOGLE_MEET || $template->meeting_type === 'online') {
+                        $googleService = new GoogleService($template->company_id);
+                        if ($googleService->isConfigured()) { 
+                            $googleMeet = $googleService->createGoogleMeet($newMeeting);
+                            $googleMeetData = $googleMeet->getData();
+                            if ($googleMeetData->success) {
+                                $newMeeting->update([
+                                    'google_meet_link' => $googleMeetData->link,
+                                    'google_event_id' => $googleMeetData->event_id,
+                                    'public_token' => Str::random(10),
+                                    'public_code' => Str::random(5),
+                                    'public_token_generated_at' => now(),
+                                ]);
+                            }
+                        }
+                    }
                     // Copy partisipan
                     $participants = $template->participants()->get();
                     if ($participants->isNotEmpty()) {
