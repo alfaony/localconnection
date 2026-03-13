@@ -71,6 +71,31 @@ class RadiusService
     }
 
     /**
+     * Buat/update customer hotspot di RADIUS (password + group, tanpa Framed-IP-Address).
+     */
+    public function upsertHotspotCustomer(InternetCustomer $cust, string $groupName): void
+    {
+        $password = trim((string) $cust->pass_hash) ?: 'admin123';
+
+        RadCheck::updateOrCreate(
+            ['username' => $cust->username, 'attribute' => 'Cleartext-Password'],
+            ['op' => ':=', 'value' => $password]
+        );
+
+        RadUserGroup::updateOrCreate(
+            ['username' => $cust->username],
+            ['groupname' => $groupName, 'priority' => 1]
+        );
+
+        // Hotspot tidak pakai Framed-IP-Address — hapus jika ada dari data lama
+        RadReply::where('username', $cust->username)
+            ->where('attribute', 'Framed-IP-Address')
+            ->delete();
+
+        Log::info('[RadiusService] upsertHotspotCustomer', ['username' => $cust->username, 'group' => $groupName]);
+    }
+
+    /**
      * Suspend user — WALLED GARDEN (Isolir)
      * User tetap bisa connect tapi hanya akses web pembayaran.
      * Rate-limit diperkecil, group diganti ke ISOLIR.
