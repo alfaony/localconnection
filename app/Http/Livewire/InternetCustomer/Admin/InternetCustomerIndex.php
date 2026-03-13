@@ -16,6 +16,7 @@ use App\Models\Router;
 use App\Models\CoverageService;
 use App\Models\OpticalDistribution;
 use App\Models\CoverageServiceDistribution;
+use App\Models\HotspotServer;
 
 use App\Jobs\ProvisionCustomerJob;
 use App\Jobs\GenerateInternetPurchaseCouponJob;
@@ -81,6 +82,13 @@ class InternetCustomerIndex extends Component
     public $newUsernameAvailable = false;
     public $newUsernameExistingCustomer = [];
 
+    // Hotspot installation fields
+    public ?string $hotspot_server_id = null;
+    public ?string $ip_binding_type   = null;
+    public ?string $ip_binding_mode   = null;
+    public ?string $ip_address        = null;
+    public ?string $mac_address       = null;
+
     public $canApprove;
     public $canTechnical;
 
@@ -104,10 +112,11 @@ class InternetCustomerIndex extends Component
             'internetPackage',
             'subdistrict.coverageService.coverageServiceOds.ods.pops.routers',
         ])->findOrFail($customerId);
-            
-        $this->currentInstallationId = $cust->id;
 
-        // === FILTER ROUTER ===
+        $this->currentInstallationId = $cust->id;
+        $accessType = $cust->access_type ?? 'pppoe';
+
+        // === FILTER ROUTER (PPPoE) ===
         $routerIds = collect(
             $cust->subdistrict?->coverageService?->coverageServiceOds ?? []
         )
@@ -118,7 +127,7 @@ class InternetCustomerIndex extends Component
         ->unique()
         ->values();
 
-        if ($routerIds->isEmpty()) 
+        if ($routerIds->isEmpty())
         {
             $routers = Router::query()
                 ->whereHas('pppoeServers')
@@ -135,19 +144,38 @@ class InternetCustomerIndex extends Component
             ->get(['id','name','active_status']);
         }
 
-        // BARU: Load ODP dari CoverageService
+        // === HOTSPOT SERVERS ===
+        $hotspotServers = [];
+        if ($accessType === 'hotspot') {
+            $hotspotServers = HotspotServer::query()
+                ->whereHas('router', fn($q) => $q->where('company_id', auth()->user()->company_id))
+                ->with('router:id,name')
+                ->orderBy('name')
+                ->get()
+                ->map(fn($hs) => [
+                    'id'        => $hs->id,
+                    'name'      => $hs->name . ' (' . optional($hs->router)->name . ')',
+                    'router_id' => $hs->router_id,
+                ])
+                ->values()
+                ->toArray();
+        }
+
+        // Load ODP dari CoverageService
         $this->loadOdpsForCustomer($cust);
-        
+
         $payload = [
-            'customerName'  => $cust->name,
-            'customerCode'  => $cust->code,
-            'serialNumber'  => '',
-            'routers'       => $routers->map(fn($r) => [
-                'id'   => $r->id,
+            'customerName'   => $cust->name,
+            'customerCode'   => $cust->code,
+            'serialNumber'   => '',
+            'accessType'     => $accessType,
+            'routers'        => $routers->map(fn($r) => [
+                'id'       => $r->id,
                 'disabled' => $r->is_online ? false : true,
-                'name' => $r->name . ' (PPPoE: '.$r->pppoe_servers_count.')',
+                'name'     => $r->name . ' (PPPoE: '.$r->pppoe_servers_count.')',
             ])->values(),
-            'odps' => $this->availableOdps, // BARU
+            'hotspotServers' => $hotspotServers,
+            'odps'           => $this->availableOdps,
         ];
 
         $this->dispatchBrowserEvent('open-installation-modal', $payload);
@@ -194,26 +222,32 @@ class InternetCustomerIndex extends Component
     }
 
     public function completeInstallation(
-        $serialNumber, 
-        $notes, 
-        $routerId, 
-        $username, 
-        $password, 
-        $override_pool_id, 
+        $serialNumber,
+        $notes,
+        $routerId,
+        $username,
+        $password,
+        $override_pool_id,
         $local_address,
-        $optical_distribution_id = null,  // BARU
-        $grouping_id = null                // BARU
+        $optical_distribution_id = null,
+        $grouping_id = null,
+        $hotspot_server_id = null,
+        $ip_binding_type   = null,
+        $ip_binding_mode   = null,
+        $ip_address        = null,
+        $mac_address       = null
         ) {
-        // Update properties dari parameter
-        $this->deviceSerialNumber = $serialNumber;
-        $this->installationNotes = $notes;
-        $this->router_id = $routerId;
-        $this->username = $username;
-        $this->password = $password;
-        $this->override_pool_id = $override_pool_id;
-        $this->local_address = $local_address;
-        $this->optical_distribution_id = $optical_distribution_id;  // BARU
-        $this->grouping_id = $grouping_id;                          // BARU
+        $this->deviceSerialNumber       = $serialNumber;
+        $this->installationNotes        = $notes;
+        $this->username                 = $username;
+        $this->password                 = $password;
+        $this->optical_distribution_id  = $optical_distribution_id;
+        $this->grouping_id              = $grouping_id;
+        $this->hotspot_server_id        = $hotspot_server_id;
+        $this->ip_binding_type          = $ip_binding_type;
+        $this->ip_binding_mode          = $ip_binding_mode;
+        $this->ip_address               = $ip_address;
+        $this->mac_address              = $mac_address;
         
         Log::info('completeInstallation called', [
             'serialNumber' => $serialNumber,
@@ -246,44 +280,75 @@ class InternetCustomerIndex extends Component
             return false;
         }
         
-        // UPDATED: Validasi dengan field baru
-        $validated = $this->validate([
-            'currentInstallationId' => 'required|exists:internet_customers,id',
-            'deviceSerialNumber' => 'required|string|max:255',
-            'router_id' => 'required|exists:routers,id',
-            'username' => 'required|unique:internet_customers,username',
-            'password' => 'required',
-            'local_address' => 'nullable|ip|unique:internet_customers,local_address',
-            'optical_distribution_id' => 'required|exists:optical_distributions,id',  // BARU: Wajib
-            'grouping_id' => 'nullable|string|max:255',                                // BARU: Opsional
-        ], [
-            'deviceSerialNumber.required' => 'Serial Number wajib diisi',
-            'currentInstallationId.required' => 'Customer ID tidak valid',
-            'currentInstallationId.exists' => 'Customer tidak ditemukan',
-            'username.unique' => 'Username PPPoE sudah digunakan',
-            'local_address.unique' => 'Alamat IP lokal sudah terdaftar',
-            'optical_distribution_id.required' => 'ODP wajib dipilih',           // BARU
-            'optical_distribution_id.exists' => 'ODP tidak valid',               // BARU
-        ]);
+        // Ambil customer lebih awal untuk tahu access_type
+        $customer = InternetCustomer::findOrFail($this->currentInstallationId);
+        $isHotspot = ($customer->access_type === 'hotspot');
+
+        // Router dari hotspot server jika hotspot
+        if ($isHotspot && $hotspot_server_id) {
+            $hs = HotspotServer::find($hotspot_server_id);
+            $this->router_id = $hs?->router_id;
+        } else {
+            $this->router_id        = $routerId;
+            $this->override_pool_id = $override_pool_id;
+            $this->local_address    = $local_address;
+        }
+
+        // Validasi kondisional
+        $rules = [
+            'currentInstallationId'  => 'required|exists:internet_customers,id',
+            'deviceSerialNumber'     => 'required|string|max:255',
+            'username'               => 'required|unique:internet_customers,username',
+            'password'               => 'required',
+            'optical_distribution_id'=> 'required|exists:optical_distributions,id',
+            'grouping_id'            => 'nullable|string|max:255',
+        ];
+        $messages = [
+            'deviceSerialNumber.required'      => 'Serial Number wajib diisi',
+            'username.unique'                  => 'Username sudah digunakan',
+            'optical_distribution_id.required' => 'ODP wajib dipilih',
+            'optical_distribution_id.exists'   => 'ODP tidak valid',
+        ];
+
+        if ($isHotspot) {
+            $rules['hotspot_server_id'] = 'required|exists:hotspot_servers,id';
+            $rules['ip_address']        = 'nullable|ip';
+            $rules['mac_address']       = 'nullable|string|max:32';
+            $messages['hotspot_server_id.required'] = 'Hotspot Server wajib dipilih';
+        } else {
+            $rules['router_id']    = 'required|exists:routers,id';
+            $rules['local_address']= 'nullable|ip|unique:internet_customers,local_address';
+            $messages['local_address.unique'] = 'Alamat IP lokal sudah terdaftar';
+        }
+
+        $this->validate($rules, $messages);
 
         DB::beginTransaction();
         try {
-            // 1. Ambil customer
-            $customer = InternetCustomer::findOrFail($this->currentInstallationId);
-            
-            Log::info('Customer found', ['id' => $customer->id, 'code' => $customer->code]);
-            
-            // 2. UPDATED: Update customer dengan field baru
-            $customer->update([
-                'grouping_id' => $grouping_id,
-                'status' => ParamSchema::INSTALLED,
-                'local_address' => $local_address,
-                'router_id' => $routerId,
-                'username' => $username,
-                'pass_hash' => $password,
-                'override_pool_id' => $override_pool_id ?: null,
-                'optical_distribution_id' => $optical_distribution_id,  // BARU
-            ]);
+            Log::info('Customer found', ['id' => $customer->id, 'code' => $customer->code, 'access_type' => $customer->access_type]);
+
+            // Base update data
+            $updateData = [
+                'grouping_id'            => $grouping_id,
+                'status'                 => ParamSchema::INSTALLED,
+                'router_id'              => $this->router_id,
+                'username'               => $username,
+                'pass_hash'              => $password,
+                'optical_distribution_id'=> $optical_distribution_id,
+            ];
+
+            if ($isHotspot) {
+                $updateData['hotspot_server_id'] = $hotspot_server_id;
+                $updateData['ip_binding_type']   = $ip_binding_type ?: null;
+                $updateData['ip_binding_mode']   = $ip_binding_mode ?: null;
+                $updateData['ip_address']        = $ip_address ?: null;
+                $updateData['mac_address']       = $mac_address ?: null;
+            } else {
+                $updateData['local_address']    = $local_address;
+                $updateData['override_pool_id'] = $override_pool_id ?: null;
+            }
+
+            $customer->update($updateData);
             
             dispatch(new \App\Jobs\ProvisionCustomerJob($customer->id));
 
@@ -530,8 +595,8 @@ class InternetCustomerIndex extends Component
             }else
             {
                 $post['status'] = ParamSchema::REACTIVATED;
-                dispatch(new ProvisionCustomerJob($internetCustomers->id));
-                \App\Jobs\SyncInstalledCustomersJob::dispatch([$internetCustomers->id]);
+                dispatch(new ProvisionCustomerJob($internetPurchase->internet_customer_id));
+                \App\Jobs\SyncInstalledCustomersJob::dispatch([$internetPurchase->internet_customer_id]);
             }
 
             GenerateInternetPurchaseCouponJob::dispatch($internetPurchase->customer->id, $internetPurchase->id, $internetPurchase->payment_months);

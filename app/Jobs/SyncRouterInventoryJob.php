@@ -4,7 +4,7 @@ namespace App\Jobs;
 
 use App\Models\{
     Router, RouterInterface, AddressPool, InternetPackage,
-    PackageRouterProfile, InternetCustomer, PppoeServer
+    PackageRouterProfile, InternetCustomer, PppoeServer, HotspotServer
 };
 use App\Services\RouterOSService;
 use Illuminate\Bus\Queueable;
@@ -37,7 +37,8 @@ class SyncRouterInventoryJob implements ShouldQueue
         public bool $withSecrets      = false,
         public bool $withSessions     = false,
         public bool $withPppoe        = false,
-        public bool $ensureProfiles   = false  // create/update profile di router sesuai paket
+        public bool $withHotspot      = false,  // sync hotspot servers dari MikroTik
+        public bool $ensureProfiles   = false   // create/update profile di router sesuai paket
     ) {}
 
     // public function middleware(): array
@@ -95,6 +96,15 @@ class SyncRouterInventoryJob implements ShouldQueue
                 $this->syncPppoeServers($c, $router);
             } catch (Throwable $e) {
                 \Log::warning('[SyncRouter] pppoe servers fail', ['router_id'=>$router->id, 'error'=>$e->getMessage()]);
+            }
+        }
+
+        // ---- 3b) Hotspot servers (opsional)
+        if ($this->withHotspot) {
+            try {
+                $this->syncHotspotServers($c, $router);
+            } catch (Throwable $e) {
+                \Log::warning('[SyncRouter] hotspot servers fail', ['router_id'=>$router->id, 'error'=>$e->getMessage()]);
             }
         }
 
@@ -160,6 +170,29 @@ class SyncRouterInventoryJob implements ShouldQueue
                     'meta' => $row,
                 ]
             );
+        }
+
+        // Pastikan bridge interfaces tersync — beberapa versi RouterOS tidak selalu
+        // mengembalikan bridge dengan type='bridge' di /interface/print
+        try {
+            $bridges = $c->query(new Query('/interface/bridge/print'))->read();
+            foreach ($bridges as $row) {
+                $name = $row['name'] ?? null;
+                if (!$name) continue;
+
+                RouterInterface::updateOrCreate(
+                    ['router_id' => $router->id, 'name' => $name],
+                    [
+                        'role' => 'management',
+                        'meta' => array_merge($row, ['type' => 'bridge']),
+                    ]
+                );
+            }
+        } catch (Throwable $e) {
+            \Log::warning('[SyncRouter] bridge interface sync fail', [
+                'router_id' => $router->id,
+                'error'     => $e->getMessage(),
+            ]);
         }
     }
 
@@ -242,6 +275,66 @@ class SyncRouterInventoryJob implements ShouldQueue
         if ($seen) {
             PppoeServer::where('router_id', $router->id)
                 ->whereNotIn('service_name', $seen)
+                ->delete();
+        }
+    }
+
+    /**
+     * Sync hotspot servers dari MikroTik → tabel hotspot_servers.
+     * Endpoint: /ip/hotspot/print
+     *
+     * Field yang di-sync: name, interface, address-pool, profile, disabled
+     * Hotspot yg tidak ada lagi di router akan di-softDelete.
+     */
+    private function syncHotspotServers($c, Router $router): void
+    {
+        $rows = $c->query(new Query('/ip/hotspot/print'))->read();
+
+        $seen = [];
+        foreach ($rows as $hs) {
+            $name = $hs['name'] ?? null;
+            if (!$name) continue;
+            $seen[] = $name;
+
+            // Resolve interface
+            $iface = null;
+            if (!empty($hs['interface'])) {
+                $iface = RouterInterface::where('router_id', $router->id)
+                    ->where('name', $hs['interface'])
+                    ->first();
+            }
+
+            // Resolve address pool
+            $pool = null;
+            if (!empty($hs['address-pool'])) {
+                $pool = AddressPool::where('router_id', $router->id)
+                    ->where('name', $hs['address-pool'])
+                    ->first();
+            }
+
+            HotspotServer::updateOrCreate(
+                ['router_id' => $router->id, 'name' => $name],
+                [
+                    'interface_id'    => $iface?->id,
+                    'address_pool_id' => $pool?->id,
+                    'profile_name'    => $hs['profile'] ?? null,
+                    'dns_name'        => $hs['dns-name'] ?? null,
+                    'meta'            => $hs,
+                ]
+            );
+
+            \Log::info('[SyncRouter] hotspot server synced', [
+                'router_id' => $router->id,
+                'name'      => $name,
+                'interface' => $hs['interface'] ?? null,
+                'pool'      => $hs['address-pool'] ?? null,
+            ]);
+        }
+
+        // Soft-delete hotspot server yang sudah tidak ada di router
+        if ($seen) {
+            HotspotServer::where('router_id', $router->id)
+                ->whereNotIn('name', $seen)
                 ->delete();
         }
     }

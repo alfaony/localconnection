@@ -818,6 +818,7 @@ class InternetCustomerForm extends Component
                 // 'code' => $this->code(),
                 'subdistrict_id' => $this->subdistrict_id,
                 'internet_package_id' => $this->internet_package_id,
+                'access_type' => $this->selectedPackage->access_type ?? 'pppoe',
                 'name' => $this->name,
                 'address' => $this->address,
                 'ktp_number' => $this->ktp_number,

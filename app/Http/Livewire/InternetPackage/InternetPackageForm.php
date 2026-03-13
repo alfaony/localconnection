@@ -27,6 +27,13 @@ class InternetPackageForm extends Component
     public $fup_rate_down_mbps = 0;
     public $fup_rate_up_mbps = 0;
     public $quota_bytes = 0;
+    public int $session_timeout_seconds = 0;
+
+    // Helper konversi satuan untuk hotspot_voucher
+    public string $timeout_value = '0';
+    public string $timeout_unit  = 'seconds';
+    public string $quota_value   = '0';
+    public string $quota_unit    = 'MB';
 
     // ============= REGION =============
     // Konsep baru: wilayah hanya sebagai register ketersediaan.
@@ -43,27 +50,31 @@ class InternetPackageForm extends Component
     public $regionCities = [];
     public $regionDistricts = [];
 
-    protected $rules = [
-        'name'             => 'required|string|max:255',
-        'bandwidth'        => 'required|integer|min:1',
-        'type'             => 'required|in:dedicated,broadband',
-        'price'            => 'required|numeric|min:0',
-        'price_nett'       => 'required|numeric|min:0',
-        'description'      => 'nullable|string',
-        'is_active'        => 'boolean',
-        'access_type'      => 'required|in:pppoe,hotspot,ipoe',
-        'rate_down_mbps'   => 'required|integer|min:1',
-        'rate_up_mbps'     => 'required|integer|min:1',
-        'fup_rate_down_mbps' => 'nullable|integer|min:0',
-        'fup_rate_up_mbps'   => 'nullable|integer|min:0',
-        'quota_bytes'        => 'nullable|integer|min:0',
+    protected function rules(): array
+    {
+        return [
+            'name'             => 'required|string|max:255',
+            'bandwidth'        => 'required|integer|min:1',
+            'type'             => 'required|in:dedicated,broadband',
+            'price'            => 'required|numeric|min:0',
+            'price_nett'       => 'required|numeric|min:0',
+            'description'      => 'nullable|string',
+            'is_active'        => 'boolean',
+            'access_type'      => 'required|in:pppoe,hotspot,ipoe',
+            'rate_down_mbps'   => 'required|integer|min:1',
+            'rate_up_mbps'     => 'required|integer|min:1',
+            'fup_rate_down_mbps'      => 'nullable|integer|min:0',
+            'fup_rate_up_mbps'        => 'nullable|integer|min:0',
+            'quota_bytes'             => 'nullable|integer|min:0',
+            'session_timeout_seconds' => 'nullable|integer|min:0',
 
-        // Region form (tanpa price)
-        'region_type'        => 'required|in:province,city,district',
-        'region_province_id' => 'required_if:region_type,province,city,district|nullable|integer',
-        'region_city_id'     => 'required_if:region_type,city,district|nullable|integer',
-        'region_district_id' => 'required_if:region_type,district|nullable|integer',
-    ];
+            // Region form
+            'region_type'        => 'required|in:province,city,district',
+            'region_province_id' => 'required_if:region_type,province,city,district|nullable|integer',
+            'region_city_id'     => 'required_if:region_type,city,district|nullable|integer',
+            'region_district_id' => 'required_if:region_type,district|nullable|integer',
+        ];
+    }
 
     public function mount($id = null)
     {
@@ -82,7 +93,14 @@ class InternetPackageForm extends Component
             $this->rate_up_mbps     = $package->rate_up_mbps ?? $this->bandwidth;
             $this->fup_rate_down_mbps = $package->fup_rate_down_mbps;
             $this->fup_rate_up_mbps   = $package->fup_rate_up_mbps;
-            $this->quota_bytes        = $package->quota_bytes;
+            $this->quota_bytes              = $package->quota_bytes ?? 0;
+            $this->session_timeout_seconds  = $package->session_timeout_seconds ?? 0;
+
+            // Init helper state untuk hotspot
+            if ($package->access_type === 'hotspot') {
+                $this->initTimeoutHelpers($this->session_timeout_seconds);
+                $this->initQuotaHelpers($this->quota_bytes);
+            }
 
             // Load existing regions
             $this->regions = $package->regions->map(function ($r) {
@@ -96,6 +114,77 @@ class InternetPackageForm extends Component
                     'region_type_badge' => $r->region_type_badge_color,
                 ];
             })->toArray();
+        }
+    }
+
+    // ============= HOTSPOT TIMEOUT/QUOTA HELPERS =============
+
+    public function updatedAccessType(): void
+    {
+        if ($this->access_type !== 'hotspot') {
+            $this->session_timeout_seconds = 0;
+            $this->timeout_value = '0';
+            $this->timeout_unit  = 'seconds';
+            $this->quota_bytes   = 0;
+            $this->quota_value   = '0';
+            $this->quota_unit    = 'MB';
+        }
+    }
+
+    public function updatedTimeoutValue(): void { $this->recalcTimeout(); }
+    public function updatedTimeoutUnit(): void  { $this->recalcTimeout(); }
+    public function updatedQuotaValue(): void   { $this->recalcQuota(); }
+    public function updatedQuotaUnit(): void    { $this->recalcQuota(); }
+
+    private function recalcTimeout(): void
+    {
+        $val = (int) $this->timeout_value;
+        $this->session_timeout_seconds = match ($this->timeout_unit) {
+            'minutes' => $val * 60,
+            'hours'   => $val * 3600,
+            'days'    => $val * 86400,
+            default   => $val,
+        };
+    }
+
+    private function recalcQuota(): void
+    {
+        $val = (float) $this->quota_value;
+        $this->quota_bytes = (int) match ($this->quota_unit) {
+            'GB' => $val * 1024 * 1024 * 1024,
+            default => $val * 1024 * 1024,
+        };
+    }
+
+    private function initTimeoutHelpers(int $seconds): void
+    {
+        if ($seconds <= 0) { return; }
+        if ($seconds % 86400 === 0) {
+            $this->timeout_value = (string) ($seconds / 86400);
+            $this->timeout_unit  = 'days';
+        } elseif ($seconds % 3600 === 0) {
+            $this->timeout_value = (string) ($seconds / 3600);
+            $this->timeout_unit  = 'hours';
+        } elseif ($seconds % 60 === 0) {
+            $this->timeout_value = (string) ($seconds / 60);
+            $this->timeout_unit  = 'minutes';
+        } else {
+            $this->timeout_value = (string) $seconds;
+            $this->timeout_unit  = 'seconds';
+        }
+    }
+
+    private function initQuotaHelpers(int $bytes): void
+    {
+        if ($bytes <= 0) { return; }
+        $gb = 1024 * 1024 * 1024;
+        $mb = 1024 * 1024;
+        if ($bytes % $gb === 0) {
+            $this->quota_value = (string) ($bytes / $gb);
+            $this->quota_unit  = 'GB';
+        } else {
+            $this->quota_value = (string) round($bytes / $mb, 2);
+            $this->quota_unit  = 'MB';
         }
     }
 
@@ -215,34 +304,26 @@ class InternetPackageForm extends Component
 
     public function save()
     {
-        $this->validate([
-            'name'           => 'required|string|max:255',
-            'bandwidth'      => 'required|integer|min:1',
-            'type'           => 'required|in:dedicated,broadband',
-            'price'          => 'required|numeric|min:0',
-            'price_nett'     => 'required|numeric|min:0',
-            'description'    => 'nullable|string',
-            'is_active'      => 'boolean',
-            'access_type'    => 'required|in:pppoe,hotspot,ipoe',
-            'rate_down_mbps' => 'required|integer|min:1',
-            'rate_up_mbps'   => 'required|integer|min:1',
-        ]);
+        $this->validate();
+
+        $isHotspot = $this->access_type === 'hotspot';
 
         $data = [
-            'company_id'        => Auth::user()->company_id,
-            'name'              => $this->name,
-            'bandwidth'         => $this->bandwidth,
-            'type'              => $this->type,
-            'price'             => $this->price,
-            'price_nett'        => $this->price_nett,
-            'description'       => $this->description,
-            'is_active'         => $this->is_active,
-            'access_type'       => $this->access_type,
-            'rate_down_mbps'    => $this->rate_down_mbps,
-            'rate_up_mbps'      => $this->rate_up_mbps,
-            'fup_rate_down_mbps' => $this->fup_rate_down_mbps,
-            'fup_rate_up_mbps'  => 0,
-            'quota_bytes'       => 0,
+            'company_id'              => Auth::user()->company_id,
+            'name'                    => $this->name,
+            'bandwidth'               => $this->bandwidth,
+            'type'                    => $this->type,
+            'price'                   => $this->price,
+            'price_nett'              => $this->price_nett,
+            'description'             => $this->description,
+            'is_active'               => $this->is_active,
+            'access_type'             => $this->access_type,
+            'rate_down_mbps'          => $this->rate_down_mbps,
+            'rate_up_mbps'            => $this->rate_up_mbps,
+            'fup_rate_down_mbps'      => $this->fup_rate_down_mbps,
+            'fup_rate_up_mbps'        => 0,
+            'quota_bytes'             => $isHotspot ? $this->quota_bytes : null,
+            'session_timeout_seconds' => $isHotspot ? $this->session_timeout_seconds : null,
         ];
 
         DB::transaction(function () use ($data) {

@@ -9,6 +9,7 @@ use App\Models\Router;
 use App\Models\InternetCustomer;
 use App\Models\InternetPackage;
 use App\Models\PppoeServer;
+use App\Models\HotspotVoucher;
 use App\Services\PoolResolver;
 
 
@@ -161,6 +162,205 @@ private function plainFromHash(?string $hash): ?string
     return null;
 }
 
+
+// ============================================================
+// HOTSPOT METHODS
+// ============================================================
+
+/**
+ * Pastikan hotspot user profile ada di MikroTik.
+ * Endpoint: /ip/hotspot/user/profile
+ */
+public function ensureHotspotUserProfile(
+    Client $c,
+    string $profileName,
+    string $rate,
+    ?int $sessionTimeout = null,
+    ?int $idleTimeout = null
+): void {
+    $exists = $c->query((new Query('/ip/hotspot/user/profile/print'))->where('name', $profileName))->read();
+
+    if (empty($exists)) {
+        $q = (new Query('/ip/hotspot/user/profile/add'))
+            ->equal('name', $profileName)
+            ->equal('rate-limit', $rate);
+        if ($sessionTimeout > 0) $q->equal('session-timeout', $sessionTimeout . 's');
+        if ($idleTimeout > 0)    $q->equal('idle-timeout', $idleTimeout . 's');
+        $c->query($q)->read();
+        return;
+    }
+
+    $q = (new Query('/ip/hotspot/user/profile/set'))
+        ->equal('.id', $exists[0]['.id'])
+        ->equal('rate-limit', $rate);
+    if ($sessionTimeout > 0) $q->equal('session-timeout', $sessionTimeout . 's');
+    if ($idleTimeout > 0)    $q->equal('idle-timeout', $idleTimeout . 's');
+    $c->query($q)->read();
+}
+
+/**
+ * Tambah atau update hotspot user di MikroTik.
+ * Endpoint: /ip/hotspot/user
+ */
+public function upsertHotspotUser(Client $c, InternetCustomer $cust, string $profile): void
+{
+    $pwd  = trim((string) $cust->pass_hash) ?: 'admin123';
+    $row  = $c->query((new Query('/ip/hotspot/user/print'))->where('comment', $cust->id))->read()[0] ?? null;
+
+    if (!$row) {
+        $q = (new Query('/ip/hotspot/user/add'))
+            ->equal('name', $cust->username)
+            ->equal('password', $pwd)
+            ->equal('profile', $profile)
+            ->equal('comment', $cust->id);
+        $c->query($q)->read();
+    } else {
+        $q = (new Query('/ip/hotspot/user/set'))
+            ->equal('.id', $row['.id'])
+            ->equal('name', $cust->username)
+            ->equal('password', $pwd)
+            ->equal('profile', $profile);
+        $c->query($q)->read();
+    }
+}
+
+/**
+ * Disable hotspot user (tidak hapus, hanya disabled).
+ */
+public function disableHotspotUser(Client $c, string $username): void
+{
+    if (!$username) return;
+    $rows = $c->query((new Query('/ip/hotspot/user/print'))->where('name', $username))->read();
+    if (empty($rows)) return;
+    $c->query(
+        (new Query('/ip/hotspot/user/set'))
+            ->equal('.id', $rows[0]['.id'])
+            ->equal('disabled', 'yes')
+    )->read();
+}
+
+/**
+ * Hapus hotspot user dari MikroTik.
+ */
+public function removeHotspotUser(Client $c, string $username): void
+{
+    if (!$username) return;
+    $rows = $c->query((new Query('/ip/hotspot/user/print'))->where('name', $username))->read();
+    foreach ($rows as $row) {
+        $c->query((new Query('/ip/hotspot/user/remove'))->equal('.id', $row['.id']))->read();
+    }
+}
+
+/**
+ * Putus sesi hotspot yang sedang aktif.
+ */
+public function disconnectHotspotUser(Client $c, string $username): void
+{
+    if (!$username) return;
+    $actives = $c->query((new Query('/ip/hotspot/active/print'))->where('user', $username))->read();
+    foreach ($actives as $a) {
+        $c->query((new Query('/ip/hotspot/active/remove'))->equal('.id', $a['.id']))->read();
+    }
+}
+
+/**
+ * Tambah IP Binding di hotspot MikroTik.
+ * $type: 'regular' (login tetap, IP fixed) | 'bypassed' (tanpa login)
+ * Binding bisa by IP, by MAC, atau keduanya.
+ */
+public function addHotspotIpBinding(
+    Client $c,
+    string $serverName,
+    ?string $ip,
+    ?string $mac,
+    string $type = 'regular'
+): void {
+    if (!$ip && !$mac) return;
+
+    // Cek existing binding (by MAC atau IP)
+    $q = new Query('/ip/hotspot/ip-binding/print');
+    if ($mac) $q->where('mac-address', $mac);
+    elseif ($ip) $q->where('address', $ip);
+    $existing = $c->query($q)->read()[0] ?? null;
+
+    if ($existing) {
+        $upd = (new Query('/ip/hotspot/ip-binding/set'))
+            ->equal('.id', $existing['.id'])
+            ->equal('type', $type)
+            ->equal('server', $serverName);
+        if ($ip)  $upd->equal('address', $ip);
+        if ($mac) $upd->equal('mac-address', $mac);
+        $c->query($upd)->read();
+    } else {
+        $add = (new Query('/ip/hotspot/ip-binding/add'))
+            ->equal('type', $type)
+            ->equal('server', $serverName);
+        if ($ip)  $add->equal('address', $ip);
+        if ($mac) $add->equal('mac-address', $mac);
+        $c->query($add)->read();
+    }
+}
+
+/**
+ * Hapus IP Binding hotspot.
+ */
+public function removeHotspotIpBinding(Client $c, ?string $ip, ?string $mac): void
+{
+    if (!$ip && !$mac) return;
+    $q = new Query('/ip/hotspot/ip-binding/print');
+    if ($mac) $q->where('mac-address', $mac);
+    elseif ($ip) $q->where('address', $ip);
+    $rows = $c->query($q)->read();
+    foreach ($rows as $row) {
+        $c->query((new Query('/ip/hotspot/ip-binding/remove'))->equal('.id', $row['.id']))->read();
+    }
+}
+
+/**
+ * Tambah/update voucher hotspot di MikroTik local.
+ * Set time-limit dan limit-bytes-total dari profile voucher.
+ */
+public function upsertVoucherOnMikrotik(Client $c, HotspotVoucher $voucher): void
+{
+    $profile  = $voucher->internetPackage;
+    $rate     = "{$profile->rate_down_mbps}M/{$profile->rate_up_mbps}M";
+    $pwd      = $voucher->password;
+
+    // Pastikan profile voucher ada
+    $this->ensureHotspotUserProfile(
+        $c,
+        'VOC_' . $voucher->internet_package_id,
+        $rate,
+        $profile->session_timeout_seconds ?: null,
+        null
+    );
+
+    $existing = $c->query((new Query('/ip/hotspot/user/print'))->where('name', $voucher->username))->read()[0] ?? null;
+
+    if (!$existing) {
+        $q = (new Query('/ip/hotspot/user/add'))
+            ->equal('name', $voucher->username)
+            ->equal('password', $pwd)
+            ->equal('profile', 'VOC_' . $voucher->internet_package_id)
+            ->equal('comment', $voucher->id);
+
+        if ($profile->quota_bytes > 0) {
+            $q->equal('limit-bytes-total', (string) $profile->quota_bytes);
+        }
+        $c->query($q)->read();
+    } else {
+        $q = (new Query('/ip/hotspot/user/set'))
+            ->equal('.id', $existing['.id'])
+            ->equal('password', $pwd)
+            ->equal('profile', 'VOC_' . $voucher->internet_package_id);
+        if ($profile->quota_bytes > 0) {
+            $q->equal('limit-bytes-total', (string) $profile->quota_bytes);
+        }
+        $c->query($q)->read();
+    }
+}
+
+// ============================================================
 
 private function addOrSetProfile(
     Client $c,

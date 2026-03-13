@@ -116,6 +116,9 @@ class InternetCustomer extends Model
         'optical_distribution_id',
         'grouping_id',
         'action_user_id',
+        'hotspot_server_id',
+        'ip_binding_type',
+        'ip_binding_mode',
     ];
 
     // ✅ RELATIONS
@@ -177,6 +180,11 @@ class InternetCustomer extends Model
     public function router()
     {
         return $this->belongsTo(Router::class);
+    }
+
+    public function hotspotServer()
+    {
+        return $this->belongsTo(HotspotServer::class, 'hotspot_server_id');
     }
 
     public function odp()

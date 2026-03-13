@@ -28,7 +28,8 @@
                                             <label for="name" class="form-label">Nama Paket <span class="text-danger">*</span></label>
                                             <div class="input-group">
                                                 <span class="input-group-text"><i class="fas fa-tag"></i></span>
-                                                <input type="text" class="form-control" id="name" wire:model="name" placeholder="Contoh: Paket Internet 50Mbps">
+                                                <input type="text" class="form-control" id="name" wire:model="name"
+                                                    placeholder="Contoh: Paket Internet 50Mbps">
                                             </div>
                                             @error('name') <div class="text-danger small mt-1">{{ $message }}</div> @enderror
                                         </div>
@@ -68,6 +69,8 @@
                                                 <select class="form-control" id="access_type" wire:model="access_type">
                                                     <option value="" selected>Pilih Tipe</option>
                                                     <option value="pppoe">PPPoE</option>
+                                                    <option value="hotspot">Hotspot</option>
+                                                    <option value="ipoe">IPoE</option>
                                                 </select>
                                             </div>
                                             @error('access_type') <div class="text-danger small mt-1">{{ $message }}</div> @enderror
@@ -96,6 +99,47 @@
                                 </div>
                             </div>
                         </div>
+
+                        {{-- HOTSPOT: DURASI & QUOTA --}}
+                        @if($access_type === 'hotspot')
+                        <div class="card mb-4 border-warning">
+                            <div class="card-header bg-warning text-dark py-2">
+                                <h6 class="mb-0"><i class="fas fa-ticket-alt me-1"></i> Pengaturan Hotspot <small class="fw-normal">(Voucher / Session)</small></h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label class="form-label">Durasi Waktu <small class="text-muted">(0 = Unlimited)</small></label>
+                                            <div class="input-group">
+                                                <input wire:model="timeout_value" type="number" min="0" class="form-control">
+                                                <select wire:model="timeout_unit" class="form-control" style="max-width:110px">
+                                                    <option value="seconds">Detik</option>
+                                                    <option value="minutes">Menit</option>
+                                                    <option value="hours">Jam</option>
+                                                    <option value="days">Hari</option>
+                                                </select>
+                                            </div>
+                                            <small class="text-muted">= {{ $session_timeout_seconds }} detik</small>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label class="form-label">Quota Data <small class="text-muted">(0 = Unlimited)</small></label>
+                                            <div class="input-group">
+                                                <input wire:model="quota_value" type="number" min="0" step="0.1" class="form-control">
+                                                <select wire:model="quota_unit" class="form-control" style="max-width:80px">
+                                                    <option value="MB">MB</option>
+                                                    <option value="GB">GB</option>
+                                                </select>
+                                            </div>
+                                            <small class="text-muted">= {{ number_format($quota_bytes) }} bytes</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        @endif
 
                         {{-- WILAYAH PAKET --}}
                         <div class="card mb-4">

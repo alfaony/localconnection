@@ -30,10 +30,14 @@ class InternetPackage extends Model
         'quota_bytes',
         'version',
         'meta',
+        'session_timeout_seconds',
+        'idle_timeout_seconds',
     ];
 
     protected $casts = [
-        'is_active' => 'boolean'
+        'is_active'               => 'boolean',
+        'session_timeout_seconds' => 'integer',
+        'idle_timeout_seconds'    => 'integer',
     ];
 
     public function company()
@@ -88,6 +92,39 @@ class InternetPackage extends Model
     public function regionDistricts(): HasMany
     {
         return $this->hasMany(InternetPackageRegion::class)->where('region_type', 'district');
+    }
+
+    public function hotspotVoucherBatches(): HasMany
+    {
+        return $this->hasMany(HotspotVoucherBatch::class, 'internet_package_id');
+    }
+
+    // ==================== HOTSPOT VOUCHER ACCESSORS ====================
+
+    /** Label durasi human-readable, misal "1 Jam", "1 Hari", "Unlimited" */
+    public function getDurationLabelAttribute(): string
+    {
+        $s = (int) $this->session_timeout_seconds;
+        if ($s <= 0) return 'Unlimited';
+        if ($s < 3600) return ($s / 60) . ' Menit';
+        if ($s < 86400) return ($s / 3600) . ' Jam';
+        return ($s / 86400) . ' Hari';
+    }
+
+    /** Label quota human-readable, misal "1 GB", "500 MB", "Unlimited" */
+    public function getQuotaLabelAttribute(): string
+    {
+        $b = (int) $this->quota_bytes;
+        if ($b <= 0) return 'Unlimited';
+        if ($b < 1024 * 1024) return round($b / 1024, 1) . ' KB';
+        if ($b < 1024 * 1024 * 1024) return round($b / (1024 * 1024), 1) . ' MB';
+        return round($b / (1024 * 1024 * 1024), 2) . ' GB';
+    }
+
+    /** Rate string untuk MikroTik: "10M/5M" */
+    public function getRateLimitAttribute(): string
+    {
+        return "{$this->rate_down_mbps}M/{$this->rate_up_mbps}M";
     }
 
     /**

@@ -6,6 +6,7 @@ use App\Models\InternetCustomer;
 use App\Models\InternetPackage;
 use App\Models\Router;
 use App\Models\PackageRouterProfile;
+use App\Models\HotspotServer;
 use App\Services\RadiusService;
 use App\Services\RouterOSService;
 use Exception;
@@ -32,7 +33,7 @@ class ProvisionCustomerJob implements ShouldQueue
 
     public function handle(RadiusService $radius): void
     {
-        $cust = InternetCustomer::with(['internetPackage', 'router'])->findOrFail($this->internetCustomerId);
+        $cust = InternetCustomer::with(['internetPackage', 'router', 'hotspotServer'])->findOrFail($this->internetCustomerId);
 
         try {
             /** @var Router $router */
@@ -46,34 +47,67 @@ class ProvisionCustomerJob implements ShouldQueue
             $groupName = $map->ros_profile ?? ('PKG_' . $pkg->id);
 
             // ==========================================
-            // DIRECT API: PPP Profile setup (selalu jalan)
+            // Route berdasarkan access_type
             // ==========================================
-            $this->ensureProfileOnRouter($router, $pkg, $groupName);
-
-            // ==========================================
-            // Auth berdasarkan status
-            // ==========================================
-            if (RadiusService::isEnabled()) {
-                // 🟢 RADIUS MODE: RADIUS primary + Direct API fallback
-                if ($cust->status == ParamSchema::INSTALLED) {
-                    $this->handleInstall($radius, $cust, $pkg, $groupName, $router);
-                } elseif ($cust->status == ParamSchema::SUSPENDED) {
-                    $this->handleSuspend($radius, $cust, $router);
-                } elseif ($cust->status == ParamSchema::REACTIVATED) {
-                    $this->handleReactivate($radius, $cust, $pkg, $groupName, $router);
-                }
+            if ($cust->access_type === 'hotspot') {
+                $this->handleHotspot($radius, $cust, $pkg, $groupName, $router);
             } else {
-                // 🔴 DIRECT API MODE: langsung ke Mikrotik
-                Log::info('[ProvisionJob] RADIUS disabled → Direct API mode', [
-                    'customer' => $cust->username, 'status' => $cust->status,
-                ]);
-                $this->handleDirectApiOnly($cust, $groupName, $router);
+                // Default: PPPoE flow (tidak berubah)
+                $this->handlePppoe($radius, $cust, $pkg, $groupName, $router);
             }
 
         } catch (\Throwable $th) {
             Log::error('[ProvisionJob] Error: ' . $th->getMessage(), [
                 'customer_id' => $this->internetCustomerId,
             ]);
+        }
+    }
+
+    /**
+     * PPPoE flow (existing logic, tidak berubah)
+     */
+    protected function handlePppoe(RadiusService $radius, InternetCustomer $cust, InternetPackage $pkg, string $groupName, Router $router): void
+    {
+        // DIRECT API: PPP Profile setup (selalu jalan)
+        $this->ensureProfileOnRouter($router, $pkg, $groupName);
+
+        if (RadiusService::isEnabled()) {
+            if ($cust->status == ParamSchema::INSTALLED) {
+                $this->handleInstall($radius, $cust, $pkg, $groupName, $router);
+            } elseif ($cust->status == ParamSchema::SUSPENDED) {
+                $this->handleSuspend($radius, $cust, $router);
+            } elseif ($cust->status == ParamSchema::REACTIVATED) {
+                $this->handleReactivate($radius, $cust, $pkg, $groupName, $router);
+            }
+        } else {
+            Log::info('[ProvisionJob] RADIUS disabled → Direct API mode', [
+                'customer' => $cust->username, 'status' => $cust->status,
+            ]);
+            $this->handleDirectApiOnly($cust, $groupName, $router);
+        }
+    }
+
+    /**
+     * Hotspot flow (RADIUS primary + Direct fallback)
+     */
+    protected function handleHotspot(RadiusService $radius, InternetCustomer $cust, InternetPackage $pkg, string $groupName, Router $router): void
+    {
+        // Ensure hotspot user profile di MikroTik (selalu jalan)
+        $this->ensureHotspotProfileOnRouter($router, $pkg, $groupName);
+
+        if (RadiusService::isEnabled()) {
+            if ($cust->status == ParamSchema::INSTALLED) {
+                $this->handleHotspotInstall($radius, $cust, $pkg, $groupName, $router);
+            } elseif ($cust->status == ParamSchema::SUSPENDED) {
+                $this->handleHotspotSuspend($radius, $cust, $router);
+            } elseif ($cust->status == ParamSchema::REACTIVATED) {
+                $this->handleHotspotReactivate($radius, $cust, $pkg, $groupName, $router);
+            }
+        } else {
+            Log::info('[ProvisionJob] RADIUS disabled → Hotspot Direct API mode', [
+                'customer' => $cust->username, 'status' => $cust->status,
+            ]);
+            $this->handleHotspotDirectApiOnly($cust, $groupName, $router);
         }
     }
 
@@ -249,6 +283,173 @@ class ProvisionCustomerJob implements ShouldQueue
                 'customer' => $cust->username,
                 'error'    => $e->getMessage(),
             ]);
+        }
+    }
+
+    // ============================================================
+    // HOTSPOT METHODS
+    // ============================================================
+
+    /**
+     * Pastikan hotspot user profile ada di router (selalu Direct API)
+     */
+    protected function ensureHotspotProfileOnRouter(Router $router, InternetPackage $pkg, string $profileName): void
+    {
+        try {
+            $ros    = app(RouterOSService::class);
+            $client = $ros->client($router);
+            $down   = (int)($pkg->rate_down_mbps ?? $pkg->bandwidth ?? 0);
+            $up     = (int)($pkg->rate_up_mbps ?? max(1, (int)ceil(($pkg->bandwidth ?? 1) * 0.2)));
+            $rate   = "{$down}M/{$up}M";
+
+            $ros->ensureHotspotUserProfile(
+                $client,
+                $profileName,
+                $rate,
+                $pkg->session_timeout_seconds ?: null,
+                $pkg->idle_timeout_seconds ?: null
+            );
+
+            Log::info('[ProvisionJob] Hotspot profile ensured', ['router' => $router->name, 'profile' => $profileName]);
+        } catch (\Throwable $e) {
+            Log::warning('[ProvisionJob] Hotspot profile setup failed (non-fatal)', [
+                'router' => $router->name, 'error' => $e->getMessage(),
+            ]);
+        }
+    }
+
+    /**
+     * HOTSPOT INSTALLED: RADIUS primary + Direct fallback
+     */
+    protected function handleHotspotInstall(RadiusService $radius, InternetCustomer $cust, InternetPackage $pkg, string $groupName, Router $router): void
+    {
+        try {
+            $radius->ensureGroup($pkg, $groupName);
+            $radius->upsertUser($cust, $groupName);
+
+            Log::info('[ProvisionJob] HOTSPOT INSTALLED via RADIUS ✅', ['customer' => $cust->username]);
+        } catch (\Throwable $e) {
+            Log::warning('[ProvisionJob] RADIUS hotspot install failed, fallback to Direct API', ['error' => $e->getMessage()]);
+            $this->fallbackHotspotDirectApi($cust, $groupName, $router, 'install');
+        }
+
+        // Handle IP binding setelah auth
+        $this->handleIpBinding($cust, $router);
+    }
+
+    /**
+     * HOTSPOT SUSPENDED: RADIUS primary + Direct fallback
+     */
+    protected function handleHotspotSuspend(RadiusService $radius, InternetCustomer $cust, Router $router): void
+    {
+        try {
+            $radius->suspendUser($cust->username);
+
+            try {
+                $ros    = app(RouterOSService::class);
+                $client = $ros->client($router);
+                $ros->disconnectHotspotUser($client, $cust->username);
+            } catch (\Throwable $dcErr) {
+                Log::warning('[ProvisionJob] Hotspot disconnect failed', ['error' => $dcErr->getMessage()]);
+            }
+
+            Log::info('[ProvisionJob] HOTSPOT SUSPENDED via RADIUS → ISOLIR ✅', ['customer' => $cust->username]);
+        } catch (\Throwable $e) {
+            Log::warning('[ProvisionJob] RADIUS hotspot suspend failed, fallback', ['error' => $e->getMessage()]);
+            $this->fallbackHotspotDirectApi($cust, '', $router, 'suspend');
+        }
+    }
+
+    /**
+     * HOTSPOT REACTIVATED: RADIUS primary + Direct fallback
+     */
+    protected function handleHotspotReactivate(RadiusService $radius, InternetCustomer $cust, InternetPackage $pkg, string $groupName, Router $router): void
+    {
+        try {
+            $radius->ensureGroup($pkg, $groupName);
+            $radius->reactivateUser($cust->username, $groupName);
+
+            try {
+                $ros    = app(RouterOSService::class);
+                $client = $ros->client($router);
+                $ros->disconnectHotspotUser($client, $cust->username);
+            } catch (\Throwable $dcErr) {
+                Log::warning('[ProvisionJob] Hotspot disconnect failed on reactivate', ['error' => $dcErr->getMessage()]);
+            }
+
+            Log::info('[ProvisionJob] HOTSPOT REACTIVATED via RADIUS ✅', ['customer' => $cust->username]);
+        } catch (\Throwable $e) {
+            Log::warning('[ProvisionJob] RADIUS hotspot reactivate failed, fallback', ['error' => $e->getMessage()]);
+            $this->fallbackHotspotDirectApi($cust, $groupName, $router, 'install');
+        }
+
+        $this->handleIpBinding($cust, $router);
+    }
+
+    /**
+     * HOTSPOT DIRECT API ONLY (RADIUS disabled)
+     */
+    protected function handleHotspotDirectApiOnly(InternetCustomer $cust, string $profileName, Router $router): void
+    {
+        $this->fallbackHotspotDirectApi($cust, $profileName, $router, $cust->status);
+        $this->handleIpBinding($cust, $router);
+    }
+
+    /**
+     * Fallback ke Direct API untuk hotspot
+     */
+    protected function fallbackHotspotDirectApi(InternetCustomer $cust, string $profileName, Router $router, string $action): void
+    {
+        try {
+            $ros    = app(RouterOSService::class);
+            $client = $ros->client($router);
+
+            if ($action === 'suspend') {
+                $ros->disableHotspotUser($client, $cust->username);
+                $ros->disconnectHotspotUser($client, $cust->username);
+            } else {
+                $ros->disconnectHotspotUser($client, $cust->username);
+                $ros->upsertHotspotUser($client, $cust, $profileName);
+            }
+
+            Log::info('[ProvisionJob] Hotspot Direct API success', ['customer' => $cust->username, 'action' => $action]);
+        } catch (\Throwable $e) {
+            Log::error('[ProvisionJob] Hotspot Direct API failed', ['customer' => $cust->username, 'error' => $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Handle IP Binding untuk hotspot customer.
+     * Dipanggil setelah auth install/reactivate.
+     */
+    protected function handleIpBinding(InternetCustomer $cust, Router $router): void
+    {
+        if (!$cust->ip_binding_type) return;
+        if ($cust->ip_binding_type !== 'direct') return; // radius binding ditangani via Framed-IP-Address
+
+        try {
+            $ros        = app(RouterOSService::class);
+            $client     = $ros->client($router);
+            $serverName = $cust->hotspotServer?->name ?? '';
+            $mode       = $cust->ip_binding_mode ?? 'regular';
+
+            $ros->addHotspotIpBinding(
+                $client,
+                $serverName,
+                $cust->ip_address ?: null,
+                $cust->mac_address ?: null,
+                $mode
+            );
+
+            Log::info('[ProvisionJob] IP Binding set', [
+                'customer' => $cust->username,
+                'type'     => $cust->ip_binding_type,
+                'mode'     => $mode,
+                'ip'       => $cust->ip_address,
+                'mac'      => $cust->mac_address,
+            ]);
+        } catch (\Throwable $e) {
+            Log::warning('[ProvisionJob] IP Binding failed (non-fatal)', ['error' => $e->getMessage()]);
         }
     }
 }

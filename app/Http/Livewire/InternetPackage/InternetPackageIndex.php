@@ -19,6 +19,7 @@ class InternetPackageIndex extends Component
     public $sortField = 'name';
     public $sortDirection = 'asc';
     public $selectedType = '';
+    public $selectedAccessType = '';
     public $activeFilter = 'all';
 
     protected $queryString = [
@@ -68,6 +69,9 @@ class InternetPackageIndex extends Component
                 })
                 ->when($this->selectedType, function ($query) {
                     $query->where('type', $this->selectedType);
+                })
+                ->when($this->selectedAccessType, function ($query) {
+                    $query->where('access_type', $this->selectedAccessType);
                 })
                 ->when($this->activeFilter !== 'all', function ($query) {
                     $query->where('is_active', $this->activeFilter === 'active');

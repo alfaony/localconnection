@@ -163,6 +163,10 @@ use App\Http\Livewire\Router\RouterForm;
 use App\Http\Livewire\Router\RouterIndex;
 use App\Http\Livewire\Router\RouterInventory;
 use App\Http\Livewire\Router\PackageProfileMapping;
+use App\Http\Livewire\Hotspot\HotspotServerIndex;
+use App\Http\Livewire\Hotspot\HotspotServerForm;
+use App\Http\Livewire\Hotspot\HotspotVoucherBatchIndex;
+use App\Http\Controllers\HotspotVoucherController;
 use App\Http\Livewire\WebhookSettingTable;
 use App\Http\Livewire\ProductSupplierTypeIndex;
 use App\Http\Livewire\ProductStore\ProductStoreIndex;
@@ -894,6 +898,15 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
       Route::get('customer-subscription/{subscription}/chat', [CustomerSubscriptionChatController::class, 'index'])->name('customer-subscription.chat.index');
       Route::post('customer-subscription/{subscription}/chat', [CustomerSubscriptionChatController::class, 'store'])->name('customer-subscription.chat.store');
     });
+  // Hotspot Server
+  Route::get('hotspot-server', HotspotServerIndex::class)->name('hotspot-server.index');
+  Route::get('hotspot-server/create', HotspotServerForm::class)->name('hotspot-server.create');
+  Route::get('hotspot-server/edit/{id}', HotspotServerForm::class)->name('hotspot-server.edit');
+
+  // Hotspot Voucher Batch
+  Route::get('hotspot-voucher-batch', HotspotVoucherBatchIndex::class)->name('hotspot-voucher-batch.index');
+  Route::get('hotspot-voucher/print/{batchId}', [HotspotVoucherController::class, 'printBatch'])->name('hotspot-voucher.print');
+
 
   Route::get('internet-customer/registration/{companyId}', InternetCustomerForm::class)->name('internet-customer.create');
   Route::get('internet-customer/customer-active/{code}', CustomerShow::class)->name('internet-customer.customer.show');

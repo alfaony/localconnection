@@ -27,11 +27,19 @@
                         <input wire:model.debounce.300ms="search" type="text" class="form-control" placeholder="Cari paket...">
                     </div>
                 </div>
-                <div class="col-md-3">
+                <div class="col-md-2">
                     <select wire:model="selectedType" class="form-control">
                         <option value="">Semua type</option>
                         <option value="dedicated">Dedicated</option>
                         <option value="broadband">Broadband</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <select wire:model="selectedAccessType" class="form-control">
+                        <option value="">Semua Akses</option>
+                        <option value="pppoe">PPPoE</option>
+                        <option value="hotspot">Hotspot</option>
+                        <option value="ipoe">IPoE</option>
                     </select>
                 </div>
                 <div class="col-md-3">
@@ -91,6 +99,11 @@
                                     <span class="badge bg-{{ $package->type === 'Dedicated' ? 'info' : 'success' }}">
                                         {{ $package->type }}
                                     </span>
+                                    @if($package->access_type)
+                                    <span class="badge badge-{{ $package->access_type === 'hotspot' ? 'warning' : ($package->access_type === 'pppoe' ? 'primary' : 'secondary') }} ml-1">
+                                        {{ strtoupper($package->access_type) }}
+                                    </span>
+                                    @endif
                                 </td>
                                 <td>Rp {{ number_format($package->price, 0, ',', '.') }}</td>
                                 <td>Rp {{ number_format($package->price_nett, 0, ',', '.') }}</td>

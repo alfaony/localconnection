@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\InternetCustomer;
 use App\Models\InternetPackage;
+use App\Models\HotspotVoucher;
 use App\Models\Radius\RadCheck;
 use App\Models\Radius\RadReply;
 use App\Models\Radius\RadGroupReply;
@@ -140,5 +141,76 @@ class RadiusService
         RadUserGroup::where('username', $username)->delete();
 
         Log::info('[RadiusService] removeUser', ['username' => $username]);
+    }
+
+    // ============================================================
+    // VOUCHER METHODS
+    // ============================================================
+
+    /**
+     * Buat/update voucher hotspot di RADIUS.
+     * - radcheck: Cleartext-Password
+     * - radreply: Mikrotik-Rate-Limit, Session-Timeout (jika > 0), Mikrotik-Total-Limit (jika quota > 0)
+     */
+    public function upsertVoucherUser(HotspotVoucher $voucher): void
+    {
+        $profile  = $voucher->internetPackage;
+        $username = $voucher->username;
+        $password = $voucher->password;
+
+        $down = (int) $profile->rate_down_mbps;
+        $up   = (int) $profile->rate_up_mbps;
+        $rate = "{$down}M/{$up}M";
+
+        // Password
+        RadCheck::updateOrCreate(
+            ['username' => $username, 'attribute' => 'Cleartext-Password'],
+            ['op' => ':=', 'value' => $password]
+        );
+
+        // Rate limit
+        RadReply::updateOrCreate(
+            ['username' => $username, 'attribute' => 'Mikrotik-Rate-Limit'],
+            ['op' => ':=', 'value' => $rate]
+        );
+
+        // Session-Timeout (waktu dalam detik)
+        if ($profile->session_timeout_seconds > 0) {
+            RadReply::updateOrCreate(
+                ['username' => $username, 'attribute' => 'Session-Timeout'],
+                ['op' => ':=', 'value' => (string) $profile->session_timeout_seconds]
+            );
+        } else {
+            RadReply::where('username', $username)->where('attribute', 'Session-Timeout')->delete();
+        }
+
+        // Mikrotik-Total-Limit (data quota dalam bytes)
+        if ($profile->quota_bytes > 0) {
+            RadReply::updateOrCreate(
+                ['username' => $username, 'attribute' => 'Mikrotik-Total-Limit'],
+                ['op' => ':=', 'value' => (string) $profile->quota_bytes]
+            );
+        } else {
+            RadReply::where('username', $username)->where('attribute', 'Mikrotik-Total-Limit')->delete();
+        }
+
+        Log::info('[RadiusService] upsertVoucherUser', [
+            'username' => $username,
+            'rate'     => $rate,
+            'timeout'  => $profile->session_timeout_seconds,
+            'quota'    => $profile->quota_bytes,
+        ]);
+    }
+
+    /**
+     * Hapus voucher user dari RADIUS.
+     */
+    public function removeVoucherUser(string $username): void
+    {
+        RadCheck::where('username', $username)->delete();
+        RadReply::where('username', $username)->delete();
+        RadUserGroup::where('username', $username)->delete();
+
+        Log::info('[RadiusService] removeVoucherUser', ['username' => $username]);
     }
 }

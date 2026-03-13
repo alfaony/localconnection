@@ -18,6 +18,7 @@ use App\Models\InternetCustomer;
 use App\Models\InternetCustomerPurchase;
 use App\Models\Router;
 use App\Models\AddressPool;
+use App\Models\HotspotServer;
 use App\Models\InternetPackage;
 
 use App\Services\RadiusService;
@@ -47,6 +48,14 @@ class InternetCustomerShow extends Component
     
     // Properties untuk edit data instalasi
     public $local_address, $username, $pass_hash, $device_serial_number;
+
+    // Hotspot fields
+    public $hotspot_server_id = null;
+    public $ip_binding_type   = null;
+    public $ip_binding_mode   = null;
+    public $ip_address        = null;
+    public $mac_address       = null;
+    public $availableHotspotServers = [];
     
     // ✅ Properties untuk move router
     public $new_router_id = null;
@@ -102,6 +111,13 @@ class InternetCustomerShow extends Component
 
         $this->status_active = $this->customer->status != ParamSchema::INACTIVE ? true : false;
         $this->availablePackages = [];
+
+        // Pre-load hotspot servers agar select punya options saat modal pertama dibuka
+        if ($this->customer->access_type === 'hotspot' && $this->customer->router_id) {
+            $this->availableHotspotServers = HotspotServer::where('router_id', $this->customer->router_id)
+                ->get(['id', 'name'])
+                ->toArray();
+        }
     }
 
     // ========================================
@@ -493,35 +509,72 @@ class InternetCustomerShow extends Component
     public function openEditInstalasiModal()
     {
         $this->local_address = $this->customer->local_address ?? '';
-        $this->username = $this->customer->username ?? '';
-        $this->pass_hash = $this->customer->pass_hash ?? '';
+        $this->username      = $this->customer->username ?? '';
+        $this->pass_hash     = $this->customer->pass_hash ?? '';
         $this->device_serial_number = $this->customer->installation->device_serial_number ?? '';
-        
+
+        // Hotspot fields
+        $this->hotspot_server_id = $this->customer->hotspot_server_id;
+        $this->ip_binding_type   = $this->customer->ip_binding_type;
+        $this->ip_binding_mode   = $this->customer->ip_binding_mode;
+        $this->ip_address        = $this->customer->ip_address;
+        $this->mac_address       = $this->customer->mac_address;
+
+        // Load hotspot servers untuk router yang sama
+        $this->availableHotspotServers = $this->customer->router_id
+            ? HotspotServer::where('router_id', $this->customer->router_id)->get(['id', 'name'])->toArray()
+            : [];
+
         $this->dispatchBrowserEvent('showEditInstalasiModal', [
-            'local_address' => $this->customer->local_address ?? '',
-            'username' => $this->customer->username ?? '',
-            'pass_hash' => $this->customer->pass_hash ?? '',
+            'local_address'        => $this->customer->local_address ?? '',
+            'username'             => $this->customer->username ?? '',
+            'pass_hash'            => $this->customer->pass_hash ?? '',
             'device_serial_number' => $this->customer->installation->device_serial_number ?? '',
+            'hotspot_server_id'    => $this->customer->hotspot_server_id ?? '',
+            'ip_binding_type'      => $this->customer->ip_binding_type ?? '',
+            'ip_binding_mode'      => $this->customer->ip_binding_mode ?? '',
         ]);
     }
 
     public function saveInstalasi()
     {
-        $this->validate([
-            'local_address' => 'nullable|ip',
-            'username' => 'required|string|max:255',
-            'pass_hash' => 'required|string|max:255',
+        $isHotspot = $this->customer->access_type === 'hotspot';
+
+        $rules = [
+            'local_address'        => 'nullable|ip',
+            'username'             => 'required|string|max:255',
+            'pass_hash'            => 'required|string|max:255',
             'device_serial_number' => 'nullable|string|max:255',
-        ]);
+        ];
+
+        if ($isHotspot) {
+            $rules['hotspot_server_id'] = 'nullable|exists:hotspot_servers,id';
+            $rules['ip_binding_type']   = 'nullable|in:direct,radius';
+            $rules['ip_binding_mode']   = 'nullable|in:regular,bypassed';
+            $rules['ip_address']        = 'nullable|ip';
+            $rules['mac_address']       = 'nullable|string|max:20';
+        }
+
+        $this->validate($rules);
 
         DB::beginTransaction();
         try {
-            $this->customer->update([
-                'status' => ParamSchema::REACTIVATED,
+            $updateData = [
+                'status'       => ParamSchema::REACTIVATED,
                 'local_address' => $this->local_address,
-                'username' => $this->username,
-                'pass_hash' => $this->pass_hash,
-            ]);
+                'username'      => $this->username,
+                'pass_hash'     => $this->pass_hash,
+            ];
+
+            if ($isHotspot) {
+                $updateData['hotspot_server_id'] = $this->hotspot_server_id ?: null;
+                $updateData['ip_binding_type']   = $this->ip_binding_type ?: null;
+                $updateData['ip_binding_mode']   = ($this->ip_binding_type === 'direct') ? ($this->ip_binding_mode ?: null) : null;
+                $updateData['ip_address']        = $this->ip_address ?: null;
+                $updateData['mac_address']       = $this->mac_address ?: null;
+            }
+
+            $this->customer->update($updateData);
 
             if ($this->customer->installation) {
                 $this->customer->installation->update([
@@ -593,15 +646,15 @@ class InternetCustomerShow extends Component
             ]);
     
             $post = ['is_paid' => true];
-    
+
             if(!$internetPurchase->customer->installation) {
                 $post['status'] = ParamSchema::PROCESS_INSTALLATION;
-                
+
                 $userTechnical = optional($internetPurchase->customer->subdistrict?->coverageService?->coverageServiceOds)
                     ->pluck('ods.user_assign_id')
                     ->unique()
                     ->all();
-        
+
                 if(count($userTechnical) > 0) {
                     $message = "Pembayaran Langganan Internet Untuk Kode ".$internetPurchase->customer->code." Telah di Setujui Oleh Finance Silahkan segera lakukan Pemasangan";
                     $directUrl = route('internet-customer.show',$internetPurchase->customer->id);
@@ -611,8 +664,8 @@ class InternetCustomerShow extends Component
                 }
             } else {
                 $post['status'] = ParamSchema::REACTIVATED;
-                dispatch(new ProvisionCustomerJob($internetCustomers->id));
-                \App\Jobs\SyncInstalledCustomersJob::dispatch([$internetCustomers->id]);
+                dispatch(new ProvisionCustomerJob($internetPurchase->internet_customer_id));
+                \App\Jobs\SyncInstalledCustomersJob::dispatch([$internetPurchase->internet_customer_id]);
             }
             
             GenerateInternetPurchaseCouponJob::dispatch($internetPurchase->customer->id, $internetPurchase->id, $internetPurchase->payment_months);

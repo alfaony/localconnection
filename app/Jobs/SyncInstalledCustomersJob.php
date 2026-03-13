@@ -150,43 +150,79 @@ class SyncInstalledCustomersJob implements ShouldQueue
 
                 $client = $ros->client($router);
 
-                // Ambil SEMUA active connections dari router sekaligus (1 query)
-                $allActive = $client->query(new Query('/ppp/active/print'))->read();
+                // Split customers by access_type
+                $pppoeCustomers   = $routerCustomers->filter(fn($c) => ($c->access_type ?? 'pppoe') !== 'hotspot');
+                $hotspotCustomers = $routerCustomers->filter(fn($c) => ($c->access_type ?? '') === 'hotspot');
+                // --- PPPoE: /ppp/active/print ---
+                if (!empty($pppoeCustomers)) {
+                    $allActive = $client->query(new Query('/ppp/active/print'))->read();
+                    $activeByName = [];
+                    foreach ($allActive as $a) {
+                        $activeByName[$a['name']] = $a;
+                    }
 
-                // Index by username untuk lookup cepat
-                $activeByName = [];
-                foreach ($allActive as $a) {
-                    $activeByName[$a['name']] = $a;
+                    Log::info("[SyncJob] Mikrotik PPPoE active connections", [
+                        'router'       => $router->name,
+                        'router_id'    => $routerId,
+                        'active_count' => count($allActive),
+                    ]);
+
+                    foreach ($pppoeCustomers as $customer) {
+                        $active = $activeByName[$customer->username] ?? null;
+                        if ($active) {
+                            $meta = $customer->meta ? json_decode($customer->meta, true) : [];
+                            $meta['radius_session'] = [
+                                'source'    => 'mikrotik_api',
+                                'caller_id' => $active['caller-id'] ?? null,
+                                'address'   => $active['address'] ?? null,
+                                'uptime'    => $active['uptime'] ?? null,
+                                'service'   => $active['service'] ?? null,
+                                'last_seen' => now()->toIso8601String(),
+                            ];
+                            $updates[] = [
+                                'id'          => $customer->id,
+                                'status'      => ParamSchema::ACTIVE,
+                                'ip_address'  => $active['address'] ?? $customer->ip_address,
+                                'mac_address' => $active['caller-id'] ?? $customer->mac_address,
+                                'meta'        => json_encode($meta),
+                            ];
+                        }
+                    }
                 }
 
-                Log::info("[SyncJob] Mikrotik API active connections", [
-                    'router'    => $router->name,
-                    'router_id' => $routerId,
-                    'active_count' => count($allActive),
-                ]);
+                // --- Hotspot: /ip/hotspot/active/print ---
+                if (!empty($hotspotCustomers)) {
+                    $allHsActive = $client->query(new Query('/ip/hotspot/active/print'))->read();
+                    $hsActiveByUser = [];
+                    foreach ($allHsActive as $a) {
+                        $hsActiveByUser[$a['user']] = $a;
+                    }
 
-                // Cek setiap customer
-                foreach ($routerCustomers as $customer) {
-                    $active = $activeByName[$customer->username] ?? null;
+                    Log::info("[SyncJob] Mikrotik Hotspot active connections", [
+                        'router'       => $router->name,
+                        'router_id'    => $routerId,
+                        'active_count' => count($allHsActive),
+                    ]);
 
-                    if ($active) {
-                        $meta = $customer->meta ? json_decode($customer->meta, true) : [];
-                        $meta['radius_session'] = [
-                            'source'     => 'mikrotik_api',
-                            'caller_id'  => $active['caller-id'] ?? null,
-                            'address'    => $active['address'] ?? null,
-                            'uptime'     => $active['uptime'] ?? null,
-                            'service'    => $active['service'] ?? null,
-                            'last_seen'  => now()->toIso8601String(),
-                        ];
-
-                        $updates[] = [
-                            'id'          => $customer->id,
-                            'status'      => ParamSchema::ACTIVE,
-                            'ip_address'  => $active['address'] ?? $customer->ip_address,
-                            'mac_address' => $active['caller-id'] ?? $customer->mac_address,
-                            'meta'        => json_encode($meta),
-                        ];
+                    foreach ($hotspotCustomers as $customer) {
+                        $active = $hsActiveByUser[$customer->username] ?? null;
+                        if ($active) {
+                            $meta = $customer->meta ? json_decode($customer->meta, true) : [];
+                            $meta['radius_session'] = [
+                                'source'    => 'mikrotik_api_hotspot',
+                                'address'   => $active['address'] ?? null,
+                                'mac'       => $active['mac-address'] ?? null,
+                                'uptime'    => $active['uptime'] ?? null,
+                                'last_seen' => now()->toIso8601String(),
+                            ];
+                            $updates[] = [
+                                'id'          => $customer->id,
+                                'status'      => ParamSchema::ACTIVE,
+                                'ip_address'  => $active['address'] ?? $customer->ip_address,
+                                'mac_address' => $active['mac-address'] ?? $customer->mac_address,
+                                'meta'        => json_encode($meta),
+                            ];
+                        }
                     }
                 }
             } catch (\Throwable $e) {
@@ -205,7 +241,7 @@ class SyncInstalledCustomersJob implements ShouldQueue
     protected function getCustomers(): array
     {
         $query = DB::table('internet_customers')
-            ->select(['id', 'router_id', 'username', 'ip_address', 'mac_address', 'meta'])
+            ->select(['id', 'router_id', 'username', 'ip_address', 'mac_address', 'meta', 'access_type'])
             ->whereIn('status', [ParamSchema::INSTALLED, ParamSchema::REACTIVATED])
             ->whereNotNull('router_id')
             ->whereNotNull('username');

@@ -818,6 +818,60 @@
                                 </div>
                             </div>
                         </div>
+
+                        {{-- Hotspot Fields (hanya tampil jika access_type = hotspot) --}}
+                        @if($customer->access_type === 'hotspot')
+                        <hr>
+                        <h6 class="text-primary"><i class="fas fa-wifi"></i> Konfigurasi Hotspot</h6>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label>Hotspot Server</label>
+                                    <select wire:model="hotspot_server_id" class="form-control" id="hotspot_server_id_select">
+                                        <option value="">-- Tidak ada --</option>
+                                        @foreach ($availableHotspotServers as $hs)
+                                            <option value="{{ $hs['id'] }}" @selected($hotspot_server_id == $hs['id'])>{{ $hs['name'] }}</option>
+                                        @endforeach
+                                    </select>
+                                    @error('hotspot_server_id') <span class="text-danger">{{ $message }}</span> @enderror
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <label>IP Binding Type</label>
+                                    <select wire:model="ip_binding_type" class="form-control">
+                                        <option value="">-- Tidak ada --</option>
+                                        <option value="direct">Direct (MikroTik)</option>
+                                        <option value="radius">Radius (Framed-IP)</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <label>Binding Mode</label>
+                                    <select wire:model="ip_binding_mode" class="form-control" @if($ip_binding_type !== 'direct') disabled @endif>
+                                        <option value="">-- Tidak ada --</option>
+                                        <option value="regular">Regular (login, IP fixed)</option>
+                                        <option value="bypassed">Bypassed (tanpa login)</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label>IP Address <small class="text-muted">(untuk binding)</small></label>
+                                    <input type="text" wire:model="ip_address" class="form-control" placeholder="192.168.1.100">
+                                    @error('ip_address') <span class="text-danger">{{ $message }}</span> @enderror
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label>MAC Address <small class="text-muted">(untuk binding)</small></label>
+                                    <input type="text" wire:model="mac_address" class="form-control" placeholder="AA:BB:CC:DD:EE:FF">
+                                    @error('mac_address') <span class="text-danger">{{ $message }}</span> @enderror
+                                </div>
+                            </div>
+                        </div>
+                        @endif
                     </form>
                 </div>
                 <div class="modal-footer">
@@ -1113,12 +1167,26 @@
             window.addEventListener('showEditInstalasiModal', function(e) {
                 // Isi nilai-nilai form dari data Livewire
                 $("#formEditInstalasiClose").click();
-                
+
                 document.getElementById('local_address').value = e.detail.local_address || '';
                 document.getElementById('username').value = e.detail.username || '';
                 document.getElementById('pass_hash').value = e.detail.pass_hash || '';
                 document.getElementById('device_serial_number').value = e.detail.device_serial_number || '';
-                
+
+                // Hotspot fields — set via JS sebagai safety net
+                var hsSelect = document.getElementById('hotspot_server_id_select');
+                if (hsSelect) {
+                    hsSelect.value = e.detail.hotspot_server_id || '';
+                }
+                var ipBindingType = document.querySelector('select[wire\\:model="ip_binding_type"]');
+                if (ipBindingType) {
+                    ipBindingType.value = e.detail.ip_binding_type || '';
+                }
+                var ipBindingMode = document.querySelector('select[wire\\:model="ip_binding_mode"]');
+                if (ipBindingMode) {
+                    ipBindingMode.value = e.detail.ip_binding_mode || '';
+                }
+
                 // Tampilkan modal
                 new bootstrap.Modal(document.getElementById('editInstalasiModal')).show();
             });

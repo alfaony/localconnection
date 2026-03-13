@@ -25,11 +25,14 @@
                         <button wire:click="resyncSecretsSessions" class="btn btn-success btn-action mb-2 mr-1">
                             <i class="bi bi-arrow-left-right me-1"></i> Sync Secrets + Sessions
                         </button>
+                        <button wire:click="resyncHotspot" class="btn btn-warning btn-action mb-2 mr-1">
+                            <i class="bi bi-wifi me-1"></i> Sync Hotspot
+                        </button>
                     </div>
                 </div>
                 
                 <div class="row mb-4">
-                    <div class="col-xl-3 col-md-6 mb-4">
+                    <div class="col-xl-2 col-md-4 mb-4">
                         <div class="card stat-card h-100 py-2">
                             <div class="card-body">
                                 <div class="row no-gutters align-items-center">
@@ -44,8 +47,8 @@
                             </div>
                         </div>
                     </div>
-                    
-                    <div class="col-xl-3 col-md-6 mb-4">
+
+                    <div class="col-xl-2 col-md-4 mb-4">
                         <div class="card stat-card h-100 py-2">
                             <div class="card-body">
                                 <div class="row no-gutters align-items-center">
@@ -60,8 +63,8 @@
                             </div>
                         </div>
                     </div>
-                    
-                    <div class="col-xl-3 col-md-6 mb-4">
+
+                    <div class="col-xl-2 col-md-4 mb-4">
                         <div class="card stat-card h-100 py-2">
                             <div class="card-body">
                                 <div class="row no-gutters align-items-center">
@@ -76,13 +79,29 @@
                             </div>
                         </div>
                     </div>
-                    
-                    <div class="col-xl-3 col-md-6 mb-4">
-                        <div class="card stat-card h-100 py-2">
+
+                    <div class="col-xl-2 col-md-4 mb-4">
+                        <div class="card stat-card h-100 py-2" style="border-left-color:#f6c23e">
                             <div class="card-body">
                                 <div class="row no-gutters align-items-center">
                                     <div class="col mr-2">
-                                        <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">Router</div>
+                                        <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">Hotspot Servers</div>
+                                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ count($hotspots) }}</div>
+                                    </div>
+                                    <div class="col-auto">
+                                        <i class="bi bi-broadcast fa-2x text-gray-300"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-xl-4 col-md-8 mb-4">
+                        <div class="card stat-card h-100 py-2" style="border-left-color:#858796">
+                            <div class="card-body">
+                                <div class="row no-gutters align-items-center">
+                                    <div class="col mr-2">
+                                        <div class="text-xs font-weight-bold text-secondary text-uppercase mb-1">Router</div>
                                         <div class="h5 mb-0 font-weight-bold text-gray-800">{{ $router->host }}</div>
                                     </div>
                                     <div class="col-auto">
@@ -157,7 +176,7 @@
         </div>
 
         <div class="row">
-            <div class="col-12">
+            <div class="col-lg-6 mb-4">
                 <div class="card shadow mb-4">
                     <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
                         <h6 class="m-0 font-weight-bold text-primary"><i class="bi bi-wifi me-2"></i>PPPoE Servers</h6>
@@ -174,7 +193,7 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    @foreach($pppoes as $s)
+                                    @forelse($pppoes as $s)
                                     <tr>
                                         <td>{{ $s->service_name }}</td>
                                         <td>{{ optional($s->interface)->name }}</td>
@@ -187,7 +206,46 @@
                                             @endif
                                         </td>
                                     </tr>
-                                    @endforeach
+                                    @empty
+                                    <tr><td colspan="4" class="text-center text-muted">Belum ada PPPoE server.</td></tr>
+                                    @endforelse
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-6 mb-4">
+                <div class="card shadow mb-4">
+                    <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                        <h6 class="m-0 font-weight-bold text-warning"><i class="bi bi-broadcast me-2"></i>Hotspot Servers</h6>
+                        <small class="text-muted">Auto-sync via "Sync Hotspot"</small>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-bordered table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Interface</th>
+                                        <th>Pool</th>
+                                        <th>Profile</th>
+                                        <th>DNS</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @forelse($hotspots as $h)
+                                    <tr>
+                                        <td><strong>{{ $h->name }}</strong></td>
+                                        <td>{{ optional($h->interface)->name ?? ($h->meta['interface'] ?? '-') }}</td>
+                                        <td>{{ optional($h->addressPool)->name ?? '-' }}</td>
+                                        <td><code>{{ $h->profile_name ?? '-' }}</code></td>
+                                        <td>{{ $h->dns_name ?? '-' }}</td>
+                                    </tr>
+                                    @empty
+                                    <tr><td colspan="5" class="text-center text-muted">Belum ada hotspot server. Klik "Sync Hotspot" untuk import dari router.</td></tr>
+                                    @endforelse
                                 </tbody>
                             </table>
                         </div>
