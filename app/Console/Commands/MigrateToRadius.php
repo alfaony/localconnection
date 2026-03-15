@@ -198,8 +198,7 @@ class MigrateToRadius extends Command
         $this->info('🎫 MIGRASI VOUCHER HOTSPOT');
         $this->info('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
 
-        $vouchers = HotspotVoucher::with('internetPackage')
-            ->whereIn('status', [HotspotVoucher::STATUS_UNUSED, HotspotVoucher::STATUS_ACTIVE])
+        $vouchers = HotspotVoucher::whereIn('status', [HotspotVoucher::STATUS_UNUSED, HotspotVoucher::STATUS_ACTIVE])
             ->whereNotNull('username')
             // ->whereNotNull('internet_package_id')
             ->get();
