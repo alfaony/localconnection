@@ -7,6 +7,7 @@ use App\Models\InternetPackage;
 use App\Models\Router;
 use App\Models\PackageRouterProfile;
 use App\Services\RouterOSService;
+use App\Jobs\SyncInstalledCustomersJob;
 use Exception;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -130,6 +131,13 @@ class ProvisionCustomerJob implements ShouldQueue
                     $cust->save();
                 }
             }
+            
+            // ✅ Trigger sync check after 45 seconds to update status to ACTIVE
+            // setelah disconnectIfActive, router butuh waktu reconnect
+            if (in_array($cust->status, [ParamSchema::REACTIVATED, ParamSchema::INSTALLED])) {
+                dispatch(new SyncInstalledCustomersJob([$cust->id]))->delay(now()->addSeconds(45));
+            }
+
         } catch (\Throwable $th) {
             //throw $th;
             // dd($th);
