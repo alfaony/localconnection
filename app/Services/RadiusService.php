@@ -96,7 +96,26 @@ class RadiusService
     }
 
     /**
-     * Suspend user — WALLED GARDEN (Isolir)
+     * Suspend customer HOTSPOT — Auth-Type:Reject (tidak bisa login sama sekali).
+     * Hapus group assignment + set Reject. Session di-kick via ProvisionJob.
+     * Reactivate: reactivateUser() hapus Reject + restore group.
+     */
+    public function suspendHotspotCustomer(string $username): void
+    {
+        // Set Auth-Type = Reject → RADIUS tolak semua auth request
+        RadCheck::updateOrCreate(
+            ['username' => $username, 'attribute' => 'Auth-Type'],
+            ['op' => ':=', 'value' => 'Reject']
+        );
+
+        // Hapus group assignment
+        RadUserGroup::where('username', $username)->delete();
+
+        Log::info('[RadiusService] suspendHotspotCustomer → Auth-Type:Reject', ['username' => $username]);
+    }
+
+    /**
+     * Suspend user PPPoE/IPoE — WALLED GARDEN (Isolir)
      * User tetap bisa connect tapi hanya akses web pembayaran.
      * Rate-limit diperkecil, group diganti ke ISOLIR.
      * Mikrotik firewall yang handle domain filtering.

@@ -141,7 +141,7 @@ class CheckActiveCustomersJob implements ShouldQueue
         Log::warning('Customer is INACTIVE', [
             'customer'     => $customer->code,
             'username'     => $customer->username,
-            'last_updated' => $customer->last_updated_router?->diffForHumans(),
+            'last_updated' => $customer->last_updated_router ? Carbon::parse($customer->last_updated_router)->diffForHumans() : null,
         ]);
 
         try {

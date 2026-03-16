@@ -181,14 +181,14 @@ class ProvisionCustomerJob implements ShouldQueue
                 'customer' => $cust->username,
             ]);
         } catch (\Throwable $e) {
-            // 🔴 FALLBACK: Direct API — disable secret
+            // 🔴 FALLBACK: Direct API — ganti profile ke ISOLIR
             Log::warning('[ProvisionJob] RADIUS suspend failed, falling back to Direct API', [
                 'error' => $e->getMessage(),
             ]);
             try {
                 $ros = app(RouterOSService::class);
                 $client = $ros->client($router);
-                $ros->disableSecret($client, $cust->username);
+                $ros->upsertPppSecret($client, $cust, 'SUSPENDED');
                 $ros->disconnectIfActive($client, $cust->username);
             } catch (\Throwable $e2) {
                 Log::error('[ProvisionJob] Direct API fallback also failed', [
@@ -243,8 +243,8 @@ class ProvisionCustomerJob implements ShouldQueue
             $client = $ros->client($router);
 
             if ($cust->status == ParamSchema::SUSPENDED) {
-                // Suspend: disable secret + disconnect
-                $ros->disableSecret($client, $cust->username);
+                // Suspend: ganti profile ke ISOLIR + disconnect agar reconnect dengan profile baru
+                $ros->upsertPppSecret($client, $cust, 'SUSPENDED');
                 $ros->disconnectIfActive($client, $cust->username);
                 Log::info('[ProvisionJob] SUSPENDED via Direct API ✅', ['customer' => $cust->username]);
             } else {
@@ -343,17 +343,22 @@ class ProvisionCustomerJob implements ShouldQueue
     protected function handleHotspotSuspend(RadiusService $radius, InternetCustomer $cust, Router $router): void
     {
         try {
-            $radius->suspendUser($cust->username);
+            // 🟢 RADIUS: Auth-Type = Reject → user tidak bisa auth sama sekali
+            $radius->suspendHotspotCustomer($cust->username);
 
+            // 🔌 Kick active session langsung
             try {
                 $ros    = app(RouterOSService::class);
                 $client = $ros->client($router);
                 $ros->disconnectHotspotUser($client, $cust->username);
+                Log::info('[ProvisionJob] Hotspot session kicked');
             } catch (\Throwable $dcErr) {
-                Log::warning('[ProvisionJob] Hotspot disconnect failed', ['error' => $dcErr->getMessage()]);
+                Log::warning('[ProvisionJob] Hotspot disconnect failed (will reject on next reconnect anyway)', [
+                    'error' => $dcErr->getMessage(),
+                ]);
             }
 
-            Log::info('[ProvisionJob] HOTSPOT SUSPENDED via RADIUS → ISOLIR ✅', ['customer' => $cust->username]);
+            Log::info('[ProvisionJob] HOTSPOT SUSPENDED via RADIUS → Auth-Type:Reject ✅', ['customer' => $cust->username]);
         } catch (\Throwable $e) {
             Log::warning('[ProvisionJob] RADIUS hotspot suspend failed, fallback', ['error' => $e->getMessage()]);
             $this->fallbackHotspotDirectApi($cust, '', $router, 'suspend');
@@ -391,7 +396,8 @@ class ProvisionCustomerJob implements ShouldQueue
      */
     protected function handleHotspotDirectApiOnly(InternetCustomer $cust, string $profileName, Router $router): void
     {
-        $this->fallbackHotspotDirectApi($cust, $profileName, $router, $cust->status);
+        $action = $cust->status == ParamSchema::SUSPENDED ? 'suspend' : 'install';
+        $this->fallbackHotspotDirectApi($cust, $profileName, $router, $action);
         $this->handleIpBinding($cust, $router);
     }
 
@@ -405,7 +411,7 @@ class ProvisionCustomerJob implements ShouldQueue
             $client = $ros->client($router);
 
             if ($action === 'suspend') {
-                $ros->disableHotspotUser($client, $cust->username);
+                $ros->removeHotspotUser($client, $cust->username);
                 $ros->disconnectHotspotUser($client, $cust->username);
             } else {
                 $ros->disconnectHotspotUser($client, $cust->username);

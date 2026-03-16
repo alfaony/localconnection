@@ -20,8 +20,8 @@ class RouterHealthCheckJob implements ShouldQueue
 {
     use InteractsWithQueue, Queueable, SerializesModels;
 
-    public int $timeout = 10; // Quick timeout
-    public int $tries = 4;
+    public int $timeout = 30; // Longer timeout to prevent worker killed (Mikrotik service has 10s timeout)
+    public int $tries = 2;
 
     public function __construct(public int $routerId) {}
 
