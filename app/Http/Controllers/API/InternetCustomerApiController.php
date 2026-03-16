@@ -46,8 +46,16 @@ class InternetCustomerApiController extends Controller
             });
         }
 
+        $allowedStatuses = ['pending', 'process_installation', 'installed'];
+
         if ($request->status) {
-            $query->where('status', $request->status);
+            if ($request->status == 'prosess') {
+                $query->whereIn('status', ['pending', 'process_installation']);
+            } else if ($request->status == 'installed') {
+                $query->where('status', 'installed');
+            }
+        } else {
+            $query->whereIn('status', $allowedStatuses);
         }
 
         if ($request->package_id) {
@@ -121,7 +129,6 @@ class InternetCustomerApiController extends Controller
         try {
             $customer = InternetCustomer::findOrFail($id);
 
-            // Validasi status harus pending
             if ($customer->status !== ParamSchema::PENDING) {
                 return response()->json([
                     'success' => false,
@@ -130,12 +137,10 @@ class InternetCustomerApiController extends Controller
                 ], 422);
             }
 
-            // Menjalankan logika instalasi & update status
             $this->installation($customer);
 
             DB::commit();
 
-            // Log activity
             Log::info('Customer pending approved via API', [
                 'customer_id'   => $customer->id,
                 'customer_code' => $customer->code,
@@ -186,11 +191,9 @@ class InternetCustomerApiController extends Controller
             if (!empty($userTechnical) && $from) {
                 $message = "Pembayaran Langganan Internet Untuk Kode " . $customer->code . " Telah di Setujui. Silahkan segera lakukan Pemasangan";
                 
-                // Karena ini API, route directUrl bisa diarahkan ke URL web atau dikosongkan jika untuk mobile
                 $directUrl = config('app.url') . "/internet-customer/" . $customer->id;
 
                 foreach ($userTechnical as $tech) {
-                    // Pastikan fungsi sentInbox tersedia di controller ini atau di Trait
                     $this->sentInbox($tech, $from->id, $message, $directUrl);
                 }
             }
@@ -335,22 +338,42 @@ class InternetCustomerApiController extends Controller
         }
     }
 
-    /**
-     * Get list of ODPs and Routers based on Customer's Location (Subdistrict)
-     * Digunakan sebelum melakukan completeInstallation
-     */
     public function getInstallationResources($id)
     {
-        $customer = InternetCustomer::with([
-            'subdistrict.coverageService.coverageServiceOds.ods.pops.routers'
+        $cust = \App\Models\InternetCustomer::with([
+            'internetPackage',
+            'subdistrict.coverageService.coverageServiceOds.ods.pops.routers',
         ])->findOrFail($id);
 
-        $coverageService = $customer->subdistrict?->coverageService;
+        $routerIds = collect(
+            $cust->subdistrict?->coverageService?->coverageServiceOds ?? []
+        )
+        ->flatMap(function ($csod) {
+            return collect($csod->opticalDistribution?->pops ?? [])
+                ->flatMap(fn($pop) => collect($pop->routers ?? [])->pluck('id'));
+        })
+        ->unique()
+        ->values();
 
-        // 1. Ambil ODP (Optical Distribution)
+        if ($routerIds->isEmpty()) {
+            $routersData = \App\Models\Router::query()
+                ->whereHas('pppoeServers')
+                ->orderBy('name')
+                ->get(['id', 'name', 'active_status']);
+        } else {
+            $routersData = \App\Models\Router::query()
+                ->whereIn('id', $routerIds)
+                ->whereHas('pppoeServers', fn($q) => $q->whereNotNull('address_pool_id'))
+                ->whereHas('addressPools')
+                ->withCount(['pppoeServers' => fn($q) => $q->whereNotNull('address_pool_id')])
+                ->orderBy('name')
+                ->get(['id', 'name', 'active_status']);
+        }
+
         $odps = [];
+        $coverageService = $cust->subdistrict?->coverageService;
         if ($coverageService) {
-            $odps = CoverageServiceDistribution::query()
+            $odps = \App\Models\CoverageServiceDistribution::query()
                 ->where('coverage_service_id', $coverageService->id)
                 ->with('ods:id,name')
                 ->get()
@@ -364,48 +387,19 @@ class InternetCustomerApiController extends Controller
                 ->values();
         }
 
-        // 2. Ambil Router terkait ODP/POP di wilayah tersebut
-        // Logic mengikuti openInstallationModal web
-        $routerIds = collect($coverageService?->coverageServiceOds ?? [])
-            ->flatMap(function ($csod) {
-                return collect($csod->ods?->pops ?? []) // Note: di model ods() adalah belongsTo ke OpticalDistribution
-                    ->flatMap(fn($pop) => collect($pop->routers ?? [])->pluck('id'));
-            })
-            ->unique()
-            ->values();
-
-        $routerQuery = \App\Models\Router::query();
-        
-        if ($routerIds->isNotEmpty()) {
-            $routerQuery->whereIn('id', $routerIds)
-                ->whereHas('pppoeServers', fn($q) => $q->whereNotNull('address_pool_id'))
-                ->whereHas('addressPools');
-        } else {
-            // Default jika tidak ada router spesifik wilayah, ambil yang punya PPPoE server
-            $routerQuery->whereHas('pppoeServers');
-        }
-
-        $routers = $routerQuery->orderBy('name')
-            ->get(['id', 'name', 'active_status'])
-            ->map(fn($r) => [
-                'id' => $r->id,
-                'name' => $r->name . ' (PPPoE: '.$r->pppoe_servers_count.')',
-                'is_online' => $r->active_status == 'online'
-            ]);
-
         return response()->json([
             'success' => true,
             'data' => [
                 'odps' => $odps,
-                'routers' => $routers
+                'routers' => $routersData->map(fn($r) => [
+                    'id' => $r->id,
+                    'name' => $r->name . ' (PPPoE: ' . ($r->pppoe_servers_count ?? 0) . ')',
+                    'is_online' => $r->active_status == 'online'
+                ])
             ]
         ]);
     }
 
-    /**
-     * Get IP Pools based on selected Router
-     * Dipanggil saat user Flutter memilih Router
-     */
     public function getIpPoolsByRouter(Request $request)
     {
         $request->validate([
