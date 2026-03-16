@@ -50,8 +50,11 @@ class CompleteInReviewDailyTasks extends Command
                 return 1;
             }
 
-            // Temukan semua task dengan status INREVIEW
-            $tasks = DailyTask::where('task_status_id', $inReviewStatus->id)->get();
+            // Temukan semua task dengan status INREVIEW yang lebih dari 2 bulan
+            $twoMonthsAgo = now()->subMonths(2);
+            $tasks = DailyTask::where('task_status_id', $inReviewStatus->id)
+                              ->where('created_at', '<', $twoMonthsAgo)
+                              ->get();
 
             if ($tasks->isEmpty()) {
                 $this->info("No tasks found with INREVIEW status.");
