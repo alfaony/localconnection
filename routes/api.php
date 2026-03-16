@@ -26,8 +26,10 @@ use App\Http\Controllers\API\UserApiController;
 
 use App\Http\Controllers\API\ProductStoreController;
 use App\Http\Controllers\API\MeetingApiController;
+use App\Http\Controllers\API\InternetCustomerApiController;
 use App\Http\Controllers\API\EkycController;
 use App\Http\Controllers\UserController;
+
 
 
 /*
@@ -65,6 +67,7 @@ Route::group(['middleware' => ['auth:api','role.permission.api']], function()
 
     Route::get('agreement-letter/downloadPdf/pdf/{slug}/',[AgreementLetterController::class,'downloadPdf'])->name('agreement-letter.download.pdf');;
     Route::resource('agreement-letter', AgreementLetterController::class);
+
 
     //Mobile
     Route::get('users/division/{divisionId}', [DailyTaskMobileController::class, 'getUsersByDivision'])
@@ -142,6 +145,17 @@ Route::group(['middleware' => ['auth:api','role.permission.api']], function()
 
     // CRUD Meeting
     Route::apiResource('meeting', MeetingApiController::class);
+
+    // Internet Customer
+    Route::prefix('internet-customers')->controller(InternetCustomerApiController::class)->group(function () {
+        Route::get('/', 'index');                          
+        Route::get('/{id}', 'show');                       
+        Route::post('/{id}/approve', 'approve');           
+        Route::post('/{id}/close', 'close');               
+        Route::post('/{id}/complete-installation', 'completeInstallation');
+        Route::get('/{id}/installation-resources', 'getInstallationResources');
+        Route::get('/get-ip-pools/by-router','getIpPoolsByRouter');
+    });
 
     // SKAM Import API
     Route::post('internet-customer/import', [InternetCustomerController::class, 'import']);
