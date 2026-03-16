@@ -9,6 +9,7 @@ use App\Models\PackageRouterProfile;
 use App\Models\HotspotServer;
 use App\Services\RadiusService;
 use App\Services\RouterOSService;
+use App\Jobs\SyncInstalledCustomersJob;
 use Exception;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;

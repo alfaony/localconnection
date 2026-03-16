@@ -9,7 +9,7 @@ class ImportProgress extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['batch_id', 'processed', 'total','total_import','errors'];
+    protected $fillable = ['batch_id', 'processed', 'total', 'total_import', 'errors'];
 
     protected $casts = [
         'errors' => 'array',  // Pastikan ini ada

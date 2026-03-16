@@ -328,10 +328,10 @@ class GenerateRecurringTasks extends Command
         $isHoliday = \App\Models\NationalHoliday::whereDate('date', $date)->exists();
 
         $isOnLeave = \App\Models\Dayoff::where('user_id', $userId)
-            ->where(function ($query) {
-                $query->whereNotNull('approval_hr_user_id')
-                      ->orWhereNotNull('approval_finance_user_id');
-            })
+            // ->where(function ($query) {
+            //     $query->whereNotNull('approval_hr_user_id')
+            //           ->orWhereNotNull('approval_finance_user_id');
+            // })
             ->whereDate('date_start', '<=', $date)
             ->whereDate('date_end', '>=', $date)
             ->exists();
