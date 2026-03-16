@@ -49,13 +49,13 @@ class InternetCustomerApiController extends Controller
         $allowedStatuses = ['pending', 'process_installation', 'installed'];
 
         if ($request->status) {
-            if ($request->status == 'prosess') {
-                $query->whereIn('status', ['pending', 'process_installation']);
+            if ($request->status == 'pending') {
+                $query->where('status', 'pending');
+            } else if ($request->status == 'prosess') {
+                $query->where('status', 'process_installation');
             } else if ($request->status == 'installed') {
                 $query->where('status', 'installed');
             }
-        } else {
-            $query->whereIn('status', $allowedStatuses);
         }
 
         if ($request->package_id) {
