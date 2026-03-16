@@ -244,19 +244,19 @@
                                         <div class="mb-1">
                                             <span class="badge badge-primary">
                                                 <i class="fas fa-warehouse mr-1"></i>
-                                                {{ $laptop->rack->zone->warehouse->name }}
+                                                {{ $laptop->rack?->zone?->warehouse?->name ?? 'Unknown' }}
                                             </span>
                                         </div>
                                         <div class="mb-1">
                                             <span class="badge badge-info">
                                                 <i class="fas fa-map-marker-alt mr-1"></i>
-                                                {{ $laptop->rack->zone->name }}
+                                                {{ $laptop->rack?->zone?->name ?? 'Unknown' }}
                                             </span>
                                         </div>
                                         <div>
                                             <span class="badge badge-secondary">
                                                 <i class="fas fa-th mr-1"></i>
-                                                {{ $laptop->rack->name }}
+                                                {{ $laptop->rack?->name ?? 'Unknown' }}
                                             </span>
                                         </div>
                                     </div>

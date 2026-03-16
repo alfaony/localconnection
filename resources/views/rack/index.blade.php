@@ -149,6 +149,10 @@
                     <td>{{ $rack->zone ? $rack->zone->name : '-' }}</td>
                     <td>{{ $rack->sensors ? $rack->sensors->pluck('name')->join(', ') : '-' }}</td>
                     <td>
+                        <a href="{{ route('rack.show', $rack->id) }}" class="btn btn-sm btn-success">
+                            <i class="fa fa-eye"></i>
+                        </a>
+
                         @canAccess('edit','racks')
                         <a href="{{ route('rack.edit', $rack->id) }}" class="btn btn-sm btn-info">
                             <i class="fa fa-edit"></i>

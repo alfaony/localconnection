@@ -23,7 +23,8 @@ class SaleIndex extends Component
     public $filter_start_time = '';
     public $filter_end_time = '';
     public $filter_user_id = '';
-    
+    public $filter_payment_method = '';
+
     // Temporary filters (user input, not yet applied)
     public $temp_search = '';
     public $temp_start_date = '';
@@ -31,6 +32,7 @@ class SaleIndex extends Component
     public $temp_start_time = '';
     public $temp_end_time = '';
     public $temp_user_id = '';
+    public $temp_payment_method = '';
     
     protected $paginationTheme = 'bootstrap';
 
@@ -45,6 +47,7 @@ class SaleIndex extends Component
         $this->temp_start_time = $this->filter_start_time;
         $this->temp_end_time = $this->filter_end_time;
         $this->temp_user_id = $this->filter_user_id;
+        $this->temp_payment_method = $this->filter_payment_method;
     }
 
     public function applyFilters()
@@ -56,6 +59,7 @@ class SaleIndex extends Component
         $this->filter_start_time = $this->temp_start_time;
         $this->filter_end_time = $this->temp_end_time;
         $this->filter_user_id = $this->temp_user_id;
+        $this->filter_payment_method = $this->temp_payment_method;
         
         $this->resetPage();
         
@@ -72,13 +76,15 @@ class SaleIndex extends Component
         $this->temp_start_time = '';
         $this->temp_end_time = '';
         $this->temp_user_id = '';
-        
+        $this->temp_payment_method = '';
+
         $this->filter_search = '';
         $this->filter_start_date = '';
         $this->filter_end_date = '';
         $this->filter_start_time = '';
         $this->filter_end_time = '';
         $this->filter_user_id = '';
+        $this->filter_payment_method = '';
         
         $this->resetPage();
         
@@ -127,9 +133,8 @@ class SaleIndex extends Component
     public function render()
     {
         $users = \App\Models\User::byCompany(auth()->user()->company_id)->get();
-        
-        $sales = Sale::byCompany(auth()->user()->company_id)
-            ->with(['user', 'items.productStore'])
+
+        $baseQuery = Sale::byCompany(auth()->user()->company_id)
             ->when($this->filter_search, function ($query) {
                 $query->where(function ($q) {
                     $q->where('transaction_code', 'like', '%' . $this->filter_search . '%')
@@ -141,6 +146,9 @@ class SaleIndex extends Component
                           $userQuery->where('name', 'like', '%' . $this->filter_search . '%');
                       });
                 });
+            })
+            ->when($this->filter_payment_method, function ($query) {
+                $query->where('payment_method', $this->filter_payment_method);
             })
             ->when($this->filter_start_date, function ($query) {
                 $query->whereDate('created_at', '>=', $this->filter_start_date);
@@ -156,11 +164,15 @@ class SaleIndex extends Component
             })
             ->when($this->filter_user_id, function ($query) {
                 $query->where('user_id', $this->filter_user_id);
-            })
+            });
+
+        $totalFinalAmount = (clone $baseQuery)->sum('final_amount');
+
+        $sales = $baseQuery->with(['user', 'items.productStore'])
             ->latest()
             ->paginate($this->perPage);
 
-        return view('livewire.sale.sale-index', compact('sales', 'users'))
+        return view('livewire.sale.sale-index', compact('sales', 'users', 'totalFinalAmount'))
             ->extends('adminlte::page');
     }
 }

@@ -136,8 +136,9 @@ class ProjectController extends Controller
         }
 
         $directManager = Manager::select('slug')->where('project_id',$projectEdit->id)->first();
+        $divisions = \App\Models\Division::byCompany(Auth::user()->company_id)->get();
 
-        return view('project.index', compact('projectEdit','project','totalProject', 'workOrder' ,'directManager'));
+        return view('project.index', compact('projectEdit','project','totalProject', 'workOrder' ,'directManager','divisions'));
     }
 
     /**

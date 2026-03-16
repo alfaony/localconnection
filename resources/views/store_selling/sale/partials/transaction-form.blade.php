@@ -191,7 +191,11 @@
                     <div class="alert alert-info">
                         <div class="d-flex justify-content-between align-items-center">
                             <span>Total yang harus dibayar:</span>
-                            <strong class="h4 mb-0">@{{ formatCurrency(grandTotal) }}</strong>
+                            <strong class="h4 mb-0">@{{ formatCurrency(paymentMethod === 'cash' ? cashRoundedTotal : grandTotal) }}</strong>
+                        </div>
+                        <div v-if="paymentMethod === 'cash' && cashDeduction > 0" class="d-flex justify-content-between align-items-center mt-1">
+                            <small class="text-muted">Total sebelum pembulatan: @{{ formatCurrency(grandTotal) }}</small>
+                            <small class="text-muted">Potongan pembulatan: @{{ formatCurrency(cashDeduction) }}</small>
                         </div>
                     </div>
 
@@ -242,19 +246,19 @@
                         <!-- Cash Payment -->
                         <div v-if="paymentMethod === 'cash'" class="form-group">
                             <label class="font-weight-bold">Jumlah Bayar</label>
-                            <input type="number" class="form-control form-control-lg" 
-                                   v-model="cashAmount" 
+                            <input type="number" class="form-control form-control-lg"
+                                   v-model="cashAmount"
                                    placeholder="Masukkan jumlah bayar"
-                                   :min="grandTotal">
+                                   :min="cashRoundedTotal">
                             <div v-if="cashAmount > 0" class="mt-3 p-3 bg-light rounded">
                                 <div class="d-flex justify-content-between">
                                     <span>Kembalian:</span>
-                                    <strong class="h5" 
-                                            :class="(cashAmount - grandTotal) >= 0 ? 'text-success' : 'text-danger'">
-                                        @{{ formatCurrency(cashAmount - grandTotal) }}
+                                    <strong class="h5"
+                                            :class="(cashAmount - cashRoundedTotal) >= 0 ? 'text-success' : 'text-danger'">
+                                        @{{ formatCurrency(cashAmount - cashRoundedTotal) }}
                                     </strong>
                                 </div>
-                                <div v-if="(cashAmount - grandTotal) < 0" class="text-danger small mt-1">
+                                <div v-if="(cashAmount - cashRoundedTotal) < 0" class="text-danger small mt-1">
                                     <i class="fas fa-exclamation-triangle"></i> Jumlah bayar kurang
                                 </div>
                             </div>

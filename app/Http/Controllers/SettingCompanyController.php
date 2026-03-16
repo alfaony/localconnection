@@ -68,11 +68,18 @@ class SettingCompanyController extends Controller
         try {
             $settings = SettingCompany::byCompany(Auth::user()->company_id)->get();
             $arrayExsist = ['header_store_image'];
-            $cacheKey = "xendit_settings_".Auth::user()->company_id;
-            Cache::forget($cacheKey);
             foreach ($settings as $setting) 
             {
                 $title = $setting->field_title;
+                
+                if ($request->has($title . '_delete') && $request->input($title . '_delete') == "1") {
+                    if ($setting->field_value && \Illuminate\Support\Facades\Storage::exists($setting->field_value)) {
+                        \Illuminate\Support\Facades\Storage::delete($setting->field_value);
+                    }
+                    $setting->user_id = Auth::user()->id;
+                    $setting->update(['field_value' => null]);
+                }
+
                 if ($request->has($title) && !in_array($title, $arrayExsist)) 
                 {
                     $fieldValue = $request->input($title);
