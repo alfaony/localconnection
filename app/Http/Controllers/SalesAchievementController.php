@@ -43,9 +43,12 @@ class SalesAchievementController extends Controller
     {
         $request->validate([
             'period' => 'required|string',
-            'sales_amount' => 'required|numeric',
-            'total_presentations' => 'required|integer',
-            'total_offers_issued' => 'required|integer'
+            'sales_amount' => 'nullable|numeric',
+            'total_presentations' => 'nullable|integer',
+            'total_offers_issued' => 'nullable|integer',
+            'customer_visits' => 'nullable|integer',
+            'registered_customers' => 'nullable|integer',
+            'active_customers' => 'nullable|integer'
         ]);
 
         $salesAchievement = new SalesAchievement();
@@ -55,6 +58,9 @@ class SalesAchievementController extends Controller
         $salesAchievement->sales_amount = $request->sales_amount;
         $salesAchievement->total_presentations = $request->total_presentations;
         $salesAchievement->total_offers_issued = $request->total_offers_issued;
+        $salesAchievement->customer_visits = $request->customer_visits;
+        $salesAchievement->registered_customers = $request->registered_customers;
+        $salesAchievement->active_customers = $request->active_customers;
         $salesAchievement->approved = false;  // mengatur ke 'false' secara default
         $salesAchievement->points = null;  // awalnya tidak ada poin
         $salesAchievement->status = ParamSchema::INREVIEW;
@@ -80,9 +86,12 @@ class SalesAchievementController extends Controller
     {
         $request->validate([
             'period' => 'required|string',
-            'sales_amount' => 'required|numeric',
-            'total_presentations' => 'required|integer',
-            'total_offers_issued' => 'required|integer'
+            'sales_amount' => 'nullable|numeric',
+            'total_presentations' => 'nullable|integer',
+            'total_offers_issued' => 'nullable|integer',
+            'customer_visits' => 'nullable|integer',
+            'registered_customers' => 'nullable|integer',
+            'active_customers' => 'nullable|integer'
         ]);
 
         $salesAchievement = SalesAchievement::byCompany(Auth::user()->company_id)->where('slug',$slug)->firstOrFail();
@@ -92,6 +101,9 @@ class SalesAchievementController extends Controller
         $salesAchievement->sales_amount = $request->sales_amount;
         $salesAchievement->total_presentations = $request->total_presentations;
         $salesAchievement->total_offers_issued = $request->total_offers_issued;
+        $salesAchievement->customer_visits = $request->customer_visits;
+        $salesAchievement->registered_customers = $request->registered_customers;
+        $salesAchievement->active_customers = $request->active_customers;
         $salesAchievement->save();
 
         return redirect()->route('sales_achievement.index')->with('success', 'Sales Achievement updated successfully.');
@@ -114,6 +126,7 @@ class SalesAchievementController extends Controller
         $salesAchievement = SalesAchievement::byCompany(Auth::user()->company_id)->where('slug',$slug)->firstOrFail();
         $salesAchievement->approval_user_id = Auth::user()->id;
         $salesAchievement->points = $request->point;
+        $salesAchievement->attempt_point_date = now();
         $salesAchievement->status = ParamSchema::COMPLATE;
         $salesAchievement->approved = true;
         $salesAchievement->save();

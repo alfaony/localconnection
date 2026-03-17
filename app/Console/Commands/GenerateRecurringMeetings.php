@@ -10,6 +10,8 @@ use Carbon\Carbon;
 use App\Services\GoogleService;
 use App\Schemas\ParamSchema;
 use Illuminate\Support\Str;
+use App\Helpers\InboxHelper;
+
 class GenerateRecurringMeetings extends Command
 {
     protected $signature = 'recurring:generate-meetings {slug?} {--date=} {--simulate} {--test}';
@@ -129,29 +131,47 @@ class GenerateRecurringMeetings extends Command
                     // Generate New Google Meet Event if needed
                     if ($template->meeting_type === ParamSchema::GOOGLE_MEET || $template->meeting_type === 'online') {
                         $googleService = new GoogleService($template->company_id);
-                        if ($googleService->isConfigured()) { 
-                            $googleMeet = $googleService->createGoogleMeet($newMeeting);
-                            $googleMeetData = $googleMeet->getData();
-                            if ($googleMeetData->success) {
-                                $newMeeting->update([
-                                    'google_meet_link' => $googleMeetData->link,
-                                    'google_event_id' => $googleMeetData->event_id,
-                                    'public_token' => Str::random(10),
-                                    'public_code' => Str::random(5),
-                                    'public_token_generated_at' => now(),
-                                ]);
-                            }
+
+                        $googleMeet = $googleService->createGoogleMeet($newMeeting);
+                        $googleMeetData = $googleMeet->getData();
+                        if ($googleMeetData->success) {
+                            $newMeeting->update([
+                                'google_meet_link' => $googleMeetData->link,
+                                'google_event_id' => $googleMeetData->event_id,
+                                'public_token' => Str::random(10),
+                                'public_code' => Str::random(5),
+                                'public_token_generated_at' => now(),
+                            ]);
                         }
                     }
                     // Copy partisipan
                     $participants = $template->participants()->get();
                     if ($participants->isNotEmpty()) {
+                        $inboxHelper = new InboxHelper();
+                        $message = "Undangan Rapat Rutin - " . $newMeeting->meeting_name;
+                        // Since newMeeting corresponds to the template but replicated, its slug may not exist yet if not created?
+                        // Model usually handles slug via boot traits upon save, so it should be there.
+                        // Let's ensure slug exists
+                        $url = route('meeting.show', $newMeeting->slug ?? '');
+
                         // attach partisipan tanpa nilai yang existing (default baru)
                         foreach ($participants as $participant) {
                             $newMeeting->participants()->attach($participant->id, [
                                 'is_attended' => false,
                                 'join_time' => null
                             ]);
+                            
+                            // Kirim inbox ke partisipan (kecuali creator / sender sendiri)
+                            if ($participant->id !== $newMeeting->user_id) {
+                                $inboxHelper->sent(
+                                    $participant->id,
+                                    $newMeeting->user_id,
+                                    $message,
+                                    $url,
+                                    false,
+                                    'email'
+                                );
+                            }
                         }
                     }
 

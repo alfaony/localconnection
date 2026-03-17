@@ -43,7 +43,7 @@ class VehicleController extends Controller
             'position' => 'required|string',
             'pic_user_id' => 'required|uuid|exists:users,id',
             'service_terakhir' => 'nullable|date',
-            'subscription_stnk' => 'required|date',
+            'subscription_stnk' => 'nullable|date',
             'subscription_kir' => 'nullable|date',
         ]);
     

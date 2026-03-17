@@ -1,6 +1,7 @@
 @extends('adminlte::page')
 
 @section('content')
+@include('components.alert')
 <div class="container p-3 mt-3">
     <h2 class="mb-4">Pencapaian Penjualan Bulanan</h2>
     <div class="mb-4">
