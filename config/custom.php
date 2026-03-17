@@ -123,6 +123,8 @@ return
 
       "type_vehicle" => 
       [
+         'item' => 'Barang Lain',
+         'engine' => 'Mesin',
          'motor' => 'Motor',
          'mobil' => 'Mobil',
       ],

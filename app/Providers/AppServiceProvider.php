@@ -595,7 +595,7 @@ class AppServiceProvider extends ServiceProvider
                 ],
                 'vehicles' => 
                 [
-                    'text' => 'Kendaraan',
+                    'text' => 'Kendaraan & Mesin',
                     'route' => 'vehicle.index',
                     'icon' => 'fa fa-car',
                 ],

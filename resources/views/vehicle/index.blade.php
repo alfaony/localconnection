@@ -1,17 +1,17 @@
 @extends('adminlte::page')
 
-@section('title', 'Kendaraan')
+@section('title', 'Kendaraan & Mesin')
 @section('content_header')
-    <h1>Daftar Kendaraan</h1>
+    <h1>Daftar Kendaraan & Mesin</h1>
 @stop
 
 @section('content')
 <div class="card">
     <div class="card-header d-flex justify-content-between align-items-center">
-        <span>List Kendaraan</span>
+        <span>List Kendaraan & Mesin</span>
         <div class="ml-auto">
             @canAccess('create','vehicles')
-            <a href="{{ route('vehicle.create') }}" class="btn btn-sm btn-primary">+ Tambah Kendaraan</a>
+            <a href="{{ route('vehicle.create') }}" class="btn btn-sm btn-primary">+ Tambah Kendaraan & Mesin</a>
             @endcanAccess
         </div>
     </div>
@@ -34,7 +34,7 @@
             <table class="table table-bordered table-hover">
                 <thead>
                     <tr>
-                        <th>ID Kendaraan</th>
+                        <th>ID Kendaraan & Mesin</th>
                         <th>Jenis</th>
                         <th>Posisi</th>
                         <th>PIC</th>
