@@ -27,7 +27,7 @@ class BatchSyncInstalledCustomersJob implements ShouldQueue
     {
         return [
             (new WithoutOverlapping('batch-sync-installed'))
-                ->expireAfter(600)
+                ->expireAfter(240)
                 ->dontRelease(),
         ];
     }
