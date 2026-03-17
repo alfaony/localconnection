@@ -41,59 +41,67 @@ class SyncInstalledCustomersJob implements ShouldQueue
         $radiusHits = 0;
         $mikrotikHits = 0;
 
-        // 1. Ambil semua customer INSTALLED/REACTIVATED
-        $customers = $this->getCustomers();
-
-        Log::info('[SyncJob] Started (HYBRID mode)', [
-            'total_customers' => count($customers),
-        ]);
-
-        if (empty($customers)) return;
-
-        // 2. Ambil active sessions dari radacct
-        $activeSessions = $this->getActiveSessions();
-
-        Log::info('[SyncJob] RADIUS radacct active sessions', [
-            'count' => count($activeSessions),
-        ]);
-
-        // 3. Process: RADIUS first, collect remaining for Mikrotik fallback
-        $updates = [];
-        $remaining = []; // Customers not found in radacct → fallback to Mikrotik
-
-        foreach ($customers as $customer) {
-            $totalChecked++;
-
-            $session = $activeSessions[$customer->username] ?? null;
-
-            if ($session) {
-                // ✅ Ditemukan di RADIUS radacct
-                $radiusHits++;
-                $totalActivated++;
-
-                $updates[] = $this->buildUpdateFromRadius($customer, $session);
-            } else {
-                // ❌ Tidak ada di radacct → simpan untuk fallback Mikrotik
-                $remaining[] = $customer;
-            }
-        }
-
-        // 4. Fallback: Cek Mikrotik API untuk customer yang tidak ada di radacct
-        if (!empty($remaining)) {
-            Log::info('[SyncJob] Fallback to Mikrotik API', [
-                'remaining_customers' => count($remaining),
+        try {
+            // 1. Ambil semua customer INSTALLED/REACTIVATED
+            $customers = $this->getCustomers();
+    
+            Log::info('[SyncJob] Started (HYBRID mode)', [
+                'total_customers' => count($customers),
             ]);
-
-            $mikrotikUpdates = $this->checkViaMikrotikApi($remaining);
-            $mikrotikHits = count($mikrotikUpdates);
-            $totalActivated += $mikrotikHits;
-
-            $updates = array_merge($updates, $mikrotikUpdates);
-        }
-
-        // 5. Batch update
-        if (!empty($updates)) {
-            $this->batchUpdateCustomers($updates);
+    
+            if (empty($customers)) return;
+    
+            // 2. Ambil active sessions dari radacct
+            $activeSessions = $this->getActiveSessions();
+    
+            Log::info('[SyncJob] RADIUS radacct active sessions', [
+                'count' => count($activeSessions),
+            ]);
+    
+            // 3. Process: RADIUS first, collect remaining for Mikrotik fallback
+            $updates = [];
+            $remaining = []; // Customers not found in radacct → fallback to Mikrotik
+    
+            foreach ($customers as $customer) {
+                $totalChecked++;
+    
+                $session = $activeSessions[$customer->username] ?? null;
+    
+                if ($session) {
+                    // ✅ Ditemukan di RADIUS radacct
+                    $radiusHits++;
+                    $totalActivated++;
+    
+                    $updates[] = $this->buildUpdateFromRadius($customer, $session);
+                } else {
+                    // ❌ Tidak ada di radacct → simpan untuk fallback Mikrotik
+                    $remaining[] = $customer;
+                }
+            }
+    
+            // 4. Fallback: Cek Mikrotik API untuk customer yang tidak ada di radacct
+            if (!empty($remaining)) {
+                Log::info('[SyncJob] Fallback to Mikrotik API', [
+                    'remaining_customers' => count($remaining),
+                ]);
+    
+                $mikrotikUpdates = $this->checkViaMikrotikApi($remaining);
+                $mikrotikHits = count($mikrotikUpdates);
+                $totalActivated += $mikrotikHits;
+    
+                $updates = array_merge($updates, $mikrotikUpdates);
+            }
+    
+            // 5. Batch update
+            if (!empty($updates)) {
+                $this->batchUpdateCustomers($updates);
+            }
+        } catch (\Throwable $th) {
+            //throw $th;
+            Log::error('[SyncJob] Error', [
+                'message' => $th->getMessage(),
+                'trace'   => $th->getTraceAsString(),
+            ]);
         }
 
         Log::info('[SyncJob] Completed (HYBRID)', [
