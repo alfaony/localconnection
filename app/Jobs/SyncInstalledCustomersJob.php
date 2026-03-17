@@ -51,44 +51,50 @@ class SyncInstalledCustomersJob implements ShouldQueue
     
             if (empty($customers)) return;
     
-            // 2. Ambil active sessions dari radacct
-            $activeSessions = $this->getActiveSessions();
-    
-            Log::info('[SyncJob] RADIUS radacct active sessions', [
-                'count' => count($activeSessions),
-            ]);
-    
-            // 3. Process: RADIUS first, collect remaining for Mikrotik fallback
-            $updates = [];
-            $remaining = []; // Customers not found in radacct → fallback to Mikrotik
-    
-            foreach ($customers as $customer) {
-                $totalChecked++;
-    
-                $session = $activeSessions[$customer->username] ?? null;
-    
-                if ($session) {
-                    // ✅ Ditemukan di RADIUS radacct
-                    $radiusHits++;
-                    $totalActivated++;
-    
-                    $updates[] = $this->buildUpdateFromRadius($customer, $session);
-                } else {
-                    // ❌ Tidak ada di radacct → simpan untuk fallback Mikrotik
-                    $remaining[] = $customer;
+            $updates   = [];
+            $remaining = [];
+
+            if (RadiusService::isEnabled()) {
+                // 2. Ambil active sessions dari radacct
+                $activeSessions = $this->getActiveSessions();
+
+                Log::info('[SyncJob] RADIUS radacct active sessions', [
+                    'count' => count($activeSessions),
+                ]);
+
+                // 3. Process: RADIUS first, collect remaining for Mikrotik fallback
+                foreach ($customers as $customer) {
+                    $totalChecked++;
+
+                    $session = $activeSessions[$customer->username] ?? null;
+
+                    if ($session) {
+                        // ✅ Ditemukan di RADIUS radacct
+                        $radiusHits++;
+                        $totalActivated++;
+                        $updates[] = $this->buildUpdateFromRadius($customer, $session);
+                    } else {
+                        // ❌ Tidak ada di radacct → fallback Mikrotik
+                        $remaining[] = $customer;
+                    }
                 }
+            } else {
+                // RADIUS disabled → langsung ke Mikrotik API
+                Log::info('[SyncJob] RADIUS disabled → Direct Mikrotik API mode');
+                $totalChecked = count($customers);
+                $remaining    = $customers;
             }
-    
-            // 4. Fallback: Cek Mikrotik API untuk customer yang tidak ada di radacct
+
+            // 4. Cek Mikrotik API untuk customer yang tidak ada di radacct (atau semua jika RADIUS disabled)
             if (!empty($remaining)) {
-                Log::info('[SyncJob] Fallback to Mikrotik API', [
+                Log::info('[SyncJob] Checking via Mikrotik API', [
                     'remaining_customers' => count($remaining),
                 ]);
-    
+
                 $mikrotikUpdates = $this->checkViaMikrotikApi($remaining);
-                $mikrotikHits = count($mikrotikUpdates);
+                $mikrotikHits    = count($mikrotikUpdates);
                 $totalActivated += $mikrotikHits;
-    
+
                 $updates = array_merge($updates, $mikrotikUpdates);
             }
     
