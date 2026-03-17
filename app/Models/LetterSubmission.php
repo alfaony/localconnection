@@ -134,7 +134,11 @@ class LetterSubmission extends Model
             return $query->byCompany(Auth::user()->company_id);
         }else
         {
-            return $query->where('user_id', Auth::user()->id)->orWhere('created_by', Auth::user()->id);
+            return $query->where('user_id', Auth::user()->id)
+                         ->orWhere('created_by', Auth::user()->id)
+                         ->orWhereHas('user', function ($q) {
+                             $q->where('approvement_user_id', Auth::user()->id);
+                         });
         }
     }
 }
