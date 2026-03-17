@@ -234,7 +234,7 @@ class SyncInstalledCustomersJob implements ShouldQueue
                     }
                 }
             } catch (\Throwable $e) {
-                Log::warning("[SyncJob] Mikrotik API fallback failed for router {$routerId}", [
+                Log::warning("[SyncJob] Mikrotik API fallback failed for router {$router->name}", [
                     'error' => $e->getMessage(),
                 ]);
             }
