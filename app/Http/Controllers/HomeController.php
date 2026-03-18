@@ -390,7 +390,7 @@ class HomeController extends Controller
             ->get()
             ->map(function($item) {
                 return [
-                    'name' => 'Direct Point dari ' . $item->fromUser->name . ' (' . $item->division->name . ')',
+                    'name' => 'Direct Point dari ' . $item->fromUser->name . ' (' . $item->division?->name ?? '-'. ')',
                     'point' => $item->approved_point ?? $item->point,
                     'date' => $item->approved_at->format('d M Y'),
                 ];
@@ -547,7 +547,7 @@ class HomeController extends Controller
                 ->get()
                 ->map(function($item) {
                     return [
-                        'name' => 'Direct Point dari ' . $item->fromUser->name . ' (' . $item->division->name . ')',
+                        'name' => 'Direct Point dari ' . $item->fromUser->name . ' (' . $item->division?->name ?? '-'. ')',
                         'point' => $item->approved_point ?? $item->point,
                         'date' => $item->approved_at->format('d M Y'),
                     ];

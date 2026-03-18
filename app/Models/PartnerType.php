@@ -30,4 +30,10 @@ class PartnerType extends Model
     {
         return $this->hasMany(Partner::class);
     }
+
+    public function scopeByCompany($query, $companyId)
+    {
+        $companyIds = auth()->user()->accessibleCompanies->pluck('id')->push($companyId)->unique();
+        return $query->whereIn('company_id', $companyIds);
+    }
 }
