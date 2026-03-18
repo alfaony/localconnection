@@ -458,7 +458,7 @@ $('#backlogAssignForm').on('submit', function(e) {
                 <select id="divisionSelect" name="division_id" class="form-control">
                     <option value="" selected>Pilih Divisi</option>    
                     @foreach($divisions as $division)
-                        <option value="{{ $division->id }}">{{ $division->name }}</option>
+                        <option value="{{ $division->id }}" data-coba="test" {{ isset($divisionAssignFirst) && $division->id == $divisionAssignFirst->id ? 'selected' : '' }}>{{ $division->name }}</option>
                     @endforeach
                 </select>
                 <small id="quotaInfo" class="text-muted d-none"></small>

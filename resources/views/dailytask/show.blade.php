@@ -566,13 +566,13 @@
                                 <label for="point">Poin</label>
                                 <input type="number" name="point" id="pointInput" class="form-control" placeholder="Masukkan Poin">
                             </div>
-
+                            
                             <div id="divisionSection" class="form-group mt-2 d-none">
                                 <label for="task_status">Point Divisi</label>
                                 <select id="divisionSelect" name="division_id" class="form-control">
                                     <option value="" selected>Pilih Divisi</option>    
                                     @foreach($divisions as $division)
-                                        <option value="{{ $division->id }}">{{ $division->name }}</option>
+                                        <option value="{{ $division->id }}" {{ isset($divisionAssignFirst) && $division->id == $divisionAssignFirst->id ? 'selected' : '' }}>{{ $division->name }}</option>
                                     @endforeach
                                 </select>
                                 <small id="quotaInfo" class="text-muted d-none"></small>
