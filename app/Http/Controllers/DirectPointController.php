@@ -86,8 +86,8 @@ class DirectPointController extends Controller
     {
         $request->validate([
             'to_user_id' => 'required|exists:users,id',
-            'division_id' => 'required|exists:divisions,id',
-            'point' => 'required|integer|min:1',
+            'division_id' => 'nullable|exists:divisions,id',
+            'point' => 'required|integer|not_in:0',
             'reason' => 'nullable|string|max:1000',
         ]);
 
@@ -95,27 +95,43 @@ class DirectPointController extends Controller
 
         try {
             $user = Auth::user();
-            $division = Division::findOrFail($request->division_id);
-
-            // Determine auto-approval status
-            $isAutoApproved = $this->checkAutoApproval($user, $division);
             
-            // If auto-approved, allocate quota now
+            $division = null;
+            $isAutoApproved = false;
             $quotaLockId = null;
-            if ($isAutoApproved) {
-                $quotaLock = $this->getOrCreateQuotaLock($division);
-                
-                // Check quota availability for auto-approved
-                $usedPoints = $this->getUsedPointsForLock($quotaLock);
-                $remainingQuota = $quotaLock->locked_quota - $usedPoints;
 
-                if ($request->point > $remainingQuota) {
-                    return back()->withErrors([
-                        'point' => "Quota divisi tidak mencukupi. Tersisa: {$remainingQuota} point"
-                    ])->withInput();
+            if ($request->point > 0) {
+                if (!$request->division_id) {
+                    return back()->withErrors(['division_id' => 'Divisi wajib dipilih untuk penambahan point.'])->withInput();
                 }
+
+                $division = Division::findOrFail($request->division_id);
+
+                // Determine auto-approval status
+                $isAutoApproved = $this->checkAutoApproval($user, $division);
                 
-                $quotaLockId = $quotaLock->id;
+                // If auto-approved, allocate quota now
+                if ($isAutoApproved) {
+                    $quotaLock = $this->getOrCreateQuotaLock($division);
+                    
+                    // Check quota availability for auto-approved
+                    $usedPoints = $this->getUsedPointsForLock($quotaLock);
+                    $remainingQuota = $quotaLock->locked_quota - $usedPoints;
+
+                    // Points < 0 (punishment) do not affect quota
+                    $requiredQuota = $request->point > 0 ? $request->point : 0;
+
+                    if ($requiredQuota > $remainingQuota) {
+                        return back()->withErrors([
+                            'point' => "Quota divisi tidak mencukupi. Tersisa: {$remainingQuota} point"
+                        ])->withInput();
+                    }
+                    
+                    $quotaLockId = $quotaLock->id;
+                }
+            } else {
+                // Negative points (punishment) do not require a division and are auto-approved
+                $isAutoApproved = true;
             }
 
             $status = $isAutoApproved ? DirectPoint::STATUS_APPROVED : DirectPoint::STATUS_PENDING;
@@ -126,7 +142,7 @@ class DirectPointController extends Controller
             $directPoint = DirectPoint::create([
                 'from_user_id' => $user->id,
                 'to_user_id' => $request->to_user_id,
-                'division_id' => $division->id,
+                'division_id' => $division ? $division->id : null,
                 'division_quota_lock_id' => $quotaLockId,
                 'point' => $request->point,
                 'approved_point' => $isAutoApproved ? $request->point : null, // Set approved_point for auto-approved
@@ -173,7 +189,7 @@ class DirectPointController extends Controller
     public function approve(Request $request, $id)
     {
         $request->validate([
-            'approved_point' => 'required|integer|min:1',
+            'approved_point' => 'required|integer|not_in:0',
         ]);
 
         $directPoint = DirectPoint::findOrFail($id);
@@ -199,10 +215,13 @@ class DirectPointController extends Controller
             $usedPoints = $this->getUsedPointsForLock($quotaLock);
             $remainingQuota = $quotaLock->locked_quota - $usedPoints;
 
-            if ($approvedPoint > $remainingQuota) {
+            // Points < 0 (punishment) do not affect quota
+            $requiredQuota = $approvedPoint > 0 ? $approvedPoint : 0;
+
+            if ($requiredQuota > $remainingQuota) {
                 DB::rollBack();
                 return back()->withErrors([
-                    'error' => "Quota tidak mencukupi untuk approve Direct Point ini. Tersisa: {$remainingQuota} point, dibutuhkan: {$approvedPoint} point"
+                    'error' => "Quota tidak mencukupi untuk approve Direct Point ini. Tersisa: {$remainingQuota} point, dibutuhkan: {$requiredQuota} point"
                 ])->withInput();
             }
 
@@ -296,7 +315,7 @@ class DirectPointController extends Controller
     {
         $request->validate([
             'division_id' => 'required|exists:divisions,id',
-            'point' => 'nullable|integer|min:1',
+            'point' => 'nullable|integer|not_in:0',
         ]);
 
         $divisionId = $request->division_id;
@@ -337,11 +356,13 @@ class DirectPointController extends Controller
         }
 
         // Calculate used points - use approved_point if set, otherwise point
+        // Only count positive points
         $directPointsUsed = DirectPoint::where('division_quota_lock_id', $quotaLock->id)
             ->where('status', DirectPoint::STATUS_APPROVED)
             ->get()
             ->sum(function($dp) {
-                return $dp->approved_point ?? $dp->point;
+                $val = $dp->approved_point ?? $dp->point;
+                return $val > 0 ? $val : 0;
             });
 
         $dailyTasksUsed = \App\Models\DailyTask::where('division_quota_lock_id', $quotaLock->id)
@@ -349,7 +370,10 @@ class DirectPointController extends Controller
 
         $totalUsed = $directPointsUsed + $dailyTasksUsed;
         $remaining = $quotaLock->locked_quota - $totalUsed;
-        $isSufficient = $remaining >= $point;
+        
+        // Negative points take 0 quota
+        $requiredQuota = $point > 0 ? $point : 0;
+        $isSufficient = $remaining >= $requiredQuota;
 
         return response()->json([
             'success' => true,
@@ -396,11 +420,13 @@ class DirectPointController extends Controller
     protected function getUsedPointsForLock(DivisionQuotaLock $quotaLock)
     {
         // Calculate used points from Direct Points (approved only) - use approved_point if set, otherwise point
+        // Only count positive points
         $directPointsUsed = DirectPoint::where('division_quota_lock_id', $quotaLock->id)
             ->where('status', DirectPoint::STATUS_APPROVED)
             ->get()
             ->sum(function($dp) {
-                return $dp->approved_point ?? $dp->point;
+                $val = $dp->approved_point ?? $dp->point;
+                return $val > 0 ? $val : 0;
             });
 
         // Calculate used points from DailyTasks
@@ -431,14 +457,15 @@ class DirectPointController extends Controller
     protected function sendInboxNotifications(DirectPoint $directPoint)
     {
         // 1. Always send to recipient
+        $divisionText = $directPoint->division ? " menggunakan quota divisi {$directPoint->division->name}" : "";
         $this->sentInbox(
             $directPoint->to_user_id,
-            "Anda menerima {$directPoint->point} point dari {$directPoint->fromUser->name} menggunakan quota divisi {$directPoint->division->name}",
+            "Anda menerima {$directPoint->point} point dari {$directPoint->fromUser->name}{$divisionText}",
             route('direct-point.show', $directPoint->id)
         );
 
         // 2. If pending, send to approvers
-        if ($directPoint->isPending()) {
+        if ($directPoint->isPending() && $directPoint->division_id) {
             $approvers = User::whereHas('divisions', function ($query) use ($directPoint) {
                 $query->where('divisions.id', $directPoint->division_id)
                     ->where('division_user.weekly_report_required', true);

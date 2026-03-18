@@ -82,7 +82,7 @@
                                     <h6 class="text-muted mb-2">
                                         <i class="fas fa-building"></i> Divisi Sumber
                                     </h6>
-                                    <h5 class="mb-0">{{ $directPoint->division->name }}</h5>
+                                    <h5 class="mb-0">{{ $directPoint->division->name ?? '-' }}</h5>
                                 </div>
                             </div>
                         </div>
@@ -164,7 +164,6 @@
                                                    id="approved_point"
                                                    class="form-control @error('approved_point') is-invalid @enderror" 
                                                    value="{{ old('approved_point', $directPoint->point) }}"
-                                                   min="1"
                                                    required>
                                             @error('approved_point')
                                                 <div class="invalid-feedback">{{ $message }}</div>
@@ -197,11 +196,11 @@
                                     const requestedPoint = parseInt(document.getElementById('requested_point').value);
                                     const approvedPoint = parseInt(document.getElementById('approved_point').value);
                                     
-                                    if (!approvedPoint || approvedPoint < 1) {
+                                    if (approvedPoint === 0 || isNaN(approvedPoint)) {
                                         Swal.fire({
                                             icon: 'warning',
                                             title: 'Point Tidak Valid',
-                                            text: 'Mohon masukkan jumlah point yang akan disetujui!',
+                                            text: 'Mohon masukkan jumlah point yang akan disetujui (tidak boleh 0)!',
                                             confirmButtonColor: '#3085d6'
                                         });
                                         return false;
@@ -257,7 +256,6 @@
                                         cancelButtonColor: '#6c757d',
                                         confirmButtonText: `<i class="fas fa-check"></i> Ya, Setujui ${approvedPoint} Point`,
                                         cancelButtonText: '<i class="fas fa-times"></i> Batal',
-                                        width: '600px',
                                         customClass: {
                                             confirmButton: 'btn btn-success btn-lg',
                                             cancelButton: 'btn btn-secondary btn-lg'
@@ -451,9 +449,10 @@
 
             const { quota, used, remaining, task_used, direct_point_used } = data;
             
-            // Calculate remaining AFTER approval
-            const remainingAfterApproval = remaining - approvedPoint;
-            const totalUsedAfterApproval = used + approvedPoint;
+            // Calculate remaining AFTER approval (negative takes 0 quota)
+            const requiredQuota = approvedPoint > 0 ? approvedPoint : 0;
+            const remainingAfterApproval = remaining - requiredQuota;
+            const totalUsedAfterApproval = used + requiredQuota;
             const usedPercentage = quota > 0 ? (totalUsedAfterApproval / quota * 100).toFixed(1) : 0;
 
             let progressColor = 'success';
@@ -543,9 +542,10 @@
 
                         const { remaining, is_sufficient } = response;
                         const requestedPoint = {{ $directPoint->point }};
-                        const remainingAfterApproval = remaining - approvedPoint;
+                        const requiredQuota = approvedPoint > 0 ? approvedPoint : 0;
+                        const remainingAfterApproval = remaining - requiredQuota;
 
-                        if (!approvedPoint || approvedPoint < 1) {
+                        if (approvedPoint === 0 || isNaN(approvedPoint)) {
                             $('#quota-feedback').html('');
                             $('#approveBtn').prop('disabled', false);
                         } else if (is_sufficient) {

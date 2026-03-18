@@ -152,7 +152,7 @@ class ReportPointProductivityDetailSheet implements FromCollection, WithHeadings
                 $rows[] = [
                     'user'     => $userName,
                     'category' => 'Direct Point',
-                    'name'     => 'Dari ' . ($item->fromUser->name ?? '-') . ' (' . ($item->division->name ?? '-') . ')',
+                    'name'     => 'Dari ' . ($item->fromUser->name ?? '-') . ' (' . ($item->division?->name ?? '-') . ')',
                     'date'     => $item->approved_at->format('d M Y'),
                     'point'    => $item->approved_point ?? $item->point,
                 ];
