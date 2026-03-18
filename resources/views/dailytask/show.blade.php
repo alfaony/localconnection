@@ -1215,7 +1215,7 @@
 <script>
     let selectedDivisionId = null;
 
-    $(document).on('input', '#pointInput', function () {
+    $(document).on('change', '#pointInput', function () {
         let point = parseInt($(this).val());
 
         if (isNaN(point) || point <= 0) {

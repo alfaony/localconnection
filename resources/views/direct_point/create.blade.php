@@ -39,10 +39,18 @@
                             <div class="input-group">
                                 <div class="input-group-prepend">
                                     <span class="input-group-text"><i class="fas fa-coins"></i></span>
+                                    <button type="button" class="btn btn-outline-danger" id="decrementPoint" title="Kurangi Point">
+                                        <i class="fas fa-minus"></i>
+                                    </button>
                                 </div>
-                                <input type="number" name="point" id="point" 
-                                       class="form-control @error('point') is-invalid @enderror" 
+                                <input type="number" name="point" id="point"
+                                       class="form-control text-center @error('point') is-invalid @enderror"
                                        value="{{ old('point', 0) }}" placeholder="Masukkan jumlah point (bisa min)" required>
+                                <div class="input-group-append">
+                                    <button type="button" class="btn btn-outline-success" id="incrementPoint" title="Tambah Point">
+                                        <i class="fas fa-plus"></i>
+                                    </button>
+                                </div>
                                 @error('point')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
@@ -462,6 +470,17 @@
                 }
             });
         }
+
+        // + / - buttons for point input
+        $('#incrementPoint').on('click', function() {
+            const current = parseInt($('#point').val()) || 0;
+            $('#point').val(current + 1).trigger('change');
+        });
+
+        $('#decrementPoint').on('click', function() {
+            const current = parseInt($('#point').val()) || 0;
+            $('#point').val(current - 1).trigger('change');
+        });
 
         // Trigger check on division or point change
         $('#division_id').on('change', _.debounce(checkQuota, 300));
