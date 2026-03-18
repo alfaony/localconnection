@@ -524,15 +524,20 @@ class InternetCustomerShow extends Component
         $this->availableHotspotServers = $this->customer->router_id
             ? HotspotServer::where('router_id', $this->customer->router_id)->get(['id', 'name'])->toArray()
             : [];
+        $install = [
+            'username'             => $this->customer->username ?? '',
+            'pass_hash'            => $this->customer->pass_hash ?? '',
+            'ip_address'           => $this->customer->ip_address ?? '',
+            'mac_address'          => $this->customer->mac_address ?? '',
+        ];
 
         $this->dispatchBrowserEvent('showEditInstalasiModal', [
             'local_address'        => $this->customer->local_address ?? '',
-            'username'             => $this->customer->username ?? '',
-            'pass_hash'            => $this->customer->pass_hash ?? '',
             'device_serial_number' => $this->customer->installation->device_serial_number ?? '',
             'hotspot_server_id'    => $this->customer->hotspot_server_id ?? '',
             'ip_binding_type'      => $this->customer->ip_binding_type ?? '',
             'ip_binding_mode'      => $this->customer->ip_binding_mode ?? '',
+            'install'              => $install,
         ]);
     }
 
@@ -794,7 +799,8 @@ class InternetCustomerShow extends Component
             
             // Update customer package
             $this->customer->update([
-                'status' => ParamSchema::REACTIVATED,
+                'status' => $this->customer->installation ? ParamSchema::REACTIVATED : ParamSchema::PROCESS_INSTALLATION,
+                'access_type' => $newPackage->access_type,
                 'internet_package_id' => $this->new_package_id,
             ]);
             

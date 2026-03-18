@@ -859,14 +859,14 @@
                             <div class="col-md-6">
                                 <div class="form-group">
                                     <label>IP Address <small class="text-muted">(untuk binding)</small></label>
-                                    <input type="text" wire:model="ip_address" class="form-control" placeholder="192.168.1.100">
+                                    <input type="text" wire:model="ip_address" id="ip_address" class="form-control" placeholder="192.168.1.100">
                                     @error('ip_address') <span class="text-danger">{{ $message }}</span> @enderror
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="form-group">
                                     <label>MAC Address <small class="text-muted">(untuk binding)</small></label>
-                                    <input type="text" wire:model="mac_address" class="form-control" placeholder="AA:BB:CC:DD:EE:FF">
+                                    <input type="text" wire:model="mac_address" id="mac_address" class="form-control" placeholder="AA:BB:CC:DD:EE:FF">
                                     @error('mac_address') <span class="text-danger">{{ $message }}</span> @enderror
                                 </div>
                             </div>
@@ -1169,9 +1169,19 @@
                 $("#formEditInstalasiClose").click();
 
                 document.getElementById('local_address').value = e.detail.local_address || '';
-                document.getElementById('username').value = e.detail.username || '';
-                document.getElementById('pass_hash').value = e.detail.pass_hash || '';
+                document.getElementById('username').value = e.detail.install.username || '';
+                document.getElementById('pass_hash').value = e.detail.install.pass_hash || '';
                 document.getElementById('device_serial_number').value = e.detail.device_serial_number || '';
+
+                var ip_addressEdit = document.getElementById('ip_address');
+                if(ip_addressEdit){
+                    document.getElementById('ip_address').value = e.detail.install.ip_address || '';
+                }
+
+                var mac_addressEdit = document.getElementById('mac_address')
+                if(mac_addressEdit){
+                    document.getElementById('mac_address').value = e.detail.install.mac_address || '';
+                }
 
                 // Hotspot fields — set via JS sebagai safety net
                 var hsSelect = document.getElementById('hotspot_server_id_select');
@@ -1239,23 +1249,48 @@
                 });
             });
 
-            // Event listener untuk submit data instalasi
+            // Event listener untuk submit data instalasi (PPPoE + Hotspot)
             document.getElementById('submitInstalasi').addEventListener('click', function() {
-                // Kumpulkan data dari form
-                $("#formEditInstalasiClose").click();
-
+                // Kumpulkan data umum (PPPoE & Hotspot)
                 const local_address = document.getElementById('local_address').value;
                 const username = document.getElementById('username').value;
                 const pass_hash = document.getElementById('pass_hash').value;
                 const device_serial_number = document.getElementById('device_serial_number').value;
-                
-                // Set nilai ke Livewire
+
+                // Set nilai umum ke Livewire
                 @this.set('local_address', local_address);
                 @this.set('username', username);
                 @this.set('pass_hash', pass_hash);
                 @this.set('device_serial_number', device_serial_number);
-                
-                // Panggil method save di Livewire
+
+                // Kumpulkan field Hotspot jika elemen ada di DOM
+                const hsSelect = document.getElementById('hotspot_server_id_select');
+                if (hsSelect) {
+                    @this.set('hotspot_server_id', hsSelect.value || null);
+                }
+
+                const ipBindingTypeEl = document.querySelector('select[wire\\:model="ip_binding_type"]');
+                if (ipBindingTypeEl) {
+                    @this.set('ip_binding_type', ipBindingTypeEl.value || null);
+                }
+
+                const ipBindingModeEl = document.querySelector('select[wire\\:model="ip_binding_mode"]');
+                if (ipBindingModeEl) {
+                    @this.set('ip_binding_mode', ipBindingModeEl.value || null);
+                }
+
+                const ipAddressEl = document.getElementById('ip_address');
+                if (ipAddressEl) {
+                    @this.set('ip_address', ipAddressEl.value || null);
+                }
+
+                const macAddressEl = document.getElementById('mac_address');
+                if (macAddressEl) {
+                    @this.set('mac_address', macAddressEl.value || null);
+                }
+
+                // Tutup modal, lalu panggil method save di Livewire
+                $("#formEditInstalasiClose").click();
                 @this.call('saveInstalasi');
             });
 
@@ -1270,6 +1305,8 @@
                 @this.set('username', '{{ $customer->username ?? '' }}');
                 @this.set('pass_hash', '{{ $customer->pass_hash ?? '' }}');
                 @this.set('device_serial_number', '{{ $customer->installation->device_serial_number ?? '' }}');
+                @this.set('ip_address', '{{ $customer->ip_address ?? '' }}');
+                @this.set('mac_address', '{{ $customer->mac_address ?? '' }}');
                 
                 // Reset error messages
                 @this.resetErrorBag();
