@@ -433,7 +433,15 @@ class DailyTaskController extends Controller
             $dailytaskNext = $request->next_slug ? DailyTask::select('id','slug','name')->byCompany(Auth::user()->company_id)->where('slug', $request->next_slug)->firstOrFail() : null;
             $doing = TaskStatus::where('name', ParamSchema::TODO)->firstOrFail();
             $approvement = TaskStatus::whereIn('name', [ParamSchema::COMPLATE, ParamSchema::NOTCOMPLATE])->get();
-            $divisions = Auth::user()->divisions()->get();
+            $divisionsFrom = Auth::user()->divisions()->get();
+            $divisionAssign = $dailytask->assign?->divisions ?? collect();
+            
+            $divisionAssignFirst = $dailytask->assign?->divisions->first() ?? null;
+
+            $divisions = $divisionsFrom
+                ->merge($divisionAssign)
+                ->unique('id') // unik berdasarkan id
+                ->values();
 
             $daysMap = config('custom.day_name_code');
             $isOverdue = $dailytask->isOverdue();
@@ -442,7 +450,7 @@ class DailyTaskController extends Controller
             $users = User::byCompany(Auth::user()->company_id)->get();
 
             // Handle AJAX request
-            $htmlContent = view('dailytask.sidebar', compact('dailytask', 'daysMap', 'isOverdue', 'doing', 'approvement','dailytaskNext','dailytaskChildCount', 'divisions', 'users'))->render();
+            $htmlContent = view('dailytask.sidebar', compact('dailytask', 'daysMap', 'isOverdue', 'doing', 'approvement','dailytaskNext','dailytaskChildCount', 'divisions', 'users', 'divisionAssignFirst'))->render();
             $htmlHeadContact = view('dailytask.sidebarhead', compact('dailytask'))->render();
             $htmlTableContent = view('dailytask.element-table', compact('dailytask'))->render();
             $htmlTableContentDashboard = view('dailytask.element-table-dashboard', compact('dailytask'))->render();
@@ -474,7 +482,7 @@ class DailyTaskController extends Controller
             $isDeleteMedia = Access::can('deletemedia', 'dailytasks');
 
             DB::commit();
-            return view('dailytask.show', compact('dailytask', 'users', 'types', 'categories', 'subTasks', 'showProject', 'doing', 'approvement', 'daysMap','divisions', 'isDeleteMedia'));
+            return view('dailytask.show', compact('dailytask', 'users', 'types', 'categories', 'subTasks', 'showProject', 'doing', 'approvement', 'daysMap','divisions', 'isDeleteMedia', 'divisionAssignFirst'));
 
         } catch (\Exception $e) {
             // dd($e);

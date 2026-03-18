@@ -41,7 +41,7 @@ class UsedLaptopResource extends JsonResource
                     return [
                         'item' => $check->item->name,
                         'status' => $check->status == "good" ? "Baik" : "Rusak",
-                        'note' => $check->note ?? "-",
+                        'note' => $check->notes ?? "-",
                     ];
                 }
             })->values()->toArray(),
