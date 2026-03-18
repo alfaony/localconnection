@@ -125,7 +125,7 @@ class RadiusService
         // Pastikan group ISOLIR ada dengan rate-limit kecil
         RadGroupReply::updateOrCreate(
             ['groupname' => 'ISOLIR', 'attribute' => 'Mikrotik-Rate-Limit'],
-            ['op' => ':=', 'value' => '512k/512k']
+            ['op' => ':=', 'value' => '1M/1M']
         );
 
         // Assign ke pool-suspended yang sudah ada di Mikrotik
