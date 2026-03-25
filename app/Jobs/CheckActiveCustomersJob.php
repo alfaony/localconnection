@@ -214,7 +214,6 @@ class CheckActiveCustomersJob implements ShouldQueue
     public function failed(\Throwable $exception): void
     {
         Log::error('CheckActiveCustomersJob failed', [
-            'router_id' => $this->routerId,
             'customer_id' => $this->customerId,
             'error' => $exception->getMessage(),
             'trace' => $exception->getTraceAsString()

@@ -18,6 +18,29 @@ class SalesAchievement extends Model
     public $incrementing = false; // Karena kita menggunakan UUID, bukan auto-increment
     protected $keyType = 'string'; // Tipe kunci primer adalah string
 
+    protected $fillable = [
+        'user_id',
+        'approval_user_id',
+        'slug',
+        'period',
+        'status',
+        'sales_amount',
+        'total_presentations',
+        'total_offers_issued',
+        'points',
+        'approved',
+        // New fields
+        'customer_visits',
+        'registered_customers',
+        'active_customers',
+        'attempt_point_date',
+    ];
+
+    protected $casts = [
+        'attempt_point_date' => 'datetime',
+        'approved' => 'boolean',
+    ];
+
     protected static function boot()
     {
         parent::boot();

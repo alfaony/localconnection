@@ -1,6 +1,7 @@
 @extends('adminlte::page')
 
 @section('content')
+@include('components.alert')
 <div class="col-md-12">
     @if ($errors->any())
         <div class="alert alert-danger">
@@ -23,7 +24,7 @@
             @endif
             <div class="mb-3">
                 <label for="period" class="form-label">Periode Capaian Penjualan</label>
-                <select class="form-control @error('period') is-invalid @enderror" id="period" name="period" required>
+                <select class="form-control @error('period') is-invalid @enderror" id="period" name="period" >
                     @foreach ($months as $key => $month)
                         <option value="{{ $key }}" {{ old('period', isset($salesAchievement) ? $salesAchievement->period : '') == $key ? 'selected' : '' }}>
                             {{ $month }}
@@ -48,7 +49,7 @@
             </div>
             <div class="mb-3">
                 <label for="total_presentations" class="form-label">Jumlah Presentasi</label>
-                <input type="number" class="form-control @error('total_presentations') is-invalid @enderror" id="total_presentations" name="total_presentations" value="{{ old('total_presentations', isset($salesAchievement) ? $salesAchievement->total_presentations : '') }}" required>
+                <input type="number" class="form-control @error('total_presentations') is-invalid @enderror" id="total_presentations" name="total_presentations" value="{{ old('total_presentations', isset($salesAchievement) ? $salesAchievement->total_presentations : '') }}" >
                 @error('total_presentations')
                     <span class="invalid-feedback" role="alert">
                         <strong>{{ $message }}</strong>
@@ -57,8 +58,36 @@
             </div>
             <div class="mb-3">
                 <label for="total_offers_issued" class="form-label">Jumlah Penawaran Diterbitkan</label>
-                <input type="number" class="form-control @error('total_offers_issued') is-invalid @enderror" id="total_offers_issued" name="total_offers_issued" value="{{ old('total_offers_issued', isset($salesAchievement) ? $salesAchievement->total_offers_issued : '') }}" required>
+                <input type="number" class="form-control @error('total_offers_issued') is-invalid @enderror" id="total_offers_issued" name="total_offers_issued" value="{{ old('total_offers_issued', isset($salesAchievement) ? $salesAchievement->total_offers_issued : '') }}" >
                 @error('total_offers_issued')
+                    <span class="invalid-feedback" role="alert">
+                        <strong>{{ $message }}</strong>
+                    </span>
+                @enderror
+            </div>
+            
+            <div class="mb-3">
+                <label for="customer_visits" class="form-label">Jumlah Kunjungan Pelanggan</label>
+                <input type="number" class="form-control @error('customer_visits') is-invalid @enderror" id="customer_visits" name="customer_visits" value="{{ old('customer_visits', isset($salesAchievement) ? $salesAchievement->customer_visits : '') }}" >
+                @error('customer_visits')
+                    <span class="invalid-feedback" role="alert">
+                        <strong>{{ $message }}</strong>
+                    </span>
+                @enderror
+            </div>
+            <div class="mb-3">
+                <label for="registered_customers" class="form-label">Jumlah Pelanggan Daftar</label>
+                <input type="number" class="form-control @error('registered_customers') is-invalid @enderror" id="registered_customers" name="registered_customers" value="{{ old('registered_customers', isset($salesAchievement) ? $salesAchievement->registered_customers : '') }}" >
+                @error('registered_customers')
+                    <span class="invalid-feedback" role="alert">
+                        <strong>{{ $message }}</strong>
+                    </span>
+                @enderror
+            </div>
+            <div class="mb-3">
+                <label for="active_customers" class="form-label">Jumlah Pelanggan Aktif</label>
+                <input type="number" class="form-control @error('active_customers') is-invalid @enderror" id="active_customers" name="active_customers" value="{{ old('active_customers', isset($salesAchievement) ? $salesAchievement->active_customers : '') }}" >
+                @error('active_customers')
                     <span class="invalid-feedback" role="alert">
                         <strong>{{ $message }}</strong>
                     </span>

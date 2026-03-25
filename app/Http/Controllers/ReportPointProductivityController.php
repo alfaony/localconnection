@@ -84,7 +84,7 @@ class ReportPointProductivityController extends Controller
                 ->sum('point');
 
             $salesAchievementPoints = SalesAchievement::where('user_id', $user->id)
-                ->whereBetween('created_at', [$startDate, $endDate])
+                ->whereBetween('attempt_point_date', [$startDate, $endDate])
                 ->sum('points');
 
            // Regular daily task points (NOT in punishment_users)
@@ -189,7 +189,7 @@ class ReportPointProductivityController extends Controller
                 ->sum('point');
 
             $salesAchievementPoints = SalesAchievement::where('user_id', $user->id)
-                ->whereBetween('created_at', [$startDate, $endDate])
+                ->whereBetween('attempt_point_date', [$startDate, $endDate])
                 ->sum('points');
 
             // Regular daily task points (NOT in punishment_users)
@@ -367,7 +367,7 @@ class ReportPointProductivityController extends Controller
             ->get()
             ->map(function($item) {
                 return [
-                    'name' => 'Direct Point dari ' . $item->fromUser->name . ' (' . $item->division->name . ')',
+                    'name' => 'Direct Point dari ' . $item->fromUser->name . ' (' . $item->division?->name . ')',
                     'point' => $item->approved_point ?? $item->point,
                     'date' => $item->approved_at->format('d M Y'),
                 ];

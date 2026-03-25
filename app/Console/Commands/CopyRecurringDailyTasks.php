@@ -28,6 +28,10 @@ class CopyRecurringDailyTasks extends Command
         // Dapatkan hari ini dalam format 'monday', 'tuesday', dll.
         $today = strtolower(Carbon::now()->format('l'));
 
+        if ($this->isNationalHoliday(Carbon::today())) {
+            $this->info("Hari ini adalah hari libur nasional. Tidak ada jadwal check-in.");
+            return;
+        }
         // Case 1: Proses tugas yang recurring di minggu yang sama tapi kurang dari hari ini
         $this->processTasksForSameWeekBeforeToday($today);
 
@@ -250,6 +254,11 @@ class CopyRecurringDailyTasks extends Command
         ]);
 
         return true;
+    }
+
+    private function isNationalHoliday($date)
+    {
+        return \App\Models\NationalHoliday::where('date', $date->toDateString())->exists();
     }
 
 }

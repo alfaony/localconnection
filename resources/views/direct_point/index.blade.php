@@ -110,8 +110,12 @@
                                     {{ $dp->toUser->name }}
                                 </td>
                                 <td>
-                                    <i class="fas fa-building text-info"></i> 
-                                    {{ $dp->division->name }}
+                                    @if($dp->division)
+                                        <i class="fas fa-building text-info"></i> 
+                                        {{ $dp->division->name }}
+                                    @else
+                                        <span class="text-muted">-</span>
+                                    @endif
                                 </td>
                                 <td class="text-center">
                                     <div class="d-flex flex-column align-items-center">

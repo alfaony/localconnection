@@ -171,13 +171,14 @@ class Kernel extends ConsoleKernel
         $schedule->command('billing:send-reminder')->timezone('Asia/Jakarta')->dailyAt('18:00');
 
         $schedule->command('project:set-status-sent-time')->timezone('Asia/Jakarta')->dailyAt('00:00');
-        $schedule->command('tasks:process-recurring')->timezone('Asia/Jakarta')->dailyAt('00:00');
+        $schedule->command('tasks:process-recurring')->timezone('Asia/Jakarta')->dailyAt('00:30');
         $schedule->command('recurring:generate')->timezone('Asia/Jakarta')->dailyAt('01:00');
         $schedule->command('recurring:generate-meetings')->timezone('Asia/Jakarta')->dailyAt('01:10');
         $schedule->command('media:cleanup-temporary')->timezone('Asia/Jakarta')->dailyAt('00:00');
         $schedule->command('dayoff:reset-quota')->timezone('Asia/Jakarta')->yearlyOn(1, 1, '02:00');
         $schedule->command('weekly:check-compliance')->timezone('Asia/Jakarta')->mondays()->at('3:00');
         $schedule->command('dailytask:check-status')->timezone('Asia/Jakarta')->dailyAt('00:00');
+        $schedule->command('dailytask:complete-inreview')->timezone('Asia/Jakarta')->dailyAt('00:00');
         
         $company = Company::all();
         foreach ($company as $a) 
