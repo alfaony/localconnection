@@ -121,6 +121,8 @@ class InternetCustomerIndex extends Component
     // BARU: Method untuk load ODP berdasarkan customer
     public function openInstallationModal(string $customerId)
     {
+        $radiusEnable = \App\Services\RadiusService::isEnabled();
+
         $cust = InternetCustomer::with([
             'internetPackage',
             'subdistrict.coverageService.coverageServiceOds.ods.pops.routers',
@@ -307,30 +309,58 @@ class InternetCustomerIndex extends Component
             $this->local_address    = $local_address;
         }
 
+        $isBypassed = $isHotspot && ($ip_binding_mode === 'bypassed');
+
+        // Auto-generate identifier untuk bypassed (tidak perlu login, tapi username harus unik di DB)
+        if ($isBypassed && empty($this->username)) {
+            $macClean = preg_replace('/[^a-zA-Z0-9]/', '', $mac_address ?? '');
+            $this->username = 'bypass_' . ($macClean ?: \Illuminate\Support\Str::random(10));
+            $username = $this->username;
+            $this->password = \Illuminate\Support\Str::random(16); // tidak pernah dipakai
+        }
+
         // Validasi kondisional
         $rules = [
             'currentInstallationId'  => 'required|exists:internet_customers,id',
             'deviceSerialNumber'     => 'required|string|max:255',
-            'username'               => 'required|unique:internet_customers,username',
-            'password'               => 'required',
             'optical_distribution_id'=> 'required|exists:optical_distributions,id',
             'grouping_id'            => 'nullable|string|max:255',
         ];
         $messages = [
             'deviceSerialNumber.required'      => 'Serial Number wajib diisi',
-            'username.unique'                  => 'Username sudah digunakan',
             'optical_distribution_id.required' => 'ODP wajib dipilih',
             'optical_distribution_id.exists'   => 'ODP tidak valid',
         ];
 
         if ($isHotspot) {
             $rules['hotspot_server_id'] = 'required|exists:hotspot_servers,id';
-            $rules['ip_address']        = 'nullable|ip';
-            $rules['mac_address']       = 'nullable|string|max:32';
             $messages['hotspot_server_id.required'] = 'Hotspot Server wajib dipilih';
+
+            if ($isBypassed) {
+                $rules['mac_address'] = 'nullable|string|max:32';
+                $rules['ip_address']  = 'nullable|ip';
+                if (empty($mac_address) && empty($ip_address)) {
+                    $this->addError('mac_address', 'Mode Bypassed membutuhkan minimal MAC address atau IP address');
+                    return false;
+                }
+            } else {
+                $rules['username']    = 'required|unique:internet_customers,username';
+                $rules['password']    = 'required';
+                $rules['ip_address']  = 'nullable|ip';
+                $rules['mac_address'] = 'nullable|string|max:32';
+                $messages['username.unique'] = 'Username hotspot sudah digunakan';
+                // Direct binding (non-bypassed) juga butuh IP atau MAC
+                if ($ip_binding_type === 'direct' && empty($ip_address) && empty($mac_address)) {
+                    $this->addError('ip_address', 'Direct binding membutuhkan minimal IP Address atau MAC Address');
+                    return false;
+                }
+            }
         } else {
+            $rules['username']     = 'required|unique:internet_customers,username';
+            $rules['password']     = 'required';
             $rules['router_id']    = 'required|exists:routers,id';
             $rules['local_address']= 'nullable|ip|unique:internet_customers,local_address';
+            $messages['username.unique']      = 'Username PPPoE sudah digunakan';
             $messages['local_address.unique'] = 'Alamat IP lokal sudah terdaftar';
         }
 
@@ -362,8 +392,6 @@ class InternetCustomerIndex extends Component
             }
 
             $customer->update($updateData);
-            
-            dispatch(new \App\Jobs\ProvisionCustomerJob($customer->id));
 
             // 3. UPDATED: Buat record installation dengan field baru
             $customerInstallation = InternetCustomerInstallation::create([
@@ -951,6 +979,7 @@ class InternetCustomerIndex extends Component
             'packages'             => $packages,
             'routers'              => $this->routers,
             'importAvailableOdps'  => $this->importAvailableOdps,
+            'radiusEnable'         => \App\Services\RadiusService::isEnabled(),
         ])->extends('adminlte::page');
     }
 

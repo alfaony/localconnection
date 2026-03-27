@@ -657,7 +657,7 @@
                             <select id="ipBindingTypeSelect" class="form-control">
                                 <option value="">— Tidak ada binding —</option>
                                 <option value="direct">Direct (MikroTik ip-binding)</option>
-                                <option value="radius">Radius (Framed-IP-Address)</option>
+                                <option value="radius" {{ $radiusEnable ? '' : 'disabled' }}>Radius (Framed-IP-Address)</option>
                             </select>
                         </div>
 
@@ -682,27 +682,36 @@
                         </div>
                     </div>
 
-                    <div class="mb-3">
-                        <label class="form-label">Username <span class="text-danger">*</span></label>
-                        <div class="input-group">
-                            <input type="text" 
-                                class="form-control" 
-                                id="modalUsername"
-                                placeholder="username_pppoe">
-                            <span class="input-group-text">
-                                <div wire:loading wire:target="username">
-                                    <i class="fas fa-spinner fa-spin"></i>
-                                </div>
-                                <div wire:loading.remove wire:target="username">
-                                    {{-- Icon akan diisi oleh JavaScript --}}
-                                </div>
-                            </span>
+                    {{-- Auth fields — disembunyikan untuk mode bypassed --}}
+                    <div id="authFields">
+                        <div class="mb-3">
+                            <label class="form-label">Username <span class="text-danger auth-required-star">*</span></label>
+                            <div class="input-group">
+                                <input type="text"
+                                    class="form-control"
+                                    id="modalUsername"
+                                    placeholder="username_hotspot">
+                                <span class="input-group-text">
+                                    <div wire:loading wire:target="username">
+                                        <i class="fas fa-spinner fa-spin"></i>
+                                    </div>
+                                    <div wire:loading.remove wire:target="username">
+                                        {{-- Icon akan diisi oleh JavaScript --}}
+                                    </div>
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Password <span class="text-danger auth-required-star">*</span></label>
+                            <input type="password" class="form-control" wire:model="password" id="modalPassword">
                         </div>
                     </div>
 
-                    <div class="mb-3">
-                        <label class="form-label">Password</label>
-                        <input type="password" class="form-control" wire:model="password" id="modalPassword" required>
+                    {{-- Info bypassed (ditampilkan saat mode bypassed dipilih) --}}
+                    <div id="bypassedInfo" class="alert alert-warning py-2 px-3 mb-3" style="display:none;">
+                        <i class="fas fa-shield-alt me-1"></i>
+                        <strong>Mode Bypassed</strong> — user tidak perlu login. Akses internet diberikan langsung berdasarkan MAC/IP address yang terdaftar.
                     </div>
                     
                     <div class="mb-3">
@@ -845,6 +854,9 @@
     document.addEventListener('livewire:load', function() {
         const installationModal = new bootstrap.Modal(document.getElementById('installationModal'));
         let uploadedFiles = [];
+        // Track access type & bypass mode untuk validasi submit
+        let currentAccessType  = 'pppoe';
+        let currentBypassMode  = false;
 
         // Listen untuk update status username check
         window.addEventListener('usernameCheckComplete', function(event) {
@@ -935,10 +947,35 @@
             select.dispatchEvent(new Event('change', { bubbles: true }));
         });
         
-        // IP Binding type → show/hide detail fields
+        // Fungsi toggle auth fields (username/password) berdasarkan mode bypassed
+        function toggleBypassedMode(isBypassed) {
+            currentBypassMode = isBypassed;
+            document.getElementById('authFields').style.display    = isBypassed ? 'none' : 'block';
+            document.getElementById('bypassedInfo').style.display  = isBypassed ? 'block' : 'none';
+            if (isBypassed) {
+                // Reset & bersihkan auth fields saat mode bypassed
+                document.getElementById('modalUsername').value = '';
+                document.getElementById('modalPassword').value = '';
+                @this.set('username', '');
+                @this.set('password', '');
+            }
+        }
+
+        // IP Binding type → show/hide detail fields + hide mode for radius
         document.getElementById('ipBindingTypeSelect')?.addEventListener('change', function() {
-            const details = document.getElementById('ipBindingDetails');
+            const details  = document.getElementById('ipBindingDetails');
+            const isDirect = this.value === 'direct';
             details.style.display = this.value ? 'block' : 'none';
+            // Mode select (bypassed) hanya relevan untuk 'direct'
+            const modeRow = document.getElementById('ipBindingModeSelect')?.closest('.col-md-6');
+            if (modeRow) modeRow.style.display = isDirect ? '' : 'none';
+            document.getElementById('ipBindingModeSelect').value = 'regular';
+            toggleBypassedMode(false);
+        });
+
+        // IP Binding mode → toggle auth fields jika bypassed
+        document.getElementById('ipBindingModeSelect')?.addEventListener('change', function() {
+            toggleBypassedMode(this.value === 'bypassed');
         });
 
         // Hotspot server change → sync router_id
@@ -954,7 +991,9 @@
         // Event listener untuk populate modal
         window.addEventListener('open-installation-modal', (e) => {
             const { customerName, customerCode, serialNumber, accessType, routers, hotspotServers, odps } = e.detail;
-            
+            currentAccessType = accessType || 'pppoe';
+            currentBypassMode = false;
+
             console.log('🔍 Modal opened with data:', e.detail); // Debug log
             console.log('📦 ODPs received:', odps); // Debug log
             
@@ -967,6 +1006,10 @@
             const isHotspot = (accessType === 'hotspot');
             document.getElementById('pppoeFields').style.display   = isHotspot ? 'none' : 'block';
             document.getElementById('hotspotFields').style.display  = isHotspot ? 'block' : 'none';
+            // Reset auth fields (selalu tampil saat modal dibuka)
+            toggleBypassedMode(false);
+            document.getElementById('authFields').style.display   = 'block';
+            document.getElementById('bypassedInfo').style.display = 'none';
 
             // Populate hotspot servers
             if (isHotspot) {
@@ -1163,31 +1206,33 @@
                 return;
             }
 
-            if (!routerId || routerId === '') {
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'Perhatian',
-                    text: 'Router harus dipilih'
-                });
+            if (currentAccessType !== 'hotspot' && (!routerId || routerId === '')) {
+                Swal.fire({ icon: 'warning', title: 'Perhatian', text: 'Router harus dipilih' });
                 return;
             }
-            
-            if (!username) {
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'Perhatian',
-                    text: 'Username harus diisi'
-                });
+
+            if (currentAccessType === 'hotspot' && !hotspotServerId) {
+                Swal.fire({ icon: 'warning', title: 'Perhatian', text: 'Hotspot Server harus dipilih' });
                 return;
             }
-            
-            if (!password) {
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'Perhatian',
-                    text: 'Password harus diisi'
-                });
+
+            // Direct binding: wajib isi IP atau MAC (berlaku untuk semua mode)
+            if (ipBindingType === 'direct' && !ipAddress && !macAddress) {
+                Swal.fire({ icon: 'warning', title: 'Perhatian', text: 'Direct binding membutuhkan minimal IP Address atau MAC Address' });
                 return;
+            }
+
+            if (currentBypassMode) {
+                // Bypassed: skip username/password (sudah dicek di atas via ipBindingType)
+            } else {
+                if (!username) {
+                    Swal.fire({ icon: 'warning', title: 'Perhatian', text: 'Username harus diisi' });
+                    return;
+                }
+                if (!password) {
+                    Swal.fire({ icon: 'warning', title: 'Perhatian', text: 'Password harus diisi' });
+                    return;
+                }
             }
             
             // Konfirmasi

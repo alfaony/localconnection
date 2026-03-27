@@ -40,6 +40,50 @@ class RadiusService
     }
 
     /**
+     * Hotspot-aware group setup — termasuk Session-Timeout dan Idle-Timeout dari paket.
+     * Jika nilai 0 / null → atribut dihapus (unlimited).
+     */
+    public function ensureHotspotGroup(InternetPackage $pkg, string $groupName): void
+    {
+        // Rate-limit (sama seperti PPPoE)
+        $down = (int)($pkg->rate_down_mbps ?? $pkg->bandwidth ?? 0);
+        $up   = (int)($pkg->rate_up_mbps ?? max(1, (int)ceil(($pkg->bandwidth ?? 1) * 0.2)));
+        RadGroupReply::updateOrCreate(
+            ['groupname' => $groupName, 'attribute' => 'Mikrotik-Rate-Limit'],
+            ['op' => ':=', 'value' => "{$down}M/{$up}M"]
+        );
+
+        // Session-Timeout (detik). 0 / null = unlimited → hapus atribut.
+        $sessionTimeout = (int)($pkg->session_timeout_seconds ?? 0);
+        if ($sessionTimeout > 0) {
+            RadGroupReply::updateOrCreate(
+                ['groupname' => $groupName, 'attribute' => 'Session-Timeout'],
+                ['op' => ':=', 'value' => (string)$sessionTimeout]
+            );
+        } else {
+            RadGroupReply::where('groupname', $groupName)->where('attribute', 'Session-Timeout')->delete();
+        }
+
+        // Idle-Timeout (detik). 0 / null = unlimited → hapus atribut.
+        $idleTimeout = (int)($pkg->idle_timeout_seconds ?? 0);
+        if ($idleTimeout > 0) {
+            RadGroupReply::updateOrCreate(
+                ['groupname' => $groupName, 'attribute' => 'Idle-Timeout'],
+                ['op' => ':=', 'value' => (string)$idleTimeout]
+            );
+        } else {
+            RadGroupReply::where('groupname', $groupName)->where('attribute', 'Idle-Timeout')->delete();
+        }
+
+        Log::info('[RadiusService] ensureHotspotGroup', [
+            'group'           => $groupName,
+            'rate'            => "{$down}M/{$up}M",
+            'session_timeout' => $sessionTimeout,
+            'idle_timeout'    => $idleTimeout,
+        ]);
+    }
+
+    /**
      * Buat/update user di RADIUS (password + group mapping).
      */
     public function upsertUser(InternetCustomer $cust, string $groupName): void
@@ -71,7 +115,13 @@ class RadiusService
     }
 
     /**
-     * Buat/update customer hotspot di RADIUS (password + group, tanpa Framed-IP-Address).
+     * Buat/update customer hotspot di RADIUS (password + group + Framed-IP-Address kondisional).
+     *
+     * Framed-IP-Address:
+     *  - ip_binding_type = 'radius' + ip_address terisi → set ke ip_address
+     *  - selain itu → hapus (tidak ada fixed IP)
+     *
+     * ip_binding_type = 'direct' ditangani terpisah via MikroTik /ip/hotspot/ip-binding/.
      */
     public function upsertHotspotCustomer(InternetCustomer $cust, string $groupName): void
     {
@@ -87,12 +137,32 @@ class RadiusService
             ['groupname' => $groupName, 'priority' => 1]
         );
 
-        // Hotspot tidak pakai Framed-IP-Address — hapus jika ada dari data lama
-        RadReply::where('username', $cust->username)
-            ->where('attribute', 'Framed-IP-Address')
-            ->delete();
+        // Radius IP binding → Framed-IP-Address dari ip_address (bukan local_address)
+        if ($cust->ip_binding_type === 'radius' && !empty($cust->ip_address)) {
+            RadReply::updateOrCreate(
+                ['username' => $cust->username, 'attribute' => 'Framed-IP-Address'],
+                ['op' => ':=', 'value' => $cust->ip_address]
+            );
+        } else {
+            RadReply::where('username', $cust->username)
+                ->where('attribute', 'Framed-IP-Address')
+                ->delete();
+        }
 
-        Log::info('[RadiusService] upsertHotspotCustomer', ['username' => $cust->username, 'group' => $groupName]);
+        Log::info('[RadiusService] upsertHotspotCustomer', [
+            'username'        => $cust->username,
+            'group'           => $groupName,
+            'ip_binding_type' => $cust->ip_binding_type,
+            'ip_address'      => $cust->ip_address,
+        ]);
+    }
+
+    /**
+     * Hapus Framed-IP-Address (dipanggil saat suspend radius binding).
+     */
+    public function removeFramedIp(string $username): void
+    {
+        RadReply::where('username', $username)->where('attribute', 'Framed-IP-Address')->delete();
     }
 
     /**

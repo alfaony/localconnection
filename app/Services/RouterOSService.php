@@ -286,15 +286,15 @@ public function addHotspotIpBinding(
     if ($existing) {
         $upd = (new Query('/ip/hotspot/ip-binding/set'))
             ->equal('.id', $existing['.id'])
-            ->equal('type', $type)
-            ->equal('server', $serverName);
+            ->equal('type', $type);
+        if ($serverName) $upd->equal('server', $serverName);
         if ($ip)  $upd->equal('address', $ip);
         if ($mac) $upd->equal('mac-address', $mac);
         $c->query($upd)->read();
     } else {
         $add = (new Query('/ip/hotspot/ip-binding/add'))
-            ->equal('type', $type)
-            ->equal('server', $serverName);
+            ->equal('type', $type);
+        if ($serverName) $add->equal('server', $serverName);
         if ($ip)  $add->equal('address', $ip);
         if ($mac) $add->equal('mac-address', $mac);
         $c->query($add)->read();

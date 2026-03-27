@@ -89,11 +89,20 @@ class ProvisionCustomerJob implements ShouldQueue
     }
 
     /**
-     * Hotspot flow (RADIUS primary + Direct fallback)
+     * Hotspot flow (RADIUS primary + Direct fallback).
+     *
+     * ip_binding_mode='bypassed' → user tidak perlu auth. MikroTik mengizinkan
+     * akses berdasarkan MAC/IP saja. Tidak butuh RADIUS atau hotspot user.
      */
     protected function handleHotspot(RadiusService $radius, InternetCustomer $cust, InternetPackage $pkg, string $groupName, Router $router): void
     {
-        // Ensure hotspot user profile di MikroTik (selalu jalan)
+        // Bypassed: hanya kelola ip-binding, skip semua auth
+        if ($cust->ip_binding_type === 'direct' && $cust->ip_binding_mode === 'bypassed') {
+            $this->handleBypassedHotspot($cust, $router);
+            return;
+        }
+
+        // Normal hotspot: RADIUS primary + Direct fallback
         $this->ensureHotspotProfileOnRouter($router, $pkg, $groupName);
 
         if (RadiusService::isEnabled()) {
@@ -109,6 +118,34 @@ class ProvisionCustomerJob implements ShouldQueue
                 'customer' => $cust->username, 'status' => $cust->status,
             ]);
             $this->handleHotspotDirectApiOnly($cust, $groupName, $router);
+        }
+    }
+
+    /**
+     * Bypassed hotspot: hanya kelola ip-binding entry di MikroTik.
+     * Tidak ada autentikasi, tidak ada RADIUS, tidak ada hotspot user.
+     *
+     *  INSTALLED/REACTIVATED → add ip-binding (bypassed)
+     *  SUSPENDED             → remove ip-binding (putus akses)
+     */
+    protected function handleBypassedHotspot(InternetCustomer $cust, Router $router): void
+    {
+        try {
+            $ros    = app(RouterOSService::class);
+            $client = $ros->client($router);
+
+            if ($cust->status == ParamSchema::SUSPENDED) {
+                $ros->removeHotspotIpBinding($client, $cust->ip_address ?: null, $cust->mac_address ?: null);
+                Log::info('[ProvisionJob] BYPASSED SUSPENDED — ip-binding removed ✅', ['customer' => $cust->username]);
+            } else {
+                $this->handleIpBinding($cust, $router);
+                Log::info('[ProvisionJob] BYPASSED ACTIVE — ip-binding set ✅', ['customer' => $cust->username]);
+            }
+        } catch (\Throwable $e) {
+            Log::error('[ProvisionJob] Bypassed ip-binding failed', [
+                'customer' => $cust->username,
+                'error'    => $e->getMessage(),
+            ]);
         }
     }
 
@@ -325,8 +362,10 @@ class ProvisionCustomerJob implements ShouldQueue
     protected function handleHotspotInstall(RadiusService $radius, InternetCustomer $cust, InternetPackage $pkg, string $groupName, Router $router): void
     {
         try {
-            $radius->ensureGroup($pkg, $groupName);
-            $radius->upsertUser($cust, $groupName);
+            // ensureHotspotGroup: set rate-limit + Session-Timeout + Idle-Timeout dari paket
+            $radius->ensureHotspotGroup($pkg, $groupName);
+            // upsertHotspotCustomer: set password, group, Framed-IP-Address (jika radius binding)
+            $radius->upsertHotspotCustomer($cust, $groupName);
 
             Log::info('[ProvisionJob] HOTSPOT INSTALLED via RADIUS ✅', ['customer' => $cust->username]);
         } catch (\Throwable $e) {
@@ -334,7 +373,7 @@ class ProvisionCustomerJob implements ShouldQueue
             $this->fallbackHotspotDirectApi($cust, $groupName, $router, 'install');
         }
 
-        // Handle IP binding setelah auth
+        // Handle Direct ip-binding (Framed-IP-Address untuk radius binding sudah di-handle upsertHotspotCustomer)
         $this->handleIpBinding($cust, $router);
     }
 
@@ -344,22 +383,40 @@ class ProvisionCustomerJob implements ShouldQueue
     protected function handleHotspotSuspend(RadiusService $radius, InternetCustomer $cust, Router $router): void
     {
         try {
-            // 🟢 RADIUS: Auth-Type = Reject → user tidak bisa auth sama sekali
+            $ros    = app(RouterOSService::class);
+            $client = $ros->client($router);
+
+            // ⚠️ ip_binding_mode='bypassed': user bypass autentikasi via MAC/IP whitelist.
+            // Auth-Type:Reject TIDAK ada efeknya untuk bypassed user — mereka tidak perlu login!
+            // Wajib hapus ip-binding entry dari MikroTik agar benar-benar terputus.
+            if ($cust->ip_binding_type === 'direct' && $cust->ip_binding_mode === 'bypassed') {
+                try {
+                    $ros->removeHotspotIpBinding($client, $cust->ip_address ?: null, $cust->mac_address ?: null);
+                    Log::info('[ProvisionJob] Bypassed ip-binding removed on suspend', ['customer' => $cust->username]);
+                } catch (\Throwable $bindErr) {
+                    Log::warning('[ProvisionJob] Bypassed ip-binding removal failed', ['error' => $bindErr->getMessage()]);
+                }
+            }
+
+            // Hapus Framed-IP-Address untuk radius binding (user tidak boleh dapat IP tetap saat suspend)
+            if ($cust->ip_binding_type === 'radius') {
+                $radius->removeFramedIp($cust->username);
+            }
+
+            // RADIUS: Auth-Type = Reject → user tidak bisa auth (efektif untuk mode 'regular')
             $radius->suspendHotspotCustomer($cust->username);
 
-            // 🔌 Kick active session langsung
+            // Kick active session
             try {
-                $ros    = app(RouterOSService::class);
-                $client = $ros->client($router);
                 $ros->disconnectHotspotUser($client, $cust->username);
                 Log::info('[ProvisionJob] Hotspot session kicked');
             } catch (\Throwable $dcErr) {
-                Log::warning('[ProvisionJob] Hotspot disconnect failed (will reject on next reconnect anyway)', [
+                Log::warning('[ProvisionJob] Hotspot disconnect failed (akan reject saat reconnect)', [
                     'error' => $dcErr->getMessage(),
                 ]);
             }
 
-            Log::info('[ProvisionJob] HOTSPOT SUSPENDED via RADIUS → Auth-Type:Reject ✅', ['customer' => $cust->username]);
+            Log::info('[ProvisionJob] HOTSPOT SUSPENDED ✅', ['customer' => $cust->username]);
         } catch (\Throwable $e) {
             Log::warning('[ProvisionJob] RADIUS hotspot suspend failed, fallback', ['error' => $e->getMessage()]);
             $this->fallbackHotspotDirectApi($cust, '', $router, 'suspend');
@@ -372,8 +429,11 @@ class ProvisionCustomerJob implements ShouldQueue
     protected function handleHotspotReactivate(RadiusService $radius, InternetCustomer $cust, InternetPackage $pkg, string $groupName, Router $router): void
     {
         try {
-            $radius->ensureGroup($pkg, $groupName);
+            $radius->ensureHotspotGroup($pkg, $groupName);
+            // Hapus Auth-Type:Reject, restore group
             $radius->reactivateUser($cust->username, $groupName);
+            // Restore Framed-IP-Address jika radius binding (hilang saat suspend)
+            $radius->upsertHotspotCustomer($cust, $groupName);
 
             try {
                 $ros    = app(RouterOSService::class);
@@ -389,6 +449,7 @@ class ProvisionCustomerJob implements ShouldQueue
             $this->fallbackHotspotDirectApi($cust, $groupName, $router, 'install');
         }
 
+        // Re-add direct ip-binding jika ada (termasuk bypassed yang dihapus saat suspend)
         $this->handleIpBinding($cust, $router);
     }
 
@@ -434,29 +495,40 @@ class ProvisionCustomerJob implements ShouldQueue
         if (!$cust->ip_binding_type) return;
         if ($cust->ip_binding_type !== 'direct') return; // radius binding ditangani via Framed-IP-Address
 
+        $ip  = $cust->ip_address  ?: null;
+        $mac = $cust->mac_address ?: null;
+
+        if (!$ip && !$mac) {
+            Log::warning('[ProvisionJob] IP Binding skipped — ip_address and mac_address both empty', [
+                'customer' => $cust->username,
+            ]);
+            return;
+        }
+
         try {
             $ros        = app(RouterOSService::class);
             $client     = $ros->client($router);
             $serverName = $cust->hotspotServer?->name ?? '';
             $mode       = $cust->ip_binding_mode ?? 'regular';
 
-            $ros->addHotspotIpBinding(
-                $client,
-                $serverName,
-                $cust->ip_address ?: null,
-                $cust->mac_address ?: null,
-                $mode
-            );
-
-            Log::info('[ProvisionJob] IP Binding set', [
+            Log::info('[ProvisionJob] Creating IP Binding', [
                 'customer' => $cust->username,
-                'type'     => $cust->ip_binding_type,
+                'server'   => $serverName ?: '(all)',
                 'mode'     => $mode,
-                'ip'       => $cust->ip_address,
-                'mac'      => $cust->mac_address,
+                'ip'       => $ip,
+                'mac'      => $mac,
             ]);
+
+            $ros->addHotspotIpBinding($client, $serverName, $ip, $mac, $mode);
+
+            Log::info('[ProvisionJob] IP Binding set ✅', ['customer' => $cust->username]);
         } catch (\Throwable $e) {
-            Log::warning('[ProvisionJob] IP Binding failed (non-fatal)', ['error' => $e->getMessage()]);
+            Log::error('[ProvisionJob] IP Binding FAILED', [
+                'customer' => $cust->username,
+                'error'    => $e->getMessage(),
+                'ip'       => $ip,
+                'mac'      => $mac,
+            ]);
         }
     }
 }
