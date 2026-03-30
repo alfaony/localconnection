@@ -410,6 +410,38 @@ class HomeController extends Controller
         ]);
     }
 
+    public function xpLeaderboard()
+    {
+        $companyId = Auth::user()->company_id;
+
+        $users = User::byCompany($companyId)
+            ->isActive()
+            ->where('total_xp', '>', 0)
+            ->orderBy('total_xp', 'desc')
+            ->select('id', 'name', 'total_xp')
+            ->limit(5)
+            ->get()
+            ->map(function ($user, $index) {
+                $level = match(true) {
+                    $user->total_xp >= 5000 => ['Diamond', '💎'],
+                    $user->total_xp >= 2000 => ['Platinum', '🔮'],
+                    $user->total_xp >= 1000 => ['Gold',     '🌟'],
+                    $user->total_xp >= 500  => ['Silver',   '⭐'],
+                    default                 => ['Bronze',   '🔶'],
+                };
+                return [
+                    'rank'     => $index + 1,
+                    'name'     => $user->name,
+                    'total_xp' => $user->total_xp,
+                    'level'    => $level[0],
+                    'badge'    => $level[1],
+                    'initial'  => strtoupper(substr($user->name, 0, 1)),
+                ];
+            });
+
+        return response()->json(['data' => $users]);
+    }
+
     public function leaderboard()
     {
         // Get period dates from SettingCompany

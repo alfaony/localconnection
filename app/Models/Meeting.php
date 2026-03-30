@@ -15,10 +15,13 @@ use Carbon\Carbon;
 use App\Helpers\Access;
 use App\Schemas\ParamSchema;
 use App\Schemas\RoleSchema;
+use App\Traits\AwardsXp;
 
 class Meeting extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory, SoftDeletes, AwardsXp;
+
+    public $incrementing = false;
 
     protected $fillable = [
         'meeting_recurrence_id',

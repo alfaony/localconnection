@@ -6,10 +6,15 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Str;
 use Carbon\Carbon;
+use App\Schemas\ParamSchema;
+use App\Traits\AwardsXp;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class MomTask extends Model
 {
-    use SoftDeletes;
+    use HasFactory, SoftDeletes, AwardsXp;
+
+    public $incrementing = false;
 
     protected $fillable = [
         'agenda_id',

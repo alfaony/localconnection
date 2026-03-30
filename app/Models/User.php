@@ -298,6 +298,14 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         return $this->belongsToMany(Company::class, 'company_user_access');
     }
+
+    /**
+     * Riwayat XP karyawan ini.
+     */
+    public function xpHistories()
+    {
+        return $this->hasMany(EmployeeXpHistory::class);
+    }
     public function getLastSalaryAttribute()
     {
         return $this->salary()->latest()->first();

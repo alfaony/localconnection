@@ -315,6 +315,7 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
   Route::get('home/listDayoff', [App\Http\Controllers\HomeController::class, 'listDayoff'])->name('home.listDayoff');
   Route::get('home/dashboardReport', [App\Http\Controllers\HomeController::class, 'dashboardReport'])->name('home.dashboardReport');
   Route::get('home/leaderboard', [App\Http\Controllers\HomeController::class, 'leaderboard'])->name('home.leaderboard');
+  Route::get('home/xp-leaderboard', [App\Http\Controllers\HomeController::class, 'xpLeaderboard'])->name('home.xpLeaderboard');
   Route::get('home/overdueRanking', [App\Http\Controllers\HomeController::class, 'overdueRanking'])->name('home.overdueRanking');
 
   Route::resource('office-media', OfficeMediaController::class)->only(['index', 'store','destroy']);
@@ -894,6 +895,17 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
       Route::get('customer-subscription/{subscription}/chat', [CustomerSubscriptionChatController::class, 'index'])->name('customer-subscription.chat.index');
       Route::post('customer-subscription/{subscription}/chat', [CustomerSubscriptionChatController::class, 'store'])->name('customer-subscription.chat.store');
     });
+
+    // ========================================================================
+  // EMPLOYEE XP SYSTEM
+  // ========================================================================
+  Route::get('xp-config/assign', [App\Http\Controllers\XpConfigController::class, 'assignIndex'])->name('xp-config.assign');
+  Route::post('xp-config/assign', [App\Http\Controllers\XpConfigController::class, 'assignUpdate'])->name('xp-config.assign.update');
+  Route::resource('xp-config', App\Http\Controllers\XpConfigController::class)->except(['show']);
+
+  Route::get('employee-xp/leaderboard', [App\Http\Controllers\EmployeeXpController::class, 'leaderboard'])->name('employee-xp.leaderboard');
+  Route::get('employee-xp/history', [App\Http\Controllers\EmployeeXpController::class, 'myHistory'])->name('employee-xp.my-history');
+  Route::get('employee-xp/history/{userId}', [App\Http\Controllers\EmployeeXpController::class, 'userHistory'])->name('employee-xp.user-history');
 
   Route::get('internet-customer/registration/{companyId}', InternetCustomerForm::class)->name('internet-customer.create');
   Route::get('internet-customer/customer-active/{code}', CustomerShow::class)->name('internet-customer.customer.show');
