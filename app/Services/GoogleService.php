@@ -213,12 +213,12 @@ class GoogleService
 
             // Waktu mulai dan akhir
             $startDateTime = new \Google\Service\Calendar\EventDateTime([
-                'dateTime' => "{$meeting->start_date}T{$meeting->start_time}:00+07:00",
+                'dateTime' => \Carbon\Carbon::parse("{$meeting->start_date} {$meeting->start_time}", 'Asia/Jakarta')->toRfc3339String(),
                 'timeZone' => 'Asia/Jakarta'
             ]);
 
             $endDateTime = new \Google\Service\Calendar\EventDateTime([
-                'dateTime' => "{$meeting->end_date}T{$meeting->end_time}:00+07:00",
+                'dateTime' => \Carbon\Carbon::parse("{$meeting->end_date} {$meeting->end_time}", 'Asia/Jakarta')->toRfc3339String(),
                 'timeZone' => 'Asia/Jakarta'
             ]);
 
