@@ -279,12 +279,12 @@
     @endcanAccess
     
     @canAccess('listDayoff','homes')
-    <div class="col-md-4">
+    <div class="col-md-4" >
         <div class="card shadow-sm mb-4">
             <div class="card-header d-flex align-items-center">
                 <i class="fas fa-user-clock mr-2"></i>User Cuti Hari Ini
             </div>
-            <div class="card-body" id="cuti-today-container">
+            <div class="card-body" id="cuti-today-container"  style="height: 240px; overflow-y: auto;">
                 <div class="text-center text-muted">
                     <i class="fas fa-spinner fa-spin"></i> Memuat data cuti...
                 </div>
@@ -293,6 +293,24 @@
     </div>
     @endcanAccess
 
+</div>
+
+<!-- Card Laporan Pengaduan Karyawan -->
+<div class="card shadow-sm">
+    <div class="card-body">
+        <div class="d-flex align-items-center">
+            <div class="icon-container bg-danger-soft rounded-circle p-3 me-3">
+                <i class="bi bi-exclamation-triangle text-danger fs-4"></i>
+            </div>
+            <div>
+                <h5 class="mb-1">Laporan Pengaduan Karyawan</h5>
+                <p class="text-muted mb-2">Laporkan keluhan atau masalah yang Anda alami melalui formulir ini.</p>
+                <a href="https://forms.gle/sPs4j3L9oNrNkPmR6" target="_blank" class="btn btn-danger btn-sm">
+                    <i class="bi bi-box-arrow-up-right me-1"></i>Buka Formulir
+                </a>
+            </div>
+        </div>
+    </div>
 </div>
 
 <div class="card shadow-sm">
