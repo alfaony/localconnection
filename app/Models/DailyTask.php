@@ -9,13 +9,12 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use Ramsey\Uuid\Uuid;
 use Carbon\Carbon;
-use App\Traits\AwardsXp;
 
 use App\Schemas\ParamSchema;
 
 class DailyTask extends Model
 {
-    use HasFactory, SoftDeletes, AwardsXp;
+    use HasFactory, SoftDeletes;
 
     public $incrementing = false; // Karena kita menggunakan UUID, bukan auto-increment
     protected $keyType = 'string'; // Tipe kunci primer adalah string

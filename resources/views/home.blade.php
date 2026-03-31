@@ -183,9 +183,9 @@
         <div class="card border-0 shadow-sm h-100 gamified-light-card" style="border-radius: 14px;">
             <div class="card-header bg-white border-0 d-flex align-items-center justify-content-between pt-4 pb-2 px-4">
                 <h5 class="mb-0 fw-bold"><i class="fas fa-calendar-alt text-primary me-2"></i> Agenda Meeting</h5>
-                <ul class="nav nav-pills nav-sm" id="agendaTabs" role="tablist">
-                    <li class="nav-item"><button class="nav-link active rounded-pill px-3 py-1" id="today-tab" data-bs-toggle="tab" type="button">Hari Ini</button></li>
-                    <li class="nav-item ms-2"><button class="nav-link rounded-pill px-3 py-1" id="week-tab" data-bs-toggle="tab" type="button">Minggu Ini</button></li>
+                <ul class="nav nav-pills nav-sm ml-auto" id="agendaTabs" role="tablist">
+                    <li class="nav-item"><button class="nav-link active rounded-pill px-3 py-1 mb-1 mr-1" id="today-tab" data-bs-toggle="tab" type="button">Hari Ini</button></li>
+                    <li class="nav-item ms-2"><button class="nav-link rounded-pill px-3 py-1 mb-1" id="week-tab" data-bs-toggle="tab" type="button">Minggu Ini</button></li>
                 </ul>
             </div>
             <div class="card-body px-4 pb-4">
@@ -1237,14 +1237,20 @@
 
     (function() {
         const totalXp = {{ Auth::user()->total_xp ?? 0 }};
-        const levels = [
-            { label: 'Bronze', badge: '🔶', min: 0,    max: 499  },
-            { label: 'Silver', badge: '⭐', min: 500,   max: 999  },
-            { label: 'Gold',   badge: '🌟', min: 1000,  max: 1999 },
-            { label: 'Plat',   badge: '🔮', min: 2000,  max: 4999 },
-            { label: 'Diamond',badge: '💎', min: 5000,  max: 99999},
-        ];
-        const lvl = levels.find(l => totalXp >= l.min && totalXp <= l.max) || levels[0];
+        @php
+            $rawLevels = collect(\App\Helpers\XpHelper::levels()); // sudah terurut ascending dari helper
+            $xpLevels  = $rawLevels->map(function ($l, $idx) use ($rawLevels) {
+                $next = $rawLevels->get($idx + 1);
+                return [
+                    'label' => $l['label'],
+                    'badge' => $l['badge'],
+                    'min'   => $l['min'],
+                    'max'   => $next ? $next['min'] - 1 : 9999999,
+                ];
+            })->values();
+        @endphp
+        const levels = {!! $xpLevels->toJson() !!};
+        const lvl = levels.slice().reverse().find(l => totalXp >= l.min) || levels[0];
         const pct = Math.min(100, ((totalXp - lvl.min) / (lvl.max - lvl.min + 1)) * 100);
 
         document.getElementById('profile-xp-label').textContent = totalXp.toLocaleString('id-ID') + ' XP';

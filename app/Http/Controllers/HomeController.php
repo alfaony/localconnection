@@ -34,6 +34,7 @@ use App\Models\User;
 use App\Models\Dayoff;
 use App\Models\CustomerSubscription;
 use App\Models\Software;
+use App\Helpers\XpHelper;
 
 class HomeController extends Controller
 {
@@ -422,19 +423,13 @@ class HomeController extends Controller
             ->limit(5)
             ->get()
             ->map(function ($user, $index) {
-                $level = match(true) {
-                    $user->total_xp >= 5000 => ['Diamond', '💎'],
-                    $user->total_xp >= 2000 => ['Platinum', '🔮'],
-                    $user->total_xp >= 1000 => ['Gold',     '🌟'],
-                    $user->total_xp >= 500  => ['Silver',   '⭐'],
-                    default                 => ['Bronze',   '🔶'],
-                };
+                $level = XpHelper::level($user->total_xp);
                 return [
                     'rank'     => $index + 1,
                     'name'     => $user->name,
                     'total_xp' => $user->total_xp,
-                    'level'    => $level[0],
-                    'badge'    => $level[1],
+                    'level'    => $level['label'],
+                    'badge'    => $level['badge'],
                     'initial'  => strtoupper(substr($user->name, 0, 1)),
                 ];
             });

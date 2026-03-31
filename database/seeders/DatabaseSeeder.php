@@ -116,6 +116,6 @@ class DatabaseSeeder extends Seeder
         $this->call(PermissionForMenuSoftwareSharingSeeder::class);
         $this->call(PermissionForMenuDirectPointSeeder::class);
         $this->call(PermissionForMenuCustomerSoftware::class);
-        
+        $this->call(PermissionForMenuXpSeeder::class);
     }
 }

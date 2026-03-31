@@ -8,10 +8,11 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Str;
 use Ramsey\Uuid\Uuid;
 use Carbon\Carbon;
+use App\Traits\AwardsXp;
 
 class Bast extends Model
 {
-    use HasFactory,SoftDeletes;
+    use HasFactory,SoftDeletes, AwardsXp;
 
     public $incrementing = false; // Karena kita menggunakan UUID, bukan auto-increment
     protected $keyType = 'string'; // Tipe kunci primer adalah string

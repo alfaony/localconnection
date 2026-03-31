@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Helpers\XpHelper;
 use App\Models\Company;
+use App\Models\EmployeeXpHistory;
+use App\Models\User;
 use App\Models\XpConfig;
 use App\Models\XpConfigModel;
 use Illuminate\Http\Request;
@@ -18,8 +20,20 @@ class XpConfigController extends Controller
      */
     public function index()
     {
-        $configs = XpConfig::withCount('companies')->withTrashed(false)->latest()->paginate(10);
-        return view('xp_config.index', compact('configs'));
+        $companyId = Auth::user()->company_id;
+
+        $configs = XpConfig::withCount('companies')->latest()->paginate(10);
+
+        $stats = [
+            'total_configs'    => XpConfig::count(),
+            'active_configs'   => XpConfig::where('is_enabled', true)->count(),
+            'companies_with_xp'=> Company::byCompany($companyId)->whereNotNull('xp_config_id')->count(),
+            'total_xp_awarded' => EmployeeXpHistory::where('company_id', $companyId)->where('xp', '>', 0)->sum('xp'),
+            'users_with_xp'    => User::byCompany($companyId)->where('total_xp', '>', 0)->count(),
+            'top_xp'           => User::byCompany($companyId)->max('total_xp') ?? 0,
+        ];
+
+        return view('xp_config.index', compact('configs', 'stats'));
     }
 
     /**
@@ -31,11 +45,10 @@ class XpConfigController extends Controller
             'ALL'         => 'Default (Semua Aksi)',
             'DailyTask'   => 'Daily Task',
             'Meeting'     => 'Meeting',
-            'MomTask'     => 'Task MoM',
+            'Mom'     => 'Task MoM',
             'ItemRequest' => 'Item Request',
             'WeeklyReport'=> 'Weekly Report',
             'Project'     => 'Project',
-            'Dayoff'      => 'Izin/Cuti',
             'Decision'    => 'Keputusan',
         ];
         return view('xp_config.createOrEdit', compact('defaultModels'));
@@ -87,17 +100,7 @@ class XpConfigController extends Controller
     public function edit(XpConfig $xpConfig)
     {
         $xpConfig->load('models');
-        $defaultModels = [
-            'ALL'         => 'Default (Semua Aksi)',
-            'DailyTask'   => 'Daily Task',
-            'Meeting'     => 'Meeting',
-            'MomTask'     => 'Task MoM',
-            'ItemRequest' => 'Item Request',
-            'WeeklyReport'=> 'Weekly Report',
-            'Project'     => 'Project',
-            'Dayoff'      => 'Izin/Cuti',
-            'Decision'    => 'Keputusan',
-        ];
+        $defaultModels = [];
         return view('xp_config.createOrEdit', compact('xpConfig', 'defaultModels'));
     }
 

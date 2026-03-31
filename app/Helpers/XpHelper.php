@@ -87,6 +87,37 @@ class XpHelper
     }
 
     /**
+     * Resolve level achievement berdasarkan total XP.
+     * Menggunakan threshold dari config/xp.php (di-set via ENV).
+     *
+     * @return array{key:string, label:string, badge:string, color:string, min:int}
+     */
+    public static function level(int $xp): array
+    {
+        $levels = collect(config('xp.levels'))->sortByDesc('min');
+
+        foreach ($levels as $level) {
+            if ($xp >= $level['min']) {
+                return $level;
+            }
+        }
+
+        // Fallback: level terendah (bronze)
+        return collect(config('xp.levels'))->sortBy('min')->first();
+    }
+
+    /**
+     * Semua level config terurut dari terendah ke tertinggi.
+     * Berguna untuk dikirim ke view/JS.
+     *
+     * @return array
+     */
+    public static function levels(): array
+    {
+        return collect(config('xp.levels'))->sortBy('min')->values()->all();
+    }
+
+    /**
      * Clear cache XP config untuk company tertentu.
      * Dipanggil setelah admin mengubah config.
      */

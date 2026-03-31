@@ -894,18 +894,24 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
       // ========================================================================
       Route::get('customer-subscription/{subscription}/chat', [CustomerSubscriptionChatController::class, 'index'])->name('customer-subscription.chat.index');
       Route::post('customer-subscription/{subscription}/chat', [CustomerSubscriptionChatController::class, 'store'])->name('customer-subscription.chat.store');
+      
+      // ========================================================================
+      // EMPLOYEE XP SYSTEM
+      // ========================================================================
+      Route::get('xp-config/assign', [App\Http\Controllers\XpConfigController::class, 'assignIndex'])->name('xp-config.assign');
+      Route::post('xp-config/assign', [App\Http\Controllers\XpConfigController::class, 'assignUpdate'])->name('xp-config.assign.update');
+      Route::resource('xp-config', App\Http\Controllers\XpConfigController::class)->except(['show']);
+      
+      Route::get('employee-xp', [App\Http\Controllers\EmployeeXpController::class, 'index'])->name('employee-xp.index');
+      Route::post('employee-xp', [App\Http\Controllers\EmployeeXpController::class, 'store'])->name('employee-xp.store');
+      Route::delete('employee-xp/{employeeXp}', [App\Http\Controllers\EmployeeXpController::class, 'destroy'])->name('employee-xp.destroy');
+      Route::get('employee-xp/history', [App\Http\Controllers\EmployeeXpController::class, 'myHistory'])->name('employee-xp.my-history');
+      Route::get('employee-xp/leaderboard', [App\Http\Controllers\EmployeeXpController::class, 'leaderboard'])->name('employee-xp.leaderboard');
+      Route::get('employee-xp/history/{userId}', [App\Http\Controllers\EmployeeXpController::class, 'userHistory'])->name('employee-xp.user-history');
+      
     });
 
-    // ========================================================================
-  // EMPLOYEE XP SYSTEM
-  // ========================================================================
-  Route::get('xp-config/assign', [App\Http\Controllers\XpConfigController::class, 'assignIndex'])->name('xp-config.assign');
-  Route::post('xp-config/assign', [App\Http\Controllers\XpConfigController::class, 'assignUpdate'])->name('xp-config.assign.update');
-  Route::resource('xp-config', App\Http\Controllers\XpConfigController::class)->except(['show']);
 
-  Route::get('employee-xp/leaderboard', [App\Http\Controllers\EmployeeXpController::class, 'leaderboard'])->name('employee-xp.leaderboard');
-  Route::get('employee-xp/history', [App\Http\Controllers\EmployeeXpController::class, 'myHistory'])->name('employee-xp.my-history');
-  Route::get('employee-xp/history/{userId}', [App\Http\Controllers\EmployeeXpController::class, 'userHistory'])->name('employee-xp.user-history');
 
   Route::get('internet-customer/registration/{companyId}', InternetCustomerForm::class)->name('internet-customer.create');
   Route::get('internet-customer/customer-active/{code}', CustomerShow::class)->name('internet-customer.customer.show');
