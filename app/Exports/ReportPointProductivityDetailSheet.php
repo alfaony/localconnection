@@ -79,15 +79,15 @@ class ReportPointProductivityDetailSheet implements FromCollection, WithHeadings
 
             // ── Sales Achievement ─────────────────────────────────────────
             $sales = SalesAchievement::where('user_id', $userId)
-                ->whereBetween('created_at', [$startDate, $endDate])
-                ->get(['period', 'points', 'created_at']);
+                ->whereBetween('attempt_point_date', [$startDate, $endDate])
+                ->get(['period', 'points', 'attempt_point_date']);
 
             foreach ($sales as $item) {
                 $rows[] = [
                     'user'     => $userName,
                     'category' => 'Pencapaian Penjualan',
                     'name'     => $item->period,
-                    'date'     => $item->created_at->format('d M Y'),
+                    'date'     => $item->attempt_point_date->format('d M Y'),
                     'point'    => $item->points,
                 ];
             }
@@ -152,7 +152,7 @@ class ReportPointProductivityDetailSheet implements FromCollection, WithHeadings
                 $rows[] = [
                     'user'     => $userName,
                     'category' => 'Direct Point',
-                    'name'     => 'Dari ' . ($item->fromUser->name ?? '-') . ' (' . ($item->division->name ?? '-') . ')',
+                    'name'     => 'Dari ' . ($item->fromUser->name ?? '-') . ' (' . ($item->division?->name ?? '-') . ')',
                     'date'     => $item->approved_at->format('d M Y'),
                     'point'    => $item->approved_point ?? $item->point,
                 ];

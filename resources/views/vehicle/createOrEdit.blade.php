@@ -1,8 +1,8 @@
 @extends('adminlte::page')
 
-@section('title', isset($vehicle) ? 'Edit Kendaraan' : 'Tambah Kendaraan')
+@section('title', isset($vehicle) ? 'Edit Kendaraan & Mesin' : 'Tambah Kendaraan & Mesin')
 @section('content_header')
-    <h1>{{ isset($vehicle) ? 'Edit Kendaraan' : 'Tambah Kendaraan' }}</h1>
+    <h1>{{ isset($vehicle) ? 'Edit Kendaraan & Mesin' : 'Tambah Kendaraan & Mesin' }}</h1>
 @stop
 
 @section('content')
@@ -30,7 +30,7 @@
             @endif
 
             <div class="mb-3">
-                <label>ID Kendaraan <span class="text-danger">*</span></label>
+                <label>ID Kendaraan & Mesin <span class="text-danger">*</span></label>
                 <input type="text" name="vehicle_id" class="form-control"
                     value="{{ old('vehicle_id', $vehicle->vehicle_id ?? '') }}" required>
             </div>
@@ -80,10 +80,9 @@
             </div>
 
             <div class="mb-3">
-                <label>Batas Berlaku STNK <span class="text-danger">*</span></label>
+                <label>Batas Berlaku STNK </label>
                 <input type="date" name="subscription_stnk" class="form-control"
-                    value="{{ old('subscription_stnk', $vehicle->subscription_stnk ?? '') }}"
-                    required>
+                    value="{{ old('subscription_stnk', $vehicle->subscription_stnk ?? '') }}">
             </div>
 
             <div class="mb-3">

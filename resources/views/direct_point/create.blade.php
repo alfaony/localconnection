@@ -20,22 +20,6 @@
                         
                         @canAccess('checkQuota','direct_points')
                         <div class="form-group">
-                            <label class="font-weight-bold">Divisi Sumber Quota <span class="text-danger">*</span></label>
-                            <select name="division_id" id="division_id" class="form-control @error('division_id') is-invalid @enderror" required>
-                                <option value="">-- Pilih Divisi --</option>
-                                @foreach($divisions as $division)
-                                    <option value="{{ $division->id }}" {{ old('division_id') == $division->id ? 'selected' : '' }}>
-                                        {{ $division->name }}
-                                    </option>
-                                @endforeach
-                            </select>
-                            @error('division_id')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                            <small class="form-text text-muted">Quota point akan diambil dari divisi ini</small>
-                        </div>
-
-                        <div class="form-group">
                             <label class="font-weight-bold">Penerima Point <span class="text-danger">*</span></label>
                             <select name="to_user_id" id="to_user_id" class="form-control @error('to_user_id') is-invalid @enderror" required>
                                 <option value="">-- Pilih User --</option>
@@ -55,15 +39,39 @@
                             <div class="input-group">
                                 <div class="input-group-prepend">
                                     <span class="input-group-text"><i class="fas fa-coins"></i></span>
+                                    <button type="button" class="btn btn-outline-danger" id="decrementPoint" title="Kurangi Point">
+                                        <i class="fas fa-minus"></i>
+                                    </button>
                                 </div>
-                                <input type="number" name="point" id="point" 
-                                       class="form-control @error('point') is-invalid @enderror" 
-                                       min="1" value="{{ old('point') }}" placeholder="Masukkan jumlah point" required>
+                                <input type="number" name="point" id="point"
+                                       class="form-control text-center @error('point') is-invalid @enderror"
+                                       value="{{ old('point', 0) }}" placeholder="Masukkan jumlah point (bisa min)" required>
+                                <div class="input-group-append">
+                                    <button type="button" class="btn btn-outline-success" id="incrementPoint" title="Tambah Point">
+                                        <i class="fas fa-plus"></i>
+                                    </button>
+                                </div>
                                 @error('point')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
                             </div>
                             <div id="quota-feedback" class="mt-2"></div>
+                        </div>
+                        
+                        <div class="form-group" id="division-container" style="display: none;">
+                            <label class="font-weight-bold">Divisi Sumber Quota <span class="text-danger" id="division-star">*</span></label>
+                            <select name="division_id" id="division_id" class="form-control @error('division_id') is-invalid @enderror">
+                                <option value="">-- Pilih Divisi --</option>
+                                @foreach($divisions as $division)
+                                    <option value="{{ $division->id }}" {{ old('division_id') == $division->id ? 'selected' : '' }}>
+                                        {{ $division->name }}
+                                    </option>
+                                @endforeach
+                            </select>
+                            @error('division_id')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                            <small class="form-text text-muted">Quota point akan diambil dari divisi ini</small>
                         </div>
                         @endcanAccess
 
@@ -107,7 +115,7 @@
                         const reason = reasonInput.value.trim();
                         
                         // Validation
-                        if (!divisionSelect.value || divisionName === '-- Pilih Divisi --') {
+                        if (point > 0 && (!divisionSelect.value || divisionName === '-- Pilih Divisi --')) {
                             Swal.fire({
                                 icon: 'warning',
                                 title: 'Divisi Belum Dipilih',
@@ -127,11 +135,11 @@
                             return false;
                         }
                         
-                        if (!point || point < 1) {
+                        if (point === 0 || isNaN(point)) {
                             Swal.fire({
                                 icon: 'warning',
                                 title: 'Point Tidak Valid',
-                                text: 'Mohon masukkan Jumlah Point yang valid (minimal 1)!',
+                                text: 'Mohon masukkan Jumlah Point yang valid (tidak boleh 0)!',
                                 confirmButtonColor: '#3085d6'
                             });
                             return false;
@@ -176,7 +184,6 @@
                             cancelButtonColor: '#6c757d',
                             confirmButtonText: '<i class="fas fa-check"></i> Ya, Buat Direct Point',
                             cancelButtonText: '<i class="fas fa-times"></i> Batal',
-                            width: '600px',
                             customClass: {
                                 confirmButton: 'btn btn-success btn-md mr-2 mb-1',
                                 cancelButton: 'btn btn-secondary btn-md mb-1'
@@ -258,9 +265,10 @@
 
             const { quota, used, remaining } = data;
             
-            // Calculate remaining AFTER point usage
-            const remainingAfterUsage = remaining - point;
-            const totalUsedAfter = used + point;
+            // Calculate remaining AFTER point usage (negative takes 0 quota)
+            const requiredQuota = point > 0 ? point : 0;
+            const remainingAfterUsage = remaining - requiredQuota;
+            const totalUsedAfter = used + requiredQuota;
             const usedPercentage = quota > 0 ? (totalUsedAfter / quota * 100).toFixed(1) : 0;
 
             let progressColor = 'success';
@@ -332,6 +340,37 @@
         function checkQuota() {
             const divisionId = $('#division_id').val();
             const point = $('#point').val();
+            const pointVal = parseInt(point) || 0;
+
+            if (pointVal <= 0) {
+                $('#division-container').hide();
+                
+                let panelContent = '';
+                if (pointVal === 0) {
+                    panelContent = `
+                        <i class="fas fa-info-circle fa-3x mb-3 text-secondary"></i>
+                        <p>Total point 0 tidak diizinkan.<br>Masukkan point > 0 untuk menggunakan Quota Divisi.</p>
+                    `;
+                    $('#submitBtn').prop('disabled', true);
+                } else {
+                    panelContent = `
+                        <i class="fas fa-minus-circle fa-3x mb-3 text-secondary"></i>
+                        <p>Total point negatif (Punishment).<br>Tidak memotong quota divisi.</p>
+                    `;
+                    $('#submitBtn').prop('disabled', false);
+                }
+                
+                $('#quota-info-panel').html(`
+                    <div class="text-center text-muted py-5">
+                        ${panelContent}
+                    </div>
+                `);
+                
+                $('#quota-feedback').html('');
+                return;
+            } else {
+                $('#division-container').show();
+            }
 
             if (!divisionId) {
                 updateQuotaPanel(null);
@@ -368,9 +407,11 @@
                         updateQuotaPanel(response, parseInt(point) || 0);
 
                         const { remaining, is_sufficient } = response;
-                        const remainingAfterUsage = remaining - (parseInt(point) || 0);
+                        const pointVal = parseInt(point) || 0;
+                        const requiredQuota = pointVal > 0 ? pointVal : 0;
+                        const remainingAfterUsage = remaining - requiredQuota;
                         
-                        if (!point || point < 1) {
+                        if (point === 0 || isNaN(point)) {
                             $('#quota-feedback').html('');
                             $('#submitBtn').prop('disabled', false);
                         } else if (is_sufficient) {
@@ -430,14 +471,23 @@
             });
         }
 
+        // + / - buttons for point input
+        $('#incrementPoint').on('click', function() {
+            const current = parseInt($('#point').val()) || 0;
+            $('#point').val(current + 1).trigger('change');
+        });
+
+        $('#decrementPoint').on('click', function() {
+            const current = parseInt($('#point').val()) || 0;
+            $('#point').val(current - 1).trigger('change');
+        });
+
         // Trigger check on division or point change
         $('#division_id').on('change', _.debounce(checkQuota, 300));
         $('#point').on('keyup change', _.debounce(checkQuota, 500));
 
-        // Initial check if values are pre-filled
-        if ($('#division_id').val()) {
-            checkQuota();
-        }
+        // Initial check if values are pre-filled or starting at 0
+        checkQuota();
     });
 </script>
 @endcanAccess

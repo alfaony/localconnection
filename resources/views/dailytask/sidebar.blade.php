@@ -434,8 +434,23 @@ $('#backlogAssignForm').on('submit', function(e) {
             @canAccess('checkDivisionQuota','dailytasks')
             <div class="form-group mt-2">
                 <label for="point">Poin</label>
-                <input type="number" name="point" id="pointInput" class="form-control" placeholder="Masukkan Poin" value="{{ $dailytask->point }}" 
-                    {{ $dailytask->status_submit == \App\Schemas\ParamSchema::PINALTY_NOT_PROGRESS ? 'readonly' : '' }}>
+                @if($dailytask->status_submit == \App\Schemas\ParamSchema::PINALTY_NOT_PROGRESS)
+                    <input type="number" name="point" id="pointInput" class="form-control text-center" placeholder="Masukkan Poin" value="{{ $dailytask->point }}" readonly>
+                @else
+                    <div class="input-group">
+                        <div class="input-group-prepend">
+                            <button type="button" class="btn btn-outline-danger" id="decrementPointApprovement" title="Kurangi Poin">
+                                <i class="fas fa-minus"></i>
+                            </button>
+                        </div>
+                        <input type="number" name="point" id="pointInput" class="form-control text-center" placeholder="Masukkan Poin" value="{{ $dailytask->point }}">
+                        <div class="input-group-append">
+                            <button type="button" class="btn btn-outline-success" id="incrementPointApprovement" title="Tambah Poin">
+                                <i class="fas fa-plus"></i>
+                            </button>
+                        </div>
+                    </div>
+                @endif
             </div>
 
             <div id="divisionSection" class="form-group mt-2 d-none">
@@ -443,7 +458,7 @@ $('#backlogAssignForm').on('submit', function(e) {
                 <select id="divisionSelect" name="division_id" class="form-control">
                     <option value="" selected>Pilih Divisi</option>    
                     @foreach($divisions as $division)
-                        <option value="{{ $division->id }}">{{ $division->name }}</option>
+                        <option value="{{ $division->id }}" data-coba="test" {{ isset($divisionAssignFirst) && $division->id == $divisionAssignFirst->id ? 'selected' : '' }}>{{ $division->name }}</option>
                     @endforeach
                 </select>
                 <small id="quotaInfo" class="text-muted d-none"></small>
@@ -458,6 +473,20 @@ $('#backlogAssignForm').on('submit', function(e) {
                 @endif
             </div>
         </form>
+        @canAccess('checkDivisionQuota','dailytasks')
+        @if($dailytask->status_submit != \App\Schemas\ParamSchema::PINALTY_NOT_PROGRESS)
+        <script>
+        $('#incrementPointApprovement').on('click', function() {
+            var current = parseInt($('#pointInput').val()) || 0;
+            $('#pointInput').val(current + 1).trigger('change');
+        });
+        $('#decrementPointApprovement').on('click', function() {
+            var current = parseInt($('#pointInput').val()) || 0;
+            $('#pointInput').val(current - 1).trigger('change');
+        });
+        </script>
+        @endif
+        @endcanAccess
         @endcanAccess
     </div>
 </div>

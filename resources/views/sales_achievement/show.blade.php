@@ -29,6 +29,18 @@
                         {{ $salesAchievement->total_offers_issued }}
                     </div>
                     <div class="mb-3">
+                        <strong>Jumlah Kunjungan Pelanggan:</strong>
+                        {{ $salesAchievement->customer_visits }}
+                    </div>
+                    <div class="mb-3">
+                        <strong>Jumlah Pelanggan Daftar:</strong>
+                        {{ $salesAchievement->registered_customers }}
+                    </div>
+                    <div class="mb-3">
+                        <strong>Jumlah Pelanggan Aktif:</strong>
+                        {{ $salesAchievement->active_customers }}
+                    </div>
+                    <div class="mb-3">
                         <strong>Poin:</strong>
                         {{ $salesAchievement->points ?? 'Belum ada poin' }}
                     </div>
@@ -63,6 +75,7 @@
                     @endcanAccess
                     @else
                     <p><strong>Point:</strong> {{ $salesAchievement->points }}</p>
+                    <p><strong>Tanggal Point:</strong> {{ $salesAchievement->attempt_point_date ? $salesAchievement->attempt_point_date->format('d M Y H:i') : '-' }}</p>
                     <p><strong>Approval:</strong> {{ $salesAchievement->approvalUser ?   $salesAchievement->approvalUser->name : ''   }}</p>
                     @endif
                 </div>

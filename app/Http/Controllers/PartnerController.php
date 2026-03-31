@@ -32,14 +32,14 @@ class PartnerController extends Controller
         }
 
         $partners = $query->byCompany(Auth::user()->company_id)->orderBy('name')->paginate(15);
-        $partnerTypes = PartnerType::where('company_id', Auth::user()->company_id)->where('is_active', true)->orderBy('name')->get();
+        $partnerTypes = PartnerType::byCompany(Auth::user()->company_id)->where('is_active', true)->orderBy('name')->get();
 
         return view('partners.index', compact('partners', 'partnerTypes'));
     }
 
     public function create()
     {
-        $partnerTypes = PartnerType::where('company_id', Auth::user()->company_id)->where('is_active', true)->orderBy('name')->get();
+        $partnerTypes = PartnerType::byCompany(Auth::user()->company_id)->where('is_active', true)->orderBy('name')->get();
         $statuses = config('partners.partner_status');
         $certificationLevels = config('partners.certification_levels');
         $users = User::byCompany(Auth::user()->company_id)->orderBy('name')->get();
@@ -104,7 +104,7 @@ class PartnerController extends Controller
 
     public function edit(Partner $partner)
     {
-        $partnerTypes = PartnerType::where('company_id', Auth::user()->company_id)->where('is_active', true)->orderBy('name')->get();
+        $partnerTypes = PartnerType::byCompany(Auth::user()->company_id)->where('is_active', true)->orderBy('name')->get();
         $statuses = config('partners.partner_status');
         $certificationLevels = config('partners.certification_levels');
         $users = User::byCompany(Auth::user()->company_id)->orderBy('name')->get();

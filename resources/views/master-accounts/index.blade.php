@@ -217,7 +217,7 @@ $(document).ready(function() {
         }).then((result) => {
             if (result.isConfirmed) {
                 const form = $('#delete-form');
-                form.attr('action', `/admin/master-accounts/${id}`);
+                form.attr('action', `/master-account/${id}`);
                 form.submit();
             }
         });

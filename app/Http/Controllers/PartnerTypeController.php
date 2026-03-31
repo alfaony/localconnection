@@ -10,7 +10,7 @@ class PartnerTypeController extends Controller
 {
     public function index()
     {
-        $partnerTypes = PartnerType::where('company_id', Auth::user()->company_id)
+        $partnerTypes = PartnerType::byCompany(Auth::user()->company_id)
             ->orderBy('name')
             ->paginate(15);
             
@@ -28,7 +28,7 @@ class PartnerTypeController extends Controller
         $validated['is_active'] = $request->has('is_active');
         
         // Ensure name is unique for this company
-        $exists = PartnerType::where('company_id', Auth::user()->company_id)
+        $exists = PartnerType::byCompany(Auth::user()->company_id)
             ->where('name', $validated['name'])
             ->exists();
             
@@ -55,7 +55,7 @@ class PartnerTypeController extends Controller
         $validated['is_active'] = $request->has('is_active');
         
         // Ensure name is unique for this company
-        $exists = PartnerType::where('company_id', Auth::user()->company_id)
+        $exists = PartnerType::byCompany(Auth::user()->company_id)
             ->where('name', $validated['name'])
             ->where('id', '!=', $partnerType->id)
             ->exists();

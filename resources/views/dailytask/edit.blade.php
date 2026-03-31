@@ -340,7 +340,7 @@
         }
     });
 
-    $(document).on('input', '#pointInput', function () {
+    $(document).on('change', '#pointInput', function () {
         const point = parseInt($(this).val());
 
         if (isNaN(point) || point <= 0) {
