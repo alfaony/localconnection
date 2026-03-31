@@ -9,12 +9,12 @@
         <small style="color:#a0a8d0;">Kelola semua transaksi XP karyawan</small>
     </div>
     <div class="d-flex gap-2">
-        @canAccess('leaderboard','employee_xp')
+        @canAccess('leaderboard','employee_xps')
         <a href="{{ route('employee-xp.leaderboard') }}" class="btn btn-sm mb-1 mr-1" style="background:rgba(245,166,35,.15);color:#f5a623;border:1px solid rgba(245,166,35,.3);">
             <i class="fas fa-trophy mr-1"></i> Leaderboard
         </a>
         @endcanAccess
-        @canAccess('store','employee_xp')
+        @canAccess('store','employee_xps')
         <button class="btn btn-sm mb-1" style="background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;border:none;" data-toggle="modal" data-target="#modalAward">
             <i class="fas fa-plus mr-1"></i> Award XP Manual
         </button>
@@ -176,7 +176,7 @@
     @endif
 </div>
 
-@canAccess('store','employee_xp')
+@canAccess('store','employee_xps')
 {{-- ── MODAL AWARD XP ────────────────────────────── --}}
 <div class="modal fade" id="modalAward" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered" style="max-width:460px;">
