@@ -28,44 +28,56 @@
 @section('content')
 @include('components.alert')
 
-<div class="row g-3">
+<div class="row g-4">
     @forelse($badges as $badge)
-    <div class="col-md-3 col-sm-6">
-        <div class="card border-0 shadow-sm h-100" style="background:linear-gradient(145deg,#1a1a2e,#16213e);border-radius:16px;overflow:hidden;">
-            <div style="height:3px;background:linear-gradient(90deg,#667eea,#f093fb,#f5a623);"></div>
-            <div class="card-body text-center p-4">
-                <div class="mb-3 d-flex justify-content-center">
+    <div class="col-xl-3 col-md-4 col-sm-6 col-12">
+        <div class="badge-master-card card border-0 shadow-sm h-100" style="background:linear-gradient(145deg,#1a1a2e,#16213e);border-radius:20px;overflow:hidden;">
+            <div style="height:4px;background:linear-gradient(90deg,#667eea,#f093fb,#f5a623);"></div>
+
+            {{-- Icon Area --}}
+            <div class="d-flex justify-content-center pt-4 pb-2">
+                <div class="badge-img-wrap">
                     @if($badge->image)
-                    <div style="width:80px;height:80px;background:rgba(102,126,234,.15);border-radius:50%;padding:6px;border:2px solid rgba(102,126,234,.4);display:flex;align-items:center;justify-content:center;">
-                        <img src="{{ s3_asset(true, null, $badge->image) }}" alt="{{ $badge->name }}"
-                             style="width:60px;height:60px;object-fit:contain;">
-                    </div>
+                    <img src="{{ s3_asset(true, null, $badge->image) }}"
+                         alt="{{ $badge->name }}"
+                         style="width:110px;height:110px;object-fit:contain;filter:drop-shadow(0 6px 18px rgba(240,147,251,.45));">
                     @else
-                    <div style="width:80px;height:80px;background:rgba(102,126,234,.15);border-radius:50%;border:2px solid rgba(102,126,234,.4);display:flex;align-items:center;justify-content:center;font-size:2rem;">
-                        🏅
-                    </div>
+                    <div class="d-flex align-items-center justify-content-center"
+                         style="width:110px;height:110px;font-size:3.8rem;">🏅</div>
                     @endif
                 </div>
-                <h6 class="fw-bold mb-1" style="color:#e0e0ff;">{{ $badge->name }}</h6>
+            </div>
+
+            <div class="card-body text-center px-4 pb-4 pt-2">
+                <h5 class="fw-bold mb-1" style="color:#e0e0ff;">{{ $badge->name }}</h5>
+
                 @if($badge->description)
-                <small style="color:#a0a8d0;">{{ $badge->description }}</small>
+                <p class="mb-3" style="color:#a0a8d0;font-size:.8rem;line-height:1.4;">{{ $badge->description }}</p>
+                @else
+                <div class="mb-3"></div>
                 @endif
-                <div class="mt-3 d-flex justify-content-center gap-1" style="gap:.4rem;">
-                    <span class="badge rounded-pill" style="background:rgba(240,147,251,.15);color:#f093fb;border:1px solid rgba(240,147,251,.3);font-size:.7rem;">
-                        <i class="fas fa-users me-1"></i>{{ $badge->user_badges_count }} dikirim
+
+                <div class="d-flex justify-content-center mb-3">
+                    <span class="px-3 py-1 rounded-pill" style="background:rgba(240,147,251,.12);color:#f093fb;border:1px solid rgba(240,147,251,.3);font-size:.75rem;font-weight:600;">
+                        <i class="fas fa-users me-1"></i>{{ $badge->user_badges_count }} penerima
                     </span>
                 </div>
-                <div class="mt-3 d-flex justify-content-center" style="gap:.5rem;">
+
+                <div class="d-flex justify-content-center" style="gap:.6rem;">
                     @canAccess('edit','badges')
-                    <a href="{{ route('badge.edit', $badge) }}" class="btn btn-sm btn-outline-info" style="border-radius:8px;font-size:.75rem;">
-                        <i class="fas fa-edit"></i>
+                    <a href="{{ route('badge.edit', $badge) }}"
+                       class="btn btn-sm btn-outline-info"
+                       style="border-radius:10px;padding:.35rem .75rem;">
+                        <i class="fas fa-edit me-1"></i> Edit
                     </a>
                     @endcanAccess
                     @canAccess('destroy','badges')
-                    <form action="{{ route('badge.destroy', $badge) }}" method="POST" onsubmit="return confirm('Hapus badge ini?')">
+                    <form action="{{ route('badge.destroy', $badge) }}" method="POST"
+                          onsubmit="return confirm('Hapus badge \'{{ $badge->name }}\'?')">
                         @csrf @method('DELETE')
-                        <button type="submit" class="btn btn-sm btn-outline-danger" style="border-radius:8px;font-size:.75rem;">
-                            <i class="fas fa-trash"></i>
+                        <button type="submit" class="btn btn-sm btn-outline-danger"
+                                style="border-radius:10px;padding:.35rem .75rem;">
+                            <i class="fas fa-trash me-1"></i> Hapus
                         </button>
                     </form>
                     @endcanAccess
@@ -76,8 +88,8 @@
     @empty
     <div class="col-12">
         <div class="text-center py-5" style="color:#a0a8d0;">
-            <div style="font-size:3rem;">🏅</div>
-            <p class="mt-2">Belum ada badge. Buat badge pertama!</p>
+            <div style="font-size:4rem;line-height:1;margin-bottom:.75rem;">🏅</div>
+            <p class="mb-3">Belum ada badge. Buat badge pertama!</p>
             <a href="{{ route('badge.create') }}" class="btn btn-primary btn-sm rounded-pill px-4">
                 <i class="fas fa-plus-circle me-1"></i> Buat Badge
             </a>
@@ -89,4 +101,22 @@
 <div class="mt-4">
     {{ $badges->links() }}
 </div>
+@stop
+
+@section('css')
+<style>
+.badge-master-card {
+    transition: transform .25s ease, box-shadow .25s ease;
+}
+.badge-master-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 16px 40px rgba(102,126,234,.25) !important;
+}
+.badge-img-wrap {
+    transition: transform .3s ease;
+}
+.badge-master-card:hover .badge-img-wrap {
+    transform: scale(1.08);
+}
+</style>
 @stop
