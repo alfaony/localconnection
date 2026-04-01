@@ -317,6 +317,7 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
   Route::get('home/leaderboard', [App\Http\Controllers\HomeController::class, 'leaderboard'])->name('home.leaderboard');
   Route::get('home/xp-leaderboard', [App\Http\Controllers\HomeController::class, 'xpLeaderboard'])->name('home.xpLeaderboard');
   Route::get('home/overdueRanking', [App\Http\Controllers\HomeController::class, 'overdueRanking'])->name('home.overdueRanking');
+  Route::get('home/user-badges', [App\Http\Controllers\HomeController::class, 'userBadges'])->name('home.userBadges');
 
   Route::resource('office-media', OfficeMediaController::class)->only(['index', 'store','destroy']);
   // Xero Setting
@@ -908,9 +909,17 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
       Route::get('employee-xp/history', [App\Http\Controllers\EmployeeXpController::class, 'myHistory'])->name('employee-xp.my-history');
       Route::get('employee-xp/leaderboard', [App\Http\Controllers\EmployeeXpController::class, 'leaderboard'])->name('employee-xp.leaderboard');
       Route::get('employee-xp/history/{userId}', [App\Http\Controllers\EmployeeXpController::class, 'userHistory'])->name('employee-xp.user-history');
+
       
     });
-
+    
+    // ========================================================================
+    // BADGE / GELAR
+    // ========================================================================
+    Route::get('badge/assign', [App\Http\Controllers\BadgeController::class, 'assignIndex'])->name('badge.assign');
+    Route::post('badge/assign', [App\Http\Controllers\BadgeController::class, 'assignStore'])->name('badge.assign.store');
+    Route::delete('badge/revoke/{userBadge}', [App\Http\Controllers\BadgeController::class, 'revokeUserBadge'])->name('badge.revoke');
+    Route::resource('badge', App\Http\Controllers\BadgeController::class)->except(['show']);
 
 
   Route::get('internet-customer/registration/{companyId}', InternetCustomerForm::class)->name('internet-customer.create');
