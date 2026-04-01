@@ -7,12 +7,12 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Str;
 use Carbon\Carbon;
 use App\Schemas\ParamSchema;
-use App\Traits\AwardsXp;
+// use App\Traits\AwardsXp;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class MomTask extends Model
 {
-    use HasFactory, SoftDeletes, AwardsXp;
+    use HasFactory, SoftDeletes;
 
     public $incrementing = false;
 

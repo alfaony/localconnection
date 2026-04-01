@@ -1050,7 +1050,7 @@ class DailyTaskController extends Controller
                 $pointToSave = $request->point ?? 0;
             }
                 
-            \App\Helpers\XpHelper::award($dailytask->user, $dailytask, "Approval Dailytask");
+            \App\Helpers\XpHelper::award($dailytask->assign, $dailytask, "Approval Dailytask");
 
             $dailytask->point = $pointToSave;
             $dailytask->task_status_id = $taskStatuss->id;
