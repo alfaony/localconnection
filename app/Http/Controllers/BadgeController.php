@@ -13,7 +13,7 @@ class BadgeController extends Controller
 {
     public function index()
     {
-        $badges = Badge::withCount('userBadges')->latest()->paginate(15);
+        $badges = Badge::byCompany(Auth::user()->company_id)->withCount('userBadges')->latest()->paginate(15);
         return view('badge.index', compact('badges'));
     }
 
