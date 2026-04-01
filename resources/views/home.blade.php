@@ -140,12 +140,15 @@
                         <div class="d-flex align-items-center mb-2">
                             <span style="color:#a0a8d0;font-size:.65rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;">🏅 Gelar</span>
                         </div>
-                        <div id="gelar-loader" class="d-flex align-items-center justify-content-center flex-grow-1" style="min-height:60px;">
+                        <div id="gelar-loader" class="d-flex align-items-center justify-content-center flex-grow-1" style="min-height:110px;">
                             <div class="spinner-border spinner-border-sm" style="color:#f093fb;" role="status"></div>
                         </div>
-                        <div id="gelar-container" class="d-none d-flex flex-wrap align-items-center" style="gap:.75rem;min-height:60px;"></div>
-                        <div id="gelar-empty" class="d-none text-center flex-grow-1 d-flex align-items-center justify-content-center" style="min-height:60px;">
-                            <small style="color:#606880;">Belum ada gelar diterima</small>
+                        <div id="gelar-container" class="d-none flex-wrap pt-4" style="gap:1.25rem 1.5rem;min-height:110px;overflow-x:auto;padding:4px 2px;"></div>
+                        <div id="gelar-empty" class="d-none text-center flex-grow-1 d-flex align-items-center justify-content-center" style="min-height:110px;">
+                            <div>
+                                <div style="font-size:2rem;opacity:.3;">🏅</div>
+                                <small style="color:#606880;">Belum ada gelar diterima</small>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -637,7 +640,48 @@
     box-shadow: 0 6px 20px rgba(240,147,251,.2);
 }
 
-/* GELAR badge hover */
+/* GELAR badge item */
+.gelar-item {
+    position: relative;
+    cursor: default;
+    text-align: center;
+    flex-shrink: 0;
+}
+.gelar-img-wrap {
+    width: 90px;
+    height: 90px;
+    transition: transform .25s ease;
+}
+.gelar-item:hover .gelar-img-wrap {
+    transform: scale(1.12) translateY(-3px);
+}
+.gelar-name {
+    font-size: .68rem;
+    color: #a0a8d0;
+    margin-top: 6px;
+    max-width: 90px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.gelar-count {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    background: #f5a623;
+    color: #1a1a2e;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    font-size: .65rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+    box-shadow: 0 2px 6px rgba(0,0,0,.3);
+}
+/* Legacy badge-icon-wrap (jika masih dipakai) */
 .badge-icon-wrap { transition: transform .2s, box-shadow .2s; }
 .badge-icon-wrap:hover { transform: scale(1.18); box-shadow: 0 4px 16px rgba(240,147,251,.45); }
 
@@ -1268,23 +1312,25 @@
             let html = '';
             data.forEach(b => {
                 const imgHtml = b.image_url
-                    ? `<img src="${b.image_url}" style="width:46px;height:46px;object-fit:contain;" alt="${b.name}">`
-                    : `<span style="font-size:1.9rem;">🏅</span>`;
+                    ? `<img src="${b.image_url}"
+                            style="width:90px;height:auto;object-fit:contain;filter:drop-shadow(0 4px 14px rgba(240,147,251,.5));"
+                            alt="${b.name}">`
+                    : `<span style="font-size:3.2rem;filter:drop-shadow(0 4px 10px rgba(240,147,251,.4));">🏅</span>`;
 
                 html += `
-                <div style="position:relative;cursor:default;"
+                <div class="gelar-item"
                      data-bs-toggle="tooltip" data-bs-placement="top"
                      title="${b.name}${b.count > 1 ? ' (×' + b.count + ')' : ''} — ${b.received_at}">
-                    <div class="badge-icon-wrap d-flex align-items-center justify-content-center"
-                         style="width:66px;height:66px;background:rgba(102,126,234,.15);border-radius:50%;padding:6px;border:2px solid rgba(102,126,234,.35);">
+                    <div class="gelar-img-wrap d-flex align-items-center justify-content-center">
                         ${imgHtml}
                     </div>
-                    ${b.count > 1 ? `<span style="position:absolute;top:-2px;right:-2px;background:#f5a623;color:#1a1a2e;border-radius:50%;width:18px;height:18px;font-size:.62rem;font-weight:700;display:flex;align-items:center;justify-content:center;line-height:1;">${b.count}</span>` : ''}
-                    <div style="font-size:.6rem;color:#a0a8d0;text-align:center;margin-top:4px;max-width:66px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${b.name}</div>
+                    ${b.count > 1 ? `<span class="gelar-count">${b.count}</span>` : ''}
+                    <div class="gelar-name mt-3">${b.name}</div>
                 </div>`;
             });
 
             container.innerHTML = html;
+            container.style.display = 'flex';
             container.classList.remove('d-none');
 
             // Reinit tooltips
