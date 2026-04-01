@@ -411,6 +411,28 @@ class HomeController extends Controller
         ]);
     }
 
+    public function userBadges()
+    {
+        $data = \App\Models\UserBadge::with('badge')
+            ->where('user_id', Auth::user()->id)
+            ->latest()
+            ->get()
+            ->groupBy('badge_id')
+            ->map(function ($group) {
+                $first = $group->first();
+                $count = $group->count();
+                return [
+                    'name'        => $first->badge->name ?? '-',
+                    'image_url'   => $first->badge && $first->badge->image ? s3_asset(true, null, $first->badge->image) : null,
+                    'count'       => $count,
+                    'received_at' => $first->created_at->format('d M Y'),
+                ];
+            })
+            ->values();
+
+        return response()->json(['status' => 'success', 'data' => $data]);
+    }
+
     public function xpLeaderboard()
     {
         $companyId = Auth::user()->company_id;

@@ -23,6 +23,20 @@
         <div id="vehicle-reminder-manager"></div>
         <div id="reminder-letter-pic"></div>
         <div id="reminder-letter-manager"></div>
+
+        {{-- LAPORAN PENGADUAN --}}
+        <a href="https://forms.gle/sPs4j3L9oNrNkPmR6" target="_blank" rel="noopener"
+           class="d-flex align-items-center mb-3 px-4 py-3 text-decoration-none laporan-banner">
+            <div style="width:42px;height:42px;background:linear-gradient(135deg,#f093fb,#667eea);border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 4px 14px rgba(240,147,251,.4);">
+                <i class="fas fa-bullhorn" style="color:#fff;font-size:1rem;"></i>
+            </div>
+            <div class="ms-3 flex-grow-1">
+                <div class="fw-bold" style="font-size:.92rem;">Laporan Pengaduan Karyawan</div>
+                <div style="font-size:.76rem;opacity:.75;">Sampaikan keluhan atau masukan secara anonim</div>
+            </div>
+            <i class="fas fa-external-link-alt ms-3" style="font-size:.82rem;opacity:.6;"></i>
+        </a>
+
     </div>
 </div>
 
@@ -31,80 +45,119 @@
     <i class="fas fa-user-astronaut me-1"></i> Player Status
 </div>
 <div class="row g-3 mb-4">
-    <div class="col-md-3">
-        <div class="card border-0 shadow-lg hover-effect h-100" style="background: linear-gradient(145deg, #1a1a2e, #16213e); border-radius: 16px; overflow: hidden;">
-            <div style="height: 4px; background: linear-gradient(90deg, #667eea, #f093fb, #f5a623);"></div>
-            <div class="card-body text-center p-4">
-                <div class="position-relative d-inline-block mb-3">
-                    <div style="width:90px;height:90px;background:linear-gradient(135deg,#667eea,#f093fb);border-radius:50%;padding:3px;margin:auto;">
+
+    {{-- ── PROFILE CARD ── --}}
+    <div class="col-md-3 col-12">
+        <div class="card border-0 shadow-lg hover-effect h-100" style="background:linear-gradient(145deg,#1a1a2e,#16213e);border-radius:16px;overflow:hidden;">
+            <div style="height:4px;background:linear-gradient(90deg,#667eea,#f093fb,#f5a623);"></div>
+            <div class="card-body text-center p-3">
+                <div class="position-relative d-inline-block mb-2">
+                    <div style="width:80px;height:80px;background:linear-gradient(135deg,#667eea,#f093fb);border-radius:50%;padding:3px;margin:auto;">
                         <img src="{{ Auth::user()->avatar ? s3_asset(true,10,Auth::user()->avatar) : 'https://placehold.co/600x400?text=Avatar' }}"
                             class="rounded-circle" alt="Avatar"
-                            style="width:84px;height:84px;object-fit:cover;background:#1a1a2e;">
+                            style="width:74px;height:74px;object-fit:cover;background:#1a1a2e;">
                     </div>
-                    <span id="profile-level-badge" class="position-absolute" style="bottom:-4px;right:-4px;font-size:1.2rem;" title="Level">🔶</span>
+                    <span id="profile-level-badge" class="position-absolute" style="bottom:-4px;right:-4px;font-size:1.1rem;" title="Level">🔶</span>
                 </div>
-                <h5 class="mb-1 fw-bold" style="color:#e0e0ff;">{{ Auth::user()->name }}</h5>
-                <div class="d-inline-flex align-items-center px-3 py-1 mb-3 rounded-pill" style="background:rgba(102,126,234,.2);border:1px solid rgba(102,126,234,.4);">
-                    <i class="bi bi-shield-fill-check me-1" style="color:#667eea;"></i>
-                    <span style="color:#a0a8d0;font-size:.78rem;">{{ ucfirst(Auth::user()->role->name) }}</span>
+                <h6 class="mb-1 fw-bold" style="color:#e0e0ff;">{{ Auth::user()->name }}</h6>
+                <div class="d-inline-flex align-items-center px-2 py-1 mb-2 rounded-pill" style="background:rgba(102,126,234,.2);border:1px solid rgba(102,126,234,.4);">
+                    <i class="bi bi-shield-fill-check me-1" style="color:#667eea;font-size:.7rem;"></i>
+                    <span style="color:#a0a8d0;font-size:.72rem;">{{ ucfirst(Auth::user()->role->name) }}</span>
                 </div>
-                <div style="background:rgba(255,255,255,.07);border-radius:12px;padding:12px 14px;">
+                <div style="background:rgba(255,255,255,.07);border-radius:10px;padding:10px 12px;">
                     <div class="d-flex justify-content-between mb-1">
-                        <small style="color:#a0a8d0;">TOTAL XP</small>
-                        <small id="profile-xp-label" style="color:#f093fb;font-weight:700;">— XP</small>
+                        <small style="color:#a0a8d0;font-size:.7rem;">TOTAL XP</small>
+                        <small id="profile-xp-label" style="color:#f093fb;font-weight:700;font-size:.7rem;">— XP</small>
                     </div>
-                    <div style="height:8px;background:rgba(255,255,255,.1);border-radius:4px;overflow:hidden;">
+                    <div style="height:6px;background:rgba(255,255,255,.1);border-radius:4px;overflow:hidden;">
                         <div id="profile-xp-bar" style="height:100%;width:0%;background:linear-gradient(90deg,#667eea,#f093fb);border-radius:4px;transition:width .8s ease;"></div>
                     </div>
-                    <div class="d-flex justify-content-between mt-2">
-                        <small style="color:#a0a8d0;">SCORE</small>
-                        <small class="fw-bold" style="color:#f5a623;" id="currentScore">—</small>
+                    <div class="d-flex justify-content-between mt-1">
+                        <small style="color:#a0a8d0;font-size:.7rem;">SCORE</small>
+                        <small class="fw-bold" style="color:#f5a623;font-size:.7rem;" id="currentScore">—</small>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="col-md-9">
-        <div class="row g-3 h-100">
-            <div class="col-md-4">
-                <div class="card border-0 shadow-sm h-100 hover-effect gamified-stat-card" style="background:linear-gradient(135deg,#0f3443,#134e5e);">
-                    <div class="top-glow" style="background:linear-gradient(90deg,#11998e,#38ef7d);"></div>
-                    <div class="card-body d-flex flex-column justify-content-center p-4">
-                        <div class="d-flex align-items-center mb-3">
-                            <div class="icon-box me-3" style="background:rgba(56,239,125,.15);"><i class="bi bi-check2-circle text-success fs-3"></i></div>
-                            <div class="small fw-bold" style="color:#8ab4c0;letter-spacing:.05em;">TASK COMPLETE</div>
+    {{-- ── KANAN: STATS (compact) + GELAR ── --}}
+    <div class="col-md-9 col-12">
+        <div class="d-flex flex-column gap-3 h-100">
+
+            {{-- 3 Stat Cards compact --}}
+            <div class="row g-2">
+                <div class="col-4">
+                    <div class="card border-0 shadow-sm hover-effect gamified-stat-card" style="background:linear-gradient(135deg,#0f3443,#134e5e);border-radius:12px;">
+                        <div class="top-glow" style="background:linear-gradient(90deg,#11998e,#38ef7d);"></div>
+                        <div class="card-body p-3">
+                            <div class="d-flex align-items-center mb-1">
+                                <i class="bi bi-check2-circle text-success me-2" style="font-size:1.1rem;"></i>
+                                <span style="color:#8ab4c0;font-size:.65rem;font-weight:700;letter-spacing:.04em;">TASK DONE</span>
+                            </div>
+                            <div class="fw-bold text-success" style="font-size:1.4rem;line-height:1;" id="totalTasksComplete">
+                                <span class="placeholder col-8 placeholder-glow" style="font-size:.8rem;"></span>
+                            </div>
                         </div>
-                        <div class="h2 mb-0 fw-bold text-success" id="totalTasksComplete"><span class="placeholder col-8 placeholder-glow"></span></div>
+                    </div>
+                </div>
+                <div class="col-4">
+                    <div class="card border-0 shadow-sm hover-effect gamified-stat-card" style="background:linear-gradient(135deg,#0d1f3c,#162447);border-radius:12px;">
+                        <div class="top-glow" style="background:linear-gradient(90deg,#4facfe,#00f2fe);"></div>
+                        <div class="card-body p-3">
+                            <div class="d-flex align-items-center mb-1">
+                                <i class="bi bi-calendar-check text-info me-2" style="font-size:1.1rem;"></i>
+                                <span style="color:#8ab4c0;font-size:.65rem;font-weight:700;letter-spacing:.04em;">CHECK-IN</span>
+                            </div>
+                            <div class="fw-bold text-info" style="font-size:1.4rem;line-height:1;" id="checkin_point_percentage">
+                                <span class="placeholder col-8 placeholder-glow" style="font-size:.8rem;"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-4">
+                    <div class="card border-0 shadow-sm hover-effect gamified-stat-card" style="background:linear-gradient(135deg,#2d1b69,#16213e);border-radius:12px;">
+                        <div class="top-glow" style="background:linear-gradient(90deg,#f093fb,#f5a623);"></div>
+                        <div class="card-body p-3">
+                            <div class="d-flex align-items-center mb-1">
+                                <i class="bi bi-graph-up me-2" style="color:#f093fb;font-size:1.1rem;"></i>
+                                <span style="color:#8ab4c0;font-size:.65rem;font-weight:700;letter-spacing:.04em;">POINTS</span>
+                            </div>
+                            <div class="fw-bold" style="color:#f093fb;font-size:1.4rem;line-height:1;" id="totalPoints">
+                                <span class="placeholder col-8 placeholder-glow" style="font-size:.8rem;"></span>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
-            <div class="col-md-4">
-                <div class="card border-0 shadow-sm h-100 hover-effect gamified-stat-card" style="background:linear-gradient(135deg,#0d1f3c,#162447);">
-                    <div class="top-glow" style="background:linear-gradient(90deg,#4facfe,#00f2fe);"></div>
-                    <div class="card-body d-flex flex-column justify-content-center p-4">
-                        <div class="d-flex align-items-center mb-3">
-                            <div class="icon-box me-3" style="background:rgba(79,172,254,.15);"><i class="bi bi-calendar-check text-info fs-3"></i></div>
-                            <div class="small fw-bold" style="color:#8ab4c0;letter-spacing:.05em;">CHECK-INS</div>
+
+            {{-- GELAR Section --}}
+            @canAccess('userBadges','homes')
+            <div class="flex-grow-1">
+                <div class="card border-0 shadow-sm h-100" style="background:linear-gradient(145deg,#1a1a2e,#16213e);border-radius:14px;overflow:hidden;">
+                    <div style="height:3px;background:linear-gradient(90deg,#f5a623,#f093fb,#667eea);"></div>
+                    <div class="card-body p-3 d-flex flex-column">
+                        <div class="d-flex align-items-center mb-2">
+                            <span style="color:#a0a8d0;font-size:.65rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;">🏅 Gelar</span>
                         </div>
-                        <div class="h2 mb-0 fw-bold text-info" id="checkin_point_percentage"><span class="placeholder col-8 placeholder-glow"></span></div>
+                        <div id="gelar-loader" class="d-flex align-items-center justify-content-center flex-grow-1" style="min-height:110px;">
+                            <div class="spinner-border spinner-border-sm" style="color:#f093fb;" role="status"></div>
+                        </div>
+                        <div id="gelar-container" class="d-none flex-wrap pt-4" style="gap:1.25rem 1.5rem;min-height:110px;overflow-x:auto;padding:4px 2px;"></div>
+                        <div id="gelar-empty" class="d-none text-center flex-grow-1 d-flex align-items-center justify-content-center" style="min-height:110px;">
+                            <div>
+                                <div style="font-size:2rem;opacity:.3;">🏅</div>
+                                <small style="color:#606880;">Belum ada gelar diterima</small>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
-            <div class="col-md-4">
-                <div class="card border-0 shadow-sm h-100 hover-effect gamified-stat-card" style="background:linear-gradient(135deg,#2d1b69,#16213e);">
-                    <div class="top-glow" style="background:linear-gradient(90deg,#f093fb,#f5a623);"></div>
-                    <div class="card-body d-flex flex-column justify-content-center p-4">
-                        <div class="d-flex align-items-center mb-3">
-                            <div class="icon-box me-3" style="background:rgba(240,147,251,.15);"><i class="bi bi-graph-up" style="color:#f093fb;font-size:1.8rem;"></i></div>
-                            <div class="small fw-bold" style="color:#8ab4c0;letter-spacing:.05em;">TOTAL POINTS</div>
-                        </div>
-                        <div class="h2 mb-0 fw-bold" style="color:#f093fb;" id="totalPoints"><span class="placeholder col-8 placeholder-glow"></span></div>
-                    </div>
-                </div>
-            </div>
+            @endcanAccess
+
         </div>
     </div>
+
 </div>
 @endcanAccess
 
@@ -571,6 +624,67 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
 
 <style>
+/* LAPORAN PENGADUAN BANNER */
+.laporan-banner {
+    background: linear-gradient(135deg, #2d1b3d, #1a1a2e);
+    border: 1px solid rgba(240,147,251,.35);
+    border-radius: 14px;
+    color: #e0e0ff;
+    transition: all .2s;
+}
+.laporan-banner:hover {
+    background: linear-gradient(135deg, #3d2450, #1e1e38);
+    border-color: rgba(240,147,251,.6);
+    color: #ffffff;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(240,147,251,.2);
+}
+
+/* GELAR badge item */
+.gelar-item {
+    position: relative;
+    cursor: default;
+    text-align: center;
+    flex-shrink: 0;
+}
+.gelar-img-wrap {
+    width: 90px;
+    height: 90px;
+    transition: transform .25s ease;
+}
+.gelar-item:hover .gelar-img-wrap {
+    transform: scale(1.12) translateY(-3px);
+}
+.gelar-name {
+    font-size: .68rem;
+    color: #a0a8d0;
+    margin-top: 6px;
+    max-width: 90px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.gelar-count {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    background: #f5a623;
+    color: #1a1a2e;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    font-size: .65rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+    box-shadow: 0 2px 6px rgba(0,0,0,.3);
+}
+/* Legacy badge-icon-wrap (jika masih dipakai) */
+.badge-icon-wrap { transition: transform .2s, box-shadow .2s; }
+.badge-icon-wrap:hover { transform: scale(1.18); box-shadow: 0 4px 16px rgba(240,147,251,.45); }
+
 /* GAME UI GLOBALS */
 .gamified-stat-card {
     position: relative;
@@ -970,6 +1084,7 @@
 @canAccess('store','office_media')
 <script>
     $(document).ready(function () {
+
         $.ajaxSetup({
             headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') }
         });
@@ -1165,6 +1280,63 @@
             $('#leaderboard-list').removeClass('d-none');
         } catch (error) {
             $('#leaderboard-loader').html('<p class="text-danger small text-center">Failed to load</p>');
+        }
+    }
+</script>
+@endcanAccess
+
+@canAccess('userBadges','homes')
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        loadUserBadges();
+    });
+
+    async function loadUserBadges() {
+        const container = document.getElementById('gelar-container');
+        const loader    = document.getElementById('gelar-loader');
+        const empty     = document.getElementById('gelar-empty');
+        if (!container) return;
+        try {
+            const res  = await fetch('{{ route("home.userBadges") }}');
+            const json = await res.json();
+            const data = json.data;
+
+            loader.classList.add('d-none');
+
+            if (!data || data.length === 0) {
+                empty.classList.remove('d-none');
+                empty.classList.add('d-flex');
+                return;
+            }
+
+            let html = '';
+            data.forEach(b => {
+                const imgHtml = b.image_url
+                    ? `<img src="${b.image_url}"
+                            style="width:90px;height:auto;object-fit:contain;filter:drop-shadow(0 4px 14px rgba(240,147,251,.5));"
+                            alt="${b.name}">`
+                    : `<span style="font-size:3.2rem;filter:drop-shadow(0 4px 10px rgba(240,147,251,.4));">🏅</span>`;
+
+                html += `
+                <div class="gelar-item"
+                     data-bs-toggle="tooltip" data-bs-placement="top"
+                     title="${b.name}${b.count > 1 ? ' (×' + b.count + ')' : ''} — ${b.received_at}">
+                    <div class="gelar-img-wrap d-flex align-items-center justify-content-center">
+                        ${imgHtml}
+                    </div>
+                    ${b.count > 1 ? `<span class="gelar-count">${b.count}</span>` : ''}
+                    <div class="gelar-name mt-3">${b.name}</div>
+                </div>`;
+            });
+
+            container.innerHTML = html;
+            container.style.display = 'flex';
+            container.classList.remove('d-none');
+
+            // Reinit tooltips
+            container.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(el => new bootstrap.Tooltip(el));
+        } catch (e) {
+            if (loader) loader.innerHTML = '<small style="color:#f87171;">Gagal memuat gelar</small>';
         }
     }
 </script>
