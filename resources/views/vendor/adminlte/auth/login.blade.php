@@ -96,3 +96,12 @@
         </p>
     @endif
 @stop
+
+@section('css')
+<style>
+body {
+    background: url('/logo/bg-login.jpg') no-repeat center center fixed;
+    background-size: cover;
+}
+</style>
+@endsection
