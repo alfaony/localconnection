@@ -201,7 +201,7 @@ class AppServiceProvider extends ServiceProvider
             'provinces','cities','districts','subdistricts','postal_codes','partner_parameter_types'
             ];
 
-            $managementSettingMenu = ['xp_configs','setting_companies','roles','webhook_settings'];
+            $managementSettingMenu = ['xp_configs','badges','setting_companies','roles','webhook_settings'];
 
 
             $menus = [
@@ -792,6 +792,12 @@ class AppServiceProvider extends ServiceProvider
                 [
                     'text' => 'Konfigurasi XP',
                     'route' => 'xp-config.index',
+                    'icon' => 'fa fa-coins',
+                ],
+                'badges' =>
+                [
+                    'text' => 'Gelar',
+                    'route' => 'badge.index',
                     'icon' => 'fa fa-coins',
                 ],
             ];

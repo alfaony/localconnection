@@ -25,7 +25,7 @@
                 <div class="text-center mb-4">
                     <div id="badge-preview" style="width:100px;height:100px;background:rgba(102,126,234,.15);border-radius:50%;padding:8px;border:2px solid rgba(102,126,234,.4);display:inline-flex;align-items:center;justify-content:center;margin:auto;">
                         @if(isset($badge) && $badge->image)
-                        <img id="preview-img" src="{{ s3_asset(false, null, $badge->image) }}" style="width:76px;height:76px;object-fit:contain;" alt="preview">
+                        <img id="preview-img" src="{{ s3_asset(true, null, $badge->image) }}" style="width:76px;height:76px;object-fit:contain;" alt="preview">
                         @else
                         <span id="preview-placeholder" style="font-size:2.5rem;">🏅</span>
                         <img id="preview-img" src="" style="width:76px;height:76px;object-fit:contain;display:none;" alt="preview">

@@ -9,9 +9,13 @@
         <small style="color:#a0a8d0;">Kelola koleksi gelar & lencana karyawan</small>
     </div>
     <div class="d-flex gap-2">
+        @canAccess('assignIndex','badges')
+        @canAccess('assignStore','badges')
         <a href="{{ route('badge.assign') }}" class="btn btn-sm btn-outline-warning mb-1 mr-1">
             <i class="fas fa-paper-plane mr-1"></i> Kirim Badge
         </a>
+        @endcanAccess
+        @endcanAccess
         @canAccess('create','badges')
         <a href="{{ route('badge.create') }}" class="btn btn-sm btn-primary mb-1">
             <i class="fas fa-plus-circle mr-1"></i> Badge Baru
