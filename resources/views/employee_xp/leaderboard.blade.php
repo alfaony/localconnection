@@ -5,8 +5,8 @@
 @section('content_header')
 <div class="d-flex justify-content-between align-items-center">
     <div>
-        <h1 class="m-0 fw-bold" style="color:#e0e0ff;">🏆 Leaderboard XP</h1>
-        <small style="color:#a0a8d0;">Ranking karyawan berdasarkan total experience points</small>
+        <h1 class="m-0 fw-bold">🏆 Leaderboard XP</h1>
+        <small style="color:#55596e;">Ranking karyawan berdasarkan total experience points</small>
     </div>
 
     @canAccess('myHistory','employee_xps')
@@ -133,7 +133,17 @@
                             <div class="xl-avatar mr-3">{{ strtoupper(substr($user->name, 0, 1)) }}</div>
                             <div>
                                 <div style="color:#e0e0ff;font-weight:{{ $isMe ? '700' : '600' }};font-size:.88rem;">
+                                    @if(!$isMe)
+                                        @if($canAccessUserHistory)
+                                        <a href="{{ route('employee-xp.user-history', $user->id) }}" class="btn btn-sm btn-outline-info" style="border-radius:10px;padding:.35rem .75rem;">
+                                            {{ $user->name }}
+                                        </a>
+                                        @else
+                                        {{ $user->name }}
+                                        @endif
+                                    @else
                                     {{ $user->name }}
+                                    @endif
                                     @if($isMe)<span class="xl-me-badge">Anda</span>@endif
                                 </div>
                             </div>

@@ -5,8 +5,8 @@
 @section('content_header')
 <div class="d-flex justify-content-between align-items-center">
     <div>
-        <h1 class="m-0 fw-bold" style="color:#e0e0ff;">🏅 Master Badge</h1>
-        <small style="color:#a0a8d0;">Kelola koleksi gelar & lencana karyawan</small>
+        <h1 class="m-0 fw-bold" >🏅 Master Badge</h1>
+        <small style="color:#55596e;">Kelola koleksi gelar & lencana karyawan</small>
     </div>
     <div class="d-flex gap-2">
         @canAccess('assignIndex','badges')

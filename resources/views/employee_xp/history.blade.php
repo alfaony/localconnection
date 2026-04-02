@@ -5,8 +5,8 @@
 @section('content_header')
 <div class="d-flex justify-content-between align-items-center">
     <div>
-        <h1 class="m-0 fw-bold" style="color:#e0e0ff;">⚡ Riwayat XP{{ isset($user) ? ' — ' . $user->name : ' Saya' }}</h1>
-        <small style="color:#a0a8d0;">Seluruh riwayat poin pengalaman Anda</small>
+        <h1 class="m-0 fw-bold">⚡ Riwayat XP{{ isset($user) ? ' — ' . $user->name : ' Saya' }}</h1>
+        <small style="color:#55596e;">Seluruh riwayat poin pengalaman Anda</small>
     </div>
     <a href="{{ route('employee-xp.leaderboard') }}" class="btn btn-sm" style="background:rgba(245,166,35,.15);color:#f5a623;border:1px solid rgba(245,166,35,.3);">
         <i class="fas fa-trophy mr-1"></i> Leaderboard

@@ -5,8 +5,8 @@
 @section('content_header')
 <div class="d-flex justify-content-between align-items-center">
     <div>
-        <h1 class="m-0 fw-bold" style="color:#e0e0ff;">🎖️ Kirim Badge</h1>
-        <small style="color:#a0a8d0;">Berikan penghargaan kepada karyawan</small>
+        <h1 class="m-0 fw-bold">🎖️ Kirim Badge</h1>
+        <small style="color:#55596e;">Berikan penghargaan kepada karyawan</small>
     </div>
     <a href="{{ route('badge.index') }}" class="btn btn-sm btn-outline-secondary mb-1">
         <i class="fas fa-arrow-left mr-1"></i> Master Badge

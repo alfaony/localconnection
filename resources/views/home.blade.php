@@ -186,7 +186,9 @@
         <div class="card shadow-sm border-0 h-100 xp-leaderboard-card">
             <div class="card-header border-0 d-flex align-items-center justify-content-between xp-header-gradient">
                 <span style="color:#e0e0ff;font-weight:600;"><i class="fas fa-star me-2 fs-5" style="color:#f093fb;"></i> Top 5 XP</span>
-                <a href="{{ route('employee-xp.leaderboard') }}" class="btn btn-sm py-0 px-2 rounded-pill" style="font-size:.75rem;background:rgba(102,126,234,.2);color:#a0c4ff;border:1px solid rgba(102,126,234,.4);">All</a>
+                @canAccess('leaderboard','employee_xps')
+                <a href="{{ route('employee-xp.leaderboard') }}" class="btn btn-sm py-0 px-2 rounded-pill ml-auto" style="font-size:.75rem;background:rgba(102,126,234,.2);color:#a0c4ff;border:1px solid rgba(102,126,234,.4);">All</a>
+                @endcanAccess
             </div>
             <div class="card-body p-2" id="xp-top5-container" style="height: 220px; overflow-y: auto;">
                 <div class="text-center text-muted py-5"><i class="fas fa-spinner fa-spin"></i> Memuat...</div>

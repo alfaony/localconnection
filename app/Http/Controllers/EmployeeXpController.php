@@ -139,6 +139,7 @@ class EmployeeXpController extends Controller
     public function leaderboard(Request $request)
     {
         $companyId = Auth::user()->company_id;
+        $canAccessUserHistory = \App\Helpers\Access::can('userHistory','employee_xps');
 
         $users = User::byCompany($companyId)
             ->isActive()
@@ -153,7 +154,7 @@ class EmployeeXpController extends Controller
             ->where('total_xp', '>', Auth::user()->total_xp)
             ->count() + 1;
 
-        return view('employee_xp.leaderboard', compact('users', 'myRank'));
+        return view('employee_xp.leaderboard', compact('users', 'myRank','canAccessUserHistory'));
     }
 
     /**
