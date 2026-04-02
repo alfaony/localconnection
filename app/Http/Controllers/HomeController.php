@@ -674,6 +674,7 @@ class HomeController extends Controller
         $today = Carbon::today();
 
         $cutiToday = Dayoff::with('user', 'type')
+            ->byCompany(Auth::user()->company_id)
             ->where('date_start', '<=', $today)
             ->where('date_end', '>=', $today)
             ->whereNull('rejected_at')
