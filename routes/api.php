@@ -70,6 +70,42 @@ Route::group(['middleware' => ['auth:api','role.permission.api']], function()
 
 
     //Mobile
+    Route::prefix('tasks')->group(function() {
+        Route::get('today', [DailyTaskMobileController::class, 'indexToday']);
+        Route::get('tomorrow', [DailyTaskMobileController::class, 'indexTomorrow']);
+        Route::get('overdue', [DailyTaskMobileController::class, 'indexOverdue']);
+        Route::get('user/{userId}', [DailyTaskMobileController::class, 'indexTaskByUser'])->name('tasks.user.mobile');
+        Route::get('division/{divisionId}', [DailyTaskMobileController::class, 'indexTaskByDivision']);
+        
+        Route::put('statuschange/{slug}', [DailyTaskMobileController::class, 'statusChange'])->name('tasks.statuschange.mobile'); 
+        Route::post('{slug}/report', [DailyTaskMobileController::class, 'report'])->name('tasks.report.mobile');
+        Route::post('{slug}/update-media', [DailyTaskMobileController::class, 'updateMedia'])->name('tasks.updateMedia.mobile');
+        Route::delete('media/{id}', [DailyTaskMobileController::class, 'deleteMedia'])->name('tasks.deleteMedia.mobile');
+        Route::post('approval/{slug}', [DailyTaskMobileController::class, 'approval'])->name('api.dailytask.approval');
+        Route::resource('/', DailyTaskMobileController::class)->only(['index', 'show', 'store', 'update', 'destroy'])
+            ->parameters(['' => 'task']); 
+    });
+
+    Route::prefix('daily-task-projects')->group(function() {
+        Route::get('/', [DailyTaskMobileController::class, 'indexDailyTaskProjects']); 
+        Route::get('titles', [DailyTaskMobileController::class, 'indexProjects']); 
+        Route::get('categories', [DailyTaskMobileController::class, 'indexDailyTaskCategories']); 
+        Route::get('types', [DailyTaskMobileController::class, 'indexDailyTaskTypes']);
+        Route::get('objectives', [DailyTaskMobileController::class, 'indexDailyTaskObjectives']);
+        Route::get('keyresults/{objectiveId}', [DailyTaskMobileController::class, 'indexKeyResults']);
+        Route::get('users', [DailyTaskMobileController::class, 'indexDailyTaskUsers']);
+        Route::get('statuses', [DailyTaskMobileController::class, 'indexTaskStatuses']); 
+    });
+
+    Route::prefix('dailytasks')->group(function() {
+        Route::get('summary', [HomeController::class, 'indexSummary']);
+        Route::get('divisions', [DailyTaskMobileController::class, 'indexDivision']);
+        Route::get('check-quota', [DailyTaskMobileController::class, 'checkDivisionQuota']);
+        Route::post('generate-media-url', [DailyTaskMobileController::class, 'generateMediaUrl'])->name('medias.generateMediaUrl.mobile');
+        Route::get('users-by-division/{divisionId}', [DailyTaskMobileController::class, 'getUsersByDivision'])->name('users.division.mobile');
+    });
+
+
     Route::get('users/division/{divisionId}', [DailyTaskMobileController::class, 'getUsersByDivision'])
         ->name('users.division.mobile');
     Route::get('users', [UserApiController::class, 'indexUsers']);
