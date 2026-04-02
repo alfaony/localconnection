@@ -263,12 +263,12 @@
 .xi-select option { background: #1a1a2e; }
 .xi-btn-filter {
     background: rgba(102,126,234,.2);
-    color: #a0c4ff;
+    color: #2c4875;
     border: 1px solid rgba(102,126,234,.3);
     border-radius: 8px;
     font-size: .83rem;
 }
-.xi-btn-filter:hover { background: rgba(102,126,234,.35); color: #e0e0ff; }
+.xi-btn-filter:hover { background: rgba(77, 103, 221, 0.35); color: #10102bff; }
 .xi-btn-reset {
     background: rgba(255,255,255,.05);
     color: #8ab4c0;
