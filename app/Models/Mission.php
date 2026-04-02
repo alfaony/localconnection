@@ -58,6 +58,15 @@ class Mission extends Model
         return $this->belongsTo(Vision::class);
     }
 
+    public function scopeByCompany($query,$companyId)
+    {
+        $companyIds = auth()->user()->accessibleCompanies->pluck('id')->push($companyId)->unique();
+        if($companyIds)
+        {
+            return $query->whereIn('company_id', $companyIds);
+        }
+    }
+
     public function objectives()
     {
         return $this->hasMany(Objective::class);

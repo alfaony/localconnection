@@ -49,7 +49,7 @@ class ObjectiveController extends Controller
     public function create()
     {
         $user = User::with('divisions')->find(Auth::user()->id);
-        $divisions = $user->divisions()->get();
+        $divisions = Division::byCompany(Auth::user()->company_id)->get();
         $missions = Mission::where('company_id',Auth::user()->company_id)->get();
 
         return view('objective.create', compact('divisions','missions'));
@@ -126,8 +126,8 @@ class ObjectiveController extends Controller
     {
         $objective = Objective::byCompany(Auth::user()->company_id)->where('slug', $slug)->firstOrFail();
         $user = User::with('divisions')->find(Auth::user()->id);
-        $divisions = $user->divisions()->get();
-        $missions = Mission::where('company_id',Auth::user()->company_id)->get();
+        $divisions = Division::byCompany(Auth::user()->company_id)->get();
+        $missions = Mission::byCompany(Auth::user()->company_id)->get();
 
         return view('objective.edit', compact('divisions','objective', 'missions'));
     }
