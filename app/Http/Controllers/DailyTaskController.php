@@ -552,8 +552,9 @@ class DailyTaskController extends Controller
 
 
         $primaryDivision = $user->primaryDivision;
+        $userDivisions   = $user->divisions;
 
-        return view('dailytask.edit',compact('categories', 'types', 'users', 'childTasks', 'dailytask', 'projects','objectives','child','days','taskRecurring', 'divisions', 'primaryDivision'));
+        return view('dailytask.edit',compact('categories', 'types', 'users', 'childTasks', 'dailytask', 'projects','objectives','child','days','taskRecurring', 'divisions', 'primaryDivision', 'userDivisions'));
 
     }
 
