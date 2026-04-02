@@ -89,6 +89,63 @@
     </div>
 </div>
 
+@canAccess('ajaxObjectiveChart', 'divisions')
+{{-- Objective Daily Task Chart --}}
+<div class="card p-3 mt-3">
+    <div class="card-header bg-gradient-primary text-white d-flex justify-content-between align-items-center">
+        <h5 class="mb-0"><i class="fas fa-chart-bar mr-2"></i>Distribusi Daily Task per Objective</h5>
+        <small class="text-white-50">berdasarkan objective_division</small>
+    </div>
+    <div class="card-body">
+        {{-- Filter --}}
+        <div class="row mb-3 align-items-end">
+            <div class="col-md-3">
+                <label class="small font-weight-bold">Dari Tanggal</label>
+                <input type="date" id="objChartStartDate" class="form-control form-control-sm">
+            </div>
+            <div class="col-md-3">
+                <label class="small font-weight-bold">Sampai Tanggal</label>
+                <input type="date" id="objChartEndDate" class="form-control form-control-sm">
+            </div>
+            <div class="col-md-2">
+                <button id="objChartLoadBtn" class="btn btn-primary btn-sm w-100">
+                    <i class="fas fa-sync-alt mr-1"></i>Tampilkan
+                </button>
+            </div>
+            <div class="col-md-2">
+                <button id="objChartResetBtn" class="btn btn-outline-secondary btn-sm w-100">
+                    <i class="fas fa-times mr-1"></i>Semua Waktu
+                </button>
+            </div>
+            <div class="col-md-2 text-right">
+                <span id="objChartTotal" class="badge badge-info px-3 py-2" style="font-size:0.85rem;display:none;">
+                    Total: <strong id="objChartTotalVal">0</strong> task
+                </span>
+            </div>
+        </div>
+
+        {{-- Loading --}}
+        <div id="objChartLoading" class="text-center py-5" style="display:none;">
+            <div class="spinner-border text-primary" role="status" style="width:2.5rem;height:2.5rem;">
+                <span class="sr-only">Loading...</span>
+            </div>
+            <p class="mt-2 text-muted small">Memuat data chart...</p>
+        </div>
+
+        {{-- Empty State --}}
+        <div id="objChartEmpty" class="text-center text-muted py-5" style="display:none;">
+            <i class="fas fa-chart-bar fa-3x mb-3 text-light"></i>
+            <p>Tidak ada data daily task untuk periode ini.</p>
+        </div>
+
+        {{-- Chart --}}
+        <div id="objChartWrapper" style="display:none;">
+            <canvas id="objDivisionChart" style="max-height:350px;"></canvas>
+        </div>
+    </div>
+</div>
+@endcanAccess
+
 <div id="accordion">
 @canAccess('fetchusertask', 'project_dashboards')
   <div class="card p-3 mt-3">
@@ -499,6 +556,98 @@
         }
     });
 </script>
+
+@canAccess('ajaxObjectiveChart', 'divisions')
+<script>
+(function () {
+    const objChartUrl = "{{ route('divisions.ajax.objective-chart', ['division' => $division->id]) }}";
+    let objChart = null;
+
+    $(document).ready(function () {
+        loadObjChart();
+        $('#objChartLoadBtn').on('click', loadObjChart);
+        $('#objChartResetBtn').on('click', function () {
+            $('#objChartStartDate').val('');
+            $('#objChartEndDate').val('');
+            loadObjChart();
+        });
+    });
+
+    function loadObjChart() {
+        const startDate = $('#objChartStartDate').val();
+        const endDate   = $('#objChartEndDate').val();
+
+        $('#objChartLoading').show();
+        $('#objChartWrapper').hide();
+        $('#objChartEmpty').hide();
+        $('#objChartTotal').hide();
+
+        $.get(objChartUrl, { start_date: startDate, end_date: endDate }, function (res) {
+            $('#objChartLoading').hide();
+
+            if (!res.labels || res.labels.length === 0) {
+                $('#objChartEmpty').show();
+                return;
+            }
+
+            $('#objChartTotal').show();
+            $('#objChartTotalVal').text(res.total);
+            $('#objChartWrapper').show();
+
+            const colors = res.labels.map((_, i) => `hsl(${(i * 47) % 360}, 65%, 55%)`);
+
+            if (objChart) objChart.destroy();
+
+            const ctx = document.getElementById('objDivisionChart').getContext('2d');
+            objChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: res.labels,
+                    datasets: [{
+                        label: 'Jumlah Daily Task',
+                        data: res.data,
+                        backgroundColor: colors.map(c => c.replace('55%)', '55%, 0.75)')),
+                        borderColor: colors,
+                        borderWidth: 1.5,
+                        borderRadius: 4,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: ctx => ` ${ctx.parsed.y} task`
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: { stepSize: 1, precision: 0 },
+                            grid: { color: 'rgba(0,0,0,0.05)' }
+                        },
+                        x: {
+                            ticks: {
+                                maxRotation: 30,
+                                callback: function(val, i) {
+                                    const lbl = this.getLabelForValue(val);
+                                    return lbl.length > 22 ? lbl.substring(0, 22) + '…' : lbl;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }).fail(function () {
+            $('#objChartLoading').hide();
+            $('#objChartEmpty').show();
+        });
+    }
+})();
+</script>
+@endcanAccess
 <script>
     $(document).ready(function() {
         $('.collapse').on('show.bs.collapse', function () {
@@ -586,6 +735,7 @@
 
 </style>
 <style>
+  #objDivisionChart { width: 100% !important; }
   .border-left-primary { border-left: 5px solid #007bff !important; }
   .border-left-warning { border-left: 5px solid #ffc107 !important; }
   .border-left-success { border-left: 5px solid #28a745 !important; }

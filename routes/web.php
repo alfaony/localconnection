@@ -479,6 +479,7 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
   Route::resource('objective', ObjectiveController::class);
 
   Route::get('division/ajaxDivisionTasks/{division}', [DivisionController::class, 'ajaxDivisionTasks'])->name('divisions.ajax.tasks');
+  Route::get('division/ajaxObjectiveChart/{division}', [DivisionController::class, 'ajaxObjectiveChart'])->name('divisions.ajax.objective-chart');
   Route::get('division/fetchusertask/{userId}/{filter}', [DivisionController::class, 'fetchusertask'])->name('division.fetchusertask');
   Route::resource('division', DivisionController::class);
   
