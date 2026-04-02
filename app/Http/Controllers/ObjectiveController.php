@@ -36,7 +36,7 @@ class ObjectiveController extends Controller
             $query->byUserDivisions(Auth::user()->id);
         }
 
-        $objectives = $query->byCompany(Auth::user()->company_id)->paginate(10);
+        $objectives = $query->with('divisions')->byCompany(Auth::user()->company_id)->paginate(10);
         $divisions = Division::byCompany(Auth::user()->company_id)->get();
         return view('objective.index', compact('objectives', 'divisions'));
     }
@@ -65,17 +65,20 @@ class ObjectiveController extends Controller
     {
         DB::beginTransaction();
         try {
-            foreach ($request->objective_name as $index => $fieldName) 
+            foreach ($request->objective_name as $index => $fieldName)
             {
+                $divisionIds = $request->division_id[$index] ?? [];
                 // Create custom field
                 $objective = Objective::create([
-                    'division_id' => $request->division_id[$index],
+                    'division_id' => $divisionIds[0] ?? null,
                     'mission_id' => $request->mission_id[$index],
                     'user_id' => Auth::user()->id,
                     'start_date' => $request->start_date_objective[$index] ?? null,
                     'end_date' => $request->end_date_objective[$index] ?? null,
                     'name' => $fieldName,
                 ]);
+
+                $objective->divisions()->sync($divisionIds);
     
                 // Create Key Result
                 foreach ($request->key_result[$index] as $indexs => $value) {
@@ -139,7 +142,8 @@ class ObjectiveController extends Controller
     public function update(Request $request, $slug)
     {
         $request->validate([
-            'division_id' => 'required|exists:divisions,id',
+            'division_ids' => 'required|array',
+            'division_ids.*' => 'required|uuid|exists:divisions,id',
             'mission_id' => 'required|exists:missions,id',
             'start_date_objective' => 'nullable|date',
             'end_date_objective' => 'nullable|date|after_or_equal:start_date_objective',
@@ -155,14 +159,18 @@ class ObjectiveController extends Controller
         DB::beginTransaction();
         try {
             $objective = Objective::byCompany(Auth::user()->company_id)->where('slug', $slug)->firstOrFail();
+            $divisionIds = $request->division_ids ?? [];
             $objective->update([
-                'division_id' => $request->division_id,
+                'division_id' => $divisionIds[0] ?? null,
                 'mission_id' => $request->mission_id,
                 'start_date' => $request->start_date_objective ?? null,
                 'end_date' => $request->end_date_objective ?? NULL,
                 'name' => $request->objective_name,
             ]);
-                        // Create Key Result 
+
+            $objective->divisions()->sync($divisionIds);
+
+            // Create Key Result 
             $existingValueIds = [];
             foreach ($request->key_result as $index => $value) {
                 if (isset($request->key_result_id[$index])) {

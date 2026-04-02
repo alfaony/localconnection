@@ -224,13 +224,15 @@ class DailyTaskController extends Controller
             return redirect()->route('dailytask.index')->with('error', 'Anda tidak tergabung dalam divisi manapun. Hubungi admin atau manager Anda.');
         } else {
             // Proceed with fetching objectives related to the user's divisions
-            $objectives = Objective::whereHas('division', function ($query) use ($divisionIds) {
-                $query->whereIn('id', $divisionIds);
+            $objectives = Objective::with('divisions')->whereHas('divisions', function ($query) use ($divisionIds) {
+                $query->whereIn('divisions.id', $divisionIds);
             })->get();
         }
 
+        $userDivisions = $user->divisions;
+        $primaryDivision = $user->primaryDivision;
 
-        return view('dailytask.create',compact('categories', 'types', 'users', 'childTasks', 'projects', 'objectives', 'dailyTaskTypeRecurring','today','days','minDate','taskRecurring'));
+        return view('dailytask.create',compact('categories', 'types', 'users', 'childTasks', 'projects', 'objectives', 'dailyTaskTypeRecurring','today','days','minDate','taskRecurring','userDivisions','primaryDivision'));
     }
 
     public function store(DailyTaskStoreRequest $request)
@@ -249,6 +251,7 @@ class DailyTaskController extends Controller
             $descriptions = $request->description ?? [];
 
             $objectives = $request->objective ?? [];
+            $objectiveDivisionIds = $request->objective_division_id ?? [];
             $recurring_days = $request->input('days') ? json_encode($request->input('days')) : NULL;
 
             
@@ -279,6 +282,7 @@ class DailyTaskController extends Controller
                 $dailyTask->description = $descriptions[$i] ?? null;
                 $dailyTask->point = 0; // Assuming default value is 0
                 $dailyTask->objective_id = $objectives[$i] ?? NULL;
+                $dailyTask->objective_division_id = $objectiveDivisionIds[$i] ?? NULL;
                 $dailyTask->recurring_days = $recurring_days;
                 
                 // Menyimpan recurring
@@ -541,13 +545,15 @@ class DailyTaskController extends Controller
             return redirect()->route('dailytask.index')->with('error', 'Anda tidak tergabung dalam divisi manapun. Hubungi admin atau manager Anda.');
         } else {
             // Proceed with fetching objectives related to the user's divisions when differirent objective
-            $objectives = Objective::whereHas('division', function ($query) use ($divisionIds) {
-                $query->whereIn('id', $divisionIds);
+            $objectives = Objective::with('divisions')->whereHas('divisions', function ($query) use ($divisionIds) {
+                $query->whereIn('divisions.id', $divisionIds);
             })->orWhere('id',$dailytask->objective_id)->get();
         }
 
 
-        return view('dailytask.edit',compact('categories', 'types', 'users', 'childTasks', 'dailytask', 'projects','objectives','child','days','taskRecurring', 'divisions'));
+        $primaryDivision = $user->primaryDivision;
+
+        return view('dailytask.edit',compact('categories', 'types', 'users', 'childTasks', 'dailytask', 'projects','objectives','child','days','taskRecurring', 'divisions', 'primaryDivision'));
 
     }
 
@@ -629,6 +635,7 @@ class DailyTaskController extends Controller
             $dailyTask->project_id = $request->data_project_id[0] ?? NULL ;
             $dailyTask->daily_task_category_id = $request->category_id;
             $dailyTask->objective_id = $request->objective;
+            $dailyTask->objective_division_id = $request->objective_division_id ?: NULL;
             // $dailyTask->recurring_days = $request->input('days') ? json_encode($request->input('days')) : NULL;
 
             $dailyTask->save();
@@ -670,6 +677,7 @@ class DailyTaskController extends Controller
                 foreach ($dailyTask->children as $dailyTaskChild) 
                 {
                     $dailyTaskChild->objective_id = $request->objective;
+                    $dailyTaskChild->objective_division_id = $request->objective_division_id ?: NULL;
                     $dailyTaskChild->keyResults()->sync($keyResults);
                     $dailyTaskChild->save();
                 }
@@ -1247,6 +1255,7 @@ class DailyTaskController extends Controller
         try {
 
             $dailyTask = new DailyTask();
+            $dailyTask->objective_division_id = $dailyTaskHead->objective_division_id ?? NULL;
             $dailyTask->user_id = Auth::user()->id;
             $dailyTask->task_status_id = $status->id;
             $dailyTask->child_daily_task_id = $dailyTaskHead->id;
@@ -1531,8 +1540,8 @@ class DailyTaskController extends Controller
             return redirect()->back()->with('error', 'Anda tidak tergabung dalam divisi manapun. Hubungi admin atau manager Anda.');
         } else {
             // Proceed with fetching objectives related to the user's divisions
-            $objectives = Objective::whereHas('division', function ($query) use ($divisionIds) {
-                $query->whereIn('id', $divisionIds);
+            $objectives = Objective::with('divisions')->whereHas('divisions', function ($query) use ($divisionIds) {
+                $query->whereIn('divisions.id', $divisionIds);
             })->get();
         }
 

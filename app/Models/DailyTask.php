@@ -168,6 +168,11 @@ class DailyTask extends Model
         return $this->belongsTo(Division::class)->withTrashed();
     }
 
+    public function objectiveDivision()
+    {
+        return $this->belongsTo(Division::class, 'objective_division_id')->withTrashed();
+    }
+
     public function divisionQuotaLock()
     {
         return $this->belongsTo(DivisionQuotaLock::class)->withTrashed();

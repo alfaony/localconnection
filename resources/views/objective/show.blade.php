@@ -19,6 +19,17 @@
             <li class="breadcrumb-item active" aria-current="page"> {{ $objective->name ?? '' }}</li>
         </ol>
     </nav>
+    <div class="card mb-3">
+        <div class="card-body">
+            <h6 class="text-muted mb-2">Divisi</h6>
+            @forelse($objective->divisions as $div)
+                <span class="badge badge-primary mr-1">{{ $div->name }}</span>
+            @empty
+                <span class="text-muted">-</span>
+            @endforelse
+        </div>
+    </div>
+
     <div class="card">
         <div class="card-body">
             <h5 class="card-title">Key Results for {{ $objective->name ?? '' }}</h5>

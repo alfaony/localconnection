@@ -39,7 +39,13 @@
         @foreach($objectives as $objective)
             <tr>
                 <td>{{ $objective->name ?? ""}}</td>
-                <td>{{ $objective->division ? $objective->division->name : "" }}</td>
+                <td>
+                    @forelse($objective->divisions as $div)
+                        <span class="badge badge-primary mr-1">{{ $div->name }}</span>
+                    @empty
+                        <span class="text-muted">-</span>
+                    @endforelse
+                </td>
                 <td>{{ $objective->dateShow }}</td>
                 <td>
                     @canAccess('show','objectives')

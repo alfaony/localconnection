@@ -248,8 +248,8 @@ class DailyTaskController extends Controller
                 ], 400);
             }
             
-            $objectives = Objective::whereHas('division', function($query) use ($divisionIds) {
-                    $query->whereIn('id', $divisionIds);
+            $objectives = Objective::whereHas('divisions', function($query) use ($divisionIds) {
+                    $query->whereIn('divisions.id', $divisionIds);
                 })
                 ->with(['keyResults'])
                 ->select('id', 'name')
@@ -486,8 +486,8 @@ class DailyTaskController extends Controller
                 ], 400);
             }
             
-            $objectives = Objective::whereHas('division', function($query) use ($divisionIds) {
-                    $query->whereIn('id', $divisionIds);
+            $objectives = Objective::whereHas('divisions', function($query) use ($divisionIds) {
+                    $query->whereIn('divisions.id', $divisionIds);
                 })
                 ->select('id', 'name')
                 // ->with(['division:id,name'])
