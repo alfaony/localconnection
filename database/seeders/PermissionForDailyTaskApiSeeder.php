@@ -19,6 +19,8 @@ class PermissionForDailyTaskApiSeeder extends Seeder
      */
     public function run()
     {
+        $this->call(ClearPermissionSeeder::class);
+        
         $roles = Role::all();
 
         if ($roles->isEmpty()) {
