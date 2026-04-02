@@ -15,6 +15,11 @@ class Company extends Model
 
     public $incrementing = false; // Karena kita menggunakan UUID, bukan auto-increment
     protected $keyType = 'string'; // Tipe kunci primer adalah string
+    protected $fillable = [
+        'name',
+        'slug',
+        'xp_config_id',
+    ];
 
     protected static function boot()
     {
@@ -69,5 +74,27 @@ class Company extends Model
     public function accessibleUsers()
     {
         return $this->belongsToMany(User::class, 'company_user_access');
+    }
+
+    /**
+     * XP Config yang di-assign ke company ini.
+     */
+    public function xpConfig()
+    {
+        return $this->belongsTo(XpConfig::class);
+    }
+
+    /**
+     * Cek apakah fitur XP aktif untuk company ini.
+     */
+    public function isXpEnabled(): bool
+    {
+        return $this->xpConfig !== null && $this->xpConfig->is_enabled;
+    }
+
+    public function scopeByCompany($query, $companyId){
+
+        $companyIds = auth()->user()->accessibleCompanies->pluck('id')->push($companyId)->unique();
+        return $query->whereIn('id', $companyIds);
     }
 }

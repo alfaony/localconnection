@@ -8,10 +8,12 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Auth;
 
 use App\Schemas\RoleSchema;
+use App\Traits\AwardsXp;
 
 class Decision extends Model
 {
-    use HasFactory,SoftDeletes;
+    use HasFactory,SoftDeletes, AwardsXp;
+    
     protected $fillable = [
         'question',
         'answer',

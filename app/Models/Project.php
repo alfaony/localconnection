@@ -11,10 +11,11 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use App\Schemas\RoleSchema;
 use App\Schemas\ParamSchema;
+use App\Traits\AwardsXp;
 
 class Project extends Model
 {
-    use HasFactory,SoftDeletes;
+    use HasFactory,SoftDeletes, AwardsXp;
 
     public $incrementing = false; // Karena kita menggunakan UUID, bukan auto-increment
     protected $keyType = 'string'; // Tipe kunci primer adalah string

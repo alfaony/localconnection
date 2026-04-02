@@ -10,10 +10,11 @@ use Ramsey\Uuid\Uuid;
 use Carbon\Carbon;
 use Spatie\Activitylog\Traits\LogsActivity;
 use Spatie\Activitylog\LogOptions;
+use App\Traits\AwardsXp;
 
 class Product extends Model
 {
-    use HasFactory,SoftDeletes,LogsActivity;
+    use HasFactory,SoftDeletes,LogsActivity, AwardsXp;
 
     public $incrementing = false; // Karena kita menggunakan UUID, bukan auto-increment
     protected $keyType = 'string'; // Tipe kunci primer adalah string

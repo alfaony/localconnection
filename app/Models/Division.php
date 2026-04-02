@@ -81,9 +81,14 @@ class Division extends Model
         return $this->hasMany(Objective::class);
     }
 
+    public function objectives()
+    {
+        return $this->belongsToMany(Objective::class, 'division_objective')->using(DivisionObjective::class);
+    }
+
     public function users()
     {
-        return $this->belongsToMany(User::class)->withPivot('weekly_report_required');
+        return $this->belongsToMany(User::class)->withPivot('weekly_report_required', 'is_primary');
     }
 
     public function scopeByCompany($query,$companyId)

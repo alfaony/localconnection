@@ -48,40 +48,56 @@ $totalUser = $totalUser + 1; // Get the total number of projects
                 @endforeach
             </select>
             --}}
-            <table class="table table-bordered" id="divisi-wrapper">
-                <thead>
+            <table class="table table-sm table-bordered division-assign-table mt-2">
+                <thead class="thead-light">
                     <tr>
-                        <th>Divisi</th>
-                        <th>Wajib Weekly Report</th>
+                        <th style="width:40%">Divisi</th>
+                        <th class="text-center" style="width:30%"><i class="fas fa-file-alt mr-1"></i>Weekly Report</th>
+                        <th class="text-center" style="width:30%"><i class="fas fa-star mr-1 text-warning"></i>Division Induk</th>
                     </tr>
                 </thead>
                 <tbody>
                     @foreach($divisions as $division)
-                    <tr>
-                        <td>
-                            <div class="form-check">
-                                <input 
-                                    class="form-check-input" 
-                                    type="checkbox" 
-                                    name="divisions[]" 
+                    <tr class="division-row">
+                        <td class="align-middle">
+                            <div class="custom-control custom-checkbox">
+                                <input
+                                    class="custom-control-input division-checkbox"
+                                    type="checkbox"
+                                    name="divisions[]"
                                     value="{{ $division->id }}"
                                     id="div-check-{{ $division->id }}"
                                     {{ isset($divisionsUser) && in_array($division->id, $divisionsUser) ? 'checked' : '' }}>
-                                <label class="form-check-label" for="div-check-{{ $division->id }}">
+                                <label class="custom-control-label" for="div-check-{{ $division->id }}">
                                     {{ $division->name }}
                                 </label>
                             </div>
                         </td>
-                        <td>
-                            <div class="form-check weekly-wrapper" data-division="{{ $division->id }}" style="display: none;">
-                                <input 
-                                    class="form-check-input" 
-                                    type="checkbox" 
-                                    name="weekly_report_required[{{ $division->id }}]"
-                                    id="weekly-check-{{ $division->id }}"
-                                    {{ isset($weeklyRequired) && in_array($division->id, $weeklyRequired) ? 'checked' : '' }}>
-                                <label class="form-check-label text-muted small" for="weekly-check-{{ $division->id }}">
-                                    Wajib Weekly Report
+                        <td class="text-center align-middle">
+                            <div class="weekly-wrapper" data-division="{{ $division->id }}" style="display:none;">
+                                <div class="custom-control custom-switch">
+                                    <input
+                                        class="custom-control-input"
+                                        type="checkbox"
+                                        name="weekly_report_required[{{ $division->id }}]"
+                                        id="weekly-check-{{ $division->id }}"
+                                        {{ isset($weeklyRequired) && in_array($division->id, $weeklyRequired) ? 'checked' : '' }}>
+                                    <label class="custom-control-label" for="weekly-check-{{ $division->id }}"></label>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="text-center align-middle">
+                            <div class="primary-wrapper" data-division="{{ $division->id }}" style="display:none;">
+                                <input
+                                    type="radio"
+                                    class="primary-division-radio d-none"
+                                    name="primary_division_id"
+                                    id="primary-check-{{ $division->id }}"
+                                    value="{{ $division->id }}"
+                                    {{ isset($primaryDivisionId) && $primaryDivisionId == $division->id ? 'checked' : '' }}>
+                                <label for="primary-check-{{ $division->id }}" class="primary-division-label mb-0">
+                                    <span class="badge-induk badge-induk-off">Jadikan Induk</span>
+                                    <span class="badge-induk badge-induk-on"><i class="fas fa-star mr-1"></i>Induk</span>
                                 </label>
                             </div>
                         </td>
@@ -322,40 +338,56 @@ $totalUser = $totalUser + 1; // Get the total number of projects
                 @endforeach
             </select>
             --}}
-            <table class="table table-bordered" id="divisi-wrapper">
-                <thead>
+            <table class="table table-sm table-bordered division-assign-table mt-2">
+                <thead class="thead-light">
                     <tr>
-                        <th>Divisi</th>
-                        <th>Wajib Weekly Report</th>
+                        <th style="width:40%">Divisi</th>
+                        <th class="text-center" style="width:30%"><i class="fas fa-file-alt mr-1"></i>Weekly Report</th>
+                        <th class="text-center" style="width:30%"><i class="fas fa-star mr-1 text-warning"></i>Division Induk</th>
                     </tr>
                 </thead>
                 <tbody>
                     @foreach($divisions as $division)
-                    <tr>
-                        <td>
-                            <div class="form-check">
-                                <input 
-                                    class="form-check-input" 
-                                    type="checkbox" 
-                                    name="divisions[]" 
+                    <tr class="division-row">
+                        <td class="align-middle">
+                            <div class="custom-control custom-checkbox">
+                                <input
+                                    class="custom-control-input division-checkbox"
+                                    type="checkbox"
+                                    name="divisions[]"
                                     value="{{ $division->id }}"
                                     id="div-check-{{ $division->id }}"
                                     {{ isset($divisionsUser) && in_array($division->id, $divisionsUser) ? 'checked' : '' }}>
-                                <label class="form-check-label" for="div-check-{{ $division->id }}">
+                                <label class="custom-control-label" for="div-check-{{ $division->id }}">
                                     {{ $division->name }}
                                 </label>
                             </div>
                         </td>
-                        <td>
-                            <div class="form-check weekly-wrapper" data-division="{{ $division->id }}" style="display: none;">
-                                <input 
-                                    class="form-check-input" 
-                                    type="checkbox" 
-                                    name="weekly_report_required[{{ $division->id }}]"
-                                    id="weekly-check-{{ $division->id }}"
-                                    {{ isset($weeklyRequired) && in_array($division->id, $weeklyRequired) ? 'checked' : '' }}>
-                                <label class="form-check-label text-muted small" for="weekly-check-{{ $division->id }}">
-                                    Wajib Weekly Report
+                        <td class="text-center align-middle">
+                            <div class="weekly-wrapper" data-division="{{ $division->id }}" style="display:none;">
+                                <div class="custom-control custom-switch">
+                                    <input
+                                        class="custom-control-input"
+                                        type="checkbox"
+                                        name="weekly_report_required[{{ $division->id }}]"
+                                        id="weekly-check-{{ $division->id }}"
+                                        {{ isset($weeklyRequired) && in_array($division->id, $weeklyRequired) ? 'checked' : '' }}>
+                                    <label class="custom-control-label" for="weekly-check-{{ $division->id }}"></label>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="text-center align-middle">
+                            <div class="primary-wrapper" data-division="{{ $division->id }}" style="display:none;">
+                                <input
+                                    type="radio"
+                                    class="primary-division-radio d-none"
+                                    name="primary_division_id"
+                                    id="primary-check-{{ $division->id }}"
+                                    value="{{ $division->id }}"
+                                    {{ isset($primaryDivisionId) && $primaryDivisionId == $division->id ? 'checked' : '' }}>
+                                <label for="primary-check-{{ $division->id }}" class="primary-division-label mb-0">
+                                    <span class="badge-induk badge-induk-off">Jadikan Induk</span>
+                                    <span class="badge-induk badge-induk-on"><i class="fas fa-star mr-1"></i>Induk</span>
                                 </label>
                             </div>
                         </td>
@@ -667,6 +699,9 @@ $totalUser = $totalUser + 1; // Get the total number of projects
             wrapper.style.display = isMandatory ? 'block' : 'none';
         });
 
+        // Toggle primary-wrapper: tampil jika division di-centang
+        updatePrimaryWrapperState();
+
         // Setelah di-toggle tampil, update disable state juga
         updateWeeklyCheckboxState();
     }
@@ -675,6 +710,7 @@ $totalUser = $totalUser + 1; // Get the total number of projects
         document.querySelectorAll('[id^="div-check-"]').forEach(divCheckbox => {
             const divisionId = divCheckbox.value;
             const weeklyCheckbox = document.querySelector(`#weekly-check-${divisionId}`);
+            const primaryWrapper = document.querySelector(`.primary-wrapper[data-division="${divisionId}"]`);
 
             if (weeklyCheckbox) {
                 if (divCheckbox.checked) {
@@ -683,6 +719,24 @@ $totalUser = $totalUser + 1; // Get the total number of projects
                     weeklyCheckbox.checked = false;
                     weeklyCheckbox.disabled = true;
                 }
+            }
+
+            if (primaryWrapper) {
+                primaryWrapper.style.display = divCheckbox.checked ? 'block' : 'none';
+                if (!divCheckbox.checked) {
+                    const radio = primaryWrapper.querySelector('.primary-division-radio');
+                    if (radio) radio.checked = false;
+                }
+            }
+        });
+    }
+
+    function updatePrimaryWrapperState() {
+        document.querySelectorAll('[id^="div-check-"]').forEach(divCheckbox => {
+            const divisionId = divCheckbox.value;
+            const primaryWrapper = document.querySelector(`.primary-wrapper[data-division="${divisionId}"]`);
+            if (primaryWrapper) {
+                primaryWrapper.style.display = divCheckbox.checked ? 'block' : 'none';
             }
         });
     }
@@ -943,5 +997,30 @@ $totalUser = $totalUser + 1; // Get the total number of projects
             color: #fe0700 !important;
             border: 1px solid #007bff !important;
         }
+
+        /* Division Induk Badge */
+        .division-assign-table td { vertical-align: middle; }
+        .primary-division-label { cursor: pointer; }
+        .badge-induk {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 0.78rem;
+            font-weight: 600;
+            transition: all 0.15s ease;
+        }
+        .badge-induk-off {
+            background-color: #e9ecef;
+            color: #6c757d;
+            border: 1px dashed #adb5bd;
+        }
+        .badge-induk-off:hover {
+            background-color: #fff3cd;
+            color: #856404;
+            border-color: #ffc107;
+        }
+        .badge-induk-on { display: none; background-color: #ffc107; color: #212529; border: 1px solid #e0a800; }
+        .primary-division-radio:checked + .primary-division-label .badge-induk-off { display: none; }
+        .primary-division-radio:checked + .primary-division-label .badge-induk-on { display: inline-block; }
 </style>
 @stop

@@ -46,7 +46,7 @@
                         </div>
                         <div class="col-md-4 mb-3">
                             <label for="custom_field_type">Divisi</label>
-                            <select class="form-control custom-field-type" name="division_id[]" required>
+                            <select class="form-control custom-field-type select2" name="division_id[0][]" multiple required>
                                 @forelse ($divisions as $division)
                                     <option value="{{ $division->id }}">{{ $division->name }}</option>
                                 @empty
@@ -118,7 +118,7 @@
                     </div>
                     <div class="col-md-4 mb-3">
                         <label for="custom_field_type">Divisi</label>
-                        <select class="form-control custom-field-type" name="division_id[]" required>
+                        <select class="form-control custom-field-type select3" name="division_id[${customFieldIndex}][]" multiple required>
                             @foreach ($divisions as $division)
                                 <option value="{{ $division->id }}">{{ $division->name }}</option>
                             @endforeach

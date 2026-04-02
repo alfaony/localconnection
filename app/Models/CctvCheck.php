@@ -7,10 +7,11 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Str;
 use Ramsey\Uuid\Uuid;
 use App\Scopes\RoleScope;
+use App\Traits\AwardsXp;
 
 class CctvCheck extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory, SoftDeletes, AwardsXp;
 
     public $incrementing = false; // Karena kita menggunakan UUID, bukan auto-increment
     protected $keyType = 'string'; // Tipe kunci primer adalah string

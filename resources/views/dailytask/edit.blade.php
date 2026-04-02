@@ -48,13 +48,25 @@
                                 <div class="col-md-6">
                                     <div class="form-group">
                                         <label for="objective_id">Objective</label>
+                                        <input type="hidden" name="objective_division_id" class="objective-division-id-input" value="{{ $dailytask->objective_division_id }}">
                                         <select name="objective" id="objective_id" class="form-control objective-select select2" onchange="loadKeyResult();" required>
                                             <option selected disabled>Pilih Objective</option>
                                             @foreach($objectives as $objective)
-                                                <option value="{{ $objective->id }}" {{ $dailytask->objective_id == $objective->id ? 'selected' : ''}} 
-                                                    {{ ($dailytask->head)  && ($dailytask->objective_id != $objective->id) ?   'disabled' : '' }}>
-                                                    {{ $objective->name }}
-                                                </option>
+                                                @forelse($objective->divisions as $div)
+                                                    <option value="{{ $objective->id }}"
+                                                        data-division-id="{{ $div->id }}"
+                                                        {{ ($dailytask->objective_id == $objective->id && $dailytask->objective_division_id == $div->id) ? 'selected' : '' }}
+                                                        {{ ($dailytask->head && $dailytask->objective_id != $objective->id) ? 'disabled' : '' }}>
+                                                        {{ ucfirst($objective->name) }} - {{ $div->name }}
+                                                    </option>
+                                                @empty
+                                                    <option value="{{ $objective->id }}"
+                                                        data-division-id=""
+                                                        {{ $dailytask->objective_id == $objective->id ? 'selected' : '' }}
+                                                        {{ ($dailytask->head && $dailytask->objective_id != $objective->id) ? 'disabled' : '' }}>
+                                                        {{ ucfirst($objective->name) }}
+                                                    </option>
+                                                @endforelse
                                             @endforeach
                                         </select>
                                     </div>
@@ -240,6 +252,7 @@
 @section('js')
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
+@include('partials.objective-division-filter-js')
 <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
 <script src="{{ asset('js/thriveEditor.js') }}"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@10"></script>

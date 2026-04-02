@@ -5,10 +5,11 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Str;
+use App\Traits\AwardsXp;
 
 class UsedItem extends Model
 {
-    use SoftDeletes;
+    use SoftDeletes, AwardsXp;
 
     protected $fillable = [
         'serial_number',
