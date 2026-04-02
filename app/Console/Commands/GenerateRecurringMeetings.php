@@ -128,22 +128,6 @@ class GenerateRecurringMeetings extends Command
                     
                     $newMeeting->save();
 
-                    // Generate New Google Meet Event if needed
-                    if ($template->meeting_type === ParamSchema::GOOGLE_MEET || $template->meeting_type === 'online') {
-                        $googleService = new GoogleService($template->company_id);
-
-                        $googleMeet = $googleService->createGoogleMeet($newMeeting);
-                        $googleMeetData = $googleMeet->getData();
-                        if ($googleMeetData->success) {
-                            $newMeeting->update([
-                                'google_meet_link' => $googleMeetData->link,
-                                'google_event_id' => $googleMeetData->event_id,
-                                'public_token' => Str::random(10),
-                                'public_code' => Str::random(5),
-                                'public_token_generated_at' => now(),
-                            ]);
-                        }
-                    }
                     // Copy partisipan
                     $participants = $template->participants()->get();
                     if ($participants->isNotEmpty()) {
@@ -172,6 +156,23 @@ class GenerateRecurringMeetings extends Command
                                     'email'
                                 );
                             }
+                        }
+                    }
+
+                    // Generate New Google Meet Event if needed
+                    if ($template->meeting_type === ParamSchema::GOOGLE_MEET || $template->meeting_type === 'online') {
+                        $googleService = new GoogleService($template->company_id);
+
+                        $googleMeet = $googleService->createGoogleMeet($newMeeting);
+                        $googleMeetData = $googleMeet->getData();
+                        if ($googleMeetData->success) {
+                            $newMeeting->update([
+                                'google_meet_link' => $googleMeetData->link,
+                                'google_event_id' => $googleMeetData->event_id,
+                                'public_token' => Str::random(10),
+                                'public_code' => Str::random(5),
+                                'public_token_generated_at' => now(),
+                            ]);
                         }
                     }
 

@@ -70,6 +70,13 @@
             </div>
         </div>
 
+        <div class="form-group row mt-3">
+            <label class="col-sm-2 col-form-label">Dailytask Project</label>
+            <div class="col-sm-10">
+                <p class="form-control-plaintext">{{ $projectEdit->dailyTaskProjects->first() ? $projectEdit->dailyTaskProjects->first()->name : 'Belum Terdaftar' }}</p>
+            </div>
+        </div>
+
         @if($projectEdit->alert_expired)
         <div class="form-group row mt-3">
             <label class="col-sm-2 col-form-label">Peringatan</label>

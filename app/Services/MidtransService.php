@@ -128,8 +128,13 @@ class MidtransService
 
 
             // Build order ID (unique)
-            $orderId = 'INT-' . $purchase->id . '-' . $customer->code .'-' . time();
+            $group = $customer->grouping_id ? $customer->grouping_id . '-' : '';
 
+            $orderId = 'INT-' . $purchase->id . '-' . $customer->code . '-' . $group . time();
+
+            // potong max 36 karakter
+            $orderId = substr($orderId, 0, 36);
+            
             // Build item details FIRST
             $items = [];
             

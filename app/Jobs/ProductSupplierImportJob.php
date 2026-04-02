@@ -11,6 +11,7 @@ use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Maatwebsite\Excel\Facades\Excel;
+use Illuminate\Support\Facades\Log;
 
 class ProductSupplierImportJob implements ShouldQueue
 {
@@ -72,7 +73,6 @@ class ProductSupplierImportJob implements ShouldQueue
                     $supplier->supplierCategories()->syncWithoutDetaching($categoryIds);
                 }
             } catch (\Exception $e) {
-                // dd($e);
                 Log::error($e->getMessage());
                 // Jika terjadi error, maka simpan error di field errors
                 ImportProgress::where('batch_id', $this->batchId)->update(['errors' => array_merge(
