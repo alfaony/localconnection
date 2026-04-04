@@ -5,7 +5,7 @@
 @section('content_header')
 <div class="d-flex justify-content-between align-items-center">
     <div>
-        <h1 class="m-0 fw-bold" style="color:#e0e0ff;">⚡ Master Riwayat XP</h1>
+        <h1 class="m-0 fw-bold">⚡ Master Riwayat XP</h1>
         <small style="color:#a0a8d0;">Kelola semua transaksi XP karyawan</small>
     </div>
     <div class="d-flex gap-2">
