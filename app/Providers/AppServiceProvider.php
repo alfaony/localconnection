@@ -1279,7 +1279,7 @@ class AppServiceProvider extends ServiceProvider
             ];
 
             $sectionSoftware = [
-                'text'    => 'Manajemen Software',
+                'text'    => 'Manajemen Software (Akun Sharing)',
                 'submenu' => $managementSoftwareMenuArray,
             ];
 
@@ -1298,12 +1298,12 @@ class AppServiceProvider extends ServiceProvider
                 $sectionUmum,
                 $sectionKaryawan,
                 $sectionInternet,
+                $sectionSoftware,
                 $sectionTokoOnline,
                 $sectionProduction,
                 $sectionGedung,
                 $sectionProduktifitas,
                 $sectionPenjualan,
-                $sectionSoftware,
                 $sectionMasterData,
                 $sectionSetting,
             ] as $section) {
