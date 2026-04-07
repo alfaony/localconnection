@@ -161,15 +161,15 @@
                 <h5 class="modal-title">
                     <i class="fas fa-plus mr-2"></i>Tambah Key Result — <span id="modalCreateDivName"></span>
                 </h5>
-                <button type="button" class="close text-white" data-dismiss="modal"><span>&times;</span></button>
+                <button type="button" class="close text-white" data-bs-dismiss="modal"><span>&times;</span></button>
             </div>
             <div class="modal-body">
                 <input type="hidden" id="createDivisionId">
                 <div id="kr-rows-container">
                     <div class="kr-row input-group mb-2">
-                        <input type="text" class="form-control kr-result-input" placeholder="Key Result...">
-                        <input type="date" class="form-control kr-start-input" style="max-width:150px;" title="Mulai">
-                        <input type="date" class="form-control kr-end-input" style="max-width:150px;" title="Selesai">
+                        <input type="text" class="form-control kr-result-input mb-1 mr-1" placeholder="Key Result...">
+                        <input type="date" class="form-control kr-start-input mb-1 mr-1" style="max-width:150px;" title="Mulai">
+                        <input type="date" class="form-control kr-end-input mb-1 mr-1" style="max-width:150px;" title="Selesai">
                         <div class="input-group-append">
                             <button class="btn btn-outline-danger btn-remove-kr-row" type="button"><i class="fas fa-times"></i></button>
                         </div>
@@ -180,7 +180,7 @@
                 </button>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-dismiss="modal">Batal</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
                 <button type="button" id="btn-save-kr" class="btn btn-success">
                     <i class="fas fa-save mr-1"></i>Simpan
                 </button>
@@ -195,7 +195,7 @@
         <div class="modal-content">
             <div class="modal-header bg-primary text-white">
                 <h5 class="modal-title"><i class="fas fa-edit mr-2"></i>Edit Key Result</h5>
-                <button type="button" class="close text-white" data-dismiss="modal"><span>&times;</span></button>
+                <button type="button" class="close text-white" data-bs-dismiss="modal"><span>&times;</span></button>
             </div>
             <div class="modal-body">
                 <input type="hidden" id="editKrId">
@@ -225,7 +225,7 @@
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-dismiss="modal">Batal</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
                 <button type="button" id="btn-update-kr" class="btn btn-primary">
                     <i class="fas fa-save mr-1"></i>Update
                 </button>
@@ -257,9 +257,9 @@
 
     function newKrRow() {
         return `<div class="kr-row input-group mb-2">
-            <input type="text" class="form-control kr-result-input" placeholder="Key Result...">
-            <input type="date" class="form-control kr-start-input" style="max-width:150px;" title="Mulai">
-            <input type="date" class="form-control kr-end-input" style="max-width:150px;" title="Selesai">
+            <input type="text" class="form-control kr-result-input mb-1 mr-1" placeholder="Key Result...">
+            <input type="date" class="form-control kr-start-input mb-1 mr-1" style="max-width:150px;" title="Mulai">
+            <input type="date" class="form-control kr-end-input mb-1 mr-1" style="max-width:150px;" title="Selesai">
             <div class="input-group-append">
                 <button class="btn btn-outline-danger btn-remove-kr-row" type="button"><i class="fas fa-times"></i></button>
             </div>
