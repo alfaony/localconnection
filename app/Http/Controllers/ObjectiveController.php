@@ -281,16 +281,22 @@ class ObjectiveController extends Controller
         if ($divisionId) {
             $query->where('division_id', $divisionId);
         }
-        $keyResult = $query->get();
-
+        
         if ($dailyTaskId) {
-            $dailyTask = DailyTask::with('keyResults')->find($dailyTaskId);
+            $dailyTask = DailyTask::find($dailyTaskId);
             if ($dailyTask) {
-                $selectedKeyResults = $dailyTask->keyResults->pluck('id')->toArray();
+                $selectedKeyResults = $dailyTask->keyResults()->withTrashed()->pluck('objective_key_results.id')->toArray();
+
+                $query->withTrashed()->where(function ($q) use ($selectedKeyResults) {
+                    $q->whereNull('objective_key_results.deleted_at')
+                      ->orWhereIn('objective_key_results.id', $selectedKeyResults);
+                });
+
                 $hasHead = $dailyTask->head ? true : false;
             }
         }
-
+        
+        $keyResult = $query->get();
         return view('partials.keyresult-fields', compact('keyResult', 'selectedKeyResults', 'index', 'hasHead'));
     }
 
