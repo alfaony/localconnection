@@ -7,10 +7,11 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Ramsey\Uuid\Uuid;
+use App\Traits\AwardsXp;
 
 class ProductStore extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory, SoftDeletes, AwardsXp;
 
     public $incrementing = false; // Karena kita menggunakan UUID, bukan auto-increment
     protected $keyType = 'string'; // Tipe kunci primer adalah string

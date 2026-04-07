@@ -146,6 +146,7 @@ class AppServiceProvider extends ServiceProvider
 
             $managementUmumMenu = [
                 'punishment_users',
+                'employee_xps',
                 'meetings','moms','dashboard_weekly_reports','weekly_reports','flowcharts',
                 'ask_bos','decisions','partnership_agreements','national_holidays',
                 'letter_submissions','companies'
@@ -196,17 +197,18 @@ class AppServiceProvider extends ServiceProvider
             'quotes','work_orders','agreement_letters','projects',
             'report_projects','basts','invoices','partners' ,'reports'
             ];
-
+            
             $managementMasterDataMenu = [
-            'provinces','cities','districts','subdistricts','postal_codes','partner_parameter_types','partner_types'
+            'provinces','cities','districts','subdistricts','postal_codes','partner_parameter_types'
             ];
 
-            $managementSettingMenu = ['partner_types','setting_companies','roles','webhook_settings'];
+            $managementSettingMenu = ['xp_configs','partner_types','setting_companies','roles','webhook_settings'];
 
             $managementSoftwareMenu = [
-                'software_dashboards','software','master_accounts','subscriptions','',
+                'software_dashboards','software','master_accounts','subscriptions',
                 'customer_software','customer_subscriptions'
             ];
+
 
             $menus = [
                 'homes' => [
@@ -774,12 +776,6 @@ class AppServiceProvider extends ServiceProvider
                     'route' => 'partner-parameter-type.index',
                     'icon' => 'fa fa-list',
                 ],
-                'partner_types' =>
-                [
-                    'text' => 'Master Tipe Partner',
-                    'route' => 'partner-type.index',
-                    'icon' => 'fa fa-tags',
-                ],
                 'partners' =>
                 [
                     'text' => 'Mitra',
@@ -833,6 +829,24 @@ class AppServiceProvider extends ServiceProvider
                     'text' => 'Software Sharing List',
                     'route' => 'customer-software.index',
                     'icon' => 'fa fa-list',
+                ],
+                'employee_xps' =>
+                [
+                    'text' => 'XP Pegawai',
+                    'route' => 'employee-xp.index',
+                    'icon' => 'fa fa-coins',
+                ],
+                'xp_configs' =>
+                [
+                    'text' => 'Konfigurasi XP',
+                    'route' => 'xp-config.index',
+                    'icon' => 'fa fa-coins',
+                ],
+                'badges' =>
+                [
+                    'text' => 'Gelar',
+                    'route' => 'badge.index',
+                    'icon' => 'fa fa-coins',
                 ],
             ];
 
@@ -1194,8 +1208,6 @@ class AppServiceProvider extends ServiceProvider
             //     ]
             // ];
 
-            // dd(Access::can('index','software_dashboards'));
-
             // ====== Helper: build submenu dari daftar role ======
             $buildSubmenu = function(array $roles) use ($menus) {
                 $result = [];
@@ -1246,11 +1258,6 @@ class AppServiceProvider extends ServiceProvider
                 'submenu' => $managementTokoOnlineMenuArray,
             ];
 
-            $sectionSoftware = [
-                'text'    => 'Manajemen Software (Akun Sharing)',
-                'submenu' => $managementSoftwareMenuArray,
-            ];
-
             $sectionProduction = [
                 'text'    => 'Manajemen Produksi',
                 'submenu' => $managementProductionMenuArray,
@@ -1269,6 +1276,11 @@ class AppServiceProvider extends ServiceProvider
             $sectionPenjualan = [
                 'text'    => 'Manajemen Penjualan',
                 'submenu' => $managementPenjualanMenuArray,
+            ];
+
+            $sectionSoftware = [
+                'text'    => 'Manajemen Software (Akun Sharing)',
+                'submenu' => $managementSoftwareMenuArray,
             ];
 
             $sectionMasterData = [

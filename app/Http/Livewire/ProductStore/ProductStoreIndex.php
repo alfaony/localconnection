@@ -55,6 +55,7 @@ class ProductStoreIndex extends Component
     public $categories;
     public $warehouses;
     public $zones;
+    public $perPage = 10;
 
     protected $queryString = [
         'search' => ['except' => ''],
@@ -501,7 +502,7 @@ class ProductStoreIndex extends Component
     public function render()
     {
         // Gunakan method yang sama untuk consistency
-        $products = $this->getFilteredQuery()->paginate(10);
+        $products = $this->getFilteredQuery()->paginate($this->perPage);
 
         // permission
         $isShow = Access::can('show','product_stores');

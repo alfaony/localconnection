@@ -147,18 +147,20 @@ class UserController extends Controller
 
         // Ambil divisi yang dicentang sebagai wajib laporan
         $weeklyRequired = $request->input('weekly_report_required', []);
+        $primaryDivisionId = $request->input('primary_division_id');
 
         // Siapkan data pivot
         $syncData = [];
         foreach ($divisionIds as $divisionId) {
             $syncData[$divisionId] = [
-                'weekly_report_required' => isset($weeklyRequired[$divisionId])
+                'weekly_report_required' => isset($weeklyRequired[$divisionId]),
+                'is_primary' => $divisionId === $primaryDivisionId,
             ];
         }
 
         // Simpan ke pivot division_user
         $user->divisions()->sync($syncData);
-        
+
         if (!empty($request->company_access)) {
             $user->accessibleCompanies()->sync($request->company_access);
         }
@@ -180,6 +182,8 @@ class UserController extends Controller
         $weeklyRequired = $userEdit->divisions->filter(function ($d) {
             return $d->pivot->weekly_report_required;
         })->pluck('id')->toArray() ?? [];
+
+        $primaryDivisionId = optional($userEdit->divisions->firstWhere('pivot.is_primary', true))->id;
         $dayofweek = config('custom.daysOfWeek');
         $dayoffTypes = DayoffType::all();
         $userQuotas = $userEdit->dayoffQuotas->pluck('quota', 'dayoff_type_id')->toArray() ?? [];
@@ -214,7 +218,7 @@ class UserController extends Controller
         }
 
 
-        return view('user.index', compact('userEdit','user','totalUser','role', 'company', 'companyAccess', 'roleAccess','users', 'divisions','divisionsUser', 'dayofweek','dayoffTypes','userQuotas', 'weeklyRequired'));
+        return view('user.index', compact('userEdit','user','totalUser','role', 'company', 'companyAccess', 'roleAccess','users', 'divisions','divisionsUser', 'dayofweek','dayoffTypes','userQuotas', 'weeklyRequired', 'primaryDivisionId'));
     }
 
     /**
@@ -244,12 +248,14 @@ class UserController extends Controller
 
         // Ambil input divisi yang wajib isi laporan
         $weeklyRequired = $request->input('weekly_report_required', []); // array key: division_id
+        $primaryDivisionId = $request->input('primary_division_id');
 
         // Persiapkan data sinkronisasi pivot
         $syncData = [];
         foreach ($divisionIds as $divisionId) {
             $syncData[$divisionId] = [
-                'weekly_report_required' => isset($weeklyRequired[$divisionId]) // true if checked
+                'weekly_report_required' => isset($weeklyRequired[$divisionId]), // true if checked
+                'is_primary' => $divisionId === $primaryDivisionId,
             ];
         }
 

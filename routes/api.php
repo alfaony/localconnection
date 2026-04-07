@@ -26,8 +26,10 @@ use App\Http\Controllers\API\UserApiController;
 
 use App\Http\Controllers\API\ProductStoreController;
 use App\Http\Controllers\API\MeetingApiController;
+use App\Http\Controllers\API\InternetCustomerApiController;
 use App\Http\Controllers\API\EkycController;
 use App\Http\Controllers\UserController;
+
 
 
 /*
@@ -66,7 +68,44 @@ Route::group(['middleware' => ['auth:api','role.permission.api']], function()
     Route::get('agreement-letter/downloadPdf/pdf/{slug}/',[AgreementLetterController::class,'downloadPdf'])->name('agreement-letter.download.pdf');;
     Route::resource('agreement-letter', AgreementLetterController::class);
 
+
     //Mobile
+    Route::prefix('tasks')->group(function() {
+        Route::get('today', [DailyTaskMobileController::class, 'indexToday']);
+        Route::get('tomorrow', [DailyTaskMobileController::class, 'indexTomorrow']);
+        Route::get('overdue', [DailyTaskMobileController::class, 'indexOverdue']);
+        Route::get('user/{userId}', [DailyTaskMobileController::class, 'indexTaskByUser'])->name('tasks.user.mobile');
+        Route::get('division/{divisionId}', [DailyTaskMobileController::class, 'indexTaskByDivision']);
+        
+        Route::put('statuschange/{slug}', [DailyTaskMobileController::class, 'statusChange'])->name('tasks.statuschange.mobile'); 
+        Route::post('{slug}/report', [DailyTaskMobileController::class, 'report'])->name('tasks.report.mobile');
+        Route::post('{slug}/update-media', [DailyTaskMobileController::class, 'updateMedia'])->name('tasks.updateMedia.mobile');
+        Route::delete('media/{id}', [DailyTaskMobileController::class, 'deleteMedia'])->name('tasks.deleteMedia.mobile');
+        Route::post('approval/{slug}', [DailyTaskMobileController::class, 'approval'])->name('api.dailytask.approval');
+        Route::resource('/', DailyTaskMobileController::class)->only(['index', 'show', 'store', 'update', 'destroy'])
+            ->parameters(['' => 'task']); 
+    });
+
+    Route::prefix('daily-task-projects')->group(function() {
+        Route::get('/', [DailyTaskMobileController::class, 'indexDailyTaskProjects']); 
+        Route::get('titles', [DailyTaskMobileController::class, 'indexProjects']); 
+        Route::get('categories', [DailyTaskMobileController::class, 'indexDailyTaskCategories']); 
+        Route::get('types', [DailyTaskMobileController::class, 'indexDailyTaskTypes']);
+        Route::get('objectives', [DailyTaskMobileController::class, 'indexDailyTaskObjectives']);
+        Route::get('keyresults/{objectiveId}', [DailyTaskMobileController::class, 'indexKeyResults']);
+        Route::get('users', [DailyTaskMobileController::class, 'indexDailyTaskUsers']);
+        Route::get('statuses', [DailyTaskMobileController::class, 'indexTaskStatuses']); 
+    });
+
+    Route::prefix('dailytasks')->group(function() {
+        Route::get('summary', [HomeController::class, 'indexSummary']);
+        Route::get('divisions', [DailyTaskMobileController::class, 'indexDivision']);
+        Route::get('check-quota', [DailyTaskMobileController::class, 'checkDivisionQuota']);
+        Route::post('generate-media-url', [DailyTaskMobileController::class, 'generateMediaUrl'])->name('medias.generateMediaUrl.mobile');
+        Route::get('users-by-division/{divisionId}', [DailyTaskMobileController::class, 'getUsersByDivision'])->name('users.division.mobile');
+    });
+
+
     Route::get('users/division/{divisionId}', [DailyTaskMobileController::class, 'getUsersByDivision'])
         ->name('users.division.mobile');
     Route::get('users', [UserApiController::class, 'indexUsers']);
@@ -142,6 +181,17 @@ Route::group(['middleware' => ['auth:api','role.permission.api']], function()
 
     // CRUD Meeting
     Route::apiResource('meeting', MeetingApiController::class);
+
+    // Internet Customer
+    Route::prefix('internet-customers')->controller(InternetCustomerApiController::class)->group(function () {
+        Route::get('/', 'index');                          
+        Route::get('/{id}', 'show');                       
+        Route::post('/{id}/approve', 'approve');           
+        Route::post('/{id}/close', 'close');               
+        Route::post('/{id}/complete-installation', 'completeInstallation');
+        Route::get('/{id}/installation-resources', 'getInstallationResources');
+        Route::get('/get-ip-pools/by-router','getIpPoolsByRouter');
+    });
 
     // SKAM Import API
     Route::post('internet-customer/import', [InternetCustomerController::class, 'import']);

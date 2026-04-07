@@ -234,6 +234,7 @@ class MeetingController extends Controller
             }
 
             DB::commit();
+
             return redirect()->route('meeting.show', $meeting->slug)->with('store', true);
         } catch (\Throwable $th) {
             //throw $th;

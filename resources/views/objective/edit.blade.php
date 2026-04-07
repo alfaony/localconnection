@@ -42,12 +42,12 @@
                         </div>
                         <div class="col-md-4 mb-3">
                             <label for="custom_field_type">Divisi</label>
-                            <select class="form-control custom-field-type" name="division_id" required>
-                                <option disabled selected>--Pilih--</option>
+                            @php $selectedDivisionIds = $objective->divisions->pluck('id')->toArray(); @endphp
+                            <select class="form-control custom-field-type select2-division" name="division_ids[]" multiple required>
                                 @forelse ($divisions as $division)
-                                    <option value="{{ $division->id }}" {{ $objective->division_id == $division->id ? 'selected' : '' }} >{{ $division->name }}</option>
+                                    <option value="{{ $division->id }}" {{ in_array($division->id, $selectedDivisionIds) ? 'selected' : '' }}>{{ $division->name }}</option>
                                 @empty
-                                <option value="" disabled selected >-- Belum Memiliki Divisi --</option>
+                                <option value="" disabled>-- Belum Memiliki Divisi --</option>
                                 @endforelse
                             </select>
                         </div>
@@ -87,8 +87,14 @@
 
 @section('js')
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
 <script>
     $(document).ready(function() {
+        $('.select2-division').select2({
+            placeholder: 'Pilih Divisi',
+            allowClear: true
+        });
+
         let customFieldIndex = 0;
 
         $('#add-custom-field').click(function() {
@@ -177,4 +183,17 @@
         syncDates(); // Initial call to setup the listeners
     });
 </script>
+@endsection
+@section('css')
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css">
+<style>
+    .select2-selection__choice {
+        background-color: #007bff !important;
+        border: 1px solid #007bff !important;
+        color: #fff !important;
+    }
+    .select2-selection__choice__remove {
+        color: #fff !important;
+    }
+</style>
 @endsection

@@ -150,6 +150,10 @@
                                     @if($data['nib_file']) 
                                         <div class="mb-2">
                                             <a href="{{ s3_asset(true,10,$data['nib_file']) }}"  class="btn btn-sm btn-primary"  download><i class="fa fa-file-pdf"></i> Download</a>
+                                            <div class="custom-control custom-checkbox d-inline ml-2">
+                                                <input type="checkbox" class="custom-control-input" id="nib_file_delete" name="nib_file_delete" value="1">
+                                                <label class="custom-control-label text-danger" for="nib_file_delete">Hapus File Ini</label>
+                                            </div>
                                         </div>
                                     @endif
                                     <input type="file" name="nib_file" class="form-control-file" accept=".pdf" >
@@ -163,6 +167,10 @@
                                     @if($data['acta_file']) 
                                         <div class="mb-2">
                                             <a href="{{ s3_asset(true,10,$data['acta_file']) }}"  class="btn btn-sm btn-primary" download><i class="fa fa-file-pdf"></i> Download</a>
+                                            <div class="custom-control custom-checkbox d-inline ml-2">
+                                                <input type="checkbox" class="custom-control-input" id="acta_file_delete" name="acta_file_delete" value="1">
+                                                <label class="custom-control-label text-danger" for="acta_file_delete">Hapus File Ini</label>
+                                            </div>
                                         </div>
                                     @endif
                                     <input type="file" name="acta_file" class="form-control-file" accept=".pdf" >
@@ -176,6 +184,10 @@
                                     @if($data['npwp_file']) 
                                         <div class="mb-2">
                                             <a href="{{ s3_asset(true,10,$data['npwp_file']) }}"  class="btn btn-sm btn-primary" download><i class="fa fa-file-pdf"></i> Download</a>
+                                            <div class="custom-control custom-checkbox d-inline ml-2">
+                                                <input type="checkbox" class="custom-control-input" id="npwp_file_delete" name="npwp_file_delete" value="1">
+                                                <label class="custom-control-label text-danger" for="npwp_file_delete">Hapus File Ini</label>
+                                            </div>
                                         </div>
                                     @endif
                                     <input type="file" name="npwp_file" class="form-control-file" accept=".pdf" >
@@ -261,6 +273,10 @@
                                     @if(isset($data['header']) && file_exists(public_path('storage/' . $data['header']))) 
                                         <div class="mb-2">
                                             <a href="{{ s3_asset(true,10,$data['header']) }}"  class="btn btn-sm btn-primary" download><i class="fa fa-download"></i> Header</a>
+                                            <div class="custom-control custom-checkbox d-inline ml-2">
+                                                <input type="checkbox" class="custom-control-input" id="header_delete" name="header_delete" value="1">
+                                                <label class="custom-control-label text-danger" for="header_delete">Hapus File Ini</label>
+                                            </div>
                                         </div>
                                     @endif
                                     <input type="file" name="header" class="form-control-file" accept="image/*">
@@ -273,6 +289,10 @@
                                     @if(isset($data['footer']) && file_exists(public_path('storage/' . $data['footer']))) 
                                         <div class="mb-2">
                                             <a href="{{ s3_asset(true,10,$data['footer']) }}"  class="btn btn-sm btn-primary" download><i class="fa fa-download"></i> Footer</a>
+                                            <div class="custom-control custom-checkbox d-inline ml-2">
+                                                <input type="checkbox" class="custom-control-input" id="footer_delete" name="footer_delete" value="1">
+                                                <label class="custom-control-label text-danger" for="footer_delete">Hapus File Ini</label>
+                                            </div>
                                         </div>
                                     @endif
                                     <input type="file" name="footer" class="form-control-file" accept="image/*">
@@ -634,6 +654,10 @@
                                     @if($data['header_store_image']) 
                                         <div class="mb-2">
                                             <a href="{{ s3_asset(true,10,$data['header_store_image']) }}"  class="btn btn-sm btn-primary"  download><i class="fa fa-file-pdf"></i> Download</a>
+                                            <div class="custom-control custom-checkbox d-inline ml-2">
+                                                <input type="checkbox" class="custom-control-input" id="header_store_image_delete" name="header_store_image_delete" value="1">
+                                                <label class="custom-control-label text-danger" for="header_store_image_delete">Hapus File Ini</label>
+                                            </div>
                                         </div>
                                     @endif
                                     <input type="file" name="header_store_image" class="form-control" accept="image/*">

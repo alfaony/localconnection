@@ -87,6 +87,14 @@ class SaleController extends Controller
 
             $taxAmount = $totalAmount * ($saleData['tax_value'] / 100);
             $finalAmount = $totalAmount + $taxAmount;
+            $cashDeduction = 0;
+
+            // For cash payment, round down to nearest 100 (ratusan)
+            if ($saleData['payment_method'] === 'cash') {
+                $roundedAmount = floor($finalAmount / 100) * 100;
+                $cashDeduction = $finalAmount - $roundedAmount;
+                $finalAmount = $roundedAmount;
+            }
 
             // Jika ada draft_id, maka update draft tersebut
             if (!empty($saleData['draft_id'])) {
@@ -100,6 +108,7 @@ class SaleController extends Controller
                     'total_amount' => $totalAmount,
                     'tax_amount' => $taxAmount,
                     'discount_amount' => 0,
+                    'cash_deduction' => $cashDeduction,
                     'final_amount' => $finalAmount,
                     'payment_method' => $saleData['payment_method'],
                     'payment_details' => $saleData['payment_details'] ?? [],
@@ -116,6 +125,7 @@ class SaleController extends Controller
                     'total_amount' => $totalAmount,
                     'tax_amount' => $taxAmount,
                     'discount_amount' => 0,
+                    'cash_deduction' => $cashDeduction,
                     'final_amount' => $finalAmount,
                     'payment_method' => $saleData['payment_method'],
                     'payment_details' => $saleData['payment_details'] ?? [],
@@ -136,7 +146,8 @@ class SaleController extends Controller
                     'subtotal' => $item['quantity'] * $item['unit_price'],
                 ]);
             }
-
+            \App\Helpers\XpHelper::award(Auth::user(), $sale, 'Transaksi Kasir');
+            
             DB::commit();
 
             return response()->json([
@@ -191,6 +202,7 @@ class SaleController extends Controller
                     'total_amount' => $totalAmount,
                     'tax_amount' => $taxAmount,
                     'discount_amount' => 0,
+                    'cash_deduction' => 0,
                     'final_amount' => $finalAmount,
                     'payment_method' => $saleData['payment_method'] ?? 'cash',
                     'payment_details' => $saleData['payment_details'] ?? [],
@@ -206,6 +218,7 @@ class SaleController extends Controller
                     'total_amount' => $totalAmount,
                     'tax_amount' => $taxAmount,
                     'discount_amount' => 0,
+                    'cash_deduction' => 0,
                     'final_amount' => $finalAmount,
                     'payment_method' => $saleData['payment_method'] ?? 'cash',
                     'payment_details' => $saleData['payment_details'] ?? [],

@@ -150,7 +150,7 @@ class User extends Authenticatable implements MustVerifyEmail
     public function divisions()
     {
         return $this->belongsToMany(Division::class)
-            ->withPivot('weekly_report_required');
+            ->withPivot('weekly_report_required', 'is_primary');
     }
 
     public function assignedRequests()
@@ -171,6 +171,11 @@ class User extends Authenticatable implements MustVerifyEmail
     public function getFirstDivisionAttribute()
     {
         return $this->divisions->first();
+    }
+
+    public function getPrimaryDivisionAttribute()
+    {
+        return $this->divisions->firstWhere('pivot.is_primary', true);
     }
     
     public function getBackGroundVerifiedAttribute()
@@ -297,6 +302,14 @@ class User extends Authenticatable implements MustVerifyEmail
     public function accessibleCompanies()
     {
         return $this->belongsToMany(Company::class, 'company_user_access');
+    }
+
+    /**
+     * Riwayat XP karyawan ini.
+     */
+    public function xpHistories()
+    {
+        return $this->hasMany(EmployeeXpHistory::class);
     }
     public function getLastSalaryAttribute()
     {

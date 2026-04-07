@@ -3,15 +3,17 @@
 @section('title', 'Dashboard')
 
 @section('content')
-<div class="row g-3">
-    <div class="col-md-12 mt-2">
+<div class="row mt-3">
+    <div class="col-md-12">
         @if(Session::get('updateProfile'))
-        <div class="alert alert-success mt-3">Pengguna Berhasil Perbarui</div>
+        <div class="alert alert-success shadow-sm" style="border-radius: 10px; border-left: 5px solid #198754;">
+            <i class="fas fa-check-circle me-2"></i> Pengguna Berhasil Diperbarui
+        </div>
         @endif
 
         @canAccess('reminderDashboard', 'weekly_reports')
-        <div id="weekly-report-reminder">
-            <div class="text-center my-3">
+        <div id="weekly-report-reminder" class="mb-2">
+            <div class="text-center p-2 rounded" style="background: rgba(255,255,255,0.1); border: 1px dashed #6c757d;">
                 <i class="fas fa-spinner fa-spin text-muted"></i> Memeriksa laporan mingguan...
             </div>
         </div>
@@ -19,436 +21,378 @@
 
         <div id="vehicle-reminder-pic"></div>
         <div id="vehicle-reminder-manager"></div>
-
         <div id="reminder-letter-pic"></div>
         <div id="reminder-letter-manager"></div>
-    </div>
 
-    @canAccess('dashboardReport','homes')
-    <!-- Profile and Stats -->
-    <div class="col-md-3 mt-3">
-        <div class="card border-0 shadow-lg hover-effect">
-            <div class="card-body text-center p-4">
-                <!-- Profile Image -->
-                <div class="avatar-wrapper mb-4">
-                    <img src="{{ Auth::user()->avatar ? s3_asset(true,10,Auth::user()->avatar) : 'https://placehold.co/600x400?text=Your%20Avatar' }}" class="rounded-circle shadow-sm" alt="User Image"
-                        style="width: 100px; height: 100px; object-fit: cover; border: 3px solid #fff">
-                </div>
-
-                <!-- Profile Info -->
-                <div class="profile-meta">
-                    <h4 class="mb-3 fw-bold text-gradient">
-                        <i class="bi bi-person-gear me-2"></i>{{  Auth::user()->name }}
-                    </h4>
-
-                    <!-- Badge -->
-                    <div
-                        class="status-badge bg-soft-warning d-inline-flex align-items-center py-2 px-3 mb-3 rounded-pill">
-                        <i class="bi bi-shield-check me-2 text-warning"></i>
-                        <span class="text-dark small fw-medium"> {{  ucfirst(Auth::user()->role->name) }}</span>
-                    </div>
-
-                    <!-- Score -->
-                    <div class="score-container bg-soft-success p-3 rounded-3">
-                        <div class="d-flex align-items-center justify-content-center">
-                            <i class="bi bi-trophy-fill me-2 text-gradient-gold fs-5"></i>
-                            <div>
-                                <div class="text-muted small">CURRENT SCORE</div>
-                                <div class="h4 mb-0 fw-bold text-success" id="currentScore">-</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+        {{-- LAPORAN PENGADUAN --}}
+        <a href="https://forms.gle/sPs4j3L9oNrNkPmR6" target="_blank" rel="noopener"
+           class="d-flex align-items-center mb-3 px-4 py-3 text-decoration-none laporan-banner">
+            <div style="width:42px;height:42px;background:linear-gradient(135deg,#f093fb,#667eea);border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 4px 14px rgba(240,147,251,.4);">
+                <i class="fas fa-bullhorn" style="color:#fff;font-size:1rem;"></i>
             </div>
-        </div>
-    </div>
-    @endcanAccess
-    
-    <div class="col-md-9 mt-3">
-        <!-- Info Cards Section -->
-        <div class="row g-3">
-            {{-- 
-            <div class="col-md-3">
-                <div class="card info-box border-0 shadow-sm h-100 hover-effect"
-                    style="pointer-events: none; opacity: 0.5;">
-                    <div class="card-body d-flex align-items-center p-3">
-                        <div class="icon-container bg-primary-soft rounded-circle p-3 me-3">
-                            <i class="bi bi-shield-check text-primary fs-4"></i>
-                        </div>
-                        <div>
-                            <div class="text-muted small mb-1">GUILD</div>
-                            <div class="h4 mb-0 text-primary fw-bold">Overlord</div>
-                        </div>
-                    </div>
-                </div>
+            <div class="ms-3 flex-grow-1">
+                <div class="fw-bold" style="font-size:.92rem;">Laporan Pengaduan Karyawan</div>
+                <div style="font-size:.76rem;opacity:.75;">Sampaikan keluhan atau masukan secara anonim</div>
             </div>
-            --}}
-            @canAccess('dashboardReport','homes')
-            <div class="col-md-4">
-                <div class="card info-box border-0 shadow-sm h-100 hover-effect">
-                    <div class="card-body d-flex align-items-center p-3">
-                        <div class="icon-container bg-success-soft rounded-circle p-3 me-3">
-                            <i class="bi bi-check2-circle text-success fs-4"></i>
-                        </div>
-                        <div>
-                            <div class="text-muted small mb-1">TASK COMPLETE</div>
-                            <div class="h4 mb-0 text-success fw-bold" id="totalTasksComplete">
-                                <span class="placeholder col-8 placeholder-glow"></span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-md-4">
-                <div class="card info-box border-0 shadow-sm h-100 hover-effect">
-                    <div class="card-body d-flex align-items-center p-3">
-                        <div class="icon-container bg-info-soft rounded-circle p-3 me-3">
-                            <i class="bi bi-calendar-check text-info fs-4"></i>
-                        </div>
-                        <div>
-                            <div class="text-muted small mb-1">CHECK-INS</div>
-                            <div class="h4 mb-0 text-info fw-bold" id="checkin_point_percentage">
-                                <span class="placeholder col-8 placeholder-glow"></span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-md-4">
-                <div class="card info-box border-0 shadow-sm h-100 hover-effect">
-                    <div class="card-body d-flex align-items-center p-3">
-                        <div class="icon-container bg-danger-soft rounded-circle p-3 me-3">
-                            <i class="bi bi-graph-up text-danger fs-4"></i>
-                        </div>
-                        <div>
-                            <div class="text-muted small mb-1">TOTAL POINTS</div>
-                            <div class="h4 mb-0 text-danger fw-bold" id="totalPoints">
-                                <span class="placeholder col-8 placeholder-glow"></span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            @endcanAccess
-
-            @canAccess('infoApprovementHr', 'dayoffs')
-            <div class="col-md-6 mt-3">
-                <div class="card border-left-primary shadow h-100 py-2">
-                    <div class="card-body d-flex align-items-center justify-content-between">
-                        <div>
-                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
-                                Cuti yang Menunggu Persetujuan HR
-                            </div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800" id="count-hr">
-                                <span class="spinner-border spinner-border-sm text-primary"></span>
-                            </div>
-                        </div>
-                        <div><i class="fas fa-user-tie fa-2x text-gray-300"></i></div>
-                    </div>
-                </div>
-            </div>
-            @endcanAccess
-            @canAccess('infoApprovementFinance', 'dayoffs')
-            <div class="col-md-6 mt-3">
-                <div class="card border-left-info shadow h-100 py-2">
-                    <div class="card-body d-flex align-items-center justify-content-between">
-                        <div>
-                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
-                                Cuti yang Menunggu Persetujuan Finance
-                            </div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800" id="count-finance">
-                                <span class="spinner-border spinner-border-sm text-info"></span>
-                            </div>
-                        </div>
-                        <div><i class="fas fa-coins fa-2x text-gray-300"></i></div>
-                    </div>
-                </div>
-            </div>
-            @endcanAccess
-        </div>
-
-
-        <!-- Action Cards Section -->
-        @canAccess('meetingAgenda','homes')
-        <div class="card border-0 shadow-sm mt-2">
-            <div class="card-header d-flex align-items-center justify-content-between">
-                <h3 class="card-title mb-0">Agenda Meeting</h3>
-                <ul class="nav nav-tabs card-header-tabs ml-auto" id="agendaTabs" role="tablist">
-                    <li class="nav-item" role="presentation">
-                        <button class="nav-link active" id="today-tab" data-bs-toggle="tab" type="button" role="tab">
-                            Hari Ini
-                        </button>
-                    </li>
-                    <li class="nav-item" role="presentation">
-                        <button class="nav-link" id="week-tab" data-bs-toggle="tab" type="button" role="tab">
-                            Minggu Ini
-                        </button>
-                    </li>
-                </ul>
-            </div>
-
-            <div class="card-body p-4">
-                <div class="table-responsive" style="max-height: 50vh;">
-                    @canAccess('store','meetings')
-                    <div class="d-flex justify-content-end mb-2">
-                        <a href="{{ route('meeting.create') }}" class="btn btn-sm btn-primary">
-                            <i class="bi bi-plus-circle me-1"></i> Agenda
-                        </a>
-                    </div>
-                    @endcanAccess
-                    <table class="table table-sm table-bordered align-middle mb-0" id="agenda-table">
-                        <thead class="table-light">
-                            <tr>
-                                <th width="30%">Agenda</th>
-                                <th width="30%">Tanggal</th>
-                                <th width="20%">Pukul</th>
-                                <th >Type</th>
-                                <th width="10%">Lokasi / Tautan</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td colspan="5" class="text-center text-muted">Loading...</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-        @endcanAccess
+            <i class="fas fa-external-link-alt ms-3" style="font-size:.82rem;opacity:.6;"></i>
+        </a>
 
     </div>
 </div>
 
-<div class="row g-3">
-    <!-- Rankings -->
-    @canAccess('leaderboard','homes')
-    <div class="col-md-4">
-        <div class="card shadow-sm">
-            <div class="card-header d-flex align-items-center">
-                <i class="bi bi-trophy me-2"></i>Ranking Top Score
-            </div>
-            <div class="card-body" style="height: 240px; overflow-y: auto;">
-                <div id="leaderboard-loader" class="d-flex justify-content-center align-items-center"
-                    style="height: 180px;">
-                    <div class="spinner-border text-success" role="status"></div>
+@canAccess('dashboardReport','homes')
+<div class="mb-2 text-uppercase fw-bold text-muted" style="letter-spacing: 1px; font-size: 0.85rem;">
+    <i class="fas fa-user-astronaut me-1"></i> Player Status
+</div>
+<div class="row g-3 mb-4">
+
+    {{-- ── PROFILE CARD ── --}}
+    <div class="col-md-3 col-12">
+        <div class="card border-0 shadow-lg hover-effect h-100" style="background:linear-gradient(145deg,#1a1a2e,#16213e);border-radius:16px;overflow:hidden;">
+            <div style="height:4px;background:linear-gradient(90deg,#667eea,#f093fb,#f5a623);"></div>
+            <div class="card-body text-center p-3">
+                <div class="position-relative d-inline-block mb-2">
+                    <div style="width:80px;height:80px;background:linear-gradient(135deg,#667eea,#f093fb);border-radius:50%;padding:3px;margin:auto;">
+                        <img src="{{ Auth::user()->avatar ? s3_asset(true,10,Auth::user()->avatar) : 'https://placehold.co/600x400?text=Avatar' }}"
+                            class="rounded-circle" alt="Avatar"
+                            style="width:74px;height:74px;object-fit:cover;background:#1a1a2e;">
+                    </div>
+                    <span id="profile-level-badge" class="position-absolute" style="bottom:-4px;right:-4px;font-size:1.1rem;" title="Level">🔶</span>
                 </div>
-                <ol class="list-group list-group-flush d-none" id="leaderboard-list">
-                    <!-- Data akan diisi via JS -->
-                </ol>
+                <h6 class="mb-1 fw-bold" style="color:#e0e0ff;">{{ Auth::user()->name }}</h6>
+                <div class="d-inline-flex align-items-center px-2 py-1 mb-2 rounded-pill" style="background:rgba(102,126,234,.2);border:1px solid rgba(102,126,234,.4);">
+                    <i class="bi bi-shield-fill-check me-1" style="color:#667eea;font-size:.7rem;"></i>
+                    <span style="color:#a0a8d0;font-size:.72rem;">{{ ucfirst(Auth::user()->role->name) }}</span>
+                </div>
+                <div style="background:rgba(255,255,255,.07);border-radius:10px;padding:10px 12px;">
+                    <div class="d-flex justify-content-between mb-1">
+                        <small style="color:#a0a8d0;font-size:.7rem;">TOTAL XP</small>
+                        <small id="profile-xp-label" style="color:#f093fb;font-weight:700;font-size:.7rem;">— XP</small>
+                    </div>
+                    <div style="height:6px;background:rgba(255,255,255,.1);border-radius:4px;overflow:hidden;">
+                        <div id="profile-xp-bar" style="height:100%;width:0%;background:linear-gradient(90deg,#667eea,#f093fb);border-radius:4px;transition:width .8s ease;"></div>
+                    </div>
+                    <div class="d-flex justify-content-between mt-1">
+                        <small style="color:#a0a8d0;font-size:.7rem;">SCORE</small>
+                        <small class="fw-bold" style="color:#f5a623;font-size:.7rem;" id="currentScore">—</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{-- ── KANAN: STATS (compact) + GELAR ── --}}
+    <div class="col-md-9 col-12">
+        <div class="d-flex flex-column gap-3 h-100">
+
+            {{-- 3 Stat Cards compact --}}
+            <div class="row g-2">
+                <div class="col-4">
+                    <div class="card border-0 shadow-sm hover-effect gamified-stat-card" style="background:linear-gradient(135deg,#0f3443,#134e5e);border-radius:12px;">
+                        <div class="top-glow" style="background:linear-gradient(90deg,#11998e,#38ef7d);"></div>
+                        <div class="card-body p-3">
+                            <div class="d-flex align-items-center mb-1">
+                                <i class="bi bi-check2-circle text-success me-2" style="font-size:1.1rem;"></i>
+                                <span style="color:#8ab4c0;font-size:.65rem;font-weight:700;letter-spacing:.04em;">TASK DONE</span>
+                            </div>
+                            <div class="fw-bold text-success" style="font-size:1.4rem;line-height:1;" id="totalTasksComplete">
+                                <span class="placeholder col-8 placeholder-glow" style="font-size:.8rem;"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-4">
+                    <div class="card border-0 shadow-sm hover-effect gamified-stat-card" style="background:linear-gradient(135deg,#0d1f3c,#162447);border-radius:12px;">
+                        <div class="top-glow" style="background:linear-gradient(90deg,#4facfe,#00f2fe);"></div>
+                        <div class="card-body p-3">
+                            <div class="d-flex align-items-center mb-1">
+                                <i class="bi bi-calendar-check text-info me-2" style="font-size:1.1rem;"></i>
+                                <span style="color:#8ab4c0;font-size:.65rem;font-weight:700;letter-spacing:.04em;">CHECK-IN</span>
+                            </div>
+                            <div class="fw-bold text-info" style="font-size:1.4rem;line-height:1;" id="checkin_point_percentage">
+                                <span class="placeholder col-8 placeholder-glow" style="font-size:.8rem;"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-4">
+                    <div class="card border-0 shadow-sm hover-effect gamified-stat-card" style="background:linear-gradient(135deg,#2d1b69,#16213e);border-radius:12px;">
+                        <div class="top-glow" style="background:linear-gradient(90deg,#f093fb,#f5a623);"></div>
+                        <div class="card-body p-3">
+                            <div class="d-flex align-items-center mb-1">
+                                <i class="bi bi-graph-up me-2" style="color:#f093fb;font-size:1.1rem;"></i>
+                                <span style="color:#8ab4c0;font-size:.65rem;font-weight:700;letter-spacing:.04em;">POINTS</span>
+                            </div>
+                            <div class="fw-bold" style="color:#f093fb;font-size:1.4rem;line-height:1;" id="totalPoints">
+                                <span class="placeholder col-8 placeholder-glow" style="font-size:.8rem;"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {{-- GELAR Section --}}
+            @canAccess('userBadges','homes')
+            <div class="flex-grow-1">
+                <div class="card border-0 shadow-sm h-100" style="background:linear-gradient(145deg,#1a1a2e,#16213e);border-radius:14px;overflow:hidden;">
+                    <div style="height:3px;background:linear-gradient(90deg,#f5a623,#f093fb,#667eea);"></div>
+                    <div class="card-body p-3 d-flex flex-column">
+                        <div class="d-flex align-items-center mb-2">
+                            <span style="color:#a0a8d0;font-size:.65rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;">🏅 Gelar</span>
+                        </div>
+                        <div id="gelar-loader" class="d-flex align-items-center justify-content-center flex-grow-1" style="min-height:110px;">
+                            <div class="spinner-border spinner-border-sm" style="color:#f093fb;" role="status"></div>
+                        </div>
+                        <div id="gelar-container" class="d-none flex-wrap pt-4" style="gap:1.25rem 1.5rem;min-height:110px;overflow-x:auto;padding:4px 2px;"></div>
+                        <div id="gelar-empty" class="d-none text-center flex-grow-1 d-flex align-items-center justify-content-center" style="min-height:110px;">
+                            <div>
+                                <div style="font-size:2rem;opacity:.3;">🏅</div>
+                                <small style="color:#606880;">Belum ada gelar diterima</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            @endcanAccess
+
+        </div>
+    </div>
+
+</div>
+@endcanAccess
+
+@canAccess('leaderboard','homes')
+<div class="mb-2 mt-4 text-uppercase fw-bold text-muted" style="letter-spacing: 1px; font-size: 0.85rem;">
+    <i class="fas fa-trophy me-1"></i> Leaderboards & Hall of Fame
+</div>
+<div class="row g-3 mb-4">
+
+    <div class="col-lg-3 col-md-6">
+        <div class="card shadow-sm border-0 h-100" style="background:linear-gradient(145deg,#1a1a2e,#16213e);border-radius:14px;overflow:hidden;">
+            <div style="height:3px;background:linear-gradient(90deg,#f5a623,#f53844);"></div>
+            <div class="card-header border-0 d-flex align-items-center" style="background:transparent;">
+                <i class="bi bi-trophy-fill me-2 fs-5" style="color:#f5a623;"></i>
+                <span style="color:#e0e0ff;font-weight:600;">Top Score</span>
+            </div>
+            <div class="card-body p-2" style="height: 220px; overflow-y: auto;">
+                <div id="leaderboard-loader" class="d-flex justify-content-center align-items-center h-100"><div class="spinner-border text-warning" role="status"></div></div>
+                <ol class="list-group list-group-flush d-none" id="leaderboard-list"></ol>
+            </div>
+        </div>
+    </div>
+
+    @canAccess('xpLeaderboard','homes')
+    <div class="col-lg-3 col-md-6">
+        <div class="card shadow-sm border-0 h-100 xp-leaderboard-card">
+            <div class="card-header border-0 d-flex align-items-center justify-content-between xp-header-gradient">
+                <span style="color:#e0e0ff;font-weight:600;"><i class="fas fa-star me-2 fs-5" style="color:#f093fb;"></i> Top 5 XP</span>
+                @canAccess('leaderboard','employee_xps')
+                <a href="{{ route('employee-xp.leaderboard') }}" class="btn btn-sm py-0 px-2 rounded-pill ml-auto" style="font-size:.75rem;background:rgba(102,126,234,.2);color:#a0c4ff;border:1px solid rgba(102,126,234,.4);">All</a>
+                @endcanAccess
+            </div>
+            <div class="card-body p-2" id="xp-top5-container" style="height: 220px; overflow-y: auto;">
+                <div class="text-center text-muted py-5"><i class="fas fa-spinner fa-spin"></i> Memuat...</div>
             </div>
         </div>
     </div>
     @endcanAccess
 
     @canAccess('overdueRanking','homes')
-    <div class="col-md-4">
-        <div class="card shadow-sm">
-            <div class="card-header d-flex align-items-center">
-                <i class="bi bi-clipboard-check"></i> Ranking Staff Overdue to Waiting Review
+    <div class="col-lg-3 col-md-6">
+        <div class="card shadow-sm border-0 h-100" style="background:linear-gradient(145deg,#1a1a2e,#16213e);border-radius:14px;overflow:hidden;">
+            <div style="height:3px;background:linear-gradient(90deg,#f7971e,#ffd200);"></div>
+            <div class="card-header border-0 d-flex align-items-center" style="background:transparent;">
+                <i class="bi bi-clipboard-check me-2 fs-5" style="color:#ffd200;"></i>
+                <span style="color:#e0e0ff;font-weight:600;">Overdue In Review</span>
             </div>
-            <div class="card-body" style="height: 240px; overflow-y: auto;">
-                <div id="overdue-inreview-loader" class="d-flex justify-content-center align-items-center"
-                    style="height: 180px;">
-                    <div class="spinner-border text-warning" role="status"></div>
-                </div>
-                <ol class="list-group list-group-flush d-none" id="overdue-inreview-ranking">
-                    <!-- Data akan diisi via JS -->
-                </ol>
+            <div class="card-body p-2" style="height: 220px; overflow-y: auto;">
+                <div id="overdue-inreview-loader" class="d-flex justify-content-center align-items-center h-100"><div class="spinner-border text-warning" role="status"></div></div>
+                <ol class="list-group list-group-flush d-none custom-dark-list" id="overdue-inreview-ranking"></ol>
             </div>
         </div>
     </div>
-    <div class="col-md-4">
-        <div class="card shadow-sm">
-            <div class="card-header d-flex align-items-center">
-                <i class="bi bi-exclamation-triangle me-2 mr-1"></i>Ranking Staff Overdue Task
+
+    <div class="col-lg-3 col-md-6">
+        <div class="card shadow-sm border-0 h-100" style="background:linear-gradient(145deg,#1a1a2e,#16213e);border-radius:14px;overflow:hidden;">
+            <div style="height:3px;background:linear-gradient(90deg,#f5576c,#f093fb);"></div>
+            <div class="card-header border-0 d-flex align-items-center" style="background:transparent;">
+                <i class="bi bi-exclamation-triangle me-2 fs-5" style="color:#f5576c;"></i>
+                <span style="color:#e0e0ff;font-weight:600;">Overdue Task</span>
             </div>
-            <div class="card-body" style="height: 240px; overflow-y: auto;">
-                <div id="overdue-loader" class="d-flex justify-content-center align-items-center"
-                    style="height: 180px;">
-                    <div class="spinner-border text-danger" role="status"></div>
-                </div>
-                <ol class="list-group list-group-flush d-none" id="overdue-ranking">
-                    <!-- Data akan diisi via JS -->
-                </ol>
+            <div class="card-body p-2" style="height: 220px; overflow-y: auto;">
+                <div id="overdue-loader" class="d-flex justify-content-center align-items-center h-100"><div class="spinner-border text-danger" role="status"></div></div>
+                <ol class="list-group list-group-flush d-none custom-dark-list" id="overdue-ranking"></ol>
             </div>
         </div>
     </div>
     @endcanAccess
-    
-    @canAccess('listDayoff','homes')
-    <div class="col-md-4" >
-        <div class="card shadow-sm mb-4">
-            <div class="card-header d-flex align-items-center">
-                <i class="fas fa-user-clock mr-2"></i>User Cuti Hari Ini
+</div>
+@endcanAccess
+
+<div class="mb-2 mt-4 text-uppercase fw-bold text-muted" style="letter-spacing: 1px; font-size: 0.85rem;">
+    <i class="fas fa-scroll me-1"></i> Quests & Team Status
+</div>
+<div class="row g-3 mb-4">
+    @canAccess('meetingAgenda','homes')
+    <div class="col-lg-8">
+        <div class="card border-0 shadow-sm h-100 gamified-light-card" style="border-radius: 14px;">
+            <div class="card-header bg-white border-0 d-flex align-items-center justify-content-between pt-4 pb-2 px-4">
+                <h5 class="mb-0 fw-bold"><i class="fas fa-calendar-alt text-primary me-2"></i> Agenda Meeting</h5>
+                <ul class="nav nav-pills nav-sm ml-auto" id="agendaTabs" role="tablist">
+                    <li class="nav-item"><button class="nav-link active rounded-pill px-3 py-1 mb-1 mr-1" id="today-tab" data-bs-toggle="tab" type="button">Hari Ini</button></li>
+                    <li class="nav-item ms-2"><button class="nav-link rounded-pill px-3 py-1 mb-1" id="week-tab" data-bs-toggle="tab" type="button">Minggu Ini</button></li>
+                </ul>
             </div>
-            <div class="card-body" id="cuti-today-container"  style="height: 240px; overflow-y: auto;">
-                <div class="text-center text-muted">
-                    <i class="fas fa-spinner fa-spin"></i> Memuat data cuti...
+            <div class="card-body px-4 pb-4">
+                @canAccess('store','meetings')
+                <div class="d-flex justify-content-end mb-3">
+                    <a href="{{ route('meeting.create') }}" class="btn btn-sm btn-primary rounded-pill px-3 shadow-sm"><i class="bi bi-plus-circle me-1"></i> Buat Agenda</a>
+                </div>
+                @endcanAccess
+                <div class="table-responsive rounded-3 border">
+                    <table class="table table-hover table-borderless align-middle mb-0" id="agenda-table">
+                        <thead class="table-light border-bottom">
+                            <tr>
+                                <th width="30%">Agenda</th>
+                                <th width="25%">Tanggal</th>
+                                <th width="15%">Pukul</th>
+                                <th>Tipe</th>
+                                <th width="15%" class="text-center">Aksi/Lokasi</th>
+                            </tr>
+                        </thead>
+                        <tbody><tr><td colspan="5" class="text-center text-muted py-4">Loading...</td></tr></tbody>
+                    </table>
                 </div>
             </div>
         </div>
     </div>
     @endcanAccess
 
-</div>
+    <div class="col-lg-4">
+        <div class="row g-3">
+            @canAccess('listDayoff','homes')
+            <div class="col-12">
+                <div class="card shadow-sm border-0 h-100" style="border-radius: 14px;">
+                    <div class="card-header bg-white border-0 pt-3 px-3">
+                        <h6 class="fw-bold mb-0 text-secondary"><i class="fas fa-user-clock text-warning me-2"></i>User Cuti Hari Ini</h6>
+                    </div>
+                    <div class="card-body px-3" id="cuti-today-container">
+                        <div class="text-center text-muted"><i class="fas fa-spinner fa-spin"></i> Memuat data...</div>
+                    </div>
+                </div>
+            </div>
+            @endcanAccess
 
-<!-- Card Laporan Pengaduan Karyawan -->
-<div class="card shadow-sm">
-    <div class="card-body">
-        <div class="d-flex align-items-center">
-            <div class="icon-container bg-danger-soft rounded-circle p-3 me-3">
-                <i class="bi bi-exclamation-triangle text-danger fs-4"></i>
+            @canAccess('infoApprovementHr', 'dayoffs')
+            <div class="col-6 col-lg-12">
+                <div class="card border-0 shadow-sm rounded-3 bg-primary text-white hover-effect">
+                    <div class="card-body p-3 d-flex align-items-center justify-content-between">
+                        <div>
+                            <div class="small text-white-50 text-uppercase fw-bold mb-1">Menunggu HR</div>
+                            <div class="h3 mb-0 fw-bold" id="count-hr"><span class="spinner-border spinner-border-sm"></span></div>
+                        </div>
+                        <div class="bg-white bg-opacity-25 rounded-circle p-2"><i class="fas fa-user-tie fa-fw fs-4"></i></div>
+                    </div>
+                </div>
             </div>
-            <div>
-                <h5 class="mb-1">Laporan Pengaduan Karyawan</h5>
-                <p class="text-muted mb-2">Laporkan keluhan atau masalah yang Anda alami melalui formulir ini.</p>
-                <a href="https://forms.gle/sPs4j3L9oNrNkPmR6" target="_blank" class="btn btn-danger btn-sm">
-                    <i class="bi bi-box-arrow-up-right me-1"></i>Buka Formulir
-                </a>
+            @endcanAccess
+
+            @canAccess('infoApprovementFinance', 'dayoffs')
+            <div class="col-6 col-lg-12">
+                <div class="card border-0 shadow-sm rounded-3 bg-info text-white hover-effect">
+                    <div class="card-body p-3 d-flex align-items-center justify-content-between">
+                        <div>
+                            <div class="small text-white-50 text-uppercase fw-bold mb-1">Menunggu Finance</div>
+                            <div class="h3 mb-0 fw-bold" id="count-finance"><span class="spinner-border spinner-border-sm"></span></div>
+                        </div>
+                        <div class="bg-white bg-opacity-25 rounded-circle p-2"><i class="fas fa-coins fa-fw fs-4"></i></div>
+                    </div>
+                </div>
             </div>
+            @endcanAccess
         </div>
     </div>
 </div>
 
-<div class="card shadow-sm">
-    <div class="card-body">
-        @canAccess('index','office_media')
-        {{-- What's Happening Now --}}
-            <div class="d-flex justify-content-between align-items-center mb-3 border-bottom pb-2 mt-3">
-                <h5>What's Happening Now !</h5>
-                @canAccess('store','office_media')
-                <button class="btn btn-outline-secondary btn-sm" data-toggle="modal" data-target="#uploadMomentModal">Upload</button>
-                @endcanAccess
-            </div>
+@canAccess('index','office_media')
+<div class="mb-2 mt-4 text-uppercase fw-bold text-muted" style="letter-spacing: 1px; font-size: 0.85rem;">
+    <i class="fas fa-photo-video me-1"></i> Guild Hall (Office Media)
+</div>
+<div class="card shadow-sm border-0 mb-4" style="border-radius: 14px;">
+    <div class="card-body p-4">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="fw-bold mb-0 text-dark"><i class="fas fa-camera text-danger me-2"></i> What's Happening Now!</h5>
+            @canAccess('store','office_media')
+            <button class="btn btn-outline-danger btn-sm rounded-pill px-3" data-toggle="modal" data-target="#uploadMomentModal"><i class="fas fa-upload me-1"></i> Upload</button>
+            @endcanAccess
+        </div>
+        <div style="height: 250px; overflow-y: auto;" id="office-media-image-section" class="custom-scrollbar bg-light rounded-3 p-2 mb-4 border">
+            <div class="loading-spiner-office d-flex justify-content-center align-items-center h-100" style="display: none;"><div class="spinner-border text-primary" role="status"></div></div>
+        </div>
         
-        
-            <div style="height: 300px; overflow-y: auto;" id="office-media-image-section">
-                <div class="loading-spiner-office d-flex justify-content-center align-items-center" style="height: 300px; display: none;">
-                    <div class="spinner-border text-primary" role="status"></div>
-                </div>
-            </div>
-        
-            {{-- Youtube Embed Section --}}
-            <hr>
-            <div class="d-flex justify-content-between align-items-center mb-3">
-                <h5>Nonton Youtube Kantor ( Embed URL )</h5>
-                @canAccess('store','office_media')
-                <button class="btn btn-outline-secondary btn-sm" data-toggle="modal" data-target="#youtubeEmbedModal">Embed URL</button>
-                @endcanAccess
-            </div>
-        
-            <div style="height: 300px; overflow-y: auto;" id="office-media-youtube-section">
-                <div class="loading-spiner-office d-flex justify-content-center align-items-center" style="height: 300px; display: none;">
-                    <div class="spinner-border text-primary" role="status"></div>
-                </div>
-            </div>
-        @endcanAccess
+        <div class="d-flex justify-content-between align-items-center mb-3 mt-4">
+            <h5 class="fw-bold mb-0 text-dark"><i class="fab fa-youtube text-danger me-2"></i> Nonton Youtube Kantor</h5>
+            @canAccess('store','office_media')
+            <button class="btn btn-outline-danger btn-sm rounded-pill px-3" data-toggle="modal" data-target="#youtubeEmbedModal"><i class="fas fa-link me-1"></i> Embed URL</button>
+            @endcanAccess
+        </div>
+        <div style="height: 250px; overflow-y: auto;" id="office-media-youtube-section" class="custom-scrollbar bg-light rounded-3 p-2 border">
+            <div class="loading-spiner-office d-flex justify-content-center align-items-center h-100" style="display: none;"><div class="spinner-border text-primary" role="status"></div></div>
+        </div>
     </div>
 </div>
-<!-- End Rankings -->
+@endcanAccess
 
-<div class="row">
+@if(Auth::user()->role->name == \App\Schemas\RoleSchema::BM)
+<div class="mb-2 mt-4 text-uppercase fw-bold text-muted" style="letter-spacing: 1px; font-size: 0.85rem;">
+    <i class="fas fa-server me-1"></i> Command Center
+</div>
+@endif
+
+<div class="row g-4 mb-4">
     <div class="col-md-12">
         @canAccess('showReport','homes')
-        <div class="card py-3">
-            <div class="card-header">
-                <h5>Laporan Overview Proyek</h5>
+        <div class="card border-0 shadow-sm mb-4" style="border-radius: 14px;">
+            <div class="card-header bg-white border-bottom pt-4 px-4">
+                <h5 class="fw-bold"><i class="fas fa-project-diagram text-primary me-2"></i> Laporan Overview Proyek & Keuangan</h5>
             </div>
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-md-4">
-                        <div class="card text-white bg-warning mb-3">
-                            <div class="card-body">
-                                <h5 class="card-title">Total Proyek Aktif</h5>
-                                <p class="card-text">{{ $totalActiveProjects }}</p>
+            <div class="card-body p-4">
+                <div class="row g-3 mb-4">
+                    <div class="col-md-2 col-6"><div class="card bg-primary text-white text-center p-3 h-100 border-0 rounded-3"><div class="small opacity-75 mb-1">Proyek Aktif</div><div class="h4 mb-0 fw-bold">{{ $totalActiveProjects }}</div></div></div>
+                    <div class="col-md-2 col-6"><div class="card bg-success text-white text-center p-3 h-100 border-0 rounded-3"><div class="small opacity-75 mb-1">Pekerja Aktif</div><div class="h4 mb-0 fw-bold">{{ $totalActiveWorkers }}</div></div></div>
+                    <div class="col-md-4 col-12"><div class="card bg-danger text-white p-3 h-100 border-0 rounded-3"><div class="small opacity-75 mb-1"><i class="fas fa-wallet me-1"></i> Anggaran Pembelian</div><div class="h4 mb-0 fw-bold">{{ 'Rp. '.number_format($totalPurchaseBudget,0,',','.') }}</div></div></div>
+                    <div class="col-md-2 col-6"><div class="card bg-info text-white text-center p-3 h-100 border-0 rounded-3"><div class="small opacity-75 mb-1">Budget Proyek</div><div class="h5 mb-0 fw-bold">{{ 'Rp. '.number_format($activeProjectsBudget,0,',','.') }}</div></div></div>
+                    <div class="col-md-2 col-6"><div class="card bg-secondary text-white text-center p-3 h-100 border-0 rounded-3"><div class="small opacity-75 mb-1">Budget Pekerja</div><div class="h5 mb-0 fw-bold">{{ 'Rp. '.number_format($activeEmployeeBudget,0,',','.') }}</div></div></div>
+                </div>
+
+                <div class="row g-3 mb-4">
+                    <div class="col-md-6">
+                        <a href="{{ route('quote.index') }}" class="text-decoration-none">
+                            <div class="card bg-light border-0 shadow-sm hover-card rounded-3 p-3 d-flex flex-row align-items-center">
+                                <div class="bg-warning text-dark p-3 rounded-circle me-3"><i class="fas fa-file-invoice-dollar fs-4"></i></div>
+                                <div><div class="text-muted small fw-bold">TOTAL QUOTE</div><div class="h4 mb-0 text-dark fw-bold">{{ $totalQuote }}</div></div>
                             </div>
-                        </div>
+                        </a>
                     </div>
-                    <div class="col-md-4">
-                        <div class="card text-white bg-warning mb-3">
-                            <div class="card-body">
-                                <h5 class="card-title">Total Pekerja Aktif</h5>
-                                <p class="card-text">{{ $totalActiveWorkers }}</p>
+                    <div class="col-md-6">
+                        <a href="{{ route('work-order.index') }}" class="text-decoration-none">
+                            <div class="card bg-light border-0 shadow-sm hover-card rounded-3 p-3 d-flex flex-row align-items-center">
+                                <div class="bg-success text-white p-3 rounded-circle me-3"><i class="fas fa-file-signature fs-4"></i></div>
+                                <div><div class="text-muted small fw-bold">TOTAL SPK</div><div class="h4 mb-0 text-dark fw-bold">{{ $totalWorkOrder }}</div></div>
                             </div>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="card text-white bg-danger mb-3">
-                            <div class="card-body">
-                                <h5 class="card-title">Anggaran Pembelian</h5>
-                                <p class="card-text">{{ 'Rp. '.number_format($totalPurchaseBudget,0,',','.') }}</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="card text-white bg-warning mb-3">
-                            <div class="card-body">
-                                <h5 class="card-title">Anggaran Proyek Aktif</h5>
-                                <p class="card-text">{{ 'Rp. '.number_format($activeProjectsBudget,0,',','.') }}</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="card text-white bg-warning mb-3">
-                            <div class="card-body">
-                                <h5 class="card-title">Anggaran Pekerja</h5>
-                                <p class="card-text">{{ 'Rp. '.number_format($activeEmployeeBudget,0,',','.') }}</p>
-                            </div>
-                        </div>
+                        </a>
                     </div>
                 </div>
 
-                <div class="row mt-3">
-                    <div class="col-md-4">
-                        <a href="{{ route('quote.index') }}">
-                            <div class="card text-white bg-warning mb-3 hover-card">
-                                <div class="card-body">
-                                    <h5 class="card-title">Total Quote</h5>
-                                    <p class="card-text">{{ $totalQuote }}</p>
-                                </div>
-                            </div>
-                        </a>
-                    </div>
-                    <div class="col-md-4">
-                        <a href="{{ route('work-order.index') }}">
-                            <div class="card text-white bg-warning mb-3 hover-card">
-                                <div class="card-body">
-                                    <h5 class="card-title">Total SPK</h5>
-                                    <p class="card-text">{{ $totalWorkOrder }}</p>
-                                </div>
-                            </div>
-                        </a>
-                    </div>
-                </div>
-            </div>
-            <div class="card-body">
-                <div class="card-header">
-                    <h5> Quote Tanpa SPK </h5>
-                </div>
-                <!-- Add Search Form -->
-                <form method="GET" action="{{ route('home') }}" class="mb-3">
-                    <div class="row mt-2 align-items-center">
-                        <div class="col-auto">
-                            <input type="text" name="search_quote" class="form-control" placeholder="Cari No Quote">
-                        </div>
-                        <div class="col-auto">
-                            <button type="submit" class="btn btn-primary"><i class="fa fa-search"></i> Cari</button>
-                        </div>
-                    </div>
+                <h6 class="fw-bold text-secondary mb-3"><i class="fas fa-exclamation-circle text-warning me-1"></i> Quote Tanpa SPK</h6>
+                <form method="GET" action="{{ route('home') }}" class="mb-3 d-flex gap-2">
+                    <input type="text" name="search_quote" class="form-control" placeholder="Cari No Quote..." style="max-width: 300px;">
+                    <button type="submit" class="btn btn-primary px-4"><i class="fa fa-search"></i></button>
                 </form>
-                <div class="table-responsive">
-                    <table class="table table-striped table-bordered">
-                        <thead class="thead-dark">
-                            <tr>
-                                <th>No Quote</th>
-                                <th>Total</th>
-                                @canAccess('downloadPdf','quotes')
-                                <th>Aksi</th>
-                                @endcanAccess
-                            </tr>
+                <div class="table-responsive rounded border">
+                    <table class="table table-striped table-hover mb-0">
+                        <thead class="table-dark">
+                            <tr><th>No Quote</th><th>Total</th>@canAccess('downloadPdf','quotes')<th class="text-center">Aksi</th>@endcanAccess</tr>
                         </thead>
                         <tbody>
                             @forelse($quotesWithoutWorkOrder as $quote)
@@ -456,499 +400,199 @@
                                 <td>{{ $quote->number_result }}</td>
                                 <td>Rp {{ number_format($quote->total, 0, ',', '.') }}</td>
                                 @canAccess('downloadPdf','quotes')
-                                <td>
-                                    <a href="{{ route('quote.download.pdf', $quote->slug) }}"
-                                        class="btn btn-sm btn-primary">
-                                        <i class="fa fa-eye"></i> Quote
-                                    </a>
-                                </td>
+                                <td class="text-center"><a href="{{ route('quote.download.pdf', $quote->slug) }}" class="btn btn-sm btn-outline-primary"><i class="fa fa-eye"></i> Lihat</a></td>
                                 @endcanAccess
                             </tr>
                             @empty
-                            <tr>
-                                <td colspan="3" class="text-center">Tidak ada quotes tanpa WorkOrder.</td>
-                            </tr>
+                            <tr><td colspan="3" class="text-center text-muted py-3">Tidak ada quotes tanpa WorkOrder.</td></tr>
                             @endforelse
                         </tbody>
                     </table>
-
-                    {{ $quotesWithoutWorkOrder->withQueryString()->links('vendor.pagination.bootstrap-4') }}
                 </div>
+                <div class="mt-3">{{ $quotesWithoutWorkOrder->withQueryString()->links('vendor.pagination.bootstrap-4') }}</div>
             </div>
         </div>
         @endcanAccess
+
         @canAccess('showReportPointDaily','homes')
-        <div class="card py-3">
-            <div class="card-header">
-                <h5>Laporan Overview Pekerjaan Harian</h5>
+        <div class="card border-0 shadow-sm mb-4" style="border-radius: 14px;">
+            <div class="card-header bg-white border-bottom pt-4 px-4 d-flex justify-content-between align-items-center">
+                <h5 class="fw-bold mb-0"><i class="fas fa-tasks text-success me-2"></i> Overview Pekerjaan Harian</h5>
             </div>
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-md-12">
-                        <!-- Date filters -->
-                        <form method="GET" action="{{ route('home') }}" class="mb-3">
-                            <div class="mb-4 row">
-                                <div class="col-md-6">
-                                    <label for="start_date" class="form-label">Tanggal Mulai:</label>
-                                    <input type="date" class="form-control" name="start_date" id="start_date"
-                                        value="{{ request('start_date') ?? $startDate->format('Y-m-d') }}">
-                                </div>
+            <div class="card-body p-4">
+                <form method="GET" action="{{ route('home') }}" class="bg-light p-3 rounded-3 mb-4 d-flex flex-wrap gap-3 align-items-end">
+                    <div style="flex: 1; min-width: 200px;">
+                        <label class="form-label small text-muted">Tanggal Mulai</label>
+                        <input type="date" class="form-control" name="start_date" id="start_date" value="{{ request('start_date') ?? $startDate->format('Y-m-d') }}">
+                    </div>
+                    <div style="flex: 1; min-width: 200px;">
+                        <label class="form-label small text-muted">Tanggal Akhir</label>
+                        <input type="date" class="form-control" name="end_date" id="end_date" value="{{ request('end_date')  ?? $endDate->format('Y-m-d') }}">
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary"><i class="fa fa-filter me-1"></i> Filter</button>
+                        <a href="{{ route('home') }}" class="btn btn-outline-secondary"><i class="fa fa-redo"></i></a>
+                    </div>
+                </form>
 
-                                <div class="col-md-6">
-                                    <label for="end_date" class="form-label">Tanggal Akhir:</label>
-                                    <input type="date" class="form-control" name="end_date" id="end_date"
-                                        value="{{ request('end_date')  ?? $endDate->format('Y-m-d') }}">
-                                </div>
-                                <div class="col-md-12 mt-2">
-                                    <button type="submit" class="btn btn-info"><i class="fa fa-search"></i>
-                                        Cari</button>
-                                    <button type="button" onclick="window.location.href='{{ route('home') }}'"
-                                        class="btn btn-secondary"><i class="fa fa-times"></i> Reset</button>
-                                </div>
-                            </div>
-                        </form>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="card text-white bg-info mb-3">
-                            <div class="card-header">Poin Tugas</div>
-                            <div class="card-body">
-                                <p class="card-text">{{ $dailyTaskPoints }} Poin</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="card text-white bg-info mb-3">
-                            <div class="card-header">Poin Training</div>
-                            <div class="card-body">
-                                <p class="card-text">{{ $trainingPoints }} Poin</p>
-                            </div>
-                        </div>
-                    </div>
-                    @if(Auth::user()->role->name == \App\Schemas\RoleSchema::SALES)
-                    <div class="col-md-3">
-                        <div class="card text-white bg-info mb-3">
-                            <div class="card-header">Poin Penjualan</div>
-                            <div class="card-body">
-                                <p class="card-text">{{ $ipRightPoints }} Poin</p>
-                            </div>
-                        </div>
-                    </div>
-                    @else
-                    <div class="col-md-3">
-                        <div class="card text-white bg-info mb-3">
-                            <div class="card-header">Poin Hak Cipta</div>
-                            <div class="card-body">
-                                <p class="card-text">{{ $ipRightPoints }} Poin</p>
-                            </div>
-                        </div>
-                    </div>
-                    @endif
-                    <div class="col-md-3">
-                        <div class="card bg-success mb-3">
-                            <div class="card-header">Jumlah Tugas Diselesaikan</div>
-                            <div class="card-body">
-                                <p class="card-text">{{ $dailyTaskCompleteCount }} Tugas</p>
-                            </div>
-                        </div>
-                    </div>
+                <div class="row g-3 mb-4">
+                    <div class="col-md-3 col-6"><div class="border rounded-3 p-3 text-center"><div class="small text-muted mb-1">Poin Tugas</div><div class="h4 text-primary fw-bold mb-0">{{ $dailyTaskPoints }}</div></div></div>
+                    <div class="col-md-3 col-6"><div class="border rounded-3 p-3 text-center"><div class="small text-muted mb-1">Poin Training</div><div class="h4 text-info fw-bold mb-0">{{ $trainingPoints }}</div></div></div>
+                    <div class="col-md-3 col-6"><div class="border rounded-3 p-3 text-center"><div class="small text-muted mb-1">{{ Auth::user()->role->name == \App\Schemas\RoleSchema::SALES ? 'Poin Penjualan' : 'Poin Hak Cipta' }}</div><div class="h4 text-warning fw-bold mb-0">{{ $ipRightPoints }}</div></div></div>
+                    <div class="col-md-3 col-6"><div class="border rounded-3 p-3 text-center bg-success text-white"><div class="small opacity-75 mb-1">Tugas Selesai</div><div class="h4 fw-bold mb-0">{{ $dailyTaskCompleteCount }}</div></div></div>
                 </div>
-                <div class="row">
-                    <!-- Todo Card -->
-                    <div class="col-md-2 mb-4">
-                        <div class="card shadow-sm border-left-primary">
-                            <div class="card-header bg-primary text-white">
-                                <h5 class="card-title">Todo</h5>
-                            </div>
-                            <div class="card-body">
-                                <p class="card-text">Jumlah Task: {{ $dailyTaskTodoCount }}</p>
-                            </div>
-                        </div>
-                    </div>
 
-                    <!-- Doing Card -->
-                    <div class="col-md-2 mb-4">
-                        <div class="card shadow-sm border-left-info">
-                            <div class="card-header bg-info text-white">
-                                <h5 class="card-title">Doing</h5>
-                            </div>
-                            <div class="card-body">
-                                <p class="card-text">Jumlah Task: {{ $dailyTasDoingCount }}</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- In Review Card -->
-                    <div class="col-md-2 mb-4">
-                        <div class="card shadow-sm border-left-warning">
-                            <div class="card-header bg-warning text-white">
-                                <h5 class="card-title">In Review</h5>
-                            </div>
-                            <div class="card-body">
-                                <p class="card-text">Jumlah Task: {{ $dailyTaskInreviewCount }}</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Complete Card -->
-                    <div class="col-md-2 mb-4">
-                        <div class="card shadow-sm border-left-success">
-                            <div class="card-header bg-success text-white">
-                                <h5 class="card-title">Complete</h5>
-                            </div>
-                            <div class="card-body">
-                                <p class="card-text">Jumlah Task: {{ $dailyTaskCompleteCount }}</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Not Complete Card -->
-                    <div class="col-md-2 mb-4">
-                        <div class="card shadow-sm border-left-danger">
-                            <div class="card-header bg-danger text-white">
-                                <h5 class="card-title">Not Complete</h5>
-                            </div>
-                            <div class="card-body">
-                                <p class="card-text">Jumlah Task: {{ $dailyTaskNotComplateCount }}</p>
-                            </div>
-                        </div>
-                    </div>
+                <div class="row g-2 text-center">
+                    <div class="col"><div class="p-3 rounded-3" style="background: rgba(13,110,253,0.1); border: 1px solid #0d6efd;"><div class="fw-bold text-primary">TODO</div><div class="h3 mb-0">{{ $dailyTaskTodoCount }}</div></div></div>
+                    <div class="col"><div class="p-3 rounded-3" style="background: rgba(13,202,240,0.1); border: 1px solid #0dcaf0;"><div class="fw-bold text-info">DOING</div><div class="h3 mb-0">{{ $dailyTasDoingCount }}</div></div></div>
+                    <div class="col"><div class="p-3 rounded-3" style="background: rgba(255,193,7,0.1); border: 1px solid #ffc107;"><div class="fw-bold text-warning">IN REVIEW</div><div class="h3 mb-0">{{ $dailyTaskInreviewCount }}</div></div></div>
+                    <div class="col"><div class="p-3 rounded-3" style="background: rgba(25,135,84,0.1); border: 1px solid #198754;"><div class="fw-bold text-success">COMPLETE</div><div class="h3 mb-0">{{ $dailyTaskCompleteCount }}</div></div></div>
+                    <div class="col"><div class="p-3 rounded-3" style="background: rgba(220,53,69,0.1); border: 1px solid #dc3545;"><div class="fw-bold text-danger">NOT COMPLETE</div><div class="h3 mb-0">{{ $dailyTaskNotComplateCount }}</div></div></div>
+                </div>
+                
+                <div class="row g-3 mt-2">
+                     <div class="col-md-4"><div class="alert alert-danger mb-0 text-center"><i class="fas fa-exclamation-triangle me-1"></i> Overdue: <strong>{{ $dailyTaskCountOverdue }}</strong></div></div>
+                     <div class="col-md-4"><div class="alert alert-primary mb-0 text-center"><i class="fas fa-calendar-day me-1"></i> Hari Ini: <strong>{{ $dailyTaskCountToday }}</strong></div></div>
+                     <div class="col-md-4"><div class="alert alert-success mb-0 text-center"><i class="fas fa-calendar-alt me-1"></i> Mendatang: <strong>{{ $dailyTaskCountUpcoming }}</strong></div></div>
                 </div>
             </div>
         </div>
-        <div class="card py-3">
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-md-3">
-                        <div class="card bg-light mb-3">
-                            <div class="card-header text-danger">Jumlah Tugas Overdue</div>
-                            <div class="card-body">
-                                <p class="card-text">{{ $dailyTaskCountOverdue }} Tugas</p>
-                            </div>
+        @endcanAccess
+
+        @canAccess('softwareSharing','homes')
+        <div class="card border-0 shadow-sm mb-4" style="border-radius: 14px;">
+            <div class="card-header bg-white border-bottom pt-4 px-4 d-flex justify-content-between align-items-center">
+                <h5 class="fw-bold mb-0"><i class="fas fa-box-open text-info me-2"></i> Software Center</h5>
+                @canAccess('index','customer_software')
+                <a href="{{ route('customer-software.index') }}" class="btn btn-sm btn-outline-info rounded-pill"><i class="fas fa-shopping-cart me-1"></i> Catalog</a>
+                @endcanAccess
+            </div>
+            <div class="card-body p-4">
+                <div class="row g-3 mb-4">
+                    <div class="col-md-3 col-6"><div class="p-3 rounded-3 text-center" style="background: #e8f5e9; color: #2e7d32;"><i class="fas fa-check-circle fs-4 mb-2"></i><div class="small fw-bold">ACTIVE</div><h4 id="stat-active" class="fw-bold mb-0"><i class="fas fa-spinner fa-spin"></i></h4></div></div>
+                    <div class="col-md-3 col-6"><div class="p-3 rounded-3 text-center" style="background: #fff3e0; color: #ef6c00;"><i class="fas fa-exclamation-triangle fs-4 mb-2"></i><div class="small fw-bold">EXPIRING (7d)</div><h4 id="stat-expiring" class="fw-bold mb-0"><i class="fas fa-spinner fa-spin"></i></h4></div></div>
+                    <div class="col-md-3 col-6"><div class="p-3 rounded-3 text-center" style="background: #ffebee; color: #c62828;"><i class="fas fa-times-circle fs-4 mb-2"></i><div class="small fw-bold">EXPIRED</div><h4 id="stat-expired" class="fw-bold mb-0"><i class="fas fa-spinner fa-spin"></i></h4></div></div>
+                    <div class="col-md-3 col-6"><div class="p-3 rounded-3 text-center" style="background: #e3f2fd; color: #1565c0;"><i class="fas fa-box fs-4 mb-2"></i><div class="small fw-bold">CATALOG</div><h4 id="stat-softwares" class="fw-bold mb-0"><i class="fas fa-spinner fa-spin"></i></h4></div></div>
+                </div>
+
+                <div class="alert alert-warning" id="expiring-alert" style="display: none; border-radius: 10px;">
+                    <i class="fas fa-exclamation-triangle me-2"></i> <strong id="expiring-count">0</strong> subscription(s) will expire soon. 
+                    @canAccess('index','customer_subscriptions')<a href="{{ route('customer-subscription.index') }}" class="btn btn-sm btn-warning ms-2 rounded-pill">View & Renew</a>@endcanAccess
+                </div>
+
+                <div class="row g-4">
+                    <div class="col-md-8">
+                        <h6 class="fw-bold text-secondary"><i class="fas fa-list me-1"></i> My Active Subscriptions</h6>
+                        <div id="active-subscriptions-container" class="border rounded-3 bg-light"><div class="text-center py-4"><i class="fas fa-spinner fa-spin text-muted"></i></div></div>
+                        
+                        <div id="expired-card" style="display: none;" class="mt-4">
+                            <h6 class="fw-bold text-danger"><i class="fas fa-history me-1"></i> Recently Expired</h6>
+                            <div id="expired-subscriptions-container" class="border rounded-3 border-danger bg-white"></div>
                         </div>
                     </div>
-                    <div class="col-md-3">
-                        <div class="card bg-light mb-3">
-                            <div class="card-header text-primary">Jumlah Hari Ini</div>
-                            <div class="card-body">
-                                <p class="card-text">{{ $dailyTaskCountToday }} Tugas</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md3">
-                        <div class="card bg-light mb-3">
-                            <div class="card-header text-green">Jumlah Tugas Mendatang</div>
-                            <div class="card-body">
-                                <p class="card-text">{{ $dailyTaskCountUpcoming }} Tugas</p>
-                            </div>
+                    <div class="col-md-4">
+                        <div class="p-4 rounded-3 text-center" style="background: linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%); border: 1px dashed #ccc;">
+                            <i class="fas fa-bolt fs-1 text-warning mb-3"></i>
+                            <h5 class="fw-bold">Quick Access</h5>
+                            <p class="small text-muted">Manage your software easily from the catalog or subscription list.</p>
+                            @canAccess('index','customer_subscriptions')
+                            <a href="{{ route('customer-subscription.index') }}" class="btn btn-primary w-100 rounded-pill mb-2"><i class="fas fa-list"></i> Manage My Sub</a>
+                            @endcanAccess
                         </div>
                     </div>
                 </div>
             </div>
         </div>
         @endcanAccess
-    </div>
-</div>
 
-@canAccess('softwareSharing','homes')
-<div class="row g-3">
-    <div class="col-lg-3 col-6">
-        <div class="small-box bg-success">
-            <div class="inner">
-                <h3 id="stat-active">
-                    <i class="fas fa-spinner fa-spin"></i>
-                </h3>
-                <p>Active Subscriptions</p>
+        @canAccess('showScheduleOb','homes')
+        <div class="card border-0 shadow-sm mb-4" style="border-radius: 14px;">
+            <div class="card-header bg-white border-bottom pt-4 px-4">
+                <h5 class="fw-bold mb-0"><i class="far fa-calendar-alt text-primary me-2"></i> Jadwal OB</h5>
             </div>
-            <div class="icon">
-                <i class="fas fa-check-circle"></i>
+            <div class="card-body p-4">
+                <div id="calendar" class="rounded-3 border p-2 bg-light"></div>
             </div>
-            @canAccess('index','customer_software')
-            <a href="{{ route('customer-software.index') }}" class="small-box-footer">
-                View All <i class="fas fa-arrow-circle-right"></i>
-            </a>
-            @endcanAccess
         </div>
-    </div>
+        @endcanAccess
 
-    <div class="col-lg-3 col-6">
-        <div class="small-box bg-warning">
-            <div class="inner">
-                <h3 id="stat-expiring">
-                    <i class="fas fa-spinner fa-spin"></i>
-                </h3>
-                <p>Expiring Soon (7 days)</p>
+        @if(Auth::user()->role->name == \App\Schemas\RoleSchema::BM)
+        <div class="card border-0 shadow-sm mb-4 border-left-danger" style="border-radius: 14px; border-left: 5px solid #dc3545 !important;">
+            <div class="card-header bg-white border-0 pt-4 px-4">
+                <h5 class="fw-bold text-danger mb-0"><i class="fas fa-boxes me-2"></i> Peringatan Stok Habis (BM)</h5>
             </div>
-            <div class="icon">
-                <i class="fas fa-exclamation-triangle"></i>
-            </div>
-            <a href="{{ route('customer-subscription.index') }}" class="small-box-footer">
-                View Details <i class="fas fa-arrow-circle-right"></i>
-            </a>
-        </div>
-    </div>
-
-    <div class="col-lg-3 col-6">
-        <div class="small-box bg-danger">
-            <div class="inner">
-                <h3 id="stat-expired">
-                    <i class="fas fa-spinner fa-spin"></i>
-                </h3>
-                <p>Expired Subscriptions</p>
-            </div>
-            <div class="icon">
-                <i class="fas fa-times-circle"></i>
-            </div>
-            <a href="{{ route('customer-subscription.index') }}" class="small-box-footer">
-                View All <i class="fas fa-arrow-circle-right"></i>
-            </a>
-        </div>
-    </div>
-
-    <div class="col-lg-3 col-6">
-        <div class="small-box bg-info">
-            <div class="inner">
-                <h3 id="stat-softwares">
-                    <i class="fas fa-spinner fa-spin"></i>
-                </h3>
-                <p>Available Software</p>
-            </div>
-            <div class="icon">
-                <i class="fas fa-box"></i>
-            </div>
-            <a href="{{ route('customer-software.index') }}" class="small-box-footer">
-                Browse Catalog <i class="fas fa-arrow-circle-right"></i>
-            </a>
-        </div>
-    </div>
-</div>
-
-<div class="row g-3">
-    <!-- Active Subscriptions -->
-    <div class="col-md-8">
-        <div class="card">
-            <div class="card-header">
-                <h3 class="card-title">
-                    <i class="fas fa-check-circle"></i> My Active Subscriptions
-                </h3>
-                <div class="card-tools">
-                    <a href="{{ route('customer-subscription.index') }}" class="btn btn-sm btn-primary">
-                        View All
-                    </a>
-                </div>
-            </div>
-            <div class="card-body p-0" id="active-subscriptions-container">
-                <div class="text-center py-5">
-                    <i class="fas fa-spinner fa-spin fa-3x text-muted"></i>
-                    <p class="text-muted mt-3">Loading subscriptions...</p>
+            <div class="card-body px-4 pb-4">
+                <div class="table-responsive rounded border">
+                    <table class="table table-hover table-striped mb-0">
+                        <thead class="table-dark"><tr><th>Nama Perlengkapan</th><th>Kode</th><th>Stok</th></tr></thead>
+                        <tbody>
+                            @forelse ($equipments as $equipment)
+                            <tr><td>{{ $equipment->name }}</td><td><span class="badge bg-secondary">{{ $equipment->code }}</span></td><td class="text-danger fw-bold">{{ $equipment->total_stock }}</td></tr>
+                            @empty
+                            <tr><td colspan="3" class="text-center py-3 text-muted"><i class="fas fa-check-circle text-success me-1"></i> Stok aman.</td></tr>
+                            @endforelse
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
-
-        <!-- Expired Subscriptions -->
-        <div class="card" id="expired-card" style="display: none;">
-            <div class="card-header">
-                <h3 class="card-title">
-                    <i class="fas fa-times-circle text-danger"></i> Recently Expired
-                </h3>
-            </div>
-            <div class="card-body p-0" id="expired-subscriptions-container">
-            </div>
-        </div>
-    </div>
-
-    <!-- Quick Actions & Info -->
-    <div class="col-md-4">
-        <!-- Quick Actions -->
-        <div class="card card-primary">
-            <div class="card-header">
-                <h3 class="card-title">
-                    <i class="fas fa-bolt"></i> Quick Actions
-                </h3>
-            </div>
-            <div class="card-body">
-                @canAccess('index','customer_software')
-                <a href="{{ route('customer-software.index') }}" class="btn btn-success btn-block mb-2">
-                    <i class="fas fa-shopping-cart"></i> Browse Software Catalog
-                </a>
-                @endcanAccess
-                @canAccess('index','customer_subscriptions')
-                <a href="{{ route('customer-software.index') }}" class="btn btn-info btn-block mb-2">
-                    <i class="fas fa-list"></i> My Subscriptions
-                </a>
-                @endcanAccess
-            </div>
-        </div>
-
-        <!-- Expiring Soon Alert -->
-        <div class="card card-warning" id="expiring-alert" style="display: none;">
-            <div class="card-header">
-                <h3 class="card-title">
-                    <i class="fas fa-exclamation-triangle"></i> Attention Needed
-                </h3>
-            </div>
-            <div class="card-body">
-                <p>
-                    <strong id="expiring-count">0</strong> subscription(s) will expire in the next 7 days.
-                </p>
-                @canAccess('index','customer_subscriptions')
-                <a href="{{ route('customer-subscription.index') }}" class="btn btn-warning btn-sm">
-                    <i class="fas fa-eye"></i> View & Renew
-                </a>
-                @endcanAccess
-            </div>
-        </div>
-
-        {{-- 
-        <!-- Help Card -->
-        <div class="card card-info">
-            <div class="card-header">
-                <h3 class="card-title">
-                    <i class="fas fa-question-circle"></i> Need Help?
-                </h3>
-            </div>
-            <div class="card-body">
-                <p class="mb-2">
-                    <i class="fas fa-book"></i> 
-                    <a href="#" class="text-dark">User Guide</a>
-                </p>
-                <p class="mb-2">
-                    <i class="fas fa-life-ring"></i> 
-                    <a href="#" class="text-dark">Contact Support</a>
-                </p>
-                <p class="mb-0">
-                    <i class="fas fa-question"></i> 
-                    <a href="#" class="text-dark">FAQ</a>
-                </p>
-            </div>
-        </div>
-
-        <!-- Account Info -->
-        <div class="card">
-            <div class="card-header">
-                <h3 class="card-title">
-                    <i class="fas fa-user"></i> Account Info
-                </h3>
-            </div>
-            <div class="card-body">
-                <p class="mb-2">
-                    <strong>Name:</strong><br>
-                    {{ auth()->user()->name }}
-                </p>
-                <p class="mb-2">
-                    <strong>Email:</strong><br>
-                    {{ auth()->user()->email }}
-                </p>
-                <p class="mb-0">
-                    <strong>Member Since:</strong><br>
-                    {{ auth()->user()->created_at->format('d M Y') }}
-                </p>
-            </div>
-        </div>
-        --}}
+        @endif
     </div>
 </div>
-@endcanAccess
 
-@canAccess('showScheduleOb','homes')
-<div class="card py-3">
-    <div class="card-body">
-        <div id="calendar"></div>
-    </div>
-</div>
-@endcanAccess
-
-@if(Auth::user()->role->name == \App\Schemas\RoleSchema::BM)
-<div class="row">
-    <div class="py-4">
-        <h2>Perlengkapan Stok Habis</h2>
-        <div class="table-responsive">
-            <table class="table table-striped table-hover">
-                <thead class="table-dark">
-                    <tr>
-                        <th>Nama Perlengkapan</th>
-                        <th>Kode Perlengkapan</th>
-                        <th>Stok Tersedia</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @forelse ($equipments as $equipment)
-                    <tr>
-                        <td>{{ $equipment->name }}</td>
-                        <td>{{ $equipment->code }}</td>
-                        <td>{{ $equipment->total_stock }}</td>
-                    </tr>
-                    @empty
-                    <tr>
-                        <td colspan="3" class="text-center">Tidak ada data stok habis.</td>
-                    </tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
-    </div>
-</div>
-@endif
-
-<!-- Modal -->
 @canAccess('store','office_media')
 {{-- Modal Upload Moment --}}
-<div class="modal fade" id="uploadMomentModal" tabindex="-1" role="dialog" aria-labelledby="uploadMomentModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <form class="modal-content" action="{{ route('office-media.store') }}" method="POST" enctype="multipart/form-data">
-            <div class="modal-header">
-                <h5 class="modal-title">Upload Moment</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span> {{-- X Button --}}
-                </button>
+<div class="modal fade" id="uploadMomentModal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <form class="modal-content border-0 shadow" action="{{ route('office-media.store') }}" method="POST" enctype="multipart/form-data" style="border-radius: 15px;">
+            <div class="modal-header bg-light border-0" style="border-radius: 15px 15px 0 0;">
+                <h5 class="modal-title fw-bold"><i class="fas fa-upload text-danger me-2"></i> Upload Moment</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
             </div>
             <input type="hidden" name="type" value="image">
-            <div class="modal-body">
+            <div class="modal-body p-4">
                 <div class="mb-3">
-                    <label for="moment_caption" class="form-label">Caption</label>
-                    <input type="text" class="form-control" id="moment_caption" placeholder="Misalnya: Ultah Kevin!">
+                    <label class="form-label fw-bold">Caption</label>
+                    <input type="text" class="form-control" id="moment_caption" placeholder="Kisah seru hari ini...">
                 </div>
                 <div class="mb-3">
-                    <label for="moment_photo" class="form-label">Foto</label>
+                    <label class="form-label fw-bold">Foto</label>
                     <input class="form-control" type="file" id="moment_photo" accept="image/*">
                 </div>
             </div>
-            <div class="modal-footer">
-                <button type="submit" class="btn btn-primary">Upload Sekarang</button>
+            <div class="modal-footer border-0">
+                <button type="submit" class="btn btn-danger rounded-pill px-4">Upload Sekarang</button>
             </div>
         </form>
     </div>
 </div>
 
 {{-- Modal Youtube Embed --}}
-<div class="modal fade" id="youtubeEmbedModal" role="dialog"  tabindex="-1" aria-labelledby="youtubeEmbedModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <form class="modal-content" enctype="multipart/form-data">
-            <div class="modal-header">
-                <h5 class="modal-title">Tambah Embed YouTube</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span> {{-- X Button --}}
-                </button>
+<div class="modal fade" id="youtubeEmbedModal" role="dialog" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <form class="modal-content border-0 shadow" enctype="multipart/form-data" style="border-radius: 15px;">
+            <div class="modal-header bg-light border-0" style="border-radius: 15px 15px 0 0;">
+                <h5 class="modal-title fw-bold"><i class="fab fa-youtube text-danger me-2"></i> Embed YouTube</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
             </div>
-            <div class="modal-body">
+            <div class="modal-body p-4">
                 <div class="mb-3">
-                    <label for="youtube_url" class="form-label">YouTube URL</label>
-                    <input type="url" class="form-control" id="youtube_url" placeholder="https://youtube.com/embed/abc123">
+                    <label class="form-label fw-bold">YouTube URL</label>
+                    <input type="url" class="form-control" id="youtube_url" placeholder="https://youtube.com/embed/...">
                 </div>
                 <div class="mb-3">
-                    <div class="form-check">
+                    <div class="form-check form-switch">
                         <input class="form-check-input" type="checkbox" value="1" id="is_temporary" name="is_temporary" checked>
-                        <label class="form-check-label" for="is_temporary">
-                            Temporary
-                        </label>
+                        <label class="form-check-label ms-2" for="is_temporary">Temporary Link</label>
                     </div>
                 </div>
                 <div class="mb-3">
-                    <label for="video_caption" class="form-label">Caption</label>
-                    <input type="text" class="form-control" id="video_caption" placeholder="Misalnya: Video Training Sales">
+                    <label class="form-label fw-bold">Caption</label>
+                    <input type="text" class="form-control" id="video_caption" placeholder="Deskripsi video...">
                 </div>
             </div>
-            <div class="modal-footer">
-                <button type="submit" class="btn btn-primary">Simpan</button>
+            <div class="modal-footer border-0">
+                <button type="submit" class="btn btn-danger rounded-pill px-4">Simpan</button>
             </div>
         </form>
     </div>
@@ -960,18 +604,14 @@
 <div class="modal fade" id="officeMediaModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-fullscreen modal-dialog-centered">
     <div class="modal-content bg-dark border-0">
-      <div class="modal-body p-0">
-        <div id="officeMediaCarousel" class="carousel slide">
-            <div class="carousel-inner" id="officeMediaCarouselInner">
-                <!-- Slides will be injected -->
-                 <button class="carousel-control-prev" type="button" data-bs-target="#officeMediaCarousel" data-bs-slide="prev">
-    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-  </button>
-
-  <button class="carousel-control-next" type="button" data-bs-target="#officeMediaCarousel" data-bs-slide="next">
-    <span class="carousel-control-next-icon" aria-hidden="true"></span>
-  </button>
-            </div>
+      <div class="modal-header border-0 pb-0">
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body p-0 d-flex align-items-center">
+        <div id="officeMediaCarousel" class="carousel slide w-100">
+            <div class="carousel-inner" id="officeMediaCarouselInner"></div>
+            <button class="carousel-control-prev" type="button" data-bs-target="#officeMediaCarousel" data-bs-slide="prev"><span class="carousel-control-prev-icon"></span></button>
+            <button class="carousel-control-next" type="button" data-bs-target="#officeMediaCarousel" data-bs-slide="next"><span class="carousel-control-next-icon"></span></button>
         </div>
       </div>
     </div>
@@ -979,10 +619,138 @@
 </div>
 @endcanAccess
 @endsection
+
+@section('css')
+<link href="https://cdn.jsdelivr.net/npm/fullcalendar@5.7.2/main.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+
+<style>
+/* LAPORAN PENGADUAN BANNER */
+.laporan-banner {
+    background: linear-gradient(135deg, #2d1b3d, #1a1a2e);
+    border: 1px solid rgba(240,147,251,.35);
+    border-radius: 14px;
+    color: #e0e0ff;
+    transition: all .2s;
+}
+.laporan-banner:hover {
+    background: linear-gradient(135deg, #3d2450, #1e1e38);
+    border-color: rgba(240,147,251,.6);
+    color: #ffffff;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(240,147,251,.2);
+}
+
+/* GELAR badge item */
+.gelar-item {
+    position: relative;
+    cursor: default;
+    text-align: center;
+    flex-shrink: 0;
+}
+.gelar-img-wrap {
+    width: 90px;
+    height: 90px;
+    transition: transform .25s ease;
+}
+.gelar-item:hover .gelar-img-wrap {
+    transform: scale(1.12) translateY(-3px);
+}
+.gelar-name {
+    font-size: .68rem;
+    color: #a0a8d0;
+    margin-top: 6px;
+    max-width: 90px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.gelar-count {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    background: #f5a623;
+    color: #1a1a2e;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    font-size: .65rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+    box-shadow: 0 2px 6px rgba(0,0,0,.3);
+}
+/* Legacy badge-icon-wrap (jika masih dipakai) */
+.badge-icon-wrap { transition: transform .2s, box-shadow .2s; }
+.badge-icon-wrap:hover { transform: scale(1.18); box-shadow: 0 4px 16px rgba(240,147,251,.45); }
+
+/* GAME UI GLOBALS */
+.gamified-stat-card {
+    position: relative;
+    border-radius: 16px !important;
+    overflow: hidden;
+}
+.gamified-stat-card .top-glow {
+    position: absolute;
+    top: 0; left: 0; right: 0; height: 4px;
+}
+.gamified-stat-card .icon-box {
+    width: 48px; height: 48px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+}
+.gamified-light-card {
+    background: #ffffff;
+}
+
+/* HOVER EFFECTS */
+.hover-effect { transition: transform 0.3s ease, box-shadow 0.3s ease; }
+.hover-effect:hover { transform: translateY(-3px); box-shadow: 0 10px 20px rgba(0,0,0,0.1) !important; }
+.hover-card { transition: all 0.3s ease; }
+.hover-card:hover { transform: translateY(-3px); background-color: #f8f9fa !important; border-color: #ddd !important; }
+
+/* LEADERBOARD LISTS */
+.custom-dark-list .list-group-item {
+    background: transparent !important;
+    border-color: rgba(255,255,255,.05) !important;
+    color: #c8d0e0;
+    padding: 10px 12px;
+}
+#leaderboard-list.dark-list .list-group-item {
+    background: transparent !important;
+    border-color: rgba(255,255,255,.08) !important;
+    color: #c8d0e0;
+}
+.xp-leaderboard-card { border-radius: 14px !important; overflow: hidden; background:linear-gradient(145deg,#1a1a2e,#16213e); }
+.xp-header-gradient { background: transparent !important; color: #e0e0ff !important; border-bottom: 1px solid rgba(102,126,234,.3) !important; }
+.xp-rank-item {
+    display: flex; align-items: center; padding: 8px 10px; border-radius: 12px; margin-bottom: 6px;
+    background: rgba(255,255,255,.03); transition: background .2s;
+}
+.xp-rank-item:hover { background: rgba(102,126,234,.12); }
+.xp-rank-avatar { width: 34px; height: 34px; border-radius: 50%; background: linear-gradient(135deg, #667eea, #f093fb); display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 700; font-size: .85rem; flex-shrink: 0; }
+.xp-rank-num { font-size: .85rem; font-weight: 700; width: 24px; text-align: center; flex-shrink: 0; }
+
+/* UTILITIES */
+.custom-scrollbar::-webkit-scrollbar { width: 6px; }
+.custom-scrollbar::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 4px; }
+.custom-scrollbar::-webkit-scrollbar-thumb { background: #c1c1c1; border-radius: 4px; }
+.custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #a8a8a8; }
+.nav-pills .nav-link.active { background-color: #0d6efd; box-shadow: 0 2px 5px rgba(13,110,253,0.3); }
+.nav-pills .nav-link { color: #6c757d; font-weight: 600; }
+.d-none {
+    display: none !important;
+}
+</style>
+@endsection
+
 @section('js')
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
-<script src="https://stackpath.bootstrapcdn.com/bootstrap/5.1.3/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.7.2/main.min.js"></script>
 <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script> 
@@ -1072,12 +840,11 @@
         }
     });
 
-    // ✅ Di luar DOMContentLoaded: bisa diakses global
     async function loadMeetings(scope = 'today') {
         const tableBody = document.querySelector('#agenda-table tbody');
         tableBody.innerHTML = `
             <tr>
-                <td colspan="5" class="text-center text-muted">
+                <td colspan="5" class="text-center text-muted py-4">
                     <div class="spinner-border text-primary" role="status"></div>
                 </td>
             </tr>
@@ -1089,7 +856,7 @@
             tableBody.innerHTML = '';
 
             if (!data.length) {
-                tableBody.innerHTML = '<tr><td colspan="5" class="text-center text-muted">Tidak ada agenda.</td></tr>';
+                tableBody.innerHTML = '<tr><td colspan="5" class="text-center text-muted py-4">Tidak ada agenda.</td></tr>';
                 return;
             }
 
@@ -1098,19 +865,19 @@
                                 
                 const locationOrAction = item.meeting_type !== 'offline' ? (userIsAttending ? `<span class="badge bg-success">Hadir</span>`: (item.google_meet_link ? (item.is_already ? `<button class="btn btn-sm btn-success" onclick="joinMeeting('${currentUserId}', '${item.id}')"><i class="fas fa-sign-in-alt"></i> Bergabung</button>` : `<span class="badge bg-warning text-dark mt-1">Segera Dimulai</span>` ) : '-')) : (item.meeting_location || '-');
 
-                    const url = `{{ route('meeting.show', ':id') }}`.replace(':id', item.slug);
+                const url = `{{ route('meeting.show', ':id') }}`.replace(':id', item.slug);
 
                 const row = `
                     <tr>
-                        <td>
-                            <a href="${url}" data-id="${item.id}" class="btn btn-sm btn-info badge text-white">
+                        <td class="fw-bold">
+                            <a href="${url}" data-id="${item.id}" class="text-decoration-none">
                                 ${item.meeting_name}
                             </a>
                         </td>
                         <td>${formatDate(item.start_date)}</td>
                         <td>${item.start_time} - ${item.end_time}</td>
                         <td>${item.meeting_type_badge}</td>
-                        <td>${locationOrAction}</td>
+                        <td class="text-center">${locationOrAction}</td>
                     </tr>
                 `;
                 tableBody.insertAdjacentHTML('beforeend', row);
@@ -1118,7 +885,7 @@
 
         } catch (err) {
             console.error(err);
-            tableBody.innerHTML = '<tr><td colspan="5" class="text-danger text-center">Gagal memuat agenda.</td></tr>';
+            tableBody.innerHTML = '<tr><td colspan="5" class="text-danger text-center py-4">Gagal memuat agenda.</td></tr>';
         }
     }
 
@@ -1133,23 +900,16 @@
 <script>
     async function loadLetterReminderPIC() {
         const container = document.querySelector('#reminder-letter-pic');
-        container.innerHTML = `<div class="text-center py-3">
-            <i class="fas fa-spinner fa-spin"></i> Memuat pengingat surat (PIC)...
-        </div>`;
-
+        container.innerHTML = `<div class="text-center py-3"><i class="fas fa-spinner fa-spin"></i> Memuat pengingat surat (PIC)...</div>`;
         try {
             const response = await fetch("{{ route('reminder.letter.pic') }}");
             const data = await response.json();
             container.innerHTML = data.html;
         } catch (error) {
-            console.error(error);
-            container.innerHTML = `<div class="alert alert-danger">❌ Gagal memuat pengingat surat (PIC).</div>`;
+            container.innerHTML = ``;
         }
     }
-
-    document.addEventListener("DOMContentLoaded", () => {
-        loadLetterReminderPIC();
-    });
+    document.addEventListener("DOMContentLoaded", () => { loadLetterReminderPIC(); });
 </script>
 @endcanAccess
 
@@ -1157,78 +917,50 @@
 <script>
     async function loadLetterReminderManager() {
         const container = document.querySelector('#reminder-letter-manager');
-        container.innerHTML = `<div class="text-center py-3">
-            <i class="fas fa-spinner fa-spin"></i> Memuat pengingat surat (Manager)...
-        </div>`;
-
+        container.innerHTML = `<div class="text-center py-3"><i class="fas fa-spinner fa-spin"></i> Memuat pengingat surat (Manager)...</div>`;
         try {
             const response = await fetch("{{ route('reminder.letter.manager') }}");
             const data = await response.json();
             container.innerHTML = data.html;
         } catch (error) {
-            console.error(error);
-            container.innerHTML = `<div class="alert alert-danger">❌ Gagal memuat pengingat surat (Manager).</div>`;
+            container.innerHTML = ``;
         }
     }
-
-    document.addEventListener("DOMContentLoaded", () => 
-    {
-        loadLetterReminderManager();
-    });
+    document.addEventListener("DOMContentLoaded", () => { loadLetterReminderManager(); });
 </script>
 @endcanAccess
 
 @canAccess('infoManager','vehicles')
 <script>
-    async function loadVehicleReminderManager(containerSelector = '#vehicle-reminder-manager') {
-        const container = document.querySelector(containerSelector);
-        const url = "{{ route('reminder.vehicle.manager') }}";
-
-        container.innerHTML = `<div class="text-center py-3">
-            <i class="fas fa-spinner fa-spin"></i> Memuat pengingat kendaraan (Manager)...
-        </div>`;
-
+    async function loadVehicleReminderManager() {
+        const container = document.querySelector('#vehicle-reminder-manager');
+        container.innerHTML = `<div class="text-center py-3"><i class="fas fa-spinner fa-spin"></i> Memuat pengingat kendaraan (Manager)...</div>`;
         try {
-            const response = await fetch(url);
+            const response = await fetch("{{ route('reminder.vehicle.manager') }}");
             const data = await response.json();
             container.innerHTML = data.html;
         } catch (error) {
-            console.error(error);
-            container.innerHTML = `<div class="alert alert-danger">❌ Gagal memuat pengingat kendaraan (Manager).</div>`;
+            container.innerHTML = ``;
         }
     }
-
-    // Panggil sesuai kebutuhan (bisa 1 atau dua-duanya)
-    document.addEventListener("DOMContentLoaded", () => {
-        loadVehicleReminderManager();
-    });
+    document.addEventListener("DOMContentLoaded", () => { loadVehicleReminderManager(); });
 </script>
 @endcanAccess
 
 @canAccess('infoPic','vehicles')
 <script>
-    async function loadVehicleReminderPIC(containerSelector = '#vehicle-reminder-pic') {
-        const container = document.querySelector(containerSelector);
-        const url = "{{ route('reminder.vehicle.pic') }}";
-
-        container.innerHTML = `<div class="text-center py-3">
-            <i class="fas fa-spinner fa-spin"></i> Memuat pengingat kendaraan (PIC)...
-        </div>`;
-
+    async function loadVehicleReminderPIC() {
+        const container = document.querySelector('#vehicle-reminder-pic');
+        container.innerHTML = `<div class="text-center py-3"><i class="fas fa-spinner fa-spin"></i> Memuat pengingat kendaraan (PIC)...</div>`;
         try {
-            const response = await fetch(url);
+            const response = await fetch("{{ route('reminder.vehicle.pic') }}");
             const data = await response.json();
             container.innerHTML = data.html;
         } catch (error) {
-            console.error(error);
-            container.innerHTML = `<div class="alert alert-danger">❌ Gagal memuat pengingat kendaraan (PIC).</div>`;
+            container.innerHTML = ``;
         }
     }
-
-    // Panggil sesuai kebutuhan (bisa 1 atau dua-duanya)
-    document.addEventListener("DOMContentLoaded", () => {
-        loadVehicleReminderPIC();
-    });
+    document.addEventListener("DOMContentLoaded", () => { loadVehicleReminderPIC(); });
 </script>
 @endcanAccess
 
@@ -1236,22 +968,12 @@
 <script>
     document.addEventListener('DOMContentLoaded', async () => {
         const container = document.getElementById('cuti-today-container');
-        container.innerHTML = `
-            <div class="text-center text-muted">
-                <i class="fas fa-spinner fa-spin"></i> Memuat data cuti...
-            </div>
-        `;
-
         try {
             const response = await fetch("{{ route('home.listDayoff') }}");
             const data = await response.json();
             container.innerHTML = data.html;
         } catch (error) {
-            container.innerHTML = `
-                <div class="text-danger">
-                    <i class="fas fa-exclamation-circle mr-1"></i> Gagal memuat data cuti hari ini.
-                </div>
-            `;
+            container.innerHTML = `<div class="text-danger small"><i class="fas fa-exclamation-circle mr-1"></i> Gagal memuat data.</div>`;
         }
     });
 </script>
@@ -1263,14 +985,8 @@
         $.ajax({
             url: "{{ route('weekly-report.reminderDashboard') }}",
             method: "GET",
-            success: function (res) {
-                $('#weekly-report-reminder').html(res.html);
-            },
-            error: function () {
-                $('#weekly-report-reminder').html(
-                    '<div class="alert alert-danger">Gagal memuat reminder laporan mingguan.</div>'
-                );
-            }
+            success: function (res) { $('#weekly-report-reminder').html(res.html); },
+            error: function () { $('#weekly-report-reminder').hide(); }
         });
     });
 </script>
@@ -1278,48 +994,30 @@
 
 @canAccess('infoApprovementHr', 'dayoffs')
 <script>
-    async function loadApprovalInfoHr() 
-    {
-        $('#count-hr').html('<span class="spinner-border spinner-border-sm text-primary"></span>');
-
+    $(document).ready(async function () {
         const response = await $.get("{{ route('dayoff.infoApprovementHr') }}");
         $('#count-hr').text(response.total);
-    }
-
-    $(document).ready(async function () {
-        await loadApprovalInfoHr();
     });
 </script>
 @endcanAccess
+
 @canAccess('infoApprovementFinance', 'dayoffs')
 <script>
-    async function loadApprovalInfoFinance() 
-    {
-        $('#count-finance').html('<span class="spinner-border spinner-border-sm text-info"></span>');
-
+    $(document).ready(async function () {
         const response = await $.get("{{ route('dayoff.infoApprovementFinance') }}");
         $('#count-finance').text(response.total);
-    }
-
-    $(document).ready(async function () {
-        await loadApprovalInfoFinance();
     });
 </script>
 @endcanAccess
 
 @canAccess('index','office_media')
 <script>
-        $(document).ready(function () 
-        {
-            loadOfficeMedia();
-        });
+        $(document).ready(function () { loadOfficeMedia(); });
         function loadOfficeMedia() 
         {
             $('#office-media-image-section, #office-media-youtube-section').html(`
-                <div class="d-flex justify-content-center py-5">
-                    <div class="spinner-border text-secondary" role="status">
-                        <span class="sr-only">Loading...</span>
-                    </div>
+                <div class="d-flex justify-content-center h-100 align-items-center">
+                    <div class="spinner-border text-secondary" role="status"></div>
                 </div>
             `);
 
@@ -1327,9 +1025,7 @@
                 url: "{{ route('office-media.index') }}",
                 type: "GET",
                 success: function(res) {
-                    
-                    if (res.status === 'success') 
-                    {                    
+                    if (res.status === 'success') {                  
                         $('#office-media-image-section').html(res.data.image);
                         $('#office-media-youtube-section').html(res.data.youtube);
                     }
@@ -1338,17 +1034,6 @@
                     $('#office-media-image-section, #office-media-youtube-section').html(`<div class="text-center text-danger">Failed to load content.</div>`);
                 }
             });
-
-            $('#office_media_image').html(`
-                <div class="col-md-3 mt-3">
-                    <div class="card border-0">
-                        <img src="https://picsum.photos/300/200" class="rounded-circle mx-auto d-block mt-2"
-                                alt="moment image" style="object-fit: cover; width: 100px; height: 100px;">
-                        <small class="mt-2 d-block mb-2">Caption dummy</small>
-                    </div>
-                </div>
-            `);
-
         }
 </script>
 <script>
@@ -1363,44 +1048,34 @@
 
             slidesHtml += `
                 <div class="carousel-item ${activeClass}">
-                    <div class="d-flex justify-content-center align-items-center">
-                        <img src="${imgUrl}" class="d-block mx-auto img-fluid" alt="${title}" style="object-fit: contain;">
+                    <div class="d-flex justify-content-center align-items-center" style="height:80vh;">
+                        <img src="${imgUrl}" class="d-block mx-auto img-fluid rounded" alt="${title}" style="max-height:100%; object-fit: contain;">
                     </div>
                 </div>
                 `;
         });
 
-        // Inject HTML
         $('#officeMediaCarouselInner').html(slidesHtml);
-
-        // Tunggu 1 tick agar DOM benar-benar render
         await new Promise(resolve => setTimeout(resolve, 10));
 
-        // Init carousel
         const carouselElement = document.getElementById('officeMediaCarousel');
         if (carouselElement.carouselInstance) {
             carouselElement.carouselInstance.dispose();
         }
 
         carouselElement.carouselInstance = new bootstrap.Carousel(carouselElement, {
-            interval: false,
-    ride: false,
-    keyboard: true,
+            interval: false, ride: false, keyboard: true,
         });
 
         carouselElement.carouselInstance.to(clickedIndex);
 
-        // Tampilkan modal
         const modalElement = document.getElementById('officeMediaModal');
         if (modalElement) {
             const modal = new bootstrap.Modal(modalElement);
             modal.show();
-        } else {
-            console.error('Modal #officeMediaModal not found in DOM');
         }
     }
 
-    // Bind click
     $(document).on('click', '.office-media-thumb', function () {
         const clickedIndex = $(this).data('index');
         handleMediaClick(clickedIndex);
@@ -1411,26 +1086,17 @@
 @canAccess('store','office_media')
 <script>
     $(document).ready(function () {
-        loadOfficeMedia();
-        
+
         $.ajaxSetup({
-            headers: {
-                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-            }
+            headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') }
         });
 
-
-        
-
-        // 📸 Submit form Upload Image
         $('#uploadMomentModal form').on('submit', function (e) {
             e.preventDefault();
-
             let formData = new FormData();
             formData.append('type', 'image');
             formData.append('title', $('#moment_caption').val());
             formData.append('file', $('#moment_photo')[0].files[0]);
-
             
             $.ajax({
                 url: "{{ route('office-media.store') }}",
@@ -1441,21 +1107,11 @@
                 beforeSend: function () {
                     $('#uploadMomentModal button[type="submit"]').prop('disabled', true).text('Uploading...');
                 },
-                success: function (response) 
-                {
+                success: function (response) {
                     Swal.fire({
-                        title: 'Success!',
-                        text: 'Media berhasil diupload.',
-                        icon: 'success',
-                        timer: 2000,
-                        timerProgressBar: true,
-                        showConfirmButton: false,
-                        didOpen: () => 
-                        {
-                            Swal.showLoading()
-                        },
-                        willClose: () => 
-                        {
+                        title: 'Success!', text: 'Media berhasil diupload.', icon: 'success',
+                        timer: 2000, timerProgressBar: true, showConfirmButton: false,
+                        willClose: () => {
                             loadOfficeMedia();
                             $('#uploadMomentModal form')[0].reset();
                             $('#uploadMomentModal .close').click();
@@ -1463,8 +1119,6 @@
                     });
                 },
                 error: function (xhr) {
-                    console.log(xhr);
-                    
                     alert(xhr.responseJSON?.message || 'Gagal upload foto');
                 },
                 complete: function () {
@@ -1473,10 +1127,8 @@
             });
         });
 
-        // 🎥 Submit form YouTube URL
         $('#youtubeEmbedModal form').on('submit', function (e) {
             e.preventDefault();
-
             let youtubeUrl = $('#youtube_url').val();
             let caption = $('#video_caption').val();
             let isTemporary = $('#is_temporary').is(':checked');
@@ -1487,27 +1139,14 @@
                 url: "{{ route('office-media.store') }}",
                 method: "POST",
                 data: {
-                    type: 'youtube',
-                    youtube_url: youtubeUrl,
-                    title: caption,
-                    is_temporary: isTemporary ? 1 : 0
+                    type: 'youtube', youtube_url: youtubeUrl, title: caption, is_temporary: isTemporary ? 1 : 0
                 },
                 success: function (response) {
                     Swal.fire({
-                        title: 'Success',
-                        text: 'Video berhasil disimpan',
-                        icon: 'success',
-                        timer: 2000,
-                        timerProgressBar: true,
-                        showConfirmButton: false,
-                        didOpen: () => {
-                            Swal.showLoading()
-                        },
-                        willClose: () => {
-                            loadOfficeMedia();
-                        }
+                        title: 'Success', text: 'Video berhasil disimpan', icon: 'success',
+                        timer: 2000, timerProgressBar: true, showConfirmButton: false,
+                        willClose: () => { loadOfficeMedia(); }
                     });
-                    
                     $('#youtubeEmbedModal form')[0].reset();
                 },
                 error: function (xhr) {
@@ -1521,26 +1160,18 @@
 
 @canAccess('destroy','office_media')
 <script>
-    $(document).on('click', '.delete-media-btn', function () 
-    {
+    $(document).on('click', '.delete-media-btn', function () {
         const mediaId = $(this).data('id');
         if (!confirm('Yakin ingin menghapus media ini?')) return;
     
         $.ajax({
             url: `{{ route('office-media.destroy', ':id') }}`.replace(':id', mediaId),
             type: 'DELETE',
-            headers: {
-                'X-CSRF-TOKEN': '{{ csrf_token() }}'
-            },
+            headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
             success: function (res) {
-                if (res.status === 'success') {
-                    
-                    loadOfficeMedia(); // reload section
-                }
+                if (res.status === 'success') { loadOfficeMedia(); }
             },
-            error: function () {
-                alert('Gagal menghapus media.');
-            }
+            error: function () { alert('Gagal menghapus media.'); }
         });
     });
 </script>
@@ -1548,77 +1179,64 @@
 
 @canAccess('overdueRanking','homes')
 <script>
-    async function loadOverdueLeaderboard() 
+    async function loadOverdueLeaderboard()
     {
-        $('#overdue-loader').removeClass('d-none');
-        $('#overdue-ranking').addClass('d-none');
+        try {
+            $('#overdue-loader, #overdue-inreview-loader').removeClass('d-none');
+            $('#overdue-ranking, #overdue-inreview-ranking').addClass('d-none');
 
-        $('#overdue-inreview-loader').removeClass('d-none');
-        $('#overdue-inreview-ranking').addClass('d-none');
-        
-        const response = await $.get('{{ route("home.overdueRanking") }}');
-        
-        const container = $('#overdue-ranking');
-        const containerInreview = $('#overdue-inreview-ranking');
+            const response = await $.get('{{ route("home.overdueRanking") }}');
 
-        container.empty();
-        containerInreview.empty();
-        
-        if (response.data.length === 0) {
-            container.append(`<li class="list-group-item text-center text-muted">No data available</li>`);
-            containerInreview.append(`<li class="list-group-item text-center text-muted">No data available</li>`);
-        } else {
-            if(response.status === 'success') 
-            {
-                if(response.data && response.data.overdueUsers.length > 0)
-                {
+            const container = $('#overdue-ranking');
+            const containerInreview = $('#overdue-inreview-ranking');
+
+            container.empty();
+            containerInreview.empty();
+
+            if (response.status === 'success') {
+                if(response.data && response.data.overdueUsers.length > 0) {
                     response.data.overdueUsers.forEach((user, index) => {
                         container.append(`
                             <li class="list-group-item d-flex justify-content-between align-items-center">
                                 <span>
-                                    ${index + 1 <= 9 ? `<i class="bi bi-${index + 1}-circle-fill text-danger me-2"></i>` : `<span class="badge bg-danger text-dark">${index + 1}</span>`}
+                                    ${index + 1 <= 9 ? `<i class="bi bi-${index + 1}-circle-fill text-danger me-2"></i>` : `<span class="badge bg-danger text-dark me-2">${index + 1}</span>`}
                                     ${user.name}
                                 </span>
                                 <span class="badge bg-danger">${user.overdue_count}</span>
                             </li>
                         `);
                     });
-                }
-                else
-                {
-                    container.append(`<li class="list-group-item text-center text-muted">No data available</li>`);
+                } else {
+                    container.append(`<li class="list-group-item text-center text-muted border-0">No data available</li>`);
                 }
 
-                if(response.data && response.data.overdueInReviewUsers.length > 0)
-                {
-                    
+                if(response.data && response.data.overdueInReviewUsers.length > 0) {
                     response.data.overdueInReviewUsers.forEach((user, index) => {
                         containerInreview.append(`
                             <li class="list-group-item d-flex justify-content-between align-items-center">
                                 <span>
-                                    ${index + 1 <= 9 ? `<i class="bi bi-${index + 1}-circle-fill text-warning me-2"></i>` : `<span class="badge bg-warning text-dark">${index + 1}</span>`}
+                                    ${index + 1 <= 9 ? `<i class="bi bi-${index + 1}-circle-fill text-warning me-2"></i>` : `<span class="badge bg-warning text-dark me-2">${index + 1}</span>`}
                                     ${user.name}
                                 </span>
-                                <span class="badge bg-warning">${user.overdue_count}</span>
+                                <span class="badge bg-warning text-dark">${user.overdue_count}</span>
                             </li>
                         `);
                     });
+                } else {
+                    containerInreview.append(`<li class="list-group-item text-center text-muted border-0">No data available</li>`);
                 }
-                else
-                {
-                    containerInreview.append(`<li class="list-group-item text-center text-muted">No data available</li>`);
-                }
+            } else {
+                container.append(`<li class="list-group-item text-center text-muted border-0">No data available</li>`);
+                containerInreview.append(`<li class="list-group-item text-center text-muted border-0">No data available</li>`);
             }
+            
+            $('#overdue-loader, #overdue-inreview-loader').addClass('d-none');
+            container.removeClass('d-none');
+            containerInreview.removeClass('d-none');
+        } catch (error) {
+            $('#overdue-loader').html('<p class="text-danger small text-center">Gagal memuat</p>');
+            $('#overdue-inreview-loader').html('<p class="text-danger small text-center">Gagal memuat</p>');
         }
-
-        $('#overdue-loader').removeClass('d-flex').removeClass('justify-content-center').removeClass('align-items-center');
-        $('#overdue-loader').addClass('d-none');
-
-        $('#overdue-inreview-loader').removeClass('d-flex').removeClass('justify-content-center').removeClass('align-items-center');
-        $('#overdue-inreview-loader').addClass('d-none');
-
-        container.removeClass('d-none');
-        containerInreview.removeClass('d-none');
     }
 
     $(document).ready(function () {
@@ -1643,30 +1261,127 @@
             const leaderboard = response.data;
             const list = $('#leaderboard-list');
             list.empty();
+            list.addClass('dark-list');
 
             if (leaderboard.length === 0) {
-                list.append(`<li class="list-group-item text-center text-muted">No data available</li>`);
+                list.append(`<li class="list-group-item text-center text-muted border-0">No data available</li>`);
             } else {
                 leaderboard.forEach((item, index) => {
-                    const icon = index + 1 <= 9 ?
-                        `<i class="bi bi-${index + 1}-circle-fill text-success me-2"></i>` :
-                        `<span class="badge bg-success text-dark">${index + 1}</span>`;
+                    const rankEmoji = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `<span style="color:#a0a8d0;font-size:.75rem;display:inline-block;width:20px;text-align:center;">${index+1}</span>`;
                     const html = `
-                            <li class="list-group-item d-flex justify-content-between align-items-center">
-                                <span>${icon}${item.name}</span>
-                                <span class="badge bg-success text-dark">${item.currentScore}</span>
-                            </li>
-                        `;
+                        <li class="list-group-item d-flex justify-content-between align-items-center px-2 py-1" style="font-size:.85rem;">
+                            <span>${rankEmoji} <span style="color:#c8d0e0;" class="ms-1">${item.name}</span></span>
+                            <span class="badge" style="background:rgba(245,166,35,.2);color:#f5a623;border:1px solid rgba(245,166,35,.3);">${item.currentScore}</span>
+                        </li>
+                    `;
                     list.append(html);
                 });
             }
 
-            $('#leaderboard-loader').removeClass('d-flex').removeClass('justify-content-center').removeClass('align-items-center');
             $('#leaderboard-loader').addClass('d-none');
             $('#leaderboard-list').removeClass('d-none');
         } catch (error) {
-            console.error('Error loading leaderboard:', error);
-            $('#leaderboard-loader').html('<p class="text-danger">Failed to load leaderboard</p>');
+            $('#leaderboard-loader').html('<p class="text-danger small text-center">Failed to load</p>');
+        }
+    }
+</script>
+@endcanAccess
+
+@canAccess('userBadges','homes')
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        loadUserBadges();
+    });
+
+    async function loadUserBadges() {
+        const container = document.getElementById('gelar-container');
+        const loader    = document.getElementById('gelar-loader');
+        const empty     = document.getElementById('gelar-empty');
+        if (!container) return;
+        try {
+            const res  = await fetch('{{ route("home.userBadges") }}');
+            const json = await res.json();
+            const data = json.data;
+
+            loader.classList.add('d-none');
+
+            if (!data || data.length === 0) {
+                empty.classList.remove('d-none');
+                empty.classList.add('d-flex');
+                return;
+            }
+
+            let html = '';
+            data.forEach(b => {
+                const imgHtml = b.image_url
+                    ? `<img src="${b.image_url}"
+                            style="width:90px;height:auto;object-fit:contain;filter:drop-shadow(0 4px 14px rgba(240,147,251,.5));"
+                            alt="${b.name}">`
+                    : `<span style="font-size:3.2rem;filter:drop-shadow(0 4px 10px rgba(240,147,251,.4));">🏅</span>`;
+
+                html += `
+                <div class="gelar-item"
+                     data-bs-toggle="tooltip" data-bs-placement="top"
+                     title="${b.name}${b.count > 1 ? ' (×' + b.count + ')' : ''} — ${b.received_at}">
+                    <div class="gelar-img-wrap d-flex align-items-center justify-content-center">
+                        ${imgHtml}
+                    </div>
+                    ${b.count > 1 ? `<span class="gelar-count">${b.count}</span>` : ''}
+                    <div class="gelar-name mt-3">${b.name}</div>
+                </div>`;
+            });
+
+            container.innerHTML = html;
+            container.style.display = 'flex';
+            container.classList.remove('d-none');
+
+            // Reinit tooltips
+            container.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(el => new bootstrap.Tooltip(el));
+        } catch (e) {
+            if (loader) loader.innerHTML = '<small style="color:#f87171;">Gagal memuat gelar</small>';
+        }
+    }
+</script>
+@endcanAccess
+
+@canAccess('xpLeaderboard','homes')
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        loadXpTop5();
+    });
+
+    async function loadXpTop5() {
+        const container = document.getElementById('xp-top5-container');
+        if (!container) return;
+        try {
+            const res = await fetch('{{ route("home.xpLeaderboard") }}');
+            const json = await res.json();
+            const data = json.data;
+
+            if (!data || data.length === 0) {
+                container.innerHTML = '<div class="text-center text-muted py-3" style="font-size:.82rem;">Belum ada data XP.</div>';
+                return;
+            }
+
+            let html = '';
+            data.forEach((u, i) => {
+                const rankLabel = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `<span style="color:#a0a8d0;font-weight:700;">${i+1}</span>`;
+                html += `
+                <div class="xp-rank-item">
+                    <div class="xp-rank-num">${rankLabel}</div>
+                    <div class="xp-rank-avatar mx-2">${u.initial}</div>
+                    <div class="flex-grow-1" style="min-width:0;">
+                        <div style="font-size:.82rem;color:#c8d0e0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${u.name}</div>
+                    </div>
+                    <div class="text-end ms-2" style="flex-shrink:0;">
+                        <div style="font-size:.72rem;color:#f093fb;font-weight:700;">${u.total_xp.toLocaleString('id-ID')} XP</div>
+                        <div style="font-size:.65rem;color:#a0a8d0;">${u.badge} ${u.level}</div>
+                    </div>
+                </div>`;
+            });
+            container.innerHTML = html;
+        } catch (e) {
+            container.innerHTML = '<div class="text-danger text-center py-2" style="font-size:.8rem;">Gagal memuat data XP.</div>';
         }
     }
 </script>
@@ -1676,15 +1391,10 @@
 <script>
     $(document).ready(async function() {
         try {
-            $('#loading').show(); // Assume there's an element with id 'loading' for showing the loading state
             const response = await $.ajax({
                 url: "{{ route('home.dashboardReport') }}",
                 type: "GET",
-                dataType: "json",
-                beforeSend: function() {
-                    $("#totalTasksComplete, #checkin_point_percentage, #totalPoints, #currentScore")
-                        .html('<span class="placeholder col-8 placeholder-glow"></span>');
-                }
+                dataType: "json"
             });
 
             if (response.status === "success") {
@@ -1696,10 +1406,36 @@
             }
         } catch (error) {
             console.error('Error fetching dashboard report:', error);
-        } finally {
-            $('#loading').hide(); // Hide the loading state after the request completes
         }
     });
+
+    (function() {
+        const totalXp = {{ Auth::user()->total_xp ?? 0 }};
+        @php
+            $rawLevels = collect(\App\Helpers\XpHelper::levels()); // sudah terurut ascending dari helper
+            $xpLevels  = $rawLevels->map(function ($l, $idx) use ($rawLevels) {
+                $next = $rawLevels->get($idx + 1);
+                return [
+                    'label' => $l['label'],
+                    'badge' => $l['badge'],
+                    'min'   => $l['min'],
+                    'max'   => $next ? $next['min'] - 1 : 9999999,
+                ];
+            })->values();
+        @endphp
+        const levels = {!! $xpLevels->toJson() !!};
+        const lvl = levels.slice().reverse().find(l => totalXp >= l.min) || levels[0];
+        const pct = Math.min(100, ((totalXp - lvl.min) / (lvl.max - lvl.min + 1)) * 100);
+
+        document.getElementById('profile-xp-label').textContent = totalXp.toLocaleString('id-ID') + ' XP';
+        document.getElementById('profile-level-badge').textContent = lvl.badge;
+        document.getElementById('profile-level-badge').title = lvl.label;
+
+        setTimeout(() => {
+            const bar = document.getElementById('profile-xp-bar');
+            if (bar) bar.style.width = pct + '%';
+        }, 300);
+    })();
 </script>
 @endcanAccess
 
@@ -1711,6 +1447,7 @@
         });
     });
 </script>
+
 @canAccess('showScheduleOb','homes')
 <script>
 document.addEventListener('DOMContentLoaded', function() {
@@ -1753,9 +1490,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 @canAccess('softwareSharing','homes')
 <script>
-    $(document).ready(function() {
-    loadDashboardData();
-});
+$(document).ready(function() { loadDashboardData(); });
 
 async function loadDashboardData() {
     try {
@@ -1770,8 +1505,7 @@ async function loadDashboardData() {
             renderExpired(response.data.recent_expired);
         }
     } catch (error) {
-        console.error('Failed to load dashboard data:', error);
-        toastr.error('Failed to load dashboard data');
+        console.error('Failed to load software sharing data');
     }
 }
 
@@ -1781,7 +1515,6 @@ function updateStatistics(stats) {
     $('#stat-expired').text(stats.expired_subscriptions);
     $('#stat-softwares').text(stats.total_softwares);
 
-    // Show expiring alert
     if (stats.expiring_soon > 0) {
         $('#expiring-count').text(stats.expiring_soon);
         $('#expiring-alert').show();
@@ -1790,278 +1523,52 @@ function updateStatistics(stats) {
 
 function renderSubscriptions(subscriptions) {
     const container = $('#active-subscriptions-container');
-    
     if (subscriptions.length === 0) {
-        container.html(`
-            <div class="text-center py-5">
-                <i class="fas fa-inbox fa-4x text-muted mb-3"></i>
-                <p class="text-muted">You don't have any active subscriptions yet.</p>
-                <a href="{{ route('customer-software.index') }}" class="btn btn-primary">
-                    <i class="fas fa-plus"></i> Browse Software Catalog
-                </a>
-            </div>
-        `);
+        container.html(`<div class="text-center py-5"><p class="text-muted">No active subscriptions yet.</p></div>`);
         return;
     }
 
-    let html = `
-        <div class="table-responsive" style="max-height: 40vh; overflow-y: auto;">
-            <table class="table table-striped">
-                <thead>
-                    <tr>
-                        <th>Software</th>
-                        <th>Package</th>
-                        <th>Expires</th>
-                        <th class="text-center">Status</th>
-                        <th class="text-center">Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-    `;
+    let html = `<div class="table-responsive"><table class="table mb-0"><thead><tr><th>Software</th><th>Package</th><th>Expires</th><th class="text-center">Status</th><th class="text-center">Actions</th></tr></thead><tbody>`;
 
     subscriptions.forEach(sub => {
-        const statusBadge = sub.status === 'active' 
-            ? '<span class="badge badge-success">Active</span>'
-            : '<span class="badge badge-danger">Expired</span>';
-
-        const expiringBadge = sub.is_expiring_soon 
-            ? `<br><span class="badge badge-warning">
-                    <i class="fas fa-exclamation-triangle"></i> ${sub.days_until_expiry} days left
-               </span>`
-            : '';
-
-        const renewButton = sub.is_expiring_soon
-            ? `<a href="${sub.renew_url}" class="btn btn-warning" title="Renew Now">
-                    <i class="fas fa-sync"></i>
-               </a>`
-            : '';
+        const statusBadge = sub.status === 'active' ? '<span class="badge bg-success">Active</span>' : '<span class="badge bg-danger">Expired</span>';
+        const expiringBadge = sub.is_expiring_soon ? `<br><span class="badge bg-warning text-dark"><i class="fas fa-exclamation-triangle"></i> ${sub.days_until_expiry} days</span>` : '';
+        const renewButton = sub.is_expiring_soon ? `<a href="${sub.renew_url}" class="btn btn-sm btn-warning"><i class="fas fa-sync"></i></a>` : '';
 
         html += `
             <tr>
-                <td><strong>${sub.software.nama}</strong></td>
-                <td><span class="badge badge-info">${sub.package.nama}</span></td>
+                <td class="fw-bold">${sub.software.nama}</td>
+                <td><span class="badge bg-info">${sub.package.nama}</span></td>
                 <td>${sub.tanggal_expired}${expiringBadge}</td>
                 <td class="text-center">${statusBadge}</td>
                 <td class="text-center">
                     <div class="btn-group btn-group-sm">
-                        <a href="${sub.detail_url}" class="btn btn-info" title="View Details">
-                            <i class="fas fa-eye"></i>
-                        </a>
+                        <a href="${sub.detail_url}" class="btn btn-info text-white"><i class="fas fa-eye"></i></a>
                         ${renewButton}
                     </div>
                 </td>
-            </tr>
-        `;
+            </tr>`;
     });
 
-    html += `
-                </tbody>
-            </table>
-        </div>
-    `;
-
+    html += `</tbody></table></div>`;
     container.html(html);
 }
 
 function renderExpired(expired) {
-    if (expired.length === 0) {
-        return;
-    }
-
+    if (expired.length === 0) return;
     $('#expired-card').show();
     const container = $('#expired-subscriptions-container');
 
-    let html = `
-        <div class="table-responsive">
-            <table class="table table-sm">
-                <thead>
-                    <tr>
-                        <th>Software</th>
-                        <th>Package</th>
-                        <th>Expired Date</th>
-                        <th class="text-center">Action</th>
-                    </tr>
-                </thead>
-                <tbody>
-    `;
-
+    let html = `<div class="table-responsive"><table class="table table-sm mb-0"><thead><tr><th>Software</th><th>Package</th><th>Expired</th><th class="text-center">Action</th></tr></thead><tbody>`;
+    
     expired.forEach(sub => {
-        html += `
-            <tr>
-                <td>${sub.software.nama}</td>
-                <td>${sub.package.nama}</td>
-                <td>${sub.tanggal_expired}</td>
-                <td class="text-center">
-                    <a href="${sub.software_url}" class="btn btn-sm btn-success">
-                        <i class="fas fa-redo"></i> Renew
-                    </a>
-                </td>
-            </tr>
-        `;
+        html += `<tr><td>${sub.software.nama}</td><td>${sub.package.nama}</td><td>${sub.tanggal_expired}</td>
+                 <td class="text-center"><a href="${sub.software_url}" class="btn btn-sm btn-outline-success"><i class="fas fa-redo"></i> Renew</a></td></tr>`;
     });
-
-    html += `
-                </tbody>
-            </table>
-        </div>
-    `;
-
+    
+    html += `</tbody></table></div>`;
     container.html(html);
 }
 </script>
 @endcanAccess
 @stop
-
-@section('css')
-<link href="https://cdn.jsdelivr.net/npm/fullcalendar@5.7.2/main.min.css" rel="stylesheet">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
-<style>
-.card-header {
-    font-weight: bold;
-}
-
-.table-responsive {
-    overflow-x: auto;
-}
-
-.form-label {
-    font-weight: bold;
-}
-</style>
-<style>
-.hover-card {
-    transition: transform 0.3s ease, background-color 0.3s ease;
-}
-
-.hover-card:hover {
-    background-color: #ffcf63 !important;
-    /* Warna hover */
-    transform: scale(1.05);
-    /* Efek zoom */
-}
-
-.hover-card .card-title,
-.hover-card .card-text {
-    transition: color 0.3s ease;
-}
-
-.hover-card:hover .card-title,
-.hover-card:hover .card-text {
-    color: #000000;
-    /* Warna teks saat hover */
-}
-</style>
-<style>
-/* Custom Styles */
-.hover-effect:hover {
-    transform: translateY(-2px);
-    transition: all 0.3s ease;
-}
-
-.icon-container {
-    width: 50px;
-    height: 50px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.bg-primary-soft {
-    background-color: rgba(13, 110, 253, 0.1);
-}
-
-.bg-success-soft {
-    background-color: rgba(25, 135, 84, 0.1);
-}
-
-.bg-info-soft {
-    background-color: rgba(13, 202, 240, 0.1);
-}
-
-.bg-danger-soft {
-    background-color: rgba(220, 53, 69, 0.1);
-}
-
-.btn-hover-effect {
-    border: 1px solid #dee2e6;
-    transition: all 0.3s ease;
-}
-
-.btn-hover-effect:hover {
-    border-color: #0d6efd;
-    background-color: rgba(13, 110, 253, 0.05);
-}
-
-.icon-wrapper {
-    width: 60px;
-    height: 60px;
-    border-radius: 12px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.bg-moon {
-    background: linear-gradient(45deg, #2b5876, #4e4376);
-}
-
-.bg-fire {
-    background: linear-gradient(45deg, #ff416c, #ff4b2b);
-}
-
-.bg-purple {
-    background: linear-gradient(45deg, #4776e6, #8e54e9);
-}
-</style>
-
-
-
-<style>
-/* Custom Styles */
-.hover-effect {
-    transition: all 0.3s ease;
-    border-bottom: 3px solid transparent;
-}
-
-.hover-effect:hover {
-    transform: translateY(-5px);
-    border-bottom-color: #ffc107;
-}
-
-.text-gradient {
-    background: linear-gradient(45deg, #2b5876, #4e4376);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-}
-
-.bg-soft-warning {
-    background-color: rgba(255, 193, 7, 0.15);
-}
-
-.bg-soft-success {
-    background-color: rgba(25, 135, 84, 0.08);
-}
-
-.text-gradient-gold {
-    background: linear-gradient(45deg, #FFD700, #D4AF37);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-}
-
-.avatar-wrapper {
-    position: relative;
-    display: inline-block;
-}
-
-.avatar-wrapper::after {
-    content: "";
-    position: absolute;
-    inset: -5px;
-    background: linear-gradient(45deg, #ff6b6b, #ffd93d);
-    border-radius: 50%;
-    z-index: -1;
-    opacity: 0.3;
-}
-</style>
-@endsection

@@ -30,10 +30,15 @@
                                         <div class="form-group">
                                             <label for="assignment_user_id">Objective</label>
                                             @canAccess('getresult','objectives')
+                                            <input type="hidden" name="objective_division_id[]" class="objective-division-id-input" value="">
                                             <select name="objective[]" class="form-control objective-select select2" required>
                                                 <option value="" disabled selected>-- Pilih --</option>
                                                 @foreach($objectives as $objective)
-                                                    <option value="{{ $objective->id }}">{{ ucfirst($objective->name) }}</option>
+                                                    @forelse($objective->divisions as $div)
+                                                        <option value="{{ $objective->id }}" data-division-id="{{ $div->id }}">{{ ucfirst($objective->name) }} - {{ $div->name }}</option>
+                                                    @empty
+                                                        <option value="{{ $objective->id }}" data-division-id="">{{ ucfirst($objective->name) }}</option>
+                                                    @endforelse
                                                 @endforeach
                                             </select>
                                             @endcanAccess
@@ -188,6 +193,7 @@
 @section('js')
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
+@include('partials.objective-division-filter-js')
 <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
 <script src="{{ asset('js/thriveEditor.js') }}"></script>
 <script>
@@ -325,11 +331,22 @@
                             <div class="col-md-6">
                                 <div class="form-group">
                                     <label for="assignment_user_id">Objective</label>
+                                    @php
+                                        $objectiveOptionsHtml = '<option value="" disabled selected>-- Pilih --</option>';
+                                        foreach($objectives as $obj) {
+                                            if($obj->divisions->count()) {
+                                                foreach($obj->divisions as $div) {
+                                                    $label = e(ucfirst($obj->name)).' - '.e($div->name);
+                                                    $objectiveOptionsHtml .= '<option value="'.$obj->id.'" data-division-id="'.$div->id.'">'.$label.'</option>';
+                                                }
+                                            } else {
+                                                $objectiveOptionsHtml .= '<option value="'.$obj->id.'" data-division-id="">'.e(ucfirst($obj->name)).'</option>';
+                                            }
+                                        }
+                                    @endphp
+                                    <input type="hidden" name="objective_division_id[]" class="objective-division-id-input" value="">
                                     <select name="objective[]" class="form-control objective-select select3" required>
-                                        <option value="" disabled selected>-- Pilih --</option>
-                                        @foreach($objectives as $objective)
-                                            <option value="{{ $objective->id }}">{{ $objective->name }}</option>
-                                        @endforeach
+                                        {!! $objectiveOptionsHtml !!}
                                     </select>
                                 </div>
                                 <div id="keyresult-fields-container-${newIndex}"></div>
@@ -542,6 +559,7 @@
         padding: 20px;
         box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     }
+    .division-filter-pill { font-size: 11px; padding: 2px 8px; cursor: pointer; }
     .select2-selection__rendered {
         line-height: 31px !important;
     }

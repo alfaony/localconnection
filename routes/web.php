@@ -315,7 +315,9 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
   Route::get('home/listDayoff', [App\Http\Controllers\HomeController::class, 'listDayoff'])->name('home.listDayoff');
   Route::get('home/dashboardReport', [App\Http\Controllers\HomeController::class, 'dashboardReport'])->name('home.dashboardReport');
   Route::get('home/leaderboard', [App\Http\Controllers\HomeController::class, 'leaderboard'])->name('home.leaderboard');
+  Route::get('home/xp-leaderboard', [App\Http\Controllers\HomeController::class, 'xpLeaderboard'])->name('home.xpLeaderboard');
   Route::get('home/overdueRanking', [App\Http\Controllers\HomeController::class, 'overdueRanking'])->name('home.overdueRanking');
+  Route::get('home/user-badges', [App\Http\Controllers\HomeController::class, 'userBadges'])->name('home.userBadges');
 
   Route::resource('office-media', OfficeMediaController::class)->only(['index', 'store','destroy']);
   // Xero Setting
@@ -477,6 +479,7 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
   Route::resource('objective', ObjectiveController::class);
 
   Route::get('division/ajaxDivisionTasks/{division}', [DivisionController::class, 'ajaxDivisionTasks'])->name('divisions.ajax.tasks');
+  Route::get('division/ajaxObjectiveChart/{division}', [DivisionController::class, 'ajaxObjectiveChart'])->name('divisions.ajax.objective-chart');
   Route::get('division/fetchusertask/{userId}/{filter}', [DivisionController::class, 'fetchusertask'])->name('division.fetchusertask');
   Route::resource('division', DivisionController::class);
   
@@ -535,6 +538,8 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
   Route::resource('warehouse', WarehouseController::class);
   Route::resource('sensor', SensorController::class);
   Route::resource('zone', ZoneController::class);
+  Route::post('rack/{rack}/assign-product-store', [RackController::class, 'assignProductStore'])->name('rack.assign-product-store');
+  Route::post('rack/{rack}/unassign-product-store', [RackController::class, 'unassignProductStore'])->name('rack.unassign-product-store');
   Route::resource('rack', RackController::class);
   
   Route::post('shipping-rate/validateCsv', [ShippingRateController::class, 'validateCsv'])->name('shipping-rate.validateCsv');
@@ -891,7 +896,31 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
       // ========================================================================
       Route::get('customer-subscription/{subscription}/chat', [CustomerSubscriptionChatController::class, 'index'])->name('customer-subscription.chat.index');
       Route::post('customer-subscription/{subscription}/chat', [CustomerSubscriptionChatController::class, 'store'])->name('customer-subscription.chat.store');
+      
+      // ========================================================================
+      // EMPLOYEE XP SYSTEM
+      // ========================================================================
+      Route::get('xp-config/assign', [App\Http\Controllers\XpConfigController::class, 'assignIndex'])->name('xp-config.assign');
+      Route::post('xp-config/assign', [App\Http\Controllers\XpConfigController::class, 'assignUpdate'])->name('xp-config.assign.update');
+      Route::resource('xp-config', App\Http\Controllers\XpConfigController::class)->except(['show']);
+      
+      Route::get('employee-xp', [App\Http\Controllers\EmployeeXpController::class, 'index'])->name('employee-xp.index');
+      Route::post('employee-xp', [App\Http\Controllers\EmployeeXpController::class, 'store'])->name('employee-xp.store');
+      Route::delete('employee-xp/{employeeXp}', [App\Http\Controllers\EmployeeXpController::class, 'destroy'])->name('employee-xp.destroy');
+      Route::get('employee-xp/history', [App\Http\Controllers\EmployeeXpController::class, 'myHistory'])->name('employee-xp.my-history');
+      Route::get('employee-xp/leaderboard', [App\Http\Controllers\EmployeeXpController::class, 'leaderboard'])->name('employee-xp.leaderboard');
+      Route::get('employee-xp/history/{userId}', [App\Http\Controllers\EmployeeXpController::class, 'userHistory'])->name('employee-xp.user-history');    
+
+      // ========================================================================
+      // BADGE / GELAR
+      // ========================================================================
+      Route::get('badge/assign', [App\Http\Controllers\BadgeController::class, 'assignIndex'])->name('badge.assign');
+      Route::post('badge/assign', [App\Http\Controllers\BadgeController::class, 'assignStore'])->name('badge.assign.store');
+      Route::delete('badge/revoke/{userBadge}', [App\Http\Controllers\BadgeController::class, 'revokeUserBadge'])->name('badge.revoke');
+      Route::resource('badge', App\Http\Controllers\BadgeController::class)->except(['show']);
     });
+    
+
 
   Route::get('internet-customer/registration/{companyId}', InternetCustomerForm::class)->name('internet-customer.create');
   Route::get('internet-customer/customer-active/{code}', CustomerShow::class)->name('internet-customer.customer.show');

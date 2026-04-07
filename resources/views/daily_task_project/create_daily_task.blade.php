@@ -28,10 +28,15 @@
                                             <div class="form-group">
                                                 <label for="assignment_user_id">Objective</label>
                                                 @canAccess('getresult','objectives')
+                                                <input type="hidden" name="objective_division_id[]" class="objective-division-id-input" value="">
                                                 <select name="objective[]" class="form-control objective-select select2" required>
                                                     <option value="" disabled selected>-- Pilih --</option>
                                                     @foreach($objectives as $objective)
-                                                        <option value="{{ $objective->id }}">{{ ucfirst($objective->name) }}</option>
+                                                        @forelse($objective->divisions as $div)
+                                                            <option value="{{ $objective->id }}" data-division-id="{{ $div->id }}">{{ ucfirst($objective->name) }} - {{ $div->name }}</option>
+                                                        @empty
+                                                            <option value="{{ $objective->id }}" data-division-id="">{{ ucfirst($objective->name) }}</option>
+                                                        @endforelse
                                                     @endforeach
                                                 </select>
                                                 @endcanAccess
@@ -139,6 +144,7 @@
 @section('js')
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
+@include('partials.objective-division-filter-js')
 <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
 <script src="{{ asset('js/thriveEditor.js') }}"></script>
 

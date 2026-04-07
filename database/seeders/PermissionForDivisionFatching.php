@@ -20,8 +20,7 @@ class PermissionForDivisionFatching extends Seeder
      */
     public function run()
     {   
-
-        $methods = ['fetchusertask','ajaxDivisionTasks'];
+        $methods = ['fetchusertask','ajaxDivisionTasks','ajaxObjectiveChart'];
        
         $root = Role::where('name',RoleSchema::ROOT)->first();
         $admin = Role::where('name',RoleSchema::ADMIN)->first();
