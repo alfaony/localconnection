@@ -265,7 +265,17 @@ class UsedLaptopController extends Controller
     {
         $laptop = UsedLaptop::where('slug', $slug)->byCompany(Auth::user()->company_id)->firstOrFail();
         $laptopType = config('custom.postion_latpop');
-        $checkItems = MasterCheckItem::where('type','laptop_type')->byCompany(Auth::user()->company_id)->get();
+        $checkItems = MasterCheckItem::where('type','laptop_type')
+            ->byCompany(Auth::user()->company_id)
+            ->withTrashed()
+            ->where(function ($query) use ($laptop) {
+                $query->whereNull('deleted_at')
+                      ->orWhereHas('checks', function ($q) use ($laptop) {
+                          $q->where('used_laptop_id', $laptop->id)
+                            ->whereNotNull('status');
+                      });
+            })
+            ->get();
         return view('used_laptop.createOrEdit', compact('checkItems', 'laptop','laptopType'));
 
     }
@@ -484,7 +494,6 @@ class UsedLaptopController extends Controller
         
         // ✅ UPDATE CHECKLIST (DENGAN PENGECEKAN NULL)
         $checkItems = $request->input('check_items', []); // Default empty array jika null
-        
         if (!empty($checkItems) && is_array($checkItems)) {
             foreach ($checkItems as $checkItemId => $checkData) {
                 // Hanya proses jika ada data condition
@@ -495,11 +504,16 @@ class UsedLaptopController extends Controller
                             'master_check_item_id' => $checkItemId,
                         ],
                         [
-                            'status' => $checkData['condition'],
+                            'status' => $checkData['condition'] ?? null,
                             'notes' => $checkData['notes'] ?? null,
                             'checked_at' => now(),
                         ]
                     );
+                }else{
+                    $checkData = UsedLaptopCheck::where('used_laptop_id', $laptop->id)->where('master_check_item_id', $checkItemId)->first();
+                    if($checkData){
+                        $checkData->delete();
+                    }
                 }
             }
         }
