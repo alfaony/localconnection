@@ -54,7 +54,7 @@ class InternetCustomerForm extends Component
     public $district_id;
     public $subdistrict_id;
     public $internet_package_id;
-    public $customer_type = 'bisnis';
+    public $customer_type = 'rumah';
     public $coverageMessage = '';
     public $coverageAvailable = false;
     public $isAvailableArea = false;
