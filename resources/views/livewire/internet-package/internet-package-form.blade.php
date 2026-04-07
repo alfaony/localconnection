@@ -266,6 +266,25 @@
                                 </div>
 
                                 <div class="mb-3">
+                                    <label class="form-label">Segmen Pelanggan <span class="text-danger">*</span></label>
+                                    <div class="d-flex gap-3">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="radio" name="customer_type" id="ct_bisnis" value="bisnis" wire:model="customer_type">
+                                            <label class="form-check-label" for="ct_bisnis">
+                                                <i class="fas fa-building me-1"></i> Bisnis
+                                            </label>
+                                        </div>
+                                        <div class="form-check ml-3">
+                                            <input class="form-check-input" type="radio" name="customer_type" id="ct_rumah" value="rumah" wire:model="customer_type">
+                                            <label class="form-check-label" for="ct_rumah">
+                                                <i class="fas fa-home me-1"></i> Rumah
+                                            </label>
+                                        </div>
+                                    </div>
+                                    @error('customer_type') <div class="text-danger small mt-1">{{ $message }}</div> @enderror
+                                </div>
+
+                                <div class="mb-3">
                                     <label for="price" class="form-label">Harga Global (Rp) <span class="text-danger">*</span></label>
                                     <p class="text-muted small mb-1">Digunakan jika tidak ada harga khusus wilayah</p>
                                     <input type="hidden" wire:model="price" id="price_hidden">

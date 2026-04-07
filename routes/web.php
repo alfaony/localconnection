@@ -477,6 +477,9 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
   Route::get('objective/showtask/{objective}', [ObjectiveController::class,'showtask'])->name('objective.showtask');
   Route::get('objective/getresult/{objective}', [ObjectiveController::class,'getresult'])->name('getresult');
   Route::resource('objective', ObjectiveController::class);
+  Route::post('objective/{objective}/key-result', [ObjectiveController::class, 'storeKeyResult'])->name('objective.key-result.store');
+  Route::put('objective/key-result/{keyResult}', [ObjectiveController::class, 'updateKeyResult'])->name('objective.key-result.update');
+  Route::delete('objective/key-result/{keyResult}', [ObjectiveController::class, 'destroyKeyResult'])->name('objective.key-result.destroy');
 
   Route::get('division/ajaxDivisionTasks/{division}', [DivisionController::class, 'ajaxDivisionTasks'])->name('divisions.ajax.tasks');
   Route::get('division/ajaxObjectiveChart/{division}', [DivisionController::class, 'ajaxObjectiveChart'])->name('divisions.ajax.objective-chart');

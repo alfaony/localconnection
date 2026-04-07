@@ -450,24 +450,22 @@
         });
     }
 
-    function loadKeyResult(dailyTaskId = null) 
+    function loadKeyResult(dailyTaskId = null)
     {
         var objectiveId = $('#objective_id').val();
-        console.log(objectiveId);
+        // Baca dari option:selected (reliable saat change maupun initial load)
+        // Fallback ke hidden input untuk initial load saat value sudah ada dari server
+        var divisionId  = $('#objective_id').find('option:selected').data('division-id') ||
+                          $('.objective-division-id-input').val() || '';
         var url = '{{ url('objective/getresult') }}/' + objectiveId;
-        
 
-        console.log(url);
         $.ajax({
             url: url,
             type: 'GET',
-            data: 
-            {
-                dailyTaskId: dailyTaskId // Passing dailyTaskId to the server
-            },
+            data: { dailyTaskId: dailyTaskId, division_id: divisionId },
             success: function(data) {
                 $('#keyresult-fields-container').html(data);
-                $('.select2-single, .select2-multiple').select2(); // Re-initialize select2
+                $('.select2-single, .select2-multiple').select2();
             }
         });
     }

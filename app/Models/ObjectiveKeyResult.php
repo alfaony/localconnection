@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Division;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -13,7 +14,7 @@ class ObjectiveKeyResult extends Model
 {
     use HasFactory, SoftDeletes;
 
-    protected $fillable = ['id', 'result', 'start_date', 'end_date', 'objective_id'];
+    protected $fillable = ['id', 'result', 'start_date', 'end_date', 'objective_id', 'division_id'];
 
     public $incrementing = false; // Karena kita menggunakan UUID, bukan auto-increment
     protected $keyType = 'string'; // Tipe kunci primer adalah string
@@ -128,5 +129,10 @@ class ObjectiveKeyResult extends Model
     public function objective()
     {
         return $this->belongsTo(Objective::class);
+    }
+
+    public function division()
+    {
+        return $this->belongsTo(Division::class);
     }
 }

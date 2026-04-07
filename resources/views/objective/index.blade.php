@@ -49,16 +49,16 @@
                 <td>{{ $objective->dateShow }}</td>
                 <td>
                     @canAccess('show','objectives')
-                    <a href="{{ route('objective.show', $objective->slug) }}" class="btn btn-sm btn-primary"><i class="fa fa-eye"></i></a>
+                    <a href="{{ route('objective.show', $objective->slug) }}" class="btn btn-sm btn-primary mb-1 mr-1"><i class="fa fa-eye"></i></a>
                     @endcanAccess
                     @canAccess('edit','objectives')
-                    <a type="button" class="btn btn-info btn-sm" href="{{ route('objective.edit', $objective->slug) }}"><i class="fa fa-edit"></i></a>
+                    <a type="button" class="btn btn-info btn-sm mb-1 mr-1" href="{{ route('objective.edit', $objective->slug) }}"><i class="fa fa-edit"></i></a>
                     @endcanAccess
                     @canAccess('destroy','objectives')
                     <form action="{{ route('objective.destroy', $objective->slug) }}" method="POST" style="display:inline-block;">
                         @csrf
                         @method('DELETE')
-                        <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Apakah Anda yakin?')"><i class="fa fa-trash"></i></button>
+                        <button type="submit" class="btn btn-danger mb-1 mr-1 btn-sm" onclick="return confirm('Apakah Anda yakin?')"><i class="fa fa-trash"></i></button>
                     </form>
                     @endcanAccess
                 </td>

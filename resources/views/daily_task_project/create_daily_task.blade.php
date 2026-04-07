@@ -192,20 +192,17 @@
 
 
         $('#dynamic-form-fields').on('change', '.objective-select', function() {
-            var objective = $(this).val();
-            var index = $(this).closest('.dynamic-field').index();
-            console.log(index);
+            var objective  = $(this).val();
+            var $field     = $(this).closest('.dynamic-field');
+            var index      = $field.index();
+            var divisionId = $(this).find('option:selected').data('division-id') || '';
 
             if (objective) {
                 $.ajax({
                     url: '{{ url('objective/getresult') }}/' + objective,
-                    data:
-                    {
-                        index:index
-                    },
+                    data: { index: index, division_id: divisionId },
                     type: 'GET',
-                    success: function(data) 
-                    {
+                    success: function(data) {
                         $('#keyresult-fields-container-' + index).html(data);
                         initializeSelect2ForContainer(index);
                     }
