@@ -145,6 +145,17 @@
                                         <td>{{ $customer->internetPackage->name ?? '-' }}</td>
                                     </tr>
                                     <tr>
+                                        <th>Segmen</th>
+                                        <td>
+                                            @php $ct = $customer->customer_type ?? 'bisnis'; @endphp
+                                            @if($ct === 'bisnis')
+                                                <span class="badge badge-primary"><i class="fas fa-building mr-1"></i> Bisnis</span>
+                                            @else
+                                                <span class="badge badge-success"><i class="fas fa-home mr-1"></i> Rumah</span>
+                                            @endif
+                                        </td>
+                                    </tr>
+                                    <tr>
                                         <th>Deskripsi Paket</th>
                                         <td>{{ $customer->internetPackage->description ?? '-' }}</td>
                                     </tr>

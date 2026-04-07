@@ -17,6 +17,7 @@ class InternetPackage extends Model
         'name',
         'bandwidth',
         'type',
+        'customer_type',
         'price',
         'price_nett',
         'description',

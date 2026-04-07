@@ -54,6 +54,7 @@ class InternetCustomerForm extends Component
     public $district_id;
     public $subdistrict_id;
     public $internet_package_id;
+    public $customer_type = 'bisnis';
     public $coverageMessage = '';
     public $coverageAvailable = false;
     public $isAvailableArea = false;
@@ -276,6 +277,11 @@ class InternetCustomerForm extends Component
         ]);
     }
     
+    public function updatedCustomerType($value)
+    {
+        $this->internet_package_id = null;
+    }
+
     public function updatedProvinceId($value)
     {
         $this->city_id = null;
@@ -458,6 +464,7 @@ class InternetCustomerForm extends Component
             'subdistricts' => $this->district_id ? Subdistrict::where('district_id', $this->district_id)->whereHas('subdistrictCoverages')->get() : [],
             'internetPackages' => InternetPackage::where('company_id',$this->company_id)
                 ->where('is_active', true)
+                ->where('customer_type', $this->customer_type)
                 ->with('regions')
                 ->forRegion($this->province_id, $this->city_id, $this->district_id)
                 ->get(),
@@ -606,6 +613,7 @@ class InternetCustomerForm extends Component
     private function validateStep1()
     {
         $this->validate([
+            'customer_type' => 'required|in:bisnis,rumah',
             'province_id' => 'required|exists:provinces,id',
             'city_id' => 'required|exists:cities,id',
             'district_id' => 'required|exists:districts,id',
@@ -795,6 +803,8 @@ class InternetCustomerForm extends Component
         
         DB::beginTransaction();
         try {
+            $signaturePath = null;
+
             // Save signature
             if ($ktpPath && (preg_match('/^data:image\/(\w+);base64,/', $this->signature, $type))) {
                 $imageType = $type[1];
@@ -823,7 +833,8 @@ class InternetCustomerForm extends Component
                 'ktp_number' => $this->ktp_number,
                 'ktp_photo' => $ktpPath ? $ktpPath : null,
                 'is_paid' => false,
-                'status' => $this->hasFreeMonthsPromo 
+                'customer_type' => $this->customer_type,
+                'status' => $this->hasFreeMonthsPromo
                     ? ParamSchema::PENDING 
                     : ($this->payment_method === 'xendit' || $this->payment_method === 'midtrans' ? ParamSchema::WAITING_PAYMENT_SUBSCRIPTION : ParamSchema::WAITING_PAYMENT_CONFIRMATION),
             ]);
@@ -905,7 +916,6 @@ class InternetCustomerForm extends Component
             $this->step = 5;
 
         } catch (\Throwable $th) {
-            // dd($th);
             DB::rollBack();
             Log::error('Registration form submission failed', [
                 'error' => $th->getMessage(),

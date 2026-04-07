@@ -154,4 +154,8 @@ class ParamSchema
     // Platform
     const APK = "apk";
     const WEB = "web";
+
+    // Internet Customer Type
+    const BISNIS = "bisnis";
+    const RUMAH = "rumah";
 }

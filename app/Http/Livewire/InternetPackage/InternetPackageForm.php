@@ -17,6 +17,7 @@ class InternetPackageForm extends Component
     public $name;
     public $bandwidth;
     public $type = 'dedicated';
+    public $customer_type = 'rumah';
     public $price;
     public $price_nett;
     public $description;
@@ -47,6 +48,7 @@ class InternetPackageForm extends Component
         'name'             => 'required|string|max:255',
         'bandwidth'        => 'required|integer|min:1',
         'type'             => 'required|in:dedicated,broadband',
+        'customer_type'    => 'required|in:bisnis,rumah',
         'price'            => 'required|numeric|min:0',
         'price_nett'       => 'required|numeric|min:0',
         'description'      => 'nullable|string',
@@ -73,6 +75,7 @@ class InternetPackageForm extends Component
             $this->name             = $package->name;
             $this->bandwidth        = $package->bandwidth;
             $this->type             = $package->type;
+            $this->customer_type    = $package->customer_type ?? 'bisnis';
             $this->price            = $package->price;
             $this->price_nett       = $package->price_nett;
             $this->description      = $package->description;
@@ -219,6 +222,7 @@ class InternetPackageForm extends Component
             'name'           => 'required|string|max:255',
             'bandwidth'      => 'required|integer|min:1',
             'type'           => 'required|in:dedicated,broadband',
+            'customer_type'  => 'required|in:bisnis,rumah',
             'price'          => 'required|numeric|min:0',
             'price_nett'     => 'required|numeric|min:0',
             'description'    => 'nullable|string',
@@ -233,6 +237,7 @@ class InternetPackageForm extends Component
             'name'              => $this->name,
             'bandwidth'         => $this->bandwidth,
             'type'              => $this->type,
+            'customer_type'     => $this->customer_type,
             'price'             => $this->price,
             'price_nett'        => $this->price_nett,
             'description'       => $this->description,
