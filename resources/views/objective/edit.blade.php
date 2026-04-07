@@ -62,21 +62,11 @@
                             </div>
                         </div>
                     </div>
-                    <div class="custom-field-values">
-                        <label for="custom_field_type">Key Result</label>
-                        @if($objective->keyResults)
-                        @foreach ($objective->keyResults as $keyResult)
-                        <div class="form-group d-flex">
-                            <input type="hidden" class="form-control custom-field-value" name="key_result_id[]" value="{{ $keyResult->id }}" required>
-                            <input type="text" class="form-control custom-field-value" name="key_result[]" value="{{ $keyResult->result }}" required>
-                            <input type="date" class="form-control start-date" name="start_date[]" placeholder="Mulai Tanggal" value="{{ $keyResult->start_date }}">
-                            <input type="date" class="form-control end-date" name="end_date[]" placeholder="Sampai Tanggal" value="{{ $keyResult->end_date }}">
-                            <button type="button" class="btn btn-danger ml-2 remove-custom-field-value"><i class="fa fa-trash"></i> </button>
-                        </div>
-                        @endforeach
-                        @endif
+                    <div class="alert alert-info py-2 mb-2 small">
+                        <i class="fas fa-info-circle mr-1"></i>
+                        Untuk menambah atau mengedit Key Result, silakan ke halaman
+                        <a href="{{ route('objective.show', $objective->slug) }}"><strong>Show Objective</strong></a>.
                     </div>
-                    <button type="button" class="btn btn-secondary add-custom-field-value"><i class="fa fa-plus"></i> Key Result</button>
                 </div>
             </div>
         </div>
