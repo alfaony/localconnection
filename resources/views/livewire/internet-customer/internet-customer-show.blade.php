@@ -145,7 +145,7 @@
                                         <td>{{ $customer->internetPackage->name ?? '-' }}</td>
                                     </tr>
                                     <tr>
-                                        <th>Segmen</th>
+                                        <th>Tipe Pelanggan</th>
                                         <td>
                                             @php $ct = $customer->customer_type ?? 'bisnis'; @endphp
                                             @if($ct === 'bisnis')
