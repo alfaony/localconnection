@@ -411,6 +411,50 @@ class HomeController extends Controller
         ]);
     }
 
+    public function activeChallenges()
+    {
+        $userId = Auth::id();
+
+        $challenges = \App\Models\Challenge::whereHas('challengeUsers', fn($q) => $q->where('user_id', $userId))
+            ->where('start_date', '<=', now()->toDateString())
+            ->where('end_date',   '>=', now()->toDateString())
+            ->get();
+
+        $data = $challenges->map(function ($challenge) use ($userId) {
+            $current = \App\Helpers\ChallengeProgressHelper::current($challenge, $userId);
+            $percent = $challenge->target_count > 0
+                ? min(100, (int) round(($current / $challenge->target_count) * 100))
+                : 0;
+
+            // Auto reward jika sudah selesai
+            if ($percent >= 100) {
+                \App\Helpers\ChallengeProgressHelper::checkAndGiveReward($challenge, $userId);
+            }
+
+            $cu = $challenge->challengeUsers()->where('user_id', $userId)->first();
+
+            return [
+                'id'            => $challenge->id,
+                'name'          => $challenge->name,
+                'module_type'   => $challenge->module_type,
+                'module_label'  => $challenge->moduleLabel(),
+                'module_icon'   => $challenge->moduleIcon(),
+                'module_color'  => $challenge->moduleColor(),
+                'target'        => $challenge->target_count,
+                'current'       => $current,
+                'percent'       => $percent,
+                'reward_point'  => $challenge->reward_point,
+                'reward_xp'     => $challenge->reward_xp,
+                'days_remaining'=> $challenge->daysRemaining(),
+                'end_date'      => $challenge->end_date->format('d M Y'),
+                'reward_given'  => $cu?->reward_given ?? false,
+                'unit'          => $challenge->module_type === 'score' ? 'XP' : 'kali',
+            ];
+        });
+
+        return response()->json(['status' => 'success', 'data' => $data]);
+    }
+
     public function userBadges()
     {
         $data = \App\Models\UserBadge::with('badge')

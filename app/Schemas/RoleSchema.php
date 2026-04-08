@@ -28,4 +28,5 @@ class RoleSchema
     const SYSTEM_BOS = "Sistem";
     const SYSTEM_ADMIN = "System Admin";
     const CUSTOMER_SOFTWARE = "Customer Software";
+    const RESIGN = "Resign";
 }

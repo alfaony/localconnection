@@ -161,6 +161,23 @@
 </div>
 @endcanAccess
 
+{{-- ════ ACTIVE CHALLENGES ════ --}}
+@canAccess('activeChallenges','homes')
+<div id="challenge-section" style="display:none;">
+    <div class="mb-2 mt-4 text-uppercase fw-bold text-muted" style="letter-spacing: 1px; font-size: 0.85rem;">
+        <i class="fas fa-fire me-1"></i> Challenge Aktif
+    </div>
+    <div id="challenge-loader" class="mb-3">
+        <div class="d-flex align-items-center justify-content-center py-3"
+             style="background:rgba(255,255,255,.04);border-radius:14px;border:1px dashed rgba(255,255,255,.1);">
+            <div class="spinner-border spinner-border-sm me-2" style="color:#f093fb;" role="status"></div>
+            <small style="color:#a0a8d0;">Memuat challenge...</small>
+        </div>
+    </div>
+    <div id="challenge-container" class="row g-3 mb-4"></div>
+</div>
+@endcanAccess
+
 @canAccess('leaderboard','homes')
 <div class="mb-2 mt-4 text-uppercase fw-bold text-muted" style="letter-spacing: 1px; font-size: 0.85rem;">
     <i class="fas fa-trophy me-1"></i> Leaderboards & Hall of Fame
@@ -683,6 +700,10 @@
     line-height: 1;
     box-shadow: 0 2px 6px rgba(0,0,0,.3);
 }
+/* CHALLENGE home cards */
+.challenge-home-card { transition: transform .25s, box-shadow .25s; }
+.challenge-home-card:hover { transform: translateY(-4px); box-shadow: 0 12px 32px rgba(0,0,0,.3) !important; }
+
 /* Legacy badge-icon-wrap (jika masih dipakai) */
 .badge-icon-wrap { transition: transform .2s, box-shadow .2s; }
 .badge-icon-wrap:hover { transform: scale(1.18); box-shadow: 0 4px 16px rgba(240,147,251,.45); }
@@ -1341,6 +1362,93 @@
             if (loader) loader.innerHTML = '<small style="color:#f87171;">Gagal memuat gelar</small>';
         }
     }
+</script>
+@endcanAccess
+
+@canAccess('activeChallenges','homes')
+<script>
+document.addEventListener('DOMContentLoaded', function () { loadActiveChallenges(); });
+
+async function loadActiveChallenges() {
+    const section   = document.getElementById('challenge-section');
+    const loader    = document.getElementById('challenge-loader');
+    const container = document.getElementById('challenge-container');
+    if (!section) return;
+    try {
+        const res  = await fetch('{{ route("home.activeChallenges") }}');
+        const json = await res.json();
+        const data = json.data;
+
+        if (!data || data.length === 0) {
+            // Kosong — sembunyikan seluruh section, tidak ganggu elemen lain
+            return;
+        }
+
+        loader.classList.add('d-none');
+        section.style.display = 'block';
+
+        let html = '';
+        data.forEach(c => {
+            const isComplete = c.percent >= 100;
+            const barColor   = isComplete ? '#38ef7d' : c.module_color;
+            const rewardDone = c.reward_given
+                ? `<span class="badge ms-1" style="background:rgba(56,239,125,.2);color:#38ef7d;font-size:.62rem;border:1px solid rgba(56,239,125,.3);"><i class="fas fa-check me-1"></i>Reward ✓</span>`
+                : '';
+
+            html += `
+            <div class="col-xl-4 col-md-6">
+                <div class="card border-0 shadow-sm h-100 challenge-home-card"
+                     style="background:linear-gradient(145deg,#1a1a2e,#16213e);border-radius:16px;overflow:hidden;cursor:default;">
+                    <div style="height:3px;background:linear-gradient(90deg,${c.module_color},#667eea);"></div>
+                    <div class="card-body p-3">
+
+                        {{-- Header --}}
+                        <div class="d-flex align-items-center gap-2 mb-3">
+                            <div style="width:38px;height:38px;background:rgba(255,255,255,.07);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                                <i class="${c.module_icon}" style="color:${c.module_color};font-size:1rem;"></i>
+                            </div>
+                            <div class="flex-grow-1" style="min-width:0;">
+                                <div style="color:#e0e0ff;font-weight:700;font-size:.88rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                                    ${c.name}${rewardDone}
+                                </div>
+                                <div style="color:#a0a8d0;font-size:.66rem;">${c.module_label}</div>
+                            </div>
+                            ${isComplete
+                                ? `<span style="font-size:1.3rem;" title="Selesai!">🏆</span>`
+                                : `<span style="color:#f5a623;font-size:.7rem;font-weight:700;white-space:nowrap;">${c.days_remaining}h lagi</span>`
+                            }
+                        </div>
+
+                        {{-- Progress --}}
+                        <div class="mb-1 d-flex justify-content-between">
+                            <small style="color:#a0a8d0;font-size:.68rem;">Progress</small>
+                            <small style="color:${barColor};font-weight:700;font-size:.75rem;">${c.current.toLocaleString('id-ID')} / ${c.target.toLocaleString('id-ID')} ${c.unit} &bull; ${c.percent}%</small>
+                        </div>
+                        <div style="height:8px;background:rgba(255,255,255,.08);border-radius:4px;overflow:hidden;margin-bottom:12px;">
+                            <div style="height:100%;width:${c.percent}%;background:linear-gradient(90deg,${barColor},${c.module_color});border-radius:4px;transition:width 1s ease;box-shadow:0 0 8px ${barColor}55;"></div>
+                        </div>
+
+                        {{-- Reward chips --}}
+                        <div class="d-flex gap-2 flex-wrap">
+                            ${c.reward_point > 0
+                                ? `<span class="px-2 py-1 rounded-pill" style="background:rgba(245,166,35,.15);color:#f5a623;border:1px solid rgba(245,166,35,.3);font-size:.65rem;font-weight:600;"><i class="fas fa-coins me-1"></i>+${c.reward_point.toLocaleString('id-ID')} Pts</span>`
+                                : ''}
+                            ${c.reward_xp > 0
+                                ? `<span class="px-2 py-1 rounded-pill" style="background:rgba(240,147,251,.15);color:#f093fb;border:1px solid rgba(240,147,251,.3);font-size:.65rem;font-weight:600;"><i class="fas fa-star me-1"></i>+${c.reward_xp.toLocaleString('id-ID')} XP</span>`
+                                : ''}
+                            <span class="ms-auto" style="color:#a0a8d0;font-size:.65rem;align-self:center;">s/d ${c.end_date}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>`;
+        });
+
+        container.innerHTML = html;
+        container.classList.remove('d-none');
+    } catch (e) {
+        if (loader) loader.innerHTML = '<small style="color:#f87171;">Gagal memuat challenge.</small>';
+    }
+}
 </script>
 @endcanAccess
 
