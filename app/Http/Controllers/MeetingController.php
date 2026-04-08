@@ -211,7 +211,7 @@ class MeetingController extends Controller
                 $meeting->save();
             }   
 
-            if($this->validateGoogleMeet(Auth::user()->company_id) && ($request->meeting_type == ParamSchema::GOOGLE_MEET || $request->meeting_type == "online"))
+            if($this->validateGoogleMeet(Auth::user()->company_id) && ($request->meeting_type == ParamSchema::GOOGLE_MEET ))
             {
                 $maxDescriptionLength = config('services.google.max_description_length'); // safe limit
 
@@ -233,12 +233,19 @@ class MeetingController extends Controller
                 $this->generatePublic($meeting);
             }
 
+            if($request->meeting_type == "online")
+            {
+                $meeting->update([
+                    'google_meet_link' => $request->google_meet_link,
+                ]);
+            }
+
             DB::commit();
 
             return redirect()->route('meeting.show', $meeting->slug)->with('store', true);
         } catch (\Throwable $th) {
             //throw $th;
-            dd($th);
+            // dd($th);
             DB::rollBack();
             Log::error('Error in store method: ' . $th->getMessage());
             return redirect()->route('meeting.index')->with('error', $th->getMessage());
@@ -394,7 +401,7 @@ class MeetingController extends Controller
             $meeting->save();
             
             // Update google meet
-             if (($meeting->meeting_type === ParamSchema::GOOGLE_MEET || $meeting->meeting_type === "online")  && $meeting->google_event_id && ($request->meeting_type == ParamSchema::GOOGLE_MEET || $request->meeting_type == "online")) 
+             if (($meeting->meeting_type === ParamSchema::GOOGLE_MEET || $meeting->meeting_type === "online")  && $meeting->google_event_id && ($request->meeting_type == ParamSchema::GOOGLE_MEET)) 
              {
                 $googleService = new GoogleService(Auth::user()->company_id);
                 $googleService->updateGoogleMeet($meeting, $request->all());
@@ -425,6 +432,14 @@ class MeetingController extends Controller
                     ]);
                 }
              }
+
+             if($request->meeting_type == "online")
+             {
+                $meeting->update([
+                    'google_meet_link' => $request->google_meet_link,
+                ]);
+            }
+             
 
              DB::commit();
             return redirect()->route('meeting.show', $meeting->slug)->with('update', true);

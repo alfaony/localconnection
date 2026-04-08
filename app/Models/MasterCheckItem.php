@@ -16,6 +16,11 @@ class MasterCheckItem extends Model
         return $this->hasMany(UsedLaptopCheck::class, 'master_check_item_id');
     }
 
+    public function checksUsed()
+    {
+        return $this->hasMany(UsedItemCheck::class, 'master_check_item_id');
+    }
+
     public function company()
     {
         return $this->belongsTo(Company::class);

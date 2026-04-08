@@ -118,7 +118,7 @@ class GenerateRecurringMeetings extends Command
                     $newMeeting->status = 'scheduled'; // Override status
                     
                     // Clear google event details initially so that it's generated anew
-                    if ($template->meeting_type === ParamSchema::GOOGLE_MEET || $template->meeting_type === 'online') {
+                    if ($template->meeting_type === ParamSchema::GOOGLE_MEET) {
                          $newMeeting->google_meet_link = null;
                          $newMeeting->google_event_id = null;
                          $newMeeting->public_token = null;
@@ -160,7 +160,7 @@ class GenerateRecurringMeetings extends Command
                     }
 
                     // Generate New Google Meet Event if needed
-                    if ($template->meeting_type === ParamSchema::GOOGLE_MEET || $template->meeting_type === 'online') {
+                    if ($template->meeting_type === ParamSchema::GOOGLE_MEET) {
                         $googleService = new GoogleService($template->company_id);
 
                         $googleMeet = $googleService->createGoogleMeet($newMeeting);

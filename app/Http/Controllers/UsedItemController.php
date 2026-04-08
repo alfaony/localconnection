@@ -108,12 +108,13 @@ class UsedItemController extends Controller
             ->withTrashed()
             ->where(function ($query) use ($usedItem) {
                 $query->whereNull('deleted_at')
-                      ->orWhereHas('checks', function ($q) use ($usedItem) {
-                          $q->where('master_check_item_id', $usedItem->id)
+                      ->orWhereHas('checksUsed', function ($q) use ($usedItem) {
+                          $q->where('used_item_id', $usedItem->id)
                             ->whereNotNull('status');
                       });
             })
             ->get();
+
         $categories = ItemCategory::where('type', 'item_type')->where('company_id', auth()->user()->company_id)->get();
 
         return view('used_item.createOrEdit', compact('checkItems', 'usedItem', 'categories'));
