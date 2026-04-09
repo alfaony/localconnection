@@ -787,10 +787,12 @@
                             {   
                                 loadMeetings();
                                 var win = window.open(response.redirect_url, '_blank');
-                                win.focus();
-                            }, 1000);
+                                if (win) {
+                                    win.focus();
+                                }
+                            }, 2000);
                         } else {
-                            setTimeout(() => location.reload(), 1000);
+                            setTimeout(() => location.reload(), 2000);
                         }
                     });
                 } else {
