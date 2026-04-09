@@ -146,7 +146,8 @@ class SaleController extends Controller
                     'subtotal' => $item['quantity'] * $item['unit_price'],
                 ]);
             }
-
+            \App\Helpers\XpHelper::award(Auth::user(), $sale, 'Transaksi Kasir');
+            
             DB::commit();
 
             return response()->json([

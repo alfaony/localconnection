@@ -52,41 +52,66 @@ class PromoForm extends Component
     public function save()
     {
         $this->validate();
-        $promo = Promo::updateOrCreate(
-            ['id' => $this->promoId],
-            [
-                // 'user_id' => Auth::user()->id,
-                // 'company_id' => Auth::user()->company_id,
-                'name' => $this->name,
-                'type' => $this->type,
-                'value' => $this->value,
-                'start_date' => $this->start_date,
-                'end_date' => $this->end_date,
-                'register_date' => $this->register_date,
-                'quota' => $this->quota,
-                'is_active' => $this->is_active,
-            ]
-        );
-
-        if(!$promo->company_id)
-        {
-            $promo->company_id = Auth::user()->company_id;   
+        try {
+            //code...
+            if($this->promoId)
+            {
+                $promo = Promo::findOrFail($this->promoId);
+                $promo->update([
+                    'name' => $this->name,
+                    'type' => $this->type,
+                    'value' => $this->value,
+                    'start_date' => $this->start_date,
+                    'end_date' => $this->end_date,
+                    'register_date' => $this->register_date,
+                    'quota' => $this->quota,
+                    'is_active' => $this->is_active,
+                ]);
+                
+                    
+            }else{
+                $promo = Promo::create(
+                    [
+                        'user_id' => Auth::user()->id,
+                        'company_id' => Auth::user()->company_id,
+                        'name' => $this->name,
+                        'type' => $this->type,
+                        'value' => $this->value,
+                        'start_date' => $this->start_date,
+                        'end_date' => $this->end_date,
+                        'register_date' => $this->register_date,
+                        'quota' => $this->quota,
+                        'is_active' => $this->is_active,
+                    ]
+                );
+            }
+    
+            if(!$promo->company_id)
+            {
+                $promo->company_id = Auth::user()->company_id;   
+            }
+    
+            if(!$promo->user_id)
+            {
+                $promo->user_id = Auth::user()->id;    
+            }
+    
+            $promo->save();
+    
+             // Simpan relasi dengan package internet (jika ada)
+            if (!empty($this->packageInternets)) {
+                $promo->packageInternets()->sync($this->packageInternets);
+            }
+            
+            session()->flash('success', 'Promo berhasil disimpan.');
+            return redirect()->route('promo.index');
+        } catch (\Throwable $th) {
+            //throw $th;
+            dd($th);
+            \Log::error($th->getMessage());
+            session()->flash('error', 'Promo gagal disimpan.');
+            return redirect()->route('promo.index');
         }
-
-        if(!$promo->user_id)
-        {
-            $promo->user_id = Auth::user()->id;    
-        }
-
-        $promo->save();
-
-         // Simpan relasi dengan package internet (jika ada)
-        if (!empty($this->packageInternets)) {
-            $promo->packageInternets()->sync($this->packageInternets);
-        }
-        
-        session()->flash('success', 'Promo berhasil disimpan.');
-        return redirect()->route('promo.index');
     }
 
     public function render()

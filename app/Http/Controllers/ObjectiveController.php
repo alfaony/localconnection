@@ -36,7 +36,7 @@ class ObjectiveController extends Controller
             $query->byUserDivisions(Auth::user()->id);
         }
 
-        $objectives = $query->byCompany(Auth::user()->company_id)->paginate(10);
+        $objectives = $query->with('divisions')->byCompany(Auth::user()->company_id)->paginate(10);
         $divisions = Division::byCompany(Auth::user()->company_id)->get();
         return view('objective.index', compact('objectives', 'divisions'));
     }
@@ -49,7 +49,7 @@ class ObjectiveController extends Controller
     public function create()
     {
         $user = User::with('divisions')->find(Auth::user()->id);
-        $divisions = $user->divisions()->get();
+        $divisions = Division::byCompany(Auth::user()->company_id)->get();
         $missions = Mission::where('company_id',Auth::user()->company_id)->get();
 
         return view('objective.create', compact('divisions','missions'));
@@ -65,27 +65,22 @@ class ObjectiveController extends Controller
     {
         DB::beginTransaction();
         try {
-            foreach ($request->objective_name as $index => $fieldName) 
+            foreach ($request->objective_name as $index => $fieldName)
             {
+                $divisionIds = $request->division_id[$index] ?? [];
                 // Create custom field
                 $objective = Objective::create([
-                    'division_id' => $request->division_id[$index],
+                    'division_id' => $divisionIds[0] ?? null,
                     'mission_id' => $request->mission_id[$index],
                     'user_id' => Auth::user()->id,
                     'start_date' => $request->start_date_objective[$index] ?? null,
                     'end_date' => $request->end_date_objective[$index] ?? null,
                     'name' => $fieldName,
                 ]);
+
+                $objective->divisions()->sync($divisionIds);
     
-                // Create Key Result
-                foreach ($request->key_result[$index] as $indexs => $value) {
-                    ObjectiveKeyResult::create([
-                        'objective_id' => $objective->id,
-                        'result' => $value,
-                        'start_date' => $request->start_date[$index][$indexs] ?? null,
-                        'end_date' => $request->end_date[$index][$indexs] ?? null,
-                    ]);
-                }
+                // Key Result dibuat di halaman Show Objective
             }
 
             DB::commit();
@@ -109,8 +104,90 @@ class ObjectiveController extends Controller
      */
     public function show($slug)
     {
-        $objective = Objective::byCompany(Auth::user()->company_id)->where('slug', $slug)->firstOrFail();
-        return view('objective.show', compact('objective'));
+        $objective = Objective::with(['divisions', 'keyResults.division'])
+            ->byCompany(Auth::user()->company_id)
+            ->where('slug', $slug)
+            ->firstOrFail();
+
+        $keyResultsByDivision = $objective->keyResults->groupBy('division_id');
+
+        return view('objective.show', compact('objective', 'keyResultsByDivision'));
+    }
+
+    public function storeKeyResult(Request $request, Objective $objective)
+    {
+        $request->validate([
+            'division_id'              => 'nullable|uuid|exists:divisions,id',
+            'key_results'              => 'required|array|min:1',
+            'key_results.*.result'     => 'required|string|max:190',
+            'key_results.*.start_date' => 'nullable|date',
+            'key_results.*.end_date'   => 'nullable|date',
+        ]);
+
+        DB::beginTransaction();
+        try {
+            $created = [];
+            foreach ($request->key_results as $kr) {
+                $keyResult = ObjectiveKeyResult::create([
+                    'objective_id' => $objective->id,
+                    'division_id'  => $request->division_id ?: null,
+                    'result'       => $kr['result'],
+                    'start_date'   => $kr['start_date'] ?? null,
+                    'end_date'     => $kr['end_date']   ?? null,
+                ]);
+                $created[] = [
+                    'id'         => $keyResult->id,
+                    'result'     => $keyResult->result,
+                    'date_show'  => $keyResult->dateShow,
+                    'task_count' => 0,
+                    'slug'       => $keyResult->slug,
+                ];
+            }
+            DB::commit();
+            return response()->json(['success' => true, 'data' => $created]);
+        } catch (\Throwable $th) {
+            DB::rollback();
+            Log::error($th);
+            return response()->json(['success' => false, 'message' => $th->getMessage()], 500);
+        }
+    }
+
+    public function updateKeyResult(Request $request, ObjectiveKeyResult $keyResult)
+    {
+        $request->validate([
+            'result'      => 'required|string|max:190',
+            'start_date'  => 'nullable|date',
+            'end_date'    => 'nullable|date',
+            'division_id' => 'nullable|uuid|exists:divisions,id',
+        ]);
+
+        $data = [
+            'result'     => $request->result,
+            'start_date' => $request->start_date ?: null,
+            'end_date'   => $request->end_date   ?: null,
+        ];
+
+        // Hanya update division_id jika dikirim (untuk migrasi legacy KR)
+        if ($request->has('division_id')) {
+            $data['division_id'] = $request->division_id;
+        }
+
+        $keyResult->update($data);
+        $keyResult->load('division');
+
+        return response()->json(['success' => true, 'data' => [
+            'id'            => $keyResult->id,
+            'result'        => $keyResult->result,
+            'date_show'     => $keyResult->dateShow,
+            'division_id'   => $keyResult->division_id,
+            'division_name' => optional($keyResult->division)->name,
+        ]]);
+    }
+
+    public function destroyKeyResult(ObjectiveKeyResult $keyResult)
+    {
+        $keyResult->delete();
+        return response()->json(['success' => true]);
     }
 
     /**
@@ -123,8 +200,8 @@ class ObjectiveController extends Controller
     {
         $objective = Objective::byCompany(Auth::user()->company_id)->where('slug', $slug)->firstOrFail();
         $user = User::with('divisions')->find(Auth::user()->id);
-        $divisions = $user->divisions()->get();
-        $missions = Mission::where('company_id',Auth::user()->company_id)->get();
+        $divisions = Division::byCompany(Auth::user()->company_id)->get();
+        $missions = Mission::byCompany(Auth::user()->company_id)->get();
 
         return view('objective.edit', compact('divisions','objective', 'missions'));
     }
@@ -139,57 +216,30 @@ class ObjectiveController extends Controller
     public function update(Request $request, $slug)
     {
         $request->validate([
-            'division_id' => 'required|exists:divisions,id',
-            'mission_id' => 'required|exists:missions,id',
+            'division_ids'         => 'required|array',
+            'division_ids.*'       => 'required|uuid|exists:divisions,id',
+            'mission_id'           => 'required|exists:missions,id',
             'start_date_objective' => 'nullable|date',
-            'end_date_objective' => 'nullable|date|after_or_equal:start_date_objective',
-            'objective_name' => 'required|string|max:190',
-            'key_result' => 'nullable|array',
-            'key_result.*' => 'required|string|max:190',
-            'start_date' => 'nullable|array',
-            'start_date.*' => 'nullable|date',
-            'end_date' => 'nullable|array',
-            'end_date.*' => 'nullable|date|after_or_equal:start_date.*',
+            'end_date_objective'   => 'nullable|date|after_or_equal:start_date_objective',
+            'objective_name'       => 'required|string|max:190',
         ]);
-        
+
         DB::beginTransaction();
         try {
             $objective = Objective::byCompany(Auth::user()->company_id)->where('slug', $slug)->firstOrFail();
+            $divisionIds = $request->division_ids ?? [];
             $objective->update([
-                'division_id' => $request->division_id,
-                'mission_id' => $request->mission_id,
-                'start_date' => $request->start_date_objective ?? null,
-                'end_date' => $request->end_date_objective ?? NULL,
-                'name' => $request->objective_name,
+                'division_id' => $divisionIds[0] ?? null,
+                'mission_id'  => $request->mission_id,
+                'start_date'  => $request->start_date_objective ?? null,
+                'end_date'    => $request->end_date_objective   ?? null,
+                'name'        => $request->objective_name,
             ]);
-                        // Create Key Result 
-            $existingValueIds = [];
-            foreach ($request->key_result as $index => $value) {
-                if (isset($request->key_result_id[$index])) {
-                    $keyResult = ObjectiveKeyResult::findOrFail($request->key_result_id[$index]);
-                    $keyResult->update([
-                        'result' => $value,
-                        'start_date' => $request->start_date[$index] ?? null,
-                        'end_date' => $request->end_date[$index] ?? null,
-                    ]);
-                    $existingValueIds[] = $keyResult->id;
-                } else {
-                    $newValue =
-                    ObjectiveKeyResult::create([
-                        'objective_id' => $objective->id,
-                        'result' => $value,
-                        'start_date' => $request->start_date[$index] ?? null,
-                        'end_date' => $request->end_date[$index] ?? null,
-                    ]);
 
-                    $existingValueIds[] = $newValue->id;
-                }
-            }
-    
-            $objective->keyResults()->whereNotIn('id', $existingValueIds)->delete();
-                
+            $objective->divisions()->sync($divisionIds);
+
             DB::commit();
-            return redirect()->route('objective.index')->with('update',true);
+            return redirect()->route('objective.index')->with('update', true);
         } catch (\Throwable $th) {
             //throw $th;
 
@@ -219,21 +269,35 @@ class ObjectiveController extends Controller
 
     public function getresult(Request $request, Objective $objective)
     {
-        $keyResult = $objective->keyResults;
-        $index = $request->index ?? 0;
+        $divisionId = $request->division_id;
+        $index      = $request->index ?? 0;
         $dailyTaskId = $request->dailyTaskId;
         $selectedKeyResults = [];
         $hasHead = false;
 
+        // Filter KR berdasarkan division_id yang dipilih;
+        // legacy KR (null division) selalu ikut tampil agar tidak breaking
+        $query = $objective->keyResults();
+        if ($divisionId) {
+            $query->where('division_id', $divisionId);
+        }
+        
         if ($dailyTaskId) {
-            $dailyTask = DailyTask::with('keyResults')->find($dailyTaskId);
+            $dailyTask = DailyTask::find($dailyTaskId);
             if ($dailyTask) {
-                $selectedKeyResults = $dailyTask->keyResults->pluck('id')->toArray();
+                $selectedKeyResults = $dailyTask->keyResults()->withTrashed()->pluck('objective_key_results.id')->toArray();
+
+                $query->withTrashed()->where(function ($q) use ($selectedKeyResults) {
+                    $q->whereNull('objective_key_results.deleted_at')
+                      ->orWhereIn('objective_key_results.id', $selectedKeyResults);
+                });
+
                 $hasHead = $dailyTask->head ? true : false;
             }
         }
-
-        return view('partials.keyresult-fields', compact('keyResult', 'selectedKeyResults', 'index' ,'hasHead'));
+        
+        $keyResult = $query->get();
+        return view('partials.keyresult-fields', compact('keyResult', 'selectedKeyResults', 'index', 'hasHead'));
     }
 
     public function showtask(Request $request, $slug)

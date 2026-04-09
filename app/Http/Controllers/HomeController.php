@@ -34,6 +34,7 @@ use App\Models\User;
 use App\Models\Dayoff;
 use App\Models\CustomerSubscription;
 use App\Models\Software;
+use App\Helpers\XpHelper;
 
 class HomeController extends Controller
 {
@@ -410,6 +411,54 @@ class HomeController extends Controller
         ]);
     }
 
+    public function userBadges()
+    {
+        $data = \App\Models\UserBadge::with('badge')
+            ->where('user_id', Auth::user()->id)
+            ->latest()
+            ->get()
+            ->groupBy('badge_id')
+            ->map(function ($group) {
+                $first = $group->first();
+                $count = $group->count();
+                return [
+                    'name'        => $first->badge->name ?? '-',
+                    'image_url'   => $first->badge && $first->badge->image ? s3_asset(true, null, $first->badge->image) : null,
+                    'count'       => $count,
+                    'received_at' => $first->created_at->format('d M Y'),
+                ];
+            })
+            ->values();
+
+        return response()->json(['status' => 'success', 'data' => $data]);
+    }
+
+    public function xpLeaderboard()
+    {
+        $companyId = Auth::user()->company_id;
+
+        $users = User::byCompany($companyId)
+            ->isActive()
+            ->where('total_xp', '>', 0)
+            ->orderBy('total_xp', 'desc')
+            ->select('id', 'name', 'total_xp')
+            ->limit(5)
+            ->get()
+            ->map(function ($user, $index) {
+                $level = XpHelper::level($user->total_xp);
+                return [
+                    'rank'     => $index + 1,
+                    'name'     => $user->name,
+                    'total_xp' => $user->total_xp,
+                    'level'    => $level['label'],
+                    'badge'    => $level['badge'],
+                    'initial'  => strtoupper(substr($user->name, 0, 1)),
+                ];
+            });
+
+        return response()->json(['data' => $users]);
+    }
+
     public function leaderboard()
     {
         // Get period dates from SettingCompany
@@ -625,6 +674,7 @@ class HomeController extends Controller
         $today = Carbon::today();
 
         $cutiToday = Dayoff::with('user', 'type')
+            ->byCompany(Auth::user()->company_id)
             ->where('date_start', '<=', $today)
             ->where('date_end', '>=', $today)
             ->whereNull('rejected_at')

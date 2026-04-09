@@ -132,6 +132,7 @@ class CompleteInReviewDailyTasks extends Command
                     }
                 }
 
+                \App\Helpers\XpHelper::award($task->assign, $task, "Approval Dailytask");
                 $count++;
             }
 

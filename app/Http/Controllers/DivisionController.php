@@ -388,6 +388,35 @@ class DivisionController extends Controller
         return response()->json($tasks);
     }
 
+    public function ajaxObjectiveChart(Request $request, Division $division)
+    {
+        $startDate = $request->input('start_date');
+        $endDate   = $request->input('end_date');
+
+        // Semua objective yang di-join ke division ini (termasuk yang 0 task)
+        $objectives = $division->objectives()->select('objectives.id', 'objectives.name')->get();
+
+        // Count task per objective dalam rentang tanggal
+        $taskCounts = DailyTask::where('objective_division_id', $division->id)
+            ->whereNotNull('objective_id')
+            ->when($startDate, fn($q) => $q->whereDate('created_at', '>=', $startDate))
+            ->when($endDate,   fn($q) => $q->whereDate('created_at', '<=', $endDate))
+            ->selectRaw('objective_id, COUNT(*) as task_count')
+            ->groupBy('objective_id')
+            ->pluck('task_count', 'objective_id');
+
+        $result = $objectives->map(fn($obj) => [
+            'objective_name' => $obj->name,
+            'task_count'     => $taskCounts[$obj->id] ?? 0,
+        ]);
+
+        return response()->json([
+            'labels' => $result->pluck('objective_name'),
+            'data'   => $result->pluck('task_count'),
+            'total'  => $result->sum('task_count'),
+        ]);
+    }
+
     public function ajaxDivisionTasks(Request $request, Division $division)
     {
         $month = $request->input('month', now()->month);

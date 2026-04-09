@@ -59,6 +59,11 @@ class Objective extends Model
         return $this->belongsTo(Division::class);
     }
 
+    public function divisions()
+    {
+        return $this->belongsToMany(Division::class, 'division_objective')->using(DivisionObjective::class);
+    }
+
     public function keyResults()
     {
         return $this->hasMany(ObjectiveKeyResult::class);
@@ -151,6 +156,8 @@ class Objective extends Model
         $user = User::with('divisions')->find($userId);
         $divisionIds = $user->divisions->pluck('id');
 
-        return $query->whereIn('division_id', $divisionIds);
+        return $query->whereHas('divisions', function ($q) use ($divisionIds) {
+            $q->whereIn('divisions.id', $divisionIds);
+        });
     }
 }

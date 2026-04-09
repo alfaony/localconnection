@@ -46,7 +46,7 @@
                         </div>
                         <div class="col-md-4 mb-3">
                             <label for="custom_field_type">Divisi</label>
-                            <select class="form-control custom-field-type" name="division_id[]" required>
+                            <select class="form-control custom-field-type select2" name="division_id[0][]" multiple required>
                                 @forelse ($divisions as $division)
                                     <option value="{{ $division->id }}">{{ $division->name }}</option>
                                 @empty
@@ -65,16 +65,10 @@
                             </div>
                         </div>
                     </div>
-                    <div class="custom-field-values">
-                        <label for="custom_field_type">Key Result</label>
-                        <div class="form-group d-flex">
-                            <input type="text" class="form-control custom-field-value" name="key_result[0][]" required>
-                            <input type="date" class="form-control start-date" name="start_date[0][]" placeholder="Mulai Tanggal">
-                            <input type="date" class="form-control end-date" name="end_date[0][]" placeholder="Sampai Tanggal">
-                            <button type="button" class="btn btn-danger ml-2 remove-custom-field-value"><i class="fa fa-trash"></i> </button>
-                        </div>
+                    <div class="alert alert-info py-2 mb-2 small">
+                        <i class="fas fa-info-circle mr-1"></i>
+                        Key Result dapat ditambahkan setelah objective disimpan, melalui halaman <strong>Show Objective</strong>.
                     </div>
-                    <button type="button" class="btn btn-secondary add-custom-field-value"><i class="fa fa-plus"></i> Key Result</button>
                     <button type="button" class="btn btn-danger remove-custom-field"><i class="fa fa-trash"></i> Objective</button>
                 </div>
             </div>
@@ -118,7 +112,7 @@
                     </div>
                     <div class="col-md-4 mb-3">
                         <label for="custom_field_type">Divisi</label>
-                        <select class="form-control custom-field-type" name="division_id[]" required>
+                        <select class="form-control custom-field-type select3" name="division_id[${customFieldIndex}][]" multiple required>
                             @foreach ($divisions as $division)
                                 <option value="{{ $division->id }}">{{ $division->name }}</option>
                             @endforeach
@@ -135,17 +129,11 @@
                         </div>
                     </div>
                 </div>
-                <div class="custom-field-values">
-                    <label for="custom_field_type">Key Result</label>
-                    <div class="form-group d-flex">
-                    <input type="text" class="form-control custom-field-value" name="key_result[${customFieldIndex}][]" required>
-                    <input type="date" class="form-control start-date" name="start_date[${customFieldIndex}][]" placeholder="Mulai Tanggal">
-                    <input type="date" class="form-control end-date" name="end_date[${customFieldIndex}][]" placeholder="Sampai Tanggal">
-                    <button type="button" class="btn btn-danger ml-2 remove-custom-field-value"><i class="fa fa-trash"></i> </button>
-                    </div>
+                <div class="alert alert-info py-2 mb-2 small">
+                    <i class="fas fa-info-circle mr-1"></i>
+                    Key Result dapat ditambahkan setelah disimpan, melalui halaman <strong>Show Objective</strong>.
                 </div>
-                <button type="button" class="btn btn-secondary add-custom-field-value"><i class="fa fa-plus"></i>  Key Result</button>
-                <button type="button" class="btn btn-danger remove-custom-field "><i class="fa fa-trash"></i> Objective</button>
+                <button type="button" class="btn btn-danger remove-custom-field"><i class="fa fa-trash"></i> Objective</button>
                 </div>
             </div>
             `;
@@ -154,26 +142,8 @@
             
         });
 
-        $(document).on('click', '.add-custom-field-value', function() {
-            const index = $(this).closest('.custom-field').index();
-            const customFieldValueTemplate = `
-                <div class="form-group d-flex">
-                    <input type="text" class="form-control custom-field-value" name="key_result[${index}][]" required>
-                    <input type="date" class="form-control start-date" name="start_date[${index}][]" placeholder="Mulai Tanggal">
-                    <input type="date" class="form-control end-date" name="end_date[${index}][]" placeholder="Sampai Tanggal">
-                    <button type="button" class="btn btn-danger ml-2 remove-custom-field-value"><i class="fa fa-trash"></i> </button>
-                </div>
-            `;
-            $(this).siblings('.custom-field-values').append(customFieldValueTemplate);
-            syncDates();
-        });
-
         $(document).on('click', '.remove-custom-field', function() {
             $(this).closest('.custom-field').remove();
-        });
-
-        $(document).on('click', '.remove-custom-field-value', function() {
-            $(this).closest('.form-group').remove();
         });
 
         function syncDates() {

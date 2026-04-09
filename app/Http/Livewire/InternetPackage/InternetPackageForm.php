@@ -17,6 +17,7 @@ class InternetPackageForm extends Component
     public $name;
     public $bandwidth;
     public $type = 'dedicated';
+    public $customer_type = 'rumah';
     public $price;
     public $price_nett;
     public $description;
@@ -84,6 +85,7 @@ class InternetPackageForm extends Component
             $this->name             = $package->name;
             $this->bandwidth        = $package->bandwidth;
             $this->type             = $package->type;
+            $this->customer_type    = $package->customer_type ?? 'bisnis';
             $this->price            = $package->price;
             $this->price_nett       = $package->price_nett;
             $this->description      = $package->description;
@@ -304,7 +306,7 @@ class InternetPackageForm extends Component
 
     public function save()
     {
-        $this->validate();
+        // $this->validate();
 
         $isHotspot = $this->access_type === 'hotspot';
 
@@ -325,6 +327,21 @@ class InternetPackageForm extends Component
             'quota_bytes'             => $isHotspot ? $this->quota_bytes : null,
             'session_timeout_seconds' => $isHotspot ? $this->session_timeout_seconds : null,
         ];
+        
+        $this->validate([
+            'name'           => 'required|string|max:255',
+            'bandwidth'      => 'required|integer|min:1',
+            'type'           => 'required|in:dedicated,broadband',
+            'customer_type'  => 'required|in:bisnis,rumah',
+            'price'          => 'required|numeric|min:0',
+            'price_nett'     => 'required|numeric|min:0',
+            'description'    => 'nullable|string',
+            'is_active'      => 'boolean',
+            'access_type'    => 'required|in:pppoe,hotspot,ipoe',
+            'rate_down_mbps' => 'required|integer|min:1',
+            'rate_up_mbps'   => 'required|integer|min:1',
+        ]);
+
 
         DB::transaction(function () use ($data) {
             if ($this->packageId) {

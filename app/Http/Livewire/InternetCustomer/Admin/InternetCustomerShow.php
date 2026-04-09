@@ -743,6 +743,7 @@ class InternetCustomerShow extends Component
         // Sehingga admin hanya bisa pilih paket yang berlaku di wilayah customer
         $packages = InternetPackage::where('company_id', $this->customer->company_id)
             ->where('is_active', true)
+            ->where('customer_type', $this->customer->customer_type)
             ->where('id', '!=', $this->customer->internet_package_id)
             ->with('regions')
             ->forRegion(

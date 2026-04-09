@@ -98,6 +98,7 @@ class InternetCustomer extends Model
         'ktp_photo',
         'is_paid',
         'status',
+        'customer_type',
         'promo_id',
         'router_id',
         'access_type',

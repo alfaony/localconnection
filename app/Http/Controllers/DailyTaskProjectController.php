@@ -432,12 +432,15 @@ class DailyTaskProjectController extends Controller
             return redirect()->route('daily_task_project.showproject',$slug)->with('error', 'Anda tidak tergabung dalam divisi manapun. Hubungi admin atau manager Anda.');
         } else {
             // Proceed with fetching objectives related to the user's divisions
-            $objectives = Objective::whereHas('division', function ($query) use ($divisionIds) {
-                $query->whereIn('id', $divisionIds);
+            $objectives = Objective::with('divisions')->whereHas('divisions', function ($query) use ($divisionIds) {
+                $query->whereIn('divisions.id', $divisionIds);
             })->get();
         }
 
-        return view('daily_task_project.create_daily_task', compact('project', 'users', 'taskStatuss', 'objectives', 'projects', 'categories', 'childTasks', 'types', 'customFields', 'redirect', 'days', 'minDate','taskRecurring'));
+        $userDivisions = $user->divisions;
+        $primaryDivision = $user->primaryDivision;
+
+        return view('daily_task_project.create_daily_task', compact('project', 'users', 'taskStatuss', 'objectives', 'projects', 'categories', 'childTasks', 'types', 'customFields', 'redirect', 'days', 'minDate','taskRecurring','userDivisions','primaryDivision'));
     }
 
 }

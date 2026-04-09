@@ -25,6 +25,7 @@ use App\Helpers\InboxHelper;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use App\Models\DailyTaskStatusRecord;
 
 
 
@@ -1082,6 +1083,17 @@ class DailyTaskMobileController extends BaseController
         }
     }
 
+    protected function statusrecord($dailyTask, $status)
+    {
+        DailyTaskStatusRecord::create([
+            'daily_task_id' => $dailyTask->id,
+            'task_status_id' => $status->id,
+            'date' => now(),
+        ]);
+
+        return true;
+    }
+
     /**
      * @param \Illuminate\Http\Request $request
      * @param string $slug
@@ -1410,7 +1422,9 @@ class DailyTaskMobileController extends BaseController
             //     ucfirst($messageType).' '.$dailytask->name
             // );
 
-            // $this->statusrecord($dailytask, $taskStatuss);
+            if (method_exists($this, 'statusrecord')) {
+                $this->statusrecord($dailytask, $taskStatuss);
+            }
 
             if ($taskStatuss->name == ParamSchema::NOTCOMPLATE) {
                 $dailytask->report_note = null;

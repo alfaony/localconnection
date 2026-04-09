@@ -5,10 +5,11 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Schemas\ParamSchema;
+use App\Traits\AwardsXp;
 
 class Mom extends Model
 {
-    use SoftDeletes;
+    use SoftDeletes, AwardsXp;
 
     protected $fillable = [
         'name',

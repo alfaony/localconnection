@@ -150,18 +150,22 @@
 @endsection
 
 @section('js')
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-    $(document).ready(function() {
-        $('#approvalModal').on('show.bs.modal', function (event) {
-            var button = $(event.relatedTarget);
-            var status = button.data('status');
-            var slug = button.data('id');
-            var modal = $(this);
+    $(document).on('show.bs.modal', '#approvalModal', function (event) {
+        let button = $(event.relatedTarget);
 
-            modal.find('#approvalStatus').val(status);
-            modal.find('#budgetId').val(slug);
-            modal.find('#approvalForm').attr('action', '/division-budget/approve/' + slug);
-        });
+        if (!button.length) return;
+
+        let status = button.data('status');
+        let slug = button.data('id');
+
+        let modal = $(this);
+
+        modal.find('#approvalStatus').val(status);
+        modal.find('#budgetId').val(slug);
+        modal.find('#approvalForm').attr('action', '/division-budget/approve/' + slug);
     });
 </script>
 @endsection

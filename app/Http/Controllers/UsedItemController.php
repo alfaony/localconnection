@@ -103,7 +103,18 @@ class UsedItemController extends Controller
     public function edit($slug)
     {
         $usedItem = UsedItem::where('slug', $slug)->byCompany(Auth::user()->company_id)->firstOrFail();
-        $checkItems = MasterCheckItem::where('type','item_type')->byCompany(Auth::user()->company_id)->get();
+        $checkItems = MasterCheckItem::where('type','item_type')
+            ->byCompany(Auth::user()->company_id)
+            ->withTrashed()
+            ->where(function ($query) use ($usedItem) {
+                $query->whereNull('deleted_at')
+                      ->orWhereHas('checksUsed', function ($q) use ($usedItem) {
+                          $q->where('used_item_id', $usedItem->id)
+                            ->whereNotNull('status');
+                      });
+            })
+            ->get();
+
         $categories = ItemCategory::where('type', 'item_type')->where('company_id', auth()->user()->company_id)->get();
 
         return view('used_item.createOrEdit', compact('checkItems', 'usedItem', 'categories'));

@@ -112,7 +112,14 @@
                                 @endif
                             </td>
                             @endcanAccess
-                            <td>{{ $submission->user->name ?? '-' }}</td>
+                            <td>{{ $submission->user->name ?? '-' }}
+                                @if($submission->createdBy)
+                                <br>
+                                <small>
+                                   <i class="fa fa-user"></i>  Dibuat oleh {{ $submission->createdBy ? $submission->createdBy->name : '' }}
+                                </small>
+                                @endif
+                            </td>
                             <td>{{ $submission->letterType->name ?? '-' }}</td>
                             <td>
                                 @if($submission->is_approved === null)

@@ -479,6 +479,7 @@ class InternetCustomerIndex extends Component
             }
 
             DB::commit();
+            \App\Helpers\XpHelper::award(Auth::user(), $customerInstallation, "Internet Instalattion");
             
             Log::info('Installation completed successfully', [
                 'customer_id' => $customer->id,

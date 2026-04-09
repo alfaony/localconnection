@@ -125,7 +125,7 @@ class ImportInternetCustomerJob implements ShouldQueue
                     $internetCustomer = InternetCustomer::where('code', $code)
                         ->where('company_id', $this->companyId)
                         ->whereIn('status', [ParamSchema::CUSTOMER_EXISTING, ParamSchema::PROCESS_INSTALLATION])
-                        ->whereDoesntHave('installation')
+                        // ->whereDoesntHave('installation')
                         ->first();
 
                     if ($internetCustomer) {
@@ -147,7 +147,7 @@ class ImportInternetCustomerJob implements ShouldQueue
                         $uc         = $matchedUsers->first();
                         $candidates = InternetCustomer::where('user_customer_id', $uc->id)
                             ->where('company_id', $this->companyId)
-                            ->whereDoesntHave('installation')
+                            // ->whereDoesntHave('installation')
                             ->get();
 
                         if ($candidates->count() > 1) {
@@ -175,7 +175,7 @@ class ImportInternetCustomerJob implements ShouldQueue
                         $uc         = $matchedUsers->first();
                         $candidates = InternetCustomer::where('user_customer_id', $uc->id)
                             ->where('company_id', $this->companyId)
-                            ->whereDoesntHave('installation')
+                            // ->whereDoesntHave('installation')
                             ->get();
 
                         if ($candidates->count() > 1) {
@@ -191,7 +191,11 @@ class ImportInternetCustomerJob implements ShouldQueue
 
                 if (!$internetCustomer) {
                     $identifier = $code ?: ($email ?: $phone);
-                    throw new \Exception("Pelanggan '{$identifier}' tidak ditemukan atau sudah memiliki instalasi");
+                    throw new \Exception("Pelanggan '{$identifier}' tidak ditemukan");
+                }
+
+                if ($internetCustomer->installation) {
+                    throw new \Exception("Pelanggan '{$identifier}' sudah memiliki instalasi");
                 }
 
                 // ── CHECK USERNAME UNIQUENESS ─────────────────────────────────
