@@ -287,7 +287,7 @@ class CompanyController extends Controller
                 $field->save();        
             }
             
-            $this->saveMasterCheck($company->id);            
+            // $this->saveMasterCheck($company->id);            
 
             DB::commit();
             return redirect()->back()->with('store',true);
