@@ -32,6 +32,7 @@ class Challenge extends Model
         'description',
         'start_date',
         'end_date',
+        'status',
         'reward_point',
         'reward_xp',
         'module_type',
@@ -144,11 +145,22 @@ class Challenge extends Model
     public function isActive(): bool
     {
         $today = now()->toDateString();
-        return $this->start_date->toDateString() <= $today && $this->end_date->toDateString() >= $today;
+        return ($this->start_date->toDateString() <= $today && $this->end_date->toDateString() >= $today) && $this->status == 'running';
     }
 
     public function isExpired(): bool
     {
         return $this->end_date->toDateString() < now()->toDateString();
+    }
+
+
+    public function isAbles(): bool
+    {
+        return $this->status == 'draft' ? true : false;
+    }
+
+    public function isFinished(): bool
+    {
+        return $this->status == 'finish' ? true : false;
     }
 }

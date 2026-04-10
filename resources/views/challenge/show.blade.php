@@ -10,9 +10,11 @@
     </div>
     <div class="d-flex gap-2">
         @canAccess('edit','challenges')
+        @if($challenge->isAbles())
         <a href="{{ route('challenge.edit', $challenge) }}" class="btn btn-sm btn-outline-warning mb-1 mr-1">
             <i class="fas fa-edit mr-1"></i> Edit
         </a>
+        @endif
         @endcanAccess
         <a href="{{ route('challenge.index') }}" class="btn btn-sm btn-outline-secondary mb-1">
             <i class="fas fa-arrow-left mr-1"></i> Kembali
@@ -40,13 +42,12 @@
                         <i class="{{ $challenge->moduleIcon() }}" style="color:{{ $color }};font-size:1.8rem;"></i>
                     </div>
                     @php
+                        $dbStatus = ucfirst($challenge->status);
+                        $statusClass = $challenge->status === 'running' ? 'success' : ($challenge->status === 'finish' ? 'primary' : 'warning');
                         $isActive  = $challenge->isActive();
-                        $isExpired = $challenge->isExpired();
-                        $statusLabel = $isActive ? 'Aktif' : ($isExpired ? 'Selesai' : 'Belum Mulai');
-                        $statusClass = $isActive ? 'success' : ($isExpired ? 'secondary' : 'warning');
                     @endphp
-                    <span class="badge bg-{{ $statusClass }} rounded-pill px-3 py-1">{{ $statusLabel }}</span>
-                    @if($isActive)
+                    <span class="badge bg-{{ $statusClass }} rounded-pill px-3 py-1">{{ $dbStatus }}</span>
+                    @if($challenge->status === 'running')
                     <div class="mt-1" style="color:#f5a623;font-size:.8rem;font-weight:600;">
                         <i class="bi bi-clock me-1"></i>{{ $challenge->daysRemaining() }} hari lagi
                     </div>
@@ -54,6 +55,10 @@
                 </div>
 
                 <div class="mb-2" style="background:rgba(255,255,255,.05);border-radius:10px;padding:10px 14px;">
+                    <div class="d-flex justify-content-between mb-2">
+                        <small style="color:#a0a8d0;">Tipe Modul</small>
+                        <span style="color:#c8d0e0;font-weight:600;font-size:.85rem;">{{ $challenge->moduleLabel() }}</span>
+                    </div>
                     <div class="d-flex justify-content-between">
                         <small style="color:#a0a8d0;">Target</small>
                         <small class="fw-bold" style="color:#e0e0ff;">
@@ -87,7 +92,7 @@
 
         {{-- Invite Card --}}
         @canAccess('invite','challenges')
-        @if($invitableUsers->isNotEmpty())
+        @if($invitableUsers->isNotEmpty() && !$challenge->isFinished())
         <div class="card border-0 shadow-sm" style="background:linear-gradient(145deg,#1a1a2e,#16213e);border-radius:16px;overflow:hidden;">
             <div style="height:3px;background:linear-gradient(90deg,#38ef7d,#4facfe);"></div>
             <div class="card-body p-4">
@@ -149,9 +154,17 @@
                                             {{ number_format($p['current']) }} / {{ number_format($challenge->target_count) }}
                                         </span>
                                         <span class="fw-bold mb-1 mr-1" style="color:{{ $p['percent'] >= 100 ? '#38ef7d' : '#f5a623' }};font-size:.8rem;">{{ $p['percent'] }}%</span>
-                                        @if($p['cu']->reward_given)
+                                        @if(!is_null($p['cu']->finished_at) || $p['percent'] >= 100)
                                         <span class="badge" style="background:rgba(56,239,125,.2);color:#38ef7d;font-size:.62rem;border:1px solid rgba(56,239,125,.3);">
-                                            <i class="fas fa-check me-1"></i>Reward ✓
+                                            <i class="fas fa-check me-1"></i>Berhasil ✓
+                                        </span>
+                                        @elseif($challenge->isExpired())
+                                        <span class="badge" style="background:rgba(245,87,108,.2);color:#f5576c;font-size:.62rem;border:1px solid rgba(245,87,108,.3);">
+                                            <i class="fas fa-times me-1"></i>Gagal
+                                        </span>
+                                        @else
+                                        <span class="badge" style="background:rgba(255,255,255,.1);color:#a0a8d0;font-size:.62rem;border:1px solid rgba(255,255,255,.2);">
+                                            <i class="fas fa-hourglass-half me-1"></i>Proses
                                         </span>
                                         @endif
                                     </div>

@@ -154,6 +154,7 @@ class AppServiceProvider extends ServiceProvider
 
             $managementKaryawanMenu = [
                 'kyes',
+                'challenges',
                 'employees','users','positions','managers','attendances',
                 'shifting_obs','schedule_obs','dayoffs','wfo_rules','barcodes','employee_checkings','office_attendances','trainings'
             ];
@@ -847,6 +848,12 @@ class AppServiceProvider extends ServiceProvider
                     'text' => 'Gelar',
                     'route' => 'badge.index',
                     'icon' => 'fa fa-coins',
+                ],
+                'challenges' =>
+                [
+                    'text' => 'Challenge Pegawai',
+                    'route' => 'challenge.index',
+                    'icon' => 'fa fa-trophy',
                 ],
             ];
 

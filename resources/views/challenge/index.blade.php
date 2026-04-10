@@ -69,6 +69,53 @@
     </div>
 </div>
 
+{{-- Filter Section --}}
+<div class="card border-0 shadow-sm mb-4" style="background:linear-gradient(145deg,#1a1a2e,#16213e);border-radius:14px;overflow:hidden;">
+    <div style="height:3px;background:rgba(255,255,255,0.1);"></div>
+    <div class="card-body p-4">
+        <form action="{{ route('challenge.index') }}" method="GET">
+            <div class="row g-3 align-items-end">
+                <div class="col-md-4">
+                    <label style="color:#a0a8d0;font-size:0.8rem;margin-bottom:0.4rem;font-weight:600;"><i class="fas fa-search me-1"></i> Cari Challenge</label>
+                    <div class="input-group">
+                        <div class="input-group-prepend">
+                            <span class="input-group-text" style="background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);color:#a0a8d0;border-right:none;border-radius:8px 0 0 8px;"><i class="fas fa-search"></i></span>
+                        </div>
+                        <input type="text" name="search" class="form-control" placeholder="Nama Challenge..." value="{{ request('search') }}" style="background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);color:#e0e0ff;border-left:none;border-radius:0 8px 8px 0;">
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <label style="color:#a0a8d0;font-size:0.8rem;margin-bottom:0.4rem;font-weight:600;"><i class="fas fa-filter me-1"></i> Status</label>
+                    <select name="status" class="form-control" style="background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);color:#e0e0ff;border-radius:8px;">
+                        <option value="" style="color:#222;">Semua Status</option>
+                        <option value="draft" {{ request('status') == 'draft' ? 'selected' : '' }} style="color:#222;">Draft</option>
+                        <option value="running" {{ request('status') == 'running' ? 'selected' : '' }} style="color:#222;">Running</option>
+                        <option value="finish" {{ request('status') == 'finish' ? 'selected' : '' }} style="color:#222;">Finish</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label style="color:#a0a8d0;font-size:0.8rem;margin-bottom:0.4rem;font-weight:600;"><i class="far fa-calendar-alt me-1"></i> Tanggal Challenge</label>
+                    <div class="input-group">
+                        <div class="input-group-prepend">
+                            <span class="input-group-text" style="background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);color:#a0a8d0;border-right:none;border-radius:8px 0 0 8px;"><i class="far fa-calendar-alt"></i></span>
+                        </div>
+                        <input type="text" name="date_range" id="daterange" class="form-control" placeholder="Pilih Tanggal" value="{{ request('date_range') }}" style="background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);color:#e0e0ff;border-left:none;border-radius:0 8px 8px 0;">
+                    </div>
+                </div>
+                <div class="col-md-2 d-flex gap-2">
+                    <button type="submit" class="btn btn-primary flex-grow-1" style="border-radius:8px;font-weight:600;">
+                        Tampilkan
+                    </button>
+                    @if(request()->hasAny(['search', 'status', 'date_range']))
+                    <a href="{{ route('challenge.index') }}" class="btn btn-outline-secondary" style="border-radius:8px;" title="Reset Filter">
+                        <i class="fas fa-undo"></i>
+                    </a>
+                    @endif
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
 {{-- Challenge List --}}
 <div class="row g-3">
     @forelse($challenges as $challenge)
@@ -76,8 +123,9 @@
         $color   = $challenge->moduleColor();
         $isActive = $challenge->isActive();
         $isExpired = $challenge->isExpired();
-        $statusLabel = $isActive ? 'Aktif' : ($isExpired ? 'Selesai' : 'Belum Mulai');
-        $statusClass = $isActive ? 'success' : ($isExpired ? 'secondary' : 'warning');
+        $isFinished = $challenge->isFinished();
+        $statusLabel = $isActive ? 'Aktif' : ($isFinished ? 'Selesai' : 'Belum Mulai');
+        $statusClass = $isActive ? 'success' : ($isFinished ? 'primary' : 'warning');
     @endphp
     <div class="col-xl-4 col-md-6">
         <div class="card border-0 shadow-sm challenge-card h-100"
@@ -144,12 +192,15 @@
                         </a>
                         @endcanAccess
                         @canAccess('edit','challenges')
+                        @if($challenge->isAbles())
                         <a href="{{ route('challenge.edit', $challenge) }}"
                            class="btn btn-sm btn-outline-warning mb-1 mr-1" style="border-radius:8px;font-size:.75rem;">
                             <i class="fas fa-edit"></i>
                         </a>
+                        @endif
                         @endcanAccess
                         @canAccess('destroy','challenges')
+                        @if($challenge->isAbles())
                         <form action="{{ route('challenge.destroy', $challenge) }}" method="POST"
                               onsubmit="return confirm('Hapus challenge \'{{ $challenge->name }}\'?')">
                             @csrf @method('DELETE')
@@ -157,6 +208,7 @@
                                 <i class="fas fa-trash"></i>
                             </button>
                         </form>
+                        @endif
                         @endcanAccess
                     </div>
                 </div>
@@ -183,8 +235,33 @@
 
 @section('css')
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css" />
 <style>
 .challenge-card { transition: transform .25s, box-shadow .25s; }
 .challenge-card:hover { transform: translateY(-5px); box-shadow: 0 14px 36px rgba(0,0,0,.25) !important; }
 </style>
+@stop
+
+@section('js')
+<script type="text/javascript" src="https://cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
+<script>
+$(document).ready(function() {
+    $('#daterange').daterangepicker({
+        autoUpdateInput: false,
+        locale: {
+            cancelLabel: 'Clear',
+            format: 'YYYY-MM-DD'
+        }
+    });
+
+    $('#daterange').on('apply.daterangepicker', function(ev, picker) {
+        $(this).val(picker.startDate.format('YYYY-MM-DD') + ' - ' + picker.endDate.format('YYYY-MM-DD'));
+    });
+
+    $('#daterange').on('cancel.daterangepicker', function(ev, picker) {
+        $(this).val('');
+    });
+});
+</script>
 @stop

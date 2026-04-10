@@ -31,6 +31,7 @@ class DirectPoint extends Model
         'status',
         'approved_by',
         'approved_at',
+        'metode',
         'rejection_reason',
     ];
 

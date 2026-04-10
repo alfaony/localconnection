@@ -171,6 +171,7 @@ class Kernel extends ConsoleKernel
         $schedule->command('billing:send-reminder')->timezone('Asia/Jakarta')->dailyAt('18:00');
 
         $schedule->command('project:set-status-sent-time')->timezone('Asia/Jakarta')->dailyAt('00:00');
+        $schedule->command('challenge:check-completed')->timezone('Asia/Jakarta')->hourly();
         $schedule->command('tasks:process-recurring')->timezone('Asia/Jakarta')->dailyAt('00:30');
         $schedule->command('recurring:generate')->timezone('Asia/Jakarta')->dailyAt('01:00');
         $schedule->command('recurring:generate-meetings')->timezone('Asia/Jakarta')->dailyAt('01:10');

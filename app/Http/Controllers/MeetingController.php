@@ -235,10 +235,11 @@ class MeetingController extends Controller
 
             DB::commit();
 
+            \App\Helpers\ChallengeProgressHelper::userCheckAndGiveReward(auth()->id);
             return redirect()->route('meeting.show', $meeting->slug)->with('store', true);
         } catch (\Throwable $th) {
             //throw $th;
-            dd($th);
+            // dd($th);
             DB::rollBack();
             Log::error('Error in store method: ' . $th->getMessage());
             return redirect()->route('meeting.index')->with('error', $th->getMessage());

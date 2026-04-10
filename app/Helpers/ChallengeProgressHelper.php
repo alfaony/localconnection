@@ -10,6 +10,7 @@ use App\Schemas\ParamSchema;
 use App\Models\TaskStatus;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
+use App\Helpers\InboxHelper;
 
 class ChallengeProgressHelper
 {
@@ -67,14 +68,16 @@ class ChallengeProgressHelper
     private static function countKasir(string $userId, Carbon $start, Carbon $end): int
     {
         // Model belum diimplementasi — placeholder
-        return 0;
+        return \App\Models\Sale::where('user_id', $userId)
+            ->whereBetween('created_at', [$start, $end])
+            ->count();
     }
 
     private static function countSprinter(string $userId, Carbon $start, Carbon $end): int
     {
-        return DB::table('jobs')
-            ->where('employee_id', $userId)
-            ->whereBetween('start_date', [$start->toDateString(), $end->toDateString()])
+        return DB::table('item_requests')
+            ->where('assigned_pic_id', $userId)
+            ->whereBetween('created_at', [$start, $end])
             ->count();
     }
 
@@ -146,6 +149,7 @@ class ChallengeProgressHelper
         $cu->update([
             'reward_given' => true,
             'completed_at' => now(),
+            'finished_at'  => now(),
         ]);
 
         // Beri Point (DirectPoint langsung approve)
@@ -156,6 +160,7 @@ class ChallengeProgressHelper
                 'point'        => $challenge->reward_point,
                 'approved_point' => $challenge->reward_point,
                 'reason'       => 'Challenge reward: ' . $challenge->name,
+                'metode'       => ParamSchema::CHALLENGE,
                 'status'       => \App\Models\DirectPoint::STATUS_APPROVED,
                 'approved_by'  => $challenge->created_by,
                 'approved_at'  => now(),
@@ -175,5 +180,48 @@ class ChallengeProgressHelper
             ]);
             \App\Models\User::where('id', $userId)->increment('total_xp', $challenge->reward_xp);
         }
+
+        // Kirim Inbox Notifikasi
+        $inboxHelper = new InboxHelper();
+        $inboxHelper->sent(
+            $userId, 
+            $challenge->created_by, 
+            "Selamat! Anda telah berhasil menyelesaikan challenge <b>{$challenge->name}</b>. Anda mendapatkan +{$challenge->reward_point} Poin dan +{$challenge->reward_xp} XP.", 
+            route('challenge.show', $challenge->id)
+        );
     }
+
+    /**
+     * User Check and Give reward 
+     */
+    public static function userCheckAndGiveReward(string $userId): void
+    {
+        $dateString = \Carbon\Carbon::now()->toDateString();
+        $challenges = Challenge::whereDate('start_date', '<=', $dateString)
+            ->whereHas('challengeUsers', function ($query) use ($userId) {
+                $query->where('user_id', $userId);
+            })
+            ->where('status', 'running')
+            ->get();
+
+        if(count($challenges) == 0) return;
+
+        foreach ($challenges as $challenge) {
+            self::checkAndGiveReward($challenge, $userId);
+
+            if ($challenge->status !== 'finish') {
+                $isEnded = $dateString > $challenge->end_date->toDateString();
+                
+                // Cek apakah semua member (minimal ada 1) sudah mendapatkan reward
+                $totalMembers = ChallengeUser::where('challenge_id', $challenge->id)->count();
+                $completedMembers = ChallengeUser::where('challenge_id', $challenge->id)->where('reward_given', true)->count();
+                $isAllCompleted = $totalMembers > 0 && ($totalMembers === $completedMembers);
+
+                if ($isEnded || $isAllCompleted) {
+                    $challenge->update(['status' => 'finish']);
+                }
+            }
+        }
+    }
+
 }

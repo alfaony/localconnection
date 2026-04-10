@@ -174,7 +174,7 @@
             <small style="color:#a0a8d0;">Memuat challenge...</small>
         </div>
     </div>
-    <div id="challenge-container" class="row g-3 mb-4"></div>
+    <div id="challenge-container" class="mb-4"></div>
 </div>
 @endcanAccess
 
@@ -1387,61 +1387,45 @@ async function loadActiveChallenges() {
         loader.classList.add('d-none');
         section.style.display = 'block';
 
-        let html = '';
+        let html = '<div class="list-group gap-2">';
         data.forEach(c => {
             const isComplete = c.percent >= 100;
             const barColor   = isComplete ? '#38ef7d' : c.module_color;
             const rewardDone = c.reward_given
                 ? `<span class="badge ms-1" style="background:rgba(56,239,125,.2);color:#38ef7d;font-size:.62rem;border:1px solid rgba(56,239,125,.3);"><i class="fas fa-check me-1"></i>Reward ✓</span>`
                 : '';
+            const draftIcon = c.status === 'draft' ? `<span class="badge ms-1" style="background:rgba(255,255,255,.1);color:#a0a8d0;font-size:.62rem;border:1px solid rgba(255,255,255,.2);"><i class="fas fa-pencil-alt me-1"></i>Draft</span>` : '';
 
             html += `
-            <div class="col-xl-4 col-md-6">
-                <div class="card border-0 shadow-sm h-100 challenge-home-card"
-                     style="background:linear-gradient(145deg,#1a1a2e,#16213e);border-radius:16px;overflow:hidden;cursor:default;">
-                    <div style="height:3px;background:linear-gradient(90deg,${c.module_color},#667eea);"></div>
-                    <div class="card-body p-3">
+            <div class="list-group-item d-flex flex-column flex-md-row justify-content-between align-items-md-center challenge-home-card" style="background:linear-gradient(145deg,#1a1a2e,#16213e);border:none;border-left:4px solid ${c.module_color};border-radius:12px;padding:16px;">
+                <div class="d-flex align-items-center gap-3 mb-3 mb-md-0">
+                    <div style="width:46px;height:46px;background:rgba(255,255,255,.07);border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                        <i class="${c.module_icon}" style="color:${c.module_color};font-size:1.3rem;"></i>
+                    </div>
+                    <div>
+                        <div style="color:#e0e0ff;font-weight:700;font-size:.95rem;margin-bottom:2px;">
+                            ${c.name}${draftIcon}${rewardDone}
+                        </div>
+                        <div style="color:#a0a8d0;font-size:.75rem;">
+                            ${c.module_label} &bull; ${isComplete ? '<span style="color:#38ef7d">Selesai!</span>' : `<span style="color:#f5a623">${c.days_remaining} hari lagi</span>`}
+                            ${c.reward_point > 0 ? ` &bull; <span style="color:#f5a623"><i class="fas fa-coins"></i> +${c.reward_point} Pts</span>` : ''}
+                            ${c.reward_xp > 0 ? ` &bull; <span style="color:#f093fb"><i class="fas fa-star"></i> +${c.reward_xp} XP</span>` : ''}
+                        </div>
+                    </div>
+                </div>
 
-                        {{-- Header --}}
-                        <div class="d-flex align-items-center gap-2 mb-3">
-                            <div style="width:38px;height:38px;background:rgba(255,255,255,.07);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-                                <i class="${c.module_icon}" style="color:${c.module_color};font-size:1rem;"></i>
-                            </div>
-                            <div class="flex-grow-1" style="min-width:0;">
-                                <div style="color:#e0e0ff;font-weight:700;font-size:.88rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
-                                    ${c.name}${rewardDone}
-                                </div>
-                                <div style="color:#a0a8d0;font-size:.66rem;">${c.module_label}</div>
-                            </div>
-                            ${isComplete
-                                ? `<span style="font-size:1.3rem;" title="Selesai!">🏆</span>`
-                                : `<span style="color:#f5a623;font-size:.7rem;font-weight:700;white-space:nowrap;">${c.days_remaining}h lagi</span>`
-                            }
-                        </div>
-
-                        {{-- Progress --}}
-                        <div class="mb-1 d-flex justify-content-between">
-                            <small style="color:#a0a8d0;font-size:.68rem;">Progress</small>
-                            <small style="color:${barColor};font-weight:700;font-size:.75rem;">${c.current.toLocaleString('id-ID')} / ${c.target.toLocaleString('id-ID')} ${c.unit} &bull; ${c.percent}%</small>
-                        </div>
-                        <div style="height:8px;background:rgba(255,255,255,.08);border-radius:4px;overflow:hidden;margin-bottom:12px;">
-                            <div style="height:100%;width:${c.percent}%;background:linear-gradient(90deg,${barColor},${c.module_color});border-radius:4px;transition:width 1s ease;box-shadow:0 0 8px ${barColor}55;"></div>
-                        </div>
-
-                        {{-- Reward chips --}}
-                        <div class="d-flex gap-2 flex-wrap">
-                            ${c.reward_point > 0
-                                ? `<span class="px-2 py-1 rounded-pill" style="background:rgba(245,166,35,.15);color:#f5a623;border:1px solid rgba(245,166,35,.3);font-size:.65rem;font-weight:600;"><i class="fas fa-coins me-1"></i>+${c.reward_point.toLocaleString('id-ID')} Pts</span>`
-                                : ''}
-                            ${c.reward_xp > 0
-                                ? `<span class="px-2 py-1 rounded-pill" style="background:rgba(240,147,251,.15);color:#f093fb;border:1px solid rgba(240,147,251,.3);font-size:.65rem;font-weight:600;"><i class="fas fa-star me-1"></i>+${c.reward_xp.toLocaleString('id-ID')} XP</span>`
-                                : ''}
-                            <span class="ms-auto" style="color:#a0a8d0;font-size:.65rem;align-self:center;">s/d ${c.end_date}</span>
-                        </div>
+                <div class="d-flex flex-column" style="min-width:200px;">
+                    <div class="mb-1 d-flex justify-content-between">
+                        <small style="color:#a0a8d0;font-size:.7rem;">Progress</small>
+                        <small style="color:${barColor};font-weight:700;font-size:.75rem;">${c.current.toLocaleString('id-ID')} / ${c.target.toLocaleString('id-ID')} ${c.unit} (${c.percent}%)</small>
+                    </div>
+                    <div style="height:8px;background:rgba(255,255,255,.08);border-radius:4px;overflow:hidden;">
+                        <div style="height:100%;width:${c.percent}%;background:linear-gradient(90deg,${barColor},${c.module_color});border-radius:4px;transition:width 1s ease;box-shadow:0 0 8px ${barColor}55;"></div>
                     </div>
                 </div>
             </div>`;
         });
+        html += '</div>';
 
         container.innerHTML = html;
         container.classList.remove('d-none');

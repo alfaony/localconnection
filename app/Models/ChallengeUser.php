@@ -19,11 +19,13 @@ class ChallengeUser extends Model
         'invited_by',
         'reward_given',
         'completed_at',
+        'finished_at',
     ];
 
     protected $casts = [
         'reward_given' => 'boolean',
         'completed_at' => 'datetime',
+        'finished_at'  => 'datetime',
     ];
 
     protected static function boot()

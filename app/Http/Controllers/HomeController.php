@@ -418,6 +418,7 @@ class HomeController extends Controller
         $challenges = \App\Models\Challenge::whereHas('challengeUsers', fn($q) => $q->where('user_id', $userId))
             ->where('start_date', '<=', now()->toDateString())
             ->where('end_date',   '>=', now()->toDateString())
+            ->where('status', '!=', 'finish')
             ->get();
 
         $data = $challenges->map(function ($challenge) use ($userId) {
@@ -429,6 +430,14 @@ class HomeController extends Controller
             // Auto reward jika sudah selesai
             if ($percent >= 100) {
                 \App\Helpers\ChallengeProgressHelper::checkAndGiveReward($challenge, $userId);
+
+                // Cek apakah semua member sudah selesai, jika ya update status challenge ke finish
+                $totalMembers = $challenge->challengeUsers()->count();
+                $completedMembers = $challenge->challengeUsers()->where('reward_given', true)->count();
+                
+                if ($totalMembers > 0 && ($totalMembers === $completedMembers)) {
+                    $challenge->update(['status' => 'finish']);
+                }
             }
 
             $cu = $challenge->challengeUsers()->where('user_id', $userId)->first();
@@ -436,6 +445,7 @@ class HomeController extends Controller
             return [
                 'id'            => $challenge->id,
                 'name'          => $challenge->name,
+                'status'        => $challenge->status,
                 'module_type'   => $challenge->module_type,
                 'module_label'  => $challenge->moduleLabel(),
                 'module_icon'   => $challenge->moduleIcon(),

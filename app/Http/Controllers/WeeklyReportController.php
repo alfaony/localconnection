@@ -98,6 +98,7 @@ class WeeklyReportController extends Controller
             'number_of_profit' => $request->number_of_profit,
         ]);
 
+        \App\Helpers\ChallengeProgressHelper::userCheckAndGiveReward(auth()->id);
         return redirect()->route('weekly-report.index')->with('store', true);
     }
 

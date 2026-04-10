@@ -32,7 +32,7 @@
                         <label class="form-label fw-semibold" style="color:#c8d0e0;">Nama Challenge</label>
                         <input type="text" name="name" class="form-control gf @error('name') is-invalid @enderror"
                                value="{{ old('name', $challenge->name ?? '') }}"
-                               placeholder="cth: Sprint Task Bulan April...">
+                               placeholder="cth: Sprint Task Bulan April..." {{ (isset($challenge) && in_array($challenge->status, ['running', 'finish'])) ? 'readonly' : '' }}>
                         @error('name')<div class="invalid-feedback">{{ $message }}</div>@enderror
                     </div>
 
@@ -40,7 +40,7 @@
                     <div class="mb-3">
                         <label class="form-label fw-semibold" style="color:#c8d0e0;">Deskripsi <span style="color:#606880;">(opsional)</span></label>
                         <textarea name="description" rows="2" class="form-control gf @error('description') is-invalid @enderror"
-                                  placeholder="Jelaskan tujuan challenge...">{{ old('description', $challenge->description ?? '') }}</textarea>
+                                  placeholder="Jelaskan tujuan challenge..." {{ (isset($challenge) && in_array($challenge->status, ['running', 'finish'])) ? 'readonly' : '' }}>{{ old('description', $challenge->description ?? '') }}</textarea>
                         @error('description')<div class="invalid-feedback">{{ $message }}</div>@enderror
                     </div>
 
@@ -93,13 +93,13 @@
                         <div class="col-6">
                             <label class="form-label fw-semibold" style="color:#c8d0e0;">Tanggal Mulai <span style="color:#f5576c;">*</span></label>
                             <input type="date" name="start_date" class="form-control gf @error('start_date') is-invalid @enderror"
-                                   value="{{ old('start_date', isset($challenge) ? $challenge->start_date->format('Y-m-d') : '') }}">
+                                   value="{{ old('start_date', isset($challenge) ? $challenge->start_date->format('Y-m-d') : '') }}" {{ (isset($challenge) && in_array($challenge->status, ['running', 'finish'])) ? 'readonly' : '' }}>
                             @error('start_date')<div class="invalid-feedback">{{ $message }}</div>@enderror
                         </div>
                         <div class="col-6">
                             <label class="form-label fw-semibold" style="color:#c8d0e0;">Tanggal Selesai <span style="color:#f5576c;">*</span></label>
                             <input type="date" name="end_date" class="form-control gf @error('end_date') is-invalid @enderror"
-                                   value="{{ old('end_date', isset($challenge) ? $challenge->end_date->format('Y-m-d') : '') }}">
+                                   value="{{ old('end_date', isset($challenge) ? $challenge->end_date->format('Y-m-d') : '') }}" {{ (isset($challenge) && in_array($challenge->status, ['running', 'finish'])) ? 'readonly' : '' }}>
                             @error('end_date')<div class="invalid-feedback">{{ $message }}</div>@enderror
                         </div>
                     </div>
@@ -109,8 +109,18 @@
                         <label class="form-label fw-semibold" style="color:#c8d0e0;">Target <span id="target-unit" style="color:#f5a623;">(jumlah)</span> <span style="color:#f5576c;">*</span></label>
                         <input type="number" name="target_count" min="1" class="form-control gf @error('target_count') is-invalid @enderror"
                                value="{{ old('target_count', $challenge->target_count ?? '') }}"
-                               placeholder="cth: 20">
+                               placeholder="cth: 20" {{ (isset($challenge) && in_array($challenge->status, ['running', 'finish'])) ? 'readonly' : '' }}>
                         @error('target_count')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                    </div>
+
+                    {{-- Status --}}
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold" style="color:#c8d0e0;">Status</label>
+                        <select name="status" class="form-control gf @error('status') is-invalid @enderror">
+                            <option value="draft" {{ old('status', $challenge->status ?? 'draft') == 'draft' ? 'selected' : '' }}>Draft</option>
+                            <option value="running" {{ old('status', $challenge->status ?? '') == 'running' ? 'selected' : '' }}>Running</option>
+                        </select>
+                        @error('status')<div class="invalid-feedback">{{ $message }}</div>@enderror
                     </div>
 
                     {{-- Rewards --}}
@@ -122,7 +132,7 @@
                                     <i class="fas fa-coins"></i>
                                 </span>
                                 <input type="number" name="reward_point" min="0" class="form-control gf @error('reward_point') is-invalid @enderror"
-                                       value="{{ old('reward_point', $challenge->reward_point ?? 0) }}">
+                                       value="{{ old('reward_point', $challenge->reward_point ?? 0) }}" {{ (isset($challenge) && in_array($challenge->status, ['running', 'finish'])) ? 'readonly' : '' }}>
                             </div>
                             @error('reward_point')<small class="text-danger">{{ $message }}</small>@enderror
                         </div>
@@ -133,7 +143,7 @@
                                     <i class="fas fa-star"></i>
                                 </span>
                                 <input type="number" name="reward_xp" min="0" class="form-control gf @error('reward_xp') is-invalid @enderror"
-                                       value="{{ old('reward_xp', $challenge->reward_xp ?? 0) }}">
+                                       value="{{ old('reward_xp', $challenge->reward_xp ?? 0) }}" {{ (isset($challenge) && in_array($challenge->status, ['running', 'finish'])) ? 'readonly' : '' }}>
                             </div>
                             @error('reward_xp')<small class="text-danger">{{ $message }}</small>@enderror
                         </div>
