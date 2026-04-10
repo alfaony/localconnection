@@ -166,5 +166,27 @@ document.querySelectorAll('.module-radio').forEach(function(radio) {
         unit.textContent = radio.value === 'score' ? '(POINT)' : '(jumlah)';
     }
 });
+
+// Swal warning saat simpan jika status = running
+$('form').on('submit', function (e) {
+    if ($('select[name="status"]').val() === 'running') {
+        e.preventDefault();
+        var $form = $(this);
+        Swal.fire({
+            title: 'Perhatian!',
+            html: 'Challenge <b>tidak bisa diubah</b> ketika status sudah <b>Running</b>.<br>Lanjutkan?',
+            type: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Lanjutkan',
+            cancelButtonText: 'Batal',
+            confirmButtonColor: '#667eea',
+            cancelButtonColor: '#6c757d',
+        }).then(function (result) {
+            if (result.value) {
+                $form.off('submit').submit();
+            }
+        });
+    }
+});
 </script>
 @stop
