@@ -120,6 +120,7 @@ class DatabaseSeeder extends Seeder
         $this->call(XpConfigSeeder::class);
         $this->call(PermissionForMenuBadgeSeeder::class);
         $this->call(PermissionForMenuChallengeSeeder::class);
-        
+        $this->call(PermissionForMenuEventSeeder::class);
+
     }
 }

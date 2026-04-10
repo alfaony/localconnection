@@ -465,6 +465,103 @@ class HomeController extends Controller
         return response()->json(['status' => 'success', 'data' => $data]);
     }
 
+    public function activeEvents(Request $request)
+    {
+        $userId     = Auth::id();
+        $weekOffset = (int) $request->input('week_offset', 0);
+
+        // Range minggu yang diminta (Senin – Minggu)
+        $weekStart = \Carbon\Carbon::now()->startOfWeek(\Carbon\Carbon::MONDAY)->addWeeks($weekOffset);
+        $weekEnd   = $weekStart->copy()->endOfWeek(\Carbon\Carbon::SUNDAY);
+
+        // Cari events milik company + user ter-invite
+        $events = \App\Models\Event::byCompany(Auth::user()->company_id)
+            ->where('is_active', true)
+            ->whereHas('eventUsers', fn($q) => $q->where('user_id', $userId))
+            ->whereHas('occurrences', function ($q) use ($weekStart, $weekEnd) {
+                $q->where('start_date', '<=', $weekEnd->toDateString())
+                  ->where('end_date',   '>=', $weekStart->toDateString());
+            })
+            ->with(['occurrences' => function ($q) use ($weekStart, $weekEnd) {
+                $q->where('start_date', '<=', $weekEnd->toDateString())
+                  ->where('end_date',   '>=', $weekStart->toDateString());
+            }])
+            ->get();
+
+        // Untuk week_offset=0 (minggu ini): catat view occurrence sekali per user
+        if ($weekOffset === 0) {
+            foreach ($events as $event) {
+                $occurrence = $event->occurrences->first();
+                if (!$occurrence) continue;
+
+                $alreadyViewed = \App\Models\EventView::where('event_occurrence_id', $occurrence->id)
+                    ->where('user_id', $userId)
+                    ->exists();
+
+                if (!$alreadyViewed) {
+                    \App\Models\EventView::create([
+                        'event_id'            => $event->id,
+                        'event_occurrence_id' => $occurrence->id,
+                        'user_id'             => $userId,
+                    ]);
+                }
+            }
+        }
+
+        // Header hari untuk kalender (Mon–Sun)
+        $days = [];
+        for ($i = 0; $i < 7; $i++) {
+            $d       = $weekStart->copy()->addDays($i);
+            $days[]  = [
+                'date'       => $d->toDateString(),
+                'label'      => $d->isoFormat('ddd'),  // Sen, Sel, ...
+                'day_number' => $d->day,
+                'is_today'   => $d->isToday(),
+            ];
+        }
+
+        // Mapping occurrences ke posisi kalender
+        $rows = $events->map(function ($event) use ($weekStart, $weekEnd) {
+            $occ = $event->occurrences->first();
+            if (!$occ) return null;
+
+            // Clamp ke range minggu
+            $occStart = $occ->start_date->lt($weekStart) ? $weekStart->copy() : $occ->start_date->copy();
+            $occEnd   = $occ->end_date->gt($weekEnd)     ? $weekEnd->copy()   : $occ->end_date->copy();
+
+            // Kolom mulai (0=Senin, 6=Minggu)
+            $colStart = (int) $occStart->diffInDays($weekStart, false) * -1;
+            if ($colStart < 0) $colStart = 0;
+            $colSpan  = (int) $occStart->diffInDays($occEnd) + 1;
+            // Jangan melebihi 7 kolom
+            $colSpan  = min($colSpan, 7 - $colStart);
+
+            return [
+                'event_id'   => $event->id,
+                'occ_id'     => $occ->id,
+                'name'       => $event->name,
+                'color'      => $event->color,
+                'col_start'  => $colStart,   // 0-based dari Senin
+                'col_span'   => $colSpan,
+                'time_range' => $event->timeRange(),
+                'detail_url' => route('event.show', $event->id),
+                'is_routine' => $event->is_routine,
+            ];
+        })->filter()->values();
+
+        return response()->json([
+            'status' => 'success',
+            'data'   => [
+                'week_start'  => $weekStart->toDateString(),
+                'week_end'    => $weekEnd->toDateString(),
+                'week_label'  => $weekStart->format('d M') . ' – ' . $weekEnd->format('d M Y'),
+                'week_offset' => $weekOffset,
+                'days'        => $days,
+                'rows'        => $rows,
+            ],
+        ]);
+    }
+
     public function userBadges()
     {
         $data = \App\Models\UserBadge::with('badge')
