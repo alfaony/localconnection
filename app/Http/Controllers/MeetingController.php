@@ -235,7 +235,7 @@ class MeetingController extends Controller
 
             DB::commit();
 
-            \App\Helpers\ChallengeProgressHelper::userCheckAndGiveReward(auth()->id);
+            \App\Helpers\ChallengeProgressHelper::userCheckAndGiveReward(auth()->id());
             return redirect()->route('meeting.show', $meeting->slug)->with('store', true);
         } catch (\Throwable $th) {
             //throw $th;

@@ -50,10 +50,11 @@ class ChallengeProgressHelper
 
     private static function countTask(string $userId, Carbon $start, Carbon $end): int
     {
-        $completeId = TaskStatus::where('name', ParamSchema::COMPLATE)->value('id');
         return DailyTask::where('assignment_user_id', $userId)
-            ->where('task_status_id', $completeId)
-            ->whereBetween('submit', [$start, $end])
+            ->whereHas('statusRecords', function ($q) use ($start, $end) {
+                $q->whereBetween('date', [$start->toDateString(), $end->toDateString()])
+                  ->whereHas('taskStatus', fn($tq) => $tq->where('name', ParamSchema::COMPLATE));
+            })
             ->count();
     }
 
