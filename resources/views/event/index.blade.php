@@ -28,13 +28,13 @@
                        class="form-control form-control-sm gf" placeholder="Cari nama event...">
             </div>
             <div class="col-md-3">
-                <select name="is_routine" class="form-select form-select-sm gf">
+                <select name="is_routine" class="form-control form-select-sm gf">
                     <option value="">Semua Tipe</option>
                     <option value="0" @selected(request('is_routine') === '0')>Tanggal Tertentu</option>
                     <option value="1" @selected(request('is_routine') === '1')>Rutin (Repeat)</option>
                 </select>
             </div>
-            <div class="col-md-auto">
+            <div class="col-md-auto ml-auto">
                 <button type="submit" class="btn btn-sm btn-primary"><i class="fas fa-search me-1"></i>Filter</button>
                 <a href="{{ route('event.index') }}" class="btn btn-sm btn-secondary ms-1">Reset</a>
             </div>
@@ -110,14 +110,14 @@
                 <div class="d-flex gap-2">
                     @canAccess('show','events')
                     <a href="{{ route('event.detail', $event->id) }}"
-                       class="btn btn-sm flex-grow-1"
+                       class="btn btn-sm flex-grow-1 mb-1 mr-1 "
                        style="background:rgba(102,126,234,.2);color:#a5b4fc;border:1px solid rgba(102,126,234,.3);font-size:.75rem;">
                         <i class="fas fa-eye me-1"></i>Detail
                     </a>
                     @endcanAccess
                     @canAccess('edit','events')
                     <a href="{{ route('event.edit', $event->id) }}"
-                       class="btn btn-sm"
+                       class="btn btn-sm mb-1 mr-1 "
                        style="background:rgba(245,166,35,.15);color:#f5a623;border:1px solid rgba(245,166,35,.3);font-size:.75rem;">
                         <i class="fas fa-pen"></i>
                     </a>
@@ -126,7 +126,7 @@
                     <form action="{{ route('event.destroy', $event->id) }}" method="POST"
                           onsubmit="return confirm('Hapus event ini?')">
                         @csrf @method('DELETE')
-                        <button class="btn btn-sm"
+                        <button class="btn btn-sm mb-1"
                                 style="background:rgba(248,113,113,.15);color:#f87171;border:1px solid rgba(248,113,113,.3);font-size:.75rem;">
                             <i class="fas fa-trash"></i>
                         </button>

@@ -9,7 +9,7 @@
         <h1 class="m-0 fw-bold">🎪 {{ $event->name }}</h1>
         <small style="color:#55596e;">Detail, Peserta & Riwayat Event</small>
     </div>
-    <div class="ms-auto d-flex gap-2">
+    <div class="ms-auto d-flex gap-2 ml-auto">
         @canAccess('edit','events')
         <a href="{{ route('event.edit', $event->id) }}" class="btn btn-sm btn-warning">
             <i class="fas fa-pen me-1"></i>Edit

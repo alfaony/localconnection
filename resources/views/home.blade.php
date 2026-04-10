@@ -161,23 +161,6 @@
 </div>
 @endcanAccess
 
-{{-- ════ ACTIVE CHALLENGES ════ --}}
-@canAccess('activeChallenges','homes')
-<div id="challenge-section" style="display:none;">
-    <div class="mb-2 mt-4 text-uppercase fw-bold text-muted" style="letter-spacing: 1px; font-size: 0.85rem;">
-        <i class="fas fa-fire me-1"></i> Challenge Aktif
-    </div>
-    <div id="challenge-loader" class="mb-3">
-        <div class="d-flex align-items-center justify-content-center py-3"
-             style="background:rgba(255,255,255,.04);border-radius:14px;border:1px dashed rgba(255,255,255,.1);">
-            <div class="spinner-border spinner-border-sm me-2" style="color:#f093fb;" role="status"></div>
-            <small style="color:#a0a8d0;">Memuat challenge...</small>
-        </div>
-    </div>
-    <div id="challenge-container" class="mb-4"></div>
-</div>
-@endcanAccess
-
 @canAccess('leaderboard','homes')
 <div class="mb-2 mt-4 text-uppercase fw-bold text-muted" style="letter-spacing: 1px; font-size: 0.85rem;">
     <i class="fas fa-trophy me-1"></i> Leaderboards & Hall of Fame
@@ -243,6 +226,23 @@
         </div>
     </div>
     @endcanAccess
+</div>
+@endcanAccess
+
+{{-- ════ ACTIVE CHALLENGES ════ --}}
+@canAccess('activeChallenges','homes')
+<div id="challenge-section" style="display:none;">
+    <div class="mb-2 mt-4 text-uppercase fw-bold text-muted" style="letter-spacing: 1px; font-size: 0.85rem;">
+        <i class="fas fa-fire me-1"></i> Challenge Aktif
+    </div>
+    <div id="challenge-loader" class="mb-3">
+        <div class="d-flex align-items-center justify-content-center py-3"
+             style="background:rgba(255,255,255,.04);border-radius:14px;border:1px dashed rgba(255,255,255,.1);">
+            <div class="spinner-border spinner-border-sm me-2" style="color:#f093fb;" role="status"></div>
+            <small style="color:#a0a8d0;">Memuat challenge...</small>
+        </div>
+    </div>
+    <div id="challenge-container" class="mb-4"></div>
 </div>
 @endcanAccess
 
