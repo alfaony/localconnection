@@ -923,14 +923,14 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
       Route::delete('badge/revoke/{userBadge}', [App\Http\Controllers\BadgeController::class, 'revokeUserBadge'])->name('badge.revoke');
       Route::resource('badge', App\Http\Controllers\BadgeController::class)->except(['show']);
 
+      // ========================================================================
+      // CHALLENGE SYSTEM
+      // ========================================================================
+      Route::delete('challenge/{challenge}/user/{userId}', [App\Http\Controllers\ChallengeController::class, 'removeUser'])->name('challenge.removeUser');
+      Route::resource('challenge', App\Http\Controllers\ChallengeController::class)->except(['show']);
+      Route::post('challenge/{challenge}/invite', [App\Http\Controllers\ChallengeController::class, 'invite'])->name('challenge.invite');
+      Route::get('challenge/{challenge}', [App\Http\Controllers\ChallengeController::class, 'show'])->name('challenge.show');
     });
-    // ========================================================================
-    // CHALLENGE SYSTEM
-    // ========================================================================
-    Route::delete('challenge/{challenge}/user/{userId}', [App\Http\Controllers\ChallengeController::class, 'removeUser'])->name('challenge.removeUser');
-    Route::resource('challenge', App\Http\Controllers\ChallengeController::class)->except(['show']);
-    Route::post('challenge/{challenge}/invite', [App\Http\Controllers\ChallengeController::class, 'invite'])->name('challenge.invite');
-    Route::get('challenge/{challenge}', [App\Http\Controllers\ChallengeController::class, 'show'])->name('challenge.show');
     
 
 
