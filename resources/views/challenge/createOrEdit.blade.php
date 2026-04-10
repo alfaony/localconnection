@@ -50,26 +50,6 @@
                         <div class="row g-2" id="module-picker">
                             @foreach($moduleOptions as $value => $label)
                             @php
-                                $icons = [
-                                    'task'          => 'bi bi-check2-circle',
-                                    'internet'      => 'bi bi-wifi',
-                                    'kasir'         => 'bi bi-cart-check',
-                                    'sprinter'      => 'fas fa-running',
-                                    'meeting'       => 'bi bi-people-fill',
-                                    'decision'      => 'bi bi-clipboard-check',
-                                    'weekly_report' => 'bi bi-file-earmark-text',
-                                    'score'         => 'bi bi-star-fill',
-                                ];
-                                $colors = [
-                                    'task'          => '#38ef7d',
-                                    'internet'      => '#4facfe',
-                                    'kasir'         => '#f5a623',
-                                    'sprinter'      => '#f093fb',
-                                    'meeting'       => '#667eea',
-                                    'decision'      => '#f5576c',
-                                    'weekly_report' => '#43e97b',
-                                    'score'         => '#ffd700',
-                                ];
                                 $selected = old('module_type', $challenge->module_type ?? '') === $value;
                             @endphp
                             <div class="col-6 col-md-3">
@@ -78,7 +58,7 @@
                                            class="d-none module-radio" {{ $selected ? 'checked' : '' }}>
                                     <div class="module-card text-center p-3 rounded-3"
                                          style="background:rgba(255,255,255,.04);border:2px solid rgba(255,255,255,.08);transition:all .2s;">
-                                        <i class="{{ $icons[$value] }}" style="color:{{ $colors[$value] }};font-size:1.4rem;"></i>
+                                        <i class="{{ config('challenge.icons.'.$value) }}" style="color:{{ config('challenge.colors.'.$value) }};font-size:1.4rem;"></i>
                                         <div style="color:#a0a8d0;font-size:.65rem;margin-top:6px;line-height:1.3;">{{ $label }}</div>
                                     </div>
                                 </label>
