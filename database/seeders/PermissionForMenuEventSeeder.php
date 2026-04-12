@@ -19,12 +19,17 @@ class PermissionForMenuEventSeeder extends Seeder
             // ── Event CRUD (Root & Admin) ──────────────────────────────────────
             $crudMethods = ['index', 'create', 'store', 'show','detail','edit', 'update', 'destroy', 'invite', 'removeUser'];
             $crudRoles   = Role::whereIn('name', [RoleSchema::ROOT, RoleSchema::ADMIN])->get();
-
+            $showEvent = null;
             foreach ($crudMethods as $method) {
                 $perm = Permission::firstOrCreate(
                     ['name' => ucwords($method) . ' Event'],
                     ['method' => $method, 'table' => 'events', 'model' => 'Event', 'guard_name' => 'web']
                 );
+
+                if($method == 'show'){
+                    $showEvent = $perm;
+                }
+
                 foreach ($crudRoles as $role) {
                     PermissionRole::firstOrCreate(['role_id' => $role->id, 'permission_id' => $perm->id]);
                 }
@@ -44,6 +49,9 @@ class PermissionForMenuEventSeeder extends Seeder
 
             foreach ($homeRoles as $role) {
                 PermissionRole::firstOrCreate(['role_id' => $role->id, 'permission_id' => $homePerm->id]);
+                if($showEvent){
+                    PermissionRole::firstOrCreate(['role_id' => $role->id, 'permission_id' => $showEvent->id]);
+                }
             }
 
             $this->call(ClearPermissionSeeder::class);
