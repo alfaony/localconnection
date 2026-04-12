@@ -286,30 +286,88 @@ class RoleController extends Controller
     private function getMainMenus()
     {
         return [
-            'assets', 'asset_assigns', 'attendances', 'homes', 'pricelists',
-            'employees', 'managers', 'users', 'products', 'customers',
-            'quotes', 'work_orders', 'agreement_letters', 'projects', 'supliers',
-            'report_projects', 'basts', 'reports', 'setting_companies', 'equipment',
-            'equipment_reductions', 'tasks', 'task_assigns', 'report_points',
-            'security_checks', 'cctv_checks', 'tickets', 'trainings', 'ip_rights',
-            'sales_achievements', 'dailytasks', 'daily_task_projects', 'objectives',
-            'divisions', 'visions', 'missions', 'project_dashboards', 'report_productivities',
-            'daily_task_categories', 'division_budgets', 'shifting_obs', 'schedule_obs',
-            'inboxes', 'letter_submissions', 'devices', 'positions', 'national_holidays',
-            'employee_checkings', 'invoices', 'xeros', 'roles', 'pass_checkings',
-            'warehouses', 'sensors', 'racks', 'zones', 'wilayahs', 'providers',
-            'shipping_rates', 'provinces', 'cities', 'districts', 'subdistricts',
-            'postal_codes', 'shipping_calculations', 'ask_bos', 'decisions', 'kyes',
-            'partnership_agreements', 'product_suppliers', 'dayoffs', 'office_media','partners',
-            'weekly_reports', 'dashboard_weekly_reports', 'vehicles', 'subscribe_letters',
-            'flowcharts', 'item_requests', 'item_purchases', 'chat_messages', 'meetings',
-            'product_categories', 'companies', 'moms', 'master_check_items', 'used_laptops',
-            'used_items', 'data_centers', 'pops', 'optical_distributions', 'coverage_services',
-            'internet_packages', 'internet_customers', 'promos', 'routers', 'webhook_settings',
-            'barcodes', 'office_attendances', 'supplier_types', 'supplier_categories',
-            'product_stores', 'category_product_stores', 'brand_product_stores',
-            'punishment_users', 'sales', 'store_sellings', 'wfo_rules','partner_parameter_types','software','master_accounts','software_packages','subscriptions',
-            'customer_software','customer_checkouts','customer_subscriptions','subscription_payments','software_dashboards','partner_types','badges','xp_configs'
+            // a
+            'agreement_letters', 'ask_bos', 'asset_assigns', 'assets', 'attendances',
+
+            // b
+            'badges', 'barcodes', 'basts', 'brand_product_stores',
+
+            // c
+            'category_product_stores', 'cctv_checks', 'challenges', 'chat_messages', 'cities',
+            'companies', 'coverage_services', 'customer_checkouts', 'customer_software', 'customer_subscriptions',
+            'customers',
+
+            // d
+            'daily_task_categories', 'daily_task_projects', 'dailytasks', 'dashboard_weekly_reports', 'data_centers',
+            'dayoffs', 'decisions', 'devices', 'districts', 'division_budgets',
+            'divisions',
+
+            // e
+            'employee_checkings', 'employees', 'equipment', 'equipment_reductions','events',
+
+            // f
+            'flowcharts',
+
+            // h
+            'homes',
+
+            // i
+            'inboxes', 'internet_customers', 'internet_packages', 'invoices', 'ip_rights',
+            'item_purchases', 'item_requests',
+
+            // k
+            'kyes',
+
+            // l
+            'letter_submissions',
+
+            // m
+            'managers', 'master_accounts', 'master_check_items', 'meetings', 'missions',
+            'moms',
+
+            // n
+            'national_holidays',
+
+            // o
+            'objectives', 'office_attendances', 'office_media', 'optical_distributions',
+
+            // p
+            'partner_parameter_types', 'partner_types', 'partners', 'partnership_agreements', 'pass_checkings',
+            'pops', 'positions', 'postal_codes', 'pricelists', 'product_categories',
+            'product_stores', 'product_suppliers', 'products', 'project_dashboards', 'projects',
+            'promos', 'providers', 'provinces', 'punishment_users',
+
+            // q
+            'quotes',
+
+            // r
+            'racks', 'report_points', 'report_productivities', 'report_projects', 'reports',
+            'roles', 'routers',
+
+            // s
+            'sales', 'sales_achievements', 'schedule_obs', 'security_checks', 'sensors',
+            'setting_companies', 'shifting_obs', 'shipping_calculations', 'shipping_rates', 'software',
+            'software_dashboards', 'software_packages', 'store_sellings', 'subdistricts', 'subscribe_letters',
+            'subscription_payments', 'subscriptions', 'supliers', 'supplier_categories', 'supplier_types',
+
+            // t
+            'task_assigns', 'tasks', 'tickets', 'trainings',
+
+            // u
+            'used_items', 'used_laptops', 'users',
+
+            // v
+            'vehicles', 'visions',
+
+            // w
+            'warehouses', 'webhook_settings', 'weekly_reports', 'wfo_rules', 'wilayahs',
+            'work_orders',
+
+            // x
+            'xeros', 'xp_configs',
+
+            // z
+            'zones',
         ];
     }
 }

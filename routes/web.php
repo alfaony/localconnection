@@ -318,6 +318,8 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
   Route::get('home/xp-leaderboard', [App\Http\Controllers\HomeController::class, 'xpLeaderboard'])->name('home.xpLeaderboard');
   Route::get('home/overdueRanking', [App\Http\Controllers\HomeController::class, 'overdueRanking'])->name('home.overdueRanking');
   Route::get('home/user-badges', [App\Http\Controllers\HomeController::class, 'userBadges'])->name('home.userBadges');
+  Route::get('home/active-challenges', [App\Http\Controllers\HomeController::class, 'activeChallenges'])->name('home.activeChallenges');
+  Route::get('home/active-events', [App\Http\Controllers\HomeController::class, 'activeEvents'])->name('home.activeEvents');
 
   Route::resource('office-media', OfficeMediaController::class)->only(['index', 'store','destroy']);
   // Xero Setting
@@ -921,6 +923,24 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
       Route::post('badge/assign', [App\Http\Controllers\BadgeController::class, 'assignStore'])->name('badge.assign.store');
       Route::delete('badge/revoke/{userBadge}', [App\Http\Controllers\BadgeController::class, 'revokeUserBadge'])->name('badge.revoke');
       Route::resource('badge', App\Http\Controllers\BadgeController::class)->except(['show']);
+
+      // ========================================================================
+      // CHALLENGE SYSTEM
+      // ========================================================================
+      Route::delete('challenge/{challenge}/user/{userId}', [App\Http\Controllers\ChallengeController::class, 'removeUser'])->name('challenge.removeUser');
+      Route::resource('challenge', App\Http\Controllers\ChallengeController::class)->except(['show']);
+      Route::post('challenge/{challenge}/invite', [App\Http\Controllers\ChallengeController::class, 'invite'])->name('challenge.invite');
+      Route::get('challenge/{challenge}', [App\Http\Controllers\ChallengeController::class, 'show'])->name('challenge.show');
+
+      // ========================================================================
+      // EVENT SYSTEM
+      // ========================================================================
+      Route::delete('event/{event}/user/{userId}', [App\Http\Controllers\EventController::class, 'removeUser'])->name('event.removeUser');
+      Route::post('event/{event}/invite', [App\Http\Controllers\EventController::class, 'invite'])->name('event.invite');
+      Route::post('event/{event}/mark-viewed', [App\Http\Controllers\EventController::class, 'markViewed'])->name('event.markViewed');
+      Route::resource('event', App\Http\Controllers\EventController::class)->except(['show']);
+      Route::get('event/{event}', [App\Http\Controllers\EventController::class, 'show'])->name('event.show');
+      Route::get('event/{event}/detail', [App\Http\Controllers\EventController::class, 'detail'])->name('event.detail');
     });
     
 

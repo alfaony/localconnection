@@ -111,9 +111,20 @@ class ReportPointProductivityController extends Controller
                 ->whereHas('punishmentUser')
                 ->sum('point');
 
-            // Direct Points received (approved only) - filter by approved_at
+            // Direct Points received (approved only) - filter by approved_at (excluding Challenges)
             $directPointsReceived = \App\Models\DirectPoint::where('to_user_id', $user->id)
                 ->where('status', \App\Models\DirectPoint::STATUS_APPROVED)
+                ->where('metode', ParamSchema::DIRECT_POINT)
+                ->whereBetween('approved_at', [$startDate, $endDate])
+                ->get()
+                ->sum(function($dp) {
+                    return $dp->approved_point ?? $dp->point;
+                });
+
+            // Challenge points (from Direct Points with reason Challenge reward:...)
+            $challengePoints = \App\Models\DirectPoint::where('to_user_id', $user->id)
+                ->where('status', \App\Models\DirectPoint::STATUS_APPROVED)
+                ->where('metode', ParamSchema::CHALLENGE)
                 ->whereBetween('approved_at', [$startDate, $endDate])
                 ->get()
                 ->sum(function($dp) {
@@ -128,7 +139,8 @@ class ReportPointProductivityController extends Controller
                 'daily_task_points' => $dailyTaskPoints,
                 'punishment_points' => $punishmentPoints,
                 'direct_points' => $directPointsReceived,
-                'total_points' => $trainingPoints + $ipRightPoints + $salesAchievementPoints + $dailyTaskPoints + $punishmentPoints + $directPointsReceived,
+                'challenge_points' => $challengePoints,
+                'total_points' => $trainingPoints + $ipRightPoints + $salesAchievementPoints + $dailyTaskPoints + $punishmentPoints + $directPointsReceived + $challengePoints,
             ];
         });
 
@@ -216,9 +228,20 @@ class ReportPointProductivityController extends Controller
                 ->whereHas('punishmentUser')
                 ->sum('point');
 
-            // Direct Points received (approved only) - filter by approved_at
+            // Direct Points received (approved only) - filter by approved_at (excluding Challenges)
             $directPointsReceived = \App\Models\DirectPoint::where('to_user_id', $user->id)
                 ->where('status', \App\Models\DirectPoint::STATUS_APPROVED)
+                ->where('reason', 'not like', 'Challenge reward:%')
+                ->whereBetween('approved_at', [$startDate, $endDate])
+                ->get()
+                ->sum(function($dp) {
+                    return $dp->approved_point ?? $dp->point;
+                });
+
+            // Challenge points
+            $challengePoints = \App\Models\DirectPoint::where('to_user_id', $user->id)
+                ->where('status', \App\Models\DirectPoint::STATUS_APPROVED)
+                ->where('reason', 'like', 'Challenge reward:%')
                 ->whereBetween('approved_at', [$startDate, $endDate])
                 ->get()
                 ->sum(function($dp) {
@@ -240,7 +263,8 @@ class ReportPointProductivityController extends Controller
                 'daily_task_points'          => $dailyTaskPoints,
                 'punishment_points'          => $punishmentPoints,
                 'direct_points'              => $directPointsReceived,
-                'total_points'               => $trainingPoints + $ipRightPoints + $salesAchievementPoints + $dailyTaskPoints + $punishmentPoints + $directPointsReceived,
+                'challenge_points'           => $challengePoints,
+                'total_points'               => $trainingPoints + $ipRightPoints + $salesAchievementPoints + $dailyTaskPoints + $punishmentPoints + $directPointsReceived + $challengePoints,
             ];
         });
 
@@ -359,15 +383,31 @@ class ReportPointProductivityController extends Controller
                 ];
             });
 
-        // Get Direct Points details
+        // Get Direct Points details (excluding Challenges)
         $directPoints = \App\Models\DirectPoint::where('to_user_id', $userId)
             ->where('status', \App\Models\DirectPoint::STATUS_APPROVED)
+            ->where('reason', 'not like', 'Challenge reward:%')
             ->whereBetween('approved_at', [$startDate, $endDate])
             ->with(['fromUser', 'division'])
             ->get()
             ->map(function($item) {
                 return [
                     'name' => 'Direct Point dari ' . $item->fromUser->name . ' (' . $item->division?->name . ')',
+                    'point' => $item->approved_point ?? $item->point,
+                    'date' => $item->approved_at->format('d M Y'),
+                ];
+            });
+
+        // Get Challenge Points details
+        $challengePoints = \App\Models\DirectPoint::where('to_user_id', $userId)
+            ->where('status', \App\Models\DirectPoint::STATUS_APPROVED)
+            ->where('reason', 'like', 'Challenge reward:%')
+            ->whereBetween('approved_at', [$startDate, $endDate])
+            ->with(['fromUser', 'division'])
+            ->get()
+            ->map(function($item) {
+                return [
+                    'name' => $item->reason,
                     'point' => $item->approved_point ?? $item->point,
                     'date' => $item->approved_at->format('d M Y'),
                 ];
@@ -400,6 +440,10 @@ class ReportPointProductivityController extends Controller
                 'direct_points' => [
                     'items' => $directPoints,
                     'total' => $directPoints->sum('point'),
+                ],
+                'challenge_points' => [
+                    'items' => $challengePoints,
+                    'total' => $challengePoints->sum('point'),
                 ],
             ],
         ]);

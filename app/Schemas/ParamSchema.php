@@ -143,6 +143,8 @@ class ParamSchema
     const REACTIVATED = "reactivated";
     const CUSTOMER_EXISTING = "customer_existing";
     const INACTIVE = "inactive";
+    const CHALLENGE = "challenge";
+    const DIRECT_POINT = "direct_point";
 
     // Promo
     const PROMO_FREE_MONTH = "free_months";
