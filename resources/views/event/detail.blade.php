@@ -48,7 +48,7 @@
                 <h5 class="fw-bold mb-1" style="color:#e0e0ff;">{{ $event->name }}</h5>
 
                 @if($event->description)
-                <p style="color:#a0a8d0;font-size:.85rem;line-height:1.6;" class="mb-3">{{ $event->description }}</p>
+                <div class="html-content mb-3" style="color:#a0a8d0;font-size:.85rem;line-height:1.6;">{!! $event->description !!}</div>
                 @endif
 
                 <div class="d-flex flex-column gap-2">
@@ -251,6 +251,26 @@
 .select2-dropdown { background-color:#16213e!important;border:1px solid rgba(255,255,255,.1)!important;color:#e0e0ff!important; }
 .select2-container--default .select2-results__option--highlighted { background-color:rgba(102,126,234,.3)!important;color:#fff!important; }
 .select2-search--dropdown .select2-search__field { background-color:#111827!important;border:1px solid rgba(255,255,255,.1)!important;color:#e0e0ff!important; }
+
+/* Quill HTML Content Styles */
+.html-content p { margin-bottom: 12px; }
+.html-content ul, .html-content ol { margin-left: 20px; margin-bottom: 12px; padding-left: 10px; }
+.html-content li { margin-bottom: 6px; }
+.html-content h1, .html-content h2, .html-content h3 { color: #e0e0ff; margin-top: 18px; margin-bottom: 10px; font-weight: 700; }
+.html-content a { color: #a5b4fc; text-decoration: none; }
+.html-content a:hover { text-decoration: underline; }
+.html-content strong, .html-content b { color: #e0e0ff; font-weight: 700; }
+.html-content blockquote {
+    border-left: 3px solid rgba(255,255,255,0.2);
+    padding-left: 14px;
+    margin: 12px 0;
+    color: #a0a8d0;
+    font-style: italic;
+    background: rgba(255,255,255,.03);
+    border-radius: 0 4px 4px 0;
+    padding-top: 8px;
+    padding-bottom: 8px;
+}
 </style>
 @stop
 

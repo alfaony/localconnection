@@ -8,14 +8,21 @@ use App\Models\ChallengeUser;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use App\Helpers\Access;
 
 class ChallengeController extends Controller
 {
     public function index(Request $request)
     {
+        $permissionCreate = Access::can('create','challenges');
         $query = Challenge::byCompany(Auth::user()->company_id)
             ->withCount('challengeUsers')
             ->latest();
+
+
+        if(!$permissionCreate){
+            $query->byInvitedUser(Auth::id());
+        }
 
         if ($request->filled('search')) {
             $query->where('name', 'like', '%' . $request->search . '%');

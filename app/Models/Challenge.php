@@ -88,6 +88,13 @@ class Challenge extends Model
                      ->where('end_date',   '>=', now()->toDateString());
     }
 
+    public function scopeByInvitedUser($query, $userId)
+    {
+        return $query->whereHas('invitedUsers', function ($q) use ($userId) {
+            $q->where('user_id', $userId);
+        });
+    }
+
     // ── Helpers ───────────────────────────────────────────────────────────
 
     public static function moduleOptions(): array

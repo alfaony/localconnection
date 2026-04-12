@@ -85,12 +85,6 @@
                     </span>
                 </div>
 
-                @if($event->description)
-                <p style="color:#a0a8d0;font-size:.75rem;line-height:1.5;margin-bottom:10px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">
-                    {{ $event->description }}
-                </p>
-                @endif
-
                 {{-- Meta chips --}}
                 <div class="d-flex gap-2 flex-wrap mb-3">
                     @if($event->start_time)

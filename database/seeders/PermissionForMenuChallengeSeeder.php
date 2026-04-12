@@ -20,11 +20,21 @@ class PermissionForMenuChallengeSeeder extends Seeder
             $crudMethods = ['index', 'create', 'store', 'show', 'edit', 'update', 'destroy', 'invite', 'removeUser'];
             $crudRoles   = Role::whereIn('name', [RoleSchema::ROOT, RoleSchema::ADMIN])->get();
 
+
+            $show = null;
             foreach ($crudMethods as $method) {
                 $perm = Permission::firstOrCreate(
                     ['name' => ucwords($method) . ' Challenge'],
                     ['method' => $method, 'table' => 'challenges', 'model' => 'Challenge', 'guard_name' => 'web']
                 );
+
+                if($method == 'show'){
+                    $show = $perm;
+                }
+
+                if($method == 'index'){
+                    $index = $perm;
+                }
                 foreach ($crudRoles as $role) {
                     PermissionRole::firstOrCreate(['role_id' => $role->id, 'permission_id' => $perm->id]);
                 }
@@ -44,6 +54,14 @@ class PermissionForMenuChallengeSeeder extends Seeder
 
             foreach ($homeRoles as $role) {
                 PermissionRole::firstOrCreate(['role_id' => $role->id, 'permission_id' => $homePerm->id]);
+
+                if($show){
+                    PermissionRole::firstOrCreate(['role_id' => $role->id, 'permission_id' => $show->id]);
+                }
+
+                if($index){
+                    PermissionRole::firstOrCreate(['role_id' => $role->id, 'permission_id' => $index->id]);
+                }
             }
 
             $this->call(ClearPermissionSeeder::class);

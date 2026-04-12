@@ -194,7 +194,25 @@
             font-size: .9rem;
             line-height: 1.75;
             color: #c8d0e0;
-            white-space: pre-wrap;
+        }
+        
+        .description p { margin-bottom: 12px; }
+        .description ul, .description ol { margin-left: 20px; margin-bottom: 12px; padding-left: 10px; }
+        .description li { margin-bottom: 6px; }
+        .description h1, .description h2, .description h3 { color: #e0e0ff; margin-top: 18px; margin-bottom: 10px; font-weight: 700; }
+        .description a { color: #a5b4fc; text-decoration: none; }
+        .description a:hover { text-decoration: underline; }
+        .description strong, .description b { color: #e0e0ff; font-weight: 700; }
+        .description blockquote {
+            border-left: 3px solid rgba(255,255,255,0.2);
+            padding-left: 14px;
+            margin: 12px 0;
+            color: #a0a8d0;
+            font-style: italic;
+            background: rgba(255,255,255,.03);
+            border-radius: 0 4px 4px 0;
+            padding-top: 8px;
+            padding-bottom: 8px;
         }
 
         /* Glow dot */
@@ -287,7 +305,7 @@
     @if($event->description)
     <div class="divider"></div>
     <div class="desc-label">Deskripsi</div>
-    <p class="description">{{ $event->description }}</p>
+    <div class="description">{!! $event->description !!}</div>
     @endif
 
 </div>

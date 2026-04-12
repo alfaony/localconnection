@@ -39,9 +39,7 @@
 
                     <div class="mb-3">
                         <label class="form-label fw-semibold" style="color:#c8d0e0;">Deskripsi <span style="color:#606880;">(opsional)</span></label>
-                        <textarea name="description" rows="3"
-                                  class="form-control gf @error('description') is-invalid @enderror"
-                                  placeholder="Agenda, tujuan, atau catatan penting...">{{ old('description', $event->description ?? '') }}</textarea>
+                        <input class="thriveEditor form-control" id="description_description" data-ids="description" name="description" placeholder="yang akan dicetak di perjanjian" value="{{ old('description', $event->description ?? '') }}"/>
                         @error('description')<div class="invalid-feedback">{{ $message }}</div>@enderror
                     </div>
 
@@ -212,11 +210,14 @@
 
 @section('css')
 <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
 <style>
 .gf { background:#111827!important;border:1px solid rgba(255,255,255,.1)!important;color:#e0e0ff!important;border-radius:8px!important; }
 .gf::placeholder { color:#55596e!important; }
 .gf option { background:#111827; }
 .color-swatch:hover { border-color:#fff!important; }
+
+/* Select2 Dark Theme */
 .select2-container .select2-selection--multiple { background-color:#111827!important;border:1px solid rgba(255,255,255,.1)!important;border-radius:8px!important;min-height:44px; }
 .select2-container .select2-search--inline .select2-search__field { color:#e0e0ff!important; }
 .select2-container--default .select2-selection--multiple .select2-selection__choice { background-color:rgba(102,126,234,.15)!important;border:1px solid rgba(102,126,234,.3)!important;color:#e0e0ff!important;border-radius:6px; }
@@ -224,11 +225,29 @@
 .select2-dropdown { background-color:#16213e!important;border:1px solid rgba(255,255,255,.1)!important;color:#e0e0ff!important; }
 .select2-container--default .select2-results__option--highlighted { background-color:rgba(102,126,234,.3)!important;color:#fff!important; }
 .select2-search--dropdown .select2-search__field { background-color:#111827!important;border:1px solid rgba(255,255,255,.1)!important;color:#e0e0ff!important; }
+
+/* Quill Dark Theme Overrides */
+.ql-toolbar.ql-snow { background-color: #111827 !important; border: 1px solid rgba(255,255,255,.1) !important; border-radius: 8px 8px 0 0 !important; }
+.ql-container.ql-snow { background-color: #16213e !important; border: 1px solid rgba(255,255,255,.1) !important; border-top: none !important; border-radius: 0 0 8px 8px !important; color: #e0e0ff !important; font-family: inherit; }
+.ql-editor { color: #e0e0ff !important; min-height: 120px; }
+.ql-editor.ql-blank::before { color: #55596e !important; font-style: normal; }
+.ql-snow .ql-stroke { stroke: #a5b4fc !important; }
+.ql-snow .ql-fill, .ql-snow .ql-stroke.ql-fill { fill: #a5b4fc !important; }
+.ql-snow .ql-picker { color: #a5b4fc !important; }
+.ql-snow .ql-picker-options { background-color: #111827 !important; border: 1px solid rgba(255,255,255,.1) !important; }
+.ql-snow .ql-picker-item:hover, .ql-snow .ql-picker-label:hover { color: #fff !important; }
+.ql-snow .ql-picker-item:hover .ql-stroke, .ql-snow .ql-picker-label:hover .ql-stroke { stroke: #fff !important; }
+.ql-snow .ql-picker-item:hover .ql-fill, .ql-snow .ql-picker-label:hover .ql-fill { fill: #fff !important; }
+button.ql-active .ql-stroke { stroke: #fff !important; }
+button.ql-active .ql-fill { fill: #fff !important; }
 </style>
 @stop
 
 @section('js')
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
+<script src="{{ asset('js/thriveEditor.js') }}"></script>
 <script>
 let _currentColor = '{{ old('color', $event->color ?? '#667eea') }}';
 
