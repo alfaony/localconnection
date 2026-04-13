@@ -620,6 +620,9 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
   
   Route::get('vehicle/infoPic', [VehicleController::class, 'infoPic'])->name('reminder.vehicle.pic');
   Route::get('vehicle/infoManager', [VehicleController::class, 'infoManager'])->name('reminder.vehicle.manager');
+  Route::get('vehicle/infoPhotoReminderPic', [VehicleController::class, 'infoPhotoReminderPic'])->name('reminder.vehicle.photo.pic');
+  Route::post('vehicle/{vehicle}/photos', [VehicleController::class, 'storePhoto'])->name('vehicle.photo.store');
+  Route::delete('vehicle/{vehicle}/photos/{photo}', [VehicleController::class, 'destroyPhoto'])->name('vehicle.photo.destroy');
   Route::resource('vehicle', VehicleController::class);
   
   Route::get('subscribe-letter/infoPic', [SubscribeLetterController::class, 'infoPic'])->name('reminder.letter.pic');
