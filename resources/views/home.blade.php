@@ -21,7 +21,6 @@
 
         <div id="vehicle-reminder-pic"></div>
         <div id="vehicle-reminder-manager"></div>
-        <div id="vehicle-photo-reminder-pic"></div>
         <div id="reminder-letter-pic"></div>
         <div id="reminder-letter-manager"></div>
 
@@ -1036,52 +1035,39 @@
         try {
             const response = await fetch("{{ route('reminder.vehicle.pic') }}");
             const data = await response.json();
-            container.innerHTML = data.html;
+
+            // Render STNK/KIR reminder (partial HTML dari server)
+            let html = data.html || '';
+
+            // Render photo reminder (inline JS)
+            if (data.photoReminders && data.photoReminders.length > 0) {
+                const items = data.photoReminders.map(v => `
+                    <li>
+                        Kendaraan <strong>${v.vehicle_id} ${v.vehicle_type}</strong>
+                        belum terdapat foto di bulan <strong>${data.bulan} ${data.tahun}</strong>, segera melakukan foto.
+                        <a href="${v.show_url}" class="ms-1 small"><i class="fas fa-arrow-right"></i> Lihat</a>
+                    </li>
+                `).join('');
+
+                html += `
+                    <div class="alert alert-warning mb-2" style="border-left: 4px solid #ffc107;">
+                        <div class="d-flex align-items-start gap-2">
+                            <i class="fas fa-camera mt-1" style="font-size:1.1rem;color:#856404;flex-shrink:0;"></i>
+                            <div>
+                                <strong>Pengingat Kendaraan Belum Terdapat Foto — ${data.bulan} ${data.tahun}</strong>
+                                <ul class="mb-0 mt-1 ps-3">${items}</ul>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            container.innerHTML = html;
         } catch (error) {
             container.innerHTML = ``;
         }
     }
     document.addEventListener("DOMContentLoaded", () => { loadVehicleReminderPIC(); });
-</script>
-@endcanAccess
-
-@canAccess('infoPhotoReminderPic','vehicles')
-<script>
-    async function loadVehiclePhotoReminderPIC() {
-        const container = document.querySelector('#vehicle-photo-reminder-pic');
-        try {
-            const response = await fetch("{{ route('reminder.vehicle.photo.pic') }}");
-            const data = await response.json();
-
-            if (!data.vehicles || data.vehicles.length === 0) {
-                container.innerHTML = '';
-                return;
-            }
-
-            const items = data.vehicles.map(v => `
-                <li>
-                    Kendaraan <strong>${v.vehicle_id} ${v.vehicle_type}</strong>
-                    belum terdapat foto di bulan <strong>${data.bulan} ${data.tahun}</strong>, segera melakukan foto.
-                    <a href="${v.show_url}" class="ms-1 small"><i class="fas fa-arrow-right"></i> Lihat</a>
-                </li>
-            `).join('');
-
-            container.innerHTML = `
-                <div class="alert alert-warning mb-2" style="border-left: 4px solid #ffc107;">
-                    <div class="d-flex align-items-start gap-2">
-                        <i class="fas fa-camera mt-1" style="font-size:1.1rem;color:#856404;flex-shrink:0;"></i>
-                        <div>
-                            <strong>Pengingat Kendaraan Belum Terdapat Foto — ${data.bulan} ${data.tahun}</strong>
-                            <ul class="mb-0 mt-1 ps-3">${items}</ul>
-                        </div>
-                    </div>
-                </div>
-            `;
-        } catch (error) {
-            container.innerHTML = '';
-        }
-    }
-    document.addEventListener("DOMContentLoaded", () => { loadVehiclePhotoReminderPIC(); });
 </script>
 @endcanAccess
 
