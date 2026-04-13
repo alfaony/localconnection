@@ -545,9 +545,22 @@ class DailyTaskController extends Controller
             return redirect()->route('dailytask.index')->with('error', 'Anda tidak tergabung dalam divisi manapun. Hubungi admin atau manager Anda.');
         } else {
             // Proceed with fetching objectives related to the user's divisions when differirent objective
-            $objectives = Objective::with('divisions')->whereHas('divisions', function ($query) use ($divisionIds) {
-                $query->whereIn('divisions.id', $divisionIds);
-            })->orWhere('id',$dailytask->objective_id)->get();
+            $objectives = Objective::withTrashed()
+                ->with('divisions')
+                ->where(function ($q) use ($divisionIds, $dailytask) {
+                    // Objective aktif (tidak dihapus) yang sesuai divisi user
+                    $q->where(function ($inner) use ($divisionIds) {
+                        $inner->whereNull('deleted_at')
+                              ->whereHas('divisions', function ($query) use ($divisionIds) {
+                                  $query->whereIn('divisions.id', $divisionIds);
+                              });
+                    });
+                    // ATAU objective yang tersimpan di daily task ini (meski sudah dihapus)
+                    if ($dailytask->objective_id) {
+                        $q->orWhere('id', $dailytask->objective_id);
+                    }
+                })
+                ->get();
         }
 
 
