@@ -14,15 +14,23 @@ class RouterIndex extends Component
 
     public function delete($id)
     {
-        Router::find($id)->delete();
-        session()->flash('message', 'Router deleted successfully.');
+        $router = Router::withCount('internetCustomers')->findOrFail($id);
+
+        if ($router->internet_customers_count > 0) {
+            session()->flash('error', "Router \"{$router->name}\" tidak dapat dihapus karena masih memiliki {$router->internet_customers_count} pelanggan.");
+            return;
+        }
+
+        $router->delete();
+        session()->flash('message', 'Router berhasil dihapus.');
     }
 
     public function render()
     {
         $mikrotiks = Router::where('company_id', auth()->user()->company_id)
+            ->withCount('internetCustomers')
             ->paginate(10);
-            
+
         return view('livewire.router.router-index', compact('mikrotiks'))
             ->extends('adminlte::page');
     }
