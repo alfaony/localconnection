@@ -20,7 +20,7 @@ class PermissionForMenuSubcribetionSeeder extends Seeder
     public function run()
     {
         $vehicles = ['index','create', 'show', 'edit', 'update', 'destroy'
-        , 'store', 'infoPic','infoManager','export'];
+        , 'store', 'infoPic','infoManager','export','storePhoto','destroyPhoto'];
 
 
         $subcribetions = ['index','create', 'show', 'edit', 'update', 'destroy'

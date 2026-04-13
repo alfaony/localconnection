@@ -73,6 +73,19 @@ class Vehicle extends Model
         return $this->belongsTo(User::class, 'pic_user_id')->withTrashed();
     }
 
+    public function photos()
+    {
+        return $this->hasMany(VehiclePhoto::class)->latest();
+    }
+
+    public function hasPhotoThisMonth()
+    {
+        return $this->photos()
+            ->whereYear('taken_at', now()->year)
+            ->whereMonth('taken_at', now()->month)
+            ->exists();
+    }
+
     public function company()
     {
         return $this->belongsTo(Company::class)->withTrashed();

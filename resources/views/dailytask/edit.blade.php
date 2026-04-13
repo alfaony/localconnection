@@ -49,7 +49,7 @@
                                     <div class="form-group">
                                         <label for="objective_id">Objective</label>
                                         <input type="hidden" name="objective_division_id" class="objective-division-id-input" value="{{ $dailytask->objective_division_id }}">
-                                        <select name="objective" id="objective_id" class="form-control objective-select select2" onchange="loadKeyResult();" required>
+                                        <select name="objective" id="objective_id" class="form-control objective-select select2" onchange="loadKeyResult(currentDailyTaskId);" required>
                                             <option selected disabled>Pilih Objective</option>
                                             @foreach($objectives as $objective)
                                                 @forelse($objective->divisions as $div)
@@ -450,9 +450,14 @@
         });
     }
 
+    // Simpan dailyTaskId di scope global agar bisa digunakan onchange
+    var currentDailyTaskId = null;
+
     function loadKeyResult(dailyTaskId = null)
     {
         var objectiveId = $('#objective_id').val();
+        if (!objectiveId) return; // belum ada objective terpilih
+
         // Baca dari option:selected (reliable saat change maupun initial load)
         // Fallback ke hidden input untuk initial load saat value sudah ada dari server
         var divisionId  = $('#objective_id').find('option:selected').data('division-id') ||
@@ -466,6 +471,9 @@
             success: function(data) {
                 $('#keyresult-fields-container').html(data);
                 $('.select2-single, .select2-multiple').select2();
+            },
+            error: function(xhr) {
+                console.error('loadKeyResult gagal:', xhr.status, xhr.responseText);
             }
         });
     }
@@ -473,10 +481,15 @@
     $(document).ready(function() 
     {
         $('.select2').select2();
-        // Assume you have a dailyTaskId variable available or extract it from the form
-        var dailyTaskId = "{{ $dailytask->id }}";
-        loadCustomFields(dailyTaskId);
-        loadKeyResult(dailyTaskId);
+        // Simpan ke global agar onchange bisa akses
+        currentDailyTaskId = "{{ $dailytask->id }}";
+        loadCustomFields(currentDailyTaskId);
+
+        // Delay loadKeyResult sedikit agar Select2 sempurna dulu applied
+        // sebelum kita baca nilai objectiveId dari select
+        setTimeout(function() {
+            loadKeyResult(currentDailyTaskId);
+        }, 150);
     });
 </script>
 <script>

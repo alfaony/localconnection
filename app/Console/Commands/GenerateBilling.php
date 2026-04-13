@@ -31,9 +31,9 @@ class GenerateBilling extends Command
 
         // Process BILLING (start_billing_date)
         if (in_array($type, ['billing', 'all'])) {
-            $this->info("Processing BILLING for customers with start_billing_date = {$today->toDateString()}...");
+            $this->info("Processing BILLING for customers with start_billing_date <= {$today->toDateString()}...");
 
-            $billingCustomers = UserCustomer::whereDate('start_billing_date', $today)
+            $billingCustomers = UserCustomer::whereDate('start_billing_date', '<=', $today)
                 ->whereHas('internetCustomer', function ($query) {
                     $query->whereIn('status', [
                         ParamSchema::ACTIVE,

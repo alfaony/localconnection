@@ -545,9 +545,22 @@ class DailyTaskController extends Controller
             return redirect()->route('dailytask.index')->with('error', 'Anda tidak tergabung dalam divisi manapun. Hubungi admin atau manager Anda.');
         } else {
             // Proceed with fetching objectives related to the user's divisions when differirent objective
-            $objectives = Objective::with('divisions')->whereHas('divisions', function ($query) use ($divisionIds) {
-                $query->whereIn('divisions.id', $divisionIds);
-            })->orWhere('id',$dailytask->objective_id)->get();
+            $objectives = Objective::withTrashed()
+                ->with('divisions')
+                ->where(function ($q) use ($divisionIds, $dailytask) {
+                    // Objective aktif (tidak dihapus) yang sesuai divisi user
+                    $q->where(function ($inner) use ($divisionIds) {
+                        $inner->whereNull('deleted_at')
+                              ->whereHas('divisions', function ($query) use ($divisionIds) {
+                                  $query->whereIn('divisions.id', $divisionIds);
+                              });
+                    });
+                    // ATAU objective yang tersimpan di daily task ini (meski sudah dihapus)
+                    if ($dailytask->objective_id) {
+                        $q->orWhere('id', $dailytask->objective_id);
+                    }
+                })
+                ->get();
         }
 
 
@@ -574,13 +587,17 @@ class DailyTaskController extends Controller
             }
             if($dailyTask->assignment_user_id != $request->assignment_user_id)
             {
-                $message = "Mengubah Tugas ".$dailyTask->name." dari ".User::find($dailyTask->assignment_user_id)->name." menjadi ".User::find($request->assignment_user_id)->name;
+                $from = User::find($dailyTask->assignment_user_id) ? User::find($dailyTask->assignment_user_id)->name : "";
+                $to = User::find($request->assignment_user_id) ? User::find($request->assignment_user_id)->name : "";
+                $message = "Mengubah Tugas ".$dailyTask->name." dari ".$from." menjadi ".$to;
             }
             elseif ($dailyTask->end_date != $request->end_date) {
-                $message = "Mengubah Tugas ".$dailyTask->name." dari ".Carbon::parse($dailyTask->end_date)->format('d-m-Y')." menjadi ".Carbon::parse($request->end_date)->format('d-m-Y');
+                $from = Carbon::parse($dailyTask->end_date)->format('d-m-Y');
+                $to = Carbon::parse($request->end_date)->format('d-m-Y');
+                $message = "Mengubah Tugas ".$dailyTask->name." dari ".$from." menjadi ".$to;
             }
         
-            if($message)
+            if($message )
             {
                 $directUrl = route('dailytask.show', ['dailytask' => $dailyTask->slug]);
                 if(Auth::user()->id == $request->assignment_user_id)
@@ -595,8 +612,10 @@ class DailyTaskController extends Controller
                     $userTo = $request->assignment_user_id;
                     $this->sentInbox($dailyTask->user_id,$message, $directUrl);
                 }
-    
-                $this->sentInbox($userTo,$message, $directUrl);
+                
+                if($userTo){
+                    $this->sentInbox($userTo,$message, $directUrl);
+                }
             }  
             if($request->point > 0)
             {
@@ -748,7 +767,7 @@ class DailyTaskController extends Controller
             DB::commit();
             return redirect()->route('dailytask.index')->with('update', true);
         } catch (\Throwable $th) {
-            // dd($th); 
+            dd($th); 
             DB::rollback();
             Log::error($th->getMessage());
 
