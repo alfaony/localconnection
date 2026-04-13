@@ -303,7 +303,7 @@ class RoleController extends Controller
             'divisions',
 
             // e
-            'employee_checkings', 'employees', 'equipment', 'equipment_reductions','events',
+            'employee_checkings', 'employees', 'equipment', 'equipment_reductions','events','employee_xps',
 
             // f
             'flowcharts',
