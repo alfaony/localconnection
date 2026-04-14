@@ -767,7 +767,7 @@ class DailyTaskController extends Controller
             DB::commit();
             return redirect()->route('dailytask.index')->with('update', true);
         } catch (\Throwable $th) {
-            dd($th); 
+            // dd($th); 
             DB::rollback();
             Log::error($th->getMessage());
 
