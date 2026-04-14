@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Challenge;
+use App\Models\ChallengeUser;
 use App\Models\Event;
 use App\Models\EventOccurrence;
 use App\Models\EventUser;
@@ -37,18 +39,24 @@ class EventController extends Controller
 
     public function create()
     {
-        $users = User::byCompany(Auth::user()->company_id)->isActive()->get(['id', 'name']);
-        return view('event.createOrEdit', compact('users'));
+        $users      = User::byCompany(Auth::user()->company_id)->isActive()->get(['id', 'name']);
+        $challenges = Challenge::byCompany(Auth::user()->company_id)
+            ->whereIn('status', ['draft', 'running'])
+            ->orderBy('name')
+            ->get(['id', 'name', 'status', 'module_type']);
+
+        return view('event.createOrEdit', compact('users', 'challenges'));
     }
 
     public function store(Request $request)
     {
         $data = $this->validate($request, $this->rules());
 
-        $data['company_id'] = Auth::user()->company_id;
-        $data['created_by'] = Auth::id();
-        $data['is_routine'] = $request->boolean('is_routine');
-        $data['is_active']  = $request->boolean('is_active', true);
+        $data['company_id']        = Auth::user()->company_id;
+        $data['created_by']        = Auth::id();
+        $data['is_routine']        = $request->boolean('is_routine');
+        $data['is_active']         = $request->boolean('is_active', true);
+        $data['sync_participants'] = $request->boolean('sync_participants');
 
         if ($request->hasFile('image')) {
             $file     = $request->file('image');
@@ -67,6 +75,11 @@ class EventController extends Controller
             'end_date'   => $event->end_date->toDateString(),
         ]);
 
+        // Attach challenges ke event
+        if ($request->filled('challenges')) {
+            $event->challenges()->sync($request->challenges);
+        }
+
         // Invite users
         if ($request->filled('users')) {
             foreach ($request->users as $userId) {
@@ -74,6 +87,11 @@ class EventController extends Controller
                     ['event_id' => $event->id, 'user_id' => $userId],
                     ['invited_by' => Auth::id()]
                 );
+            }
+
+            // Sync ke semua challenge terkait jika sync_participants aktif
+            if ($event->sync_participants && $request->filled('challenges')) {
+                $this->syncUsersToLinkedChallenges($event, $request->users);
             }
         }
 
@@ -88,7 +106,7 @@ class EventController extends Controller
 
     public function detail(Event $event)
     {
-        $event->load(['creator', 'eventUsers.user', 'eventUsers.invitedBy', 'occurrences']);
+        $event->load(['creator', 'eventUsers.user', 'eventUsers.invitedBy', 'occurrences', 'challenges']);
 
         // Urutkan occurrences dari yang terbaru
         $occurrences = $event->occurrences->sortByDesc('start_date')->values();
@@ -111,17 +129,24 @@ class EventController extends Controller
 
     public function edit(Event $event)
     {
-        $users           = User::byCompany(Auth::user()->company_id)->isActive()->get(['id', 'name']);
-        $assignedUserIds = $event->eventUsers->pluck('user_id')->toArray();
-        return view('event.createOrEdit', compact('event', 'users', 'assignedUserIds'));
+        $users              = User::byCompany(Auth::user()->company_id)->isActive()->get(['id', 'name']);
+        $assignedUserIds    = $event->eventUsers->pluck('user_id')->toArray();
+        $challenges         = Challenge::byCompany(Auth::user()->company_id)
+            ->whereIn('status', ['draft', 'running'])
+            ->orderBy('name')
+            ->get(['id', 'name', 'status', 'module_type']);
+        $assignedChallengeIds = $event->challenges->pluck('id')->toArray();
+
+        return view('event.createOrEdit', compact('event', 'users', 'assignedUserIds', 'challenges', 'assignedChallengeIds'));
     }
 
     public function update(Request $request, Event $event)
     {
         $data = $this->validate($request, $this->rules());
 
-        $data['is_routine'] = $request->boolean('is_routine');
-        $data['is_active']  = $request->boolean('is_active', true);
+        $data['is_routine']        = $request->boolean('is_routine');
+        $data['is_active']         = $request->boolean('is_active', true);
+        $data['sync_participants'] = $request->boolean('sync_participants');
 
         if ($request->hasFile('image')) {
             $file     = $request->file('image');
@@ -131,6 +156,13 @@ class EventController extends Controller
         }
 
         $event->update($data);
+
+        // Sync challenges (replace seluruh asosiasi)
+        $event->challenges()->sync($request->filled('challenges') ? $request->challenges : []);
+
+        if ($event->sync_participants && $request->filled('challenges') && $event->users->count() > 0) {
+            $this->syncUsersToLinkedChallenges($event, $event->users->pluck('id')->toArray());
+        }
 
         return redirect()->route('event.detail', $event->id)
             ->with('success', 'Event berhasil diperbarui.');
@@ -156,31 +188,79 @@ class EventController extends Controller
             );
         }
 
+        // Jika sync_participants aktif, otomatis invite ke semua challenge terkait
+        if ($event->sync_participants) {
+            $this->syncUsersToLinkedChallenges($event, $request->users);
+        }
+
         return back()->with('success', 'User berhasil diundang ke event.');
     }
 
     public function removeUser(Event $event, string $userId)
     {
         EventUser::where('event_id', $event->id)->where('user_id', $userId)->delete();
+
+        // Jika sync_participants aktif, otomatis keluarkan dari semua challenge terkait
+        if ($event->sync_participants) {
+            $this->removeUserFromLinkedChallenges($event, $userId);
+        }
+
         return back()->with('success', 'User berhasil dihapus dari event.');
+    }
+
+    // ── Private helpers ────────────────────────────────────────────────────
+
+    /**
+     * Invite daftar user ke semua challenge yang terkait dengan event ini.
+     * Hanya challenge berstatus draft/running yang diproses.
+     */
+    private function syncUsersToLinkedChallenges(Event $event, array $userIds): void
+    {
+        $challenges = $event->challenges()->whereIn('status', ['draft', 'running'])->get();
+
+        foreach ($challenges as $challenge) {
+            foreach ($userIds as $userId) {
+                ChallengeUser::firstOrCreate(
+                    ['challenge_id' => $challenge->id, 'user_id' => $userId],
+                    ['invited_by'   => Auth::id()]
+                );
+            }
+        }
+    }
+
+    /**
+     * Keluarkan satu user dari semua challenge yang terkait dengan event ini.
+     */
+    private function removeUserFromLinkedChallenges(Event $event, string $userId): void
+    {
+        $challengeIds = $event->challenges()->pluck('challenges.id');
+
+        if ($challengeIds->isNotEmpty()) {
+            ChallengeUser::whereIn('challenge_id', $challengeIds)
+                         ->where('user_id', $userId)
+                         ->delete();
+        }
     }
 
     private function rules(): array
     {
         return [
-            'name'              => 'required|string|max:255',
-            'description'       => 'nullable|string',
-            'image'             => 'nullable|image|max:5120',
-            'color'             => 'nullable|string|max:20',
-            'start_date'        => 'required|date',
-            'end_date'          => 'required|date|after_or_equal:start_date',
-            'start_time'        => 'nullable|date_format:H:i',
-            'end_time'          => 'nullable|date_format:H:i',
-            'is_routine'        => 'boolean',
-            'routine_end_date'  => 'nullable|date|after:start_date',
-            'is_active'         => 'boolean',
-            'users'             => 'nullable|array',
-            'users.*'           => 'exists:users,id',
+            'name'               => 'required|string|max:255',
+            'description'        => 'nullable|string',
+            'image'              => 'nullable|image|max:5120',
+            'color'              => 'nullable|string|max:20',
+            'start_date'         => 'required|date',
+            'end_date'           => 'required|date|after_or_equal:start_date',
+            'start_time'         => 'nullable|date_format:H:i',
+            'end_time'           => 'nullable|date_format:H:i',
+            'is_routine'         => 'boolean',
+            'routine_end_date'   => 'nullable|date|after:start_date',
+            'is_active'          => 'boolean',
+            'sync_participants'  => 'boolean',
+            'users'              => 'nullable|array',
+            'users.*'            => 'exists:users,id',
+            'challenges'         => 'nullable|array',
+            'challenges.*'       => 'exists:challenges,id',
         ];
     }
 }

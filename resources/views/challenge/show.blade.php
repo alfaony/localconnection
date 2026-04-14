@@ -59,6 +59,12 @@
                         <small style="color:#a0a8d0;">Tipe Modul</small>
                         <span style="color:#c8d0e0;font-weight:600;font-size:.85rem;">{{ $challenge->moduleLabel() }}</span>
                     </div>
+                    @if($challenge->events->isNotEmpty())
+                    <div class="d-flex justify-content-between mb-2">
+                        <small style="color:#a0a8d0;">Event</small>
+                        <span style="color:#c8d0e0;font-weight:600;font-size:.85rem;">{{ $challenge->events->pluck('name')->implode(', ') }}</span>
+                    </div>
+                    @endif
                     <div class="d-flex justify-content-between">
                         <small style="color:#a0a8d0;">Target</small>
                         <small class="fw-bold" style="color:#e0e0ff;">

@@ -174,8 +174,81 @@
         </div>
     </div>
 
-    {{-- Kanan: Daftar Peserta --}}
+    {{-- Kanan: Challenges Terkait + Daftar Peserta --}}
     <div class="col-lg-7">
+
+        {{-- Challenges terkait --}}
+        @if($event->challenges->isNotEmpty())
+        <div class="card border-0 shadow-sm mb-4" style="background:linear-gradient(135deg,#1a1a2e,#16213e);border-radius:16px;">
+            <div style="height:3px;background:linear-gradient(90deg,#ffd700,#f5a623);border-radius:16px 16px 0 0;"></div>
+            <div class="card-body p-4">
+                <div class="d-flex align-items-center gap-2 mb-3">
+                    <h6 class="fw-bold mb-0" style="color:#ffd700;">
+                        <i class="bi bi-trophy-fill me-2"></i>Challenge Terkait
+                        <span class="badge ms-1" style="background:rgba(255,215,0,.15);color:#ffd700;font-size:.65rem;">{{ $event->challenges->count() }}</span>
+                    </h6>
+                    @if($event->sync_participants)
+                    <span class="badge ms-auto" style="background:rgba(56,239,125,.15);color:#38ef7d;border:1px solid rgba(56,239,125,.2);font-size:.65rem;">
+                        <i class="fas fa-sync-alt me-1"></i>Sync Peserta Aktif
+                    </span>
+                    @endif
+                </div>
+
+                @if($event->sync_participants)
+                <div class="mb-3 p-2" style="background:rgba(56,239,125,.06);border-radius:8px;border:1px solid rgba(56,239,125,.15);">
+                    <small style="color:#a0a8d0;font-size:.72rem;">
+                        <i class="fas fa-info-circle me-1" style="color:#38ef7d;"></i>
+                        Sinkronisasi peserta aktif — menambah/mengeluarkan peserta dari event ini akan otomatis berlaku ke semua challenge di bawah.
+                    </small>
+                </div>
+                @endif
+
+                <div class="d-flex flex-column gap-2">
+                    @foreach($event->challenges as $ch)
+                    <div class="d-flex align-items-center gap-3 p-3"
+                         style="background:rgba(255,255,255,.04);border-radius:10px;border:1px solid rgba(255,255,255,.07);">
+                        <div style="width:36px;height:36px;border-radius:10px;background:{{ $ch->moduleColor() }}22;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                            <i class="{{ $ch->moduleIcon() }}" style="color:{{ $ch->moduleColor() }};font-size:.9rem;"></i>
+                        </div>
+                        <div class="flex-grow-1" style="min-width:0;">
+                            <div style="color:#e0e0ff;font-weight:600;font-size:.82rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                                {{ $ch->name }}
+                            </div>
+                            <div style="color:#a0a8d0;font-size:.7rem;">
+                                {{ $ch->moduleLabel() }} · Target {{ number_format($ch->target_count) }}
+                            </div>
+                        </div>
+                        <div class="text-end flex-shrink-0">
+                            @php
+                                $statusColor = match($ch->status) {
+                                    'running' => '#38ef7d',
+                                    'finish'  => '#a0a8d0',
+                                    default   => '#f5a623',
+                                };
+                                $statusLabel = match($ch->status) {
+                                    'running' => 'Running',
+                                    'finish'  => 'Selesai',
+                                    default   => 'Draft',
+                                };
+                            @endphp
+                            <span class="badge" style="background:{{ $statusColor }}22;color:{{ $statusColor }};border:1px solid {{ $statusColor }}44;font-size:.63rem;">
+                                {{ $statusLabel }}
+                            </span>
+                            <div style="color:#606880;font-size:.65rem;margin-top:3px;">
+                                {{ $ch->start_date->format('d M') }} – {{ $ch->end_date->format('d M Y') }}
+                            </div>
+                        </div>
+                        <a href="{{ route('challenge.show', $ch->id) }}"
+                           style="color:#a5b4fc;font-size:.75rem;flex-shrink:0;" title="Lihat detail challenge">
+                            <i class="fas fa-external-link-alt"></i>
+                        </a>
+                    </div>
+                    @endforeach
+                </div>
+            </div>
+        </div>
+        @endif
+
         <div class="card border-0 shadow-sm" style="background:linear-gradient(135deg,#1a1a2e,#16213e);border-radius:16px;">
             <div style="height:3px;background:linear-gradient(90deg,{{ $event->color }},{{ $event->color }}66);border-radius:16px 16px 0 0;"></div>
             <div class="card-body p-4">
