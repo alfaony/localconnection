@@ -87,6 +87,16 @@
         @endforeach
     </optgroup>
     @endforeach
+
+    @if($usersNoDivision->isNotEmpty())
+    <optgroup label="Tidak Memiliki Divisi" data-division="__no_division__">
+        @foreach($usersNoDivision as $u)
+        <option value="{{ $u->id }}" {{ in_array($u->id, $selectedIds) ? 'selected' : '' }}>
+            {{ $u->name }}
+        </option>
+        @endforeach
+    </optgroup>
+    @endif
 </select>
 
 <div style="display:flex;justify-content:space-between;margin-top:5px;">
