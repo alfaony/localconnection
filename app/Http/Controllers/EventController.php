@@ -39,13 +39,14 @@ class EventController extends Controller
 
     public function create()
     {
-        $users      = User::byCompany(Auth::user()->company_id)->isActive()->get(['id', 'name']);
+        [$groupedUsers, $usersNoDivision] = $this->loadGroupedUsers();
+
         $challenges = Challenge::byCompany(Auth::user()->company_id)
             ->whereIn('status', ['draft', 'running'])
             ->orderBy('name')
             ->get(['id', 'name', 'status', 'module_type']);
 
-        return view('event.createOrEdit', compact('users', 'challenges'));
+        return view('event.createOrEdit', compact('groupedUsers', 'usersNoDivision', 'challenges'));
     }
 
     public function store(Request $request)
@@ -119,25 +120,31 @@ class EventController extends Controller
             ->unique('user_id')
             ->values();
 
-        $invitableUsers = User::byCompany(Auth::user()->company_id)
-            ->isActive()
-            ->whereNotIn('id', $event->eventUsers->pluck('user_id'))
-            ->get(['id', 'name']);
+        // Invitable users: belum tergabung, dikelompokkan by division
+        $excludeIds = $event->eventUsers->pluck('user_id')->toArray();
+        [$groupedInvitable, $invitableNoDivision] = $this->loadGroupedUsers($excludeIds);
 
-        return view('event.detail', compact('event', 'occurrences', 'viewHistory', 'invitableUsers'));
+        return view('event.detail', compact('event', 'occurrences', 'viewHistory', 'groupedInvitable', 'invitableNoDivision'));
     }
 
     public function edit(Event $event)
     {
-        $users              = User::byCompany(Auth::user()->company_id)->isActive()->get(['id', 'name']);
-        $assignedUserIds    = $event->eventUsers->pluck('user_id')->toArray();
-        $challenges         = Challenge::byCompany(Auth::user()->company_id)
+        $event->load(['eventUsers', 'challenges']);
+
+        [$groupedUsers, $usersNoDivision] = $this->loadGroupedUsers();
+
+        $assignedUserIds      = $event->eventUsers->pluck('user_id')->toArray();
+        $assignedChallengeIds = $event->challenges->pluck('id')->toArray();
+
+        $challenges = Challenge::byCompany(Auth::user()->company_id)
             ->whereIn('status', ['draft', 'running'])
             ->orderBy('name')
             ->get(['id', 'name', 'status', 'module_type']);
-        $assignedChallengeIds = $event->challenges->pluck('id')->toArray();
 
-        return view('event.createOrEdit', compact('event', 'users', 'assignedUserIds', 'challenges', 'assignedChallengeIds'));
+        return view('event.createOrEdit', compact(
+            'event', 'groupedUsers', 'usersNoDivision',
+            'assignedUserIds', 'challenges', 'assignedChallengeIds'
+        ));
     }
 
     public function update(Request $request, Event $event)
@@ -209,6 +216,33 @@ class EventController extends Controller
     }
 
     // ── Private helpers ────────────────────────────────────────────────────
+
+    /**
+     * Load semua active users, kelompokkan berdasarkan primary division.
+     * $excludeIds: user IDs yang tidak perlu dimasukkan (misal sudah tergabung).
+     * Returns: [$groupedUsers (keyed by division name), $usersNoDivision]
+     */
+    private function loadGroupedUsers(array $excludeIds = []): array
+    {
+        $query = User::byCompany(Auth::user()->company_id)
+            ->isActive()
+            ->with('divisions');
+
+        if (!empty($excludeIds)) {
+            $query->whereNotIn('id', $excludeIds);
+        }
+
+        $users = $query->orderBy('name')->get();
+
+        $withDiv = $users
+            ->filter(fn($u) => $u->divisions->isNotEmpty())
+            ->groupBy(fn($u) => ($u->primaryDivision ?? $u->firstDivision)?->name ?? 'Lainnya')
+            ->sortKeys();
+
+        $noDivision = $users->filter(fn($u) => $u->divisions->isEmpty());
+
+        return [$withDiv, $noDivision];
+    }
 
     /**
      * Invite daftar user ke semua challenge yang terkait dengan event ini.

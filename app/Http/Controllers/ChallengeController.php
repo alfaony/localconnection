@@ -120,13 +120,10 @@ class ChallengeController extends Controller
             ->sortByDesc('current')
             ->values();
 
-        $invitableUsers = User::byCompany(Auth::user()->company_id)
-            ->isActive()
-            ->whereNotIn('id', $challenge->invitedUsers->pluck('id'))
-            ->orderBy('name')
-            ->get();
+        $excludeIds = $challenge->invitedUsers->pluck('id')->toArray();
+        [$groupedInvitable, $invitableNoDivision] = $this->loadGroupedUsers($excludeIds);
 
-        return view('challenge.show', compact('challenge', 'participants', 'invitableUsers'));
+        return view('challenge.show', compact('challenge', 'participants', 'groupedInvitable', 'invitableNoDivision'));
     }
 
     public function edit(Challenge $challenge)
@@ -223,6 +220,33 @@ class ChallengeController extends Controller
     }
 
     // ── Private helpers ────────────────────────────────────────────────────
+
+    /**
+     * Load active users grouped by primary division.
+     * $excludeIds: IDs to exclude (already participating).
+     * Returns: [$groupedUsers (keyed by division name), $usersNoDivision]
+     */
+    private function loadGroupedUsers(array $excludeIds = []): array
+    {
+        $query = User::byCompany(Auth::user()->company_id)
+            ->isActive()
+            ->with('divisions');
+
+        if (!empty($excludeIds)) {
+            $query->whereNotIn('id', $excludeIds);
+        }
+
+        $users = $query->orderBy('name')->get();
+
+        $withDiv = $users
+            ->filter(fn($u) => $u->divisions->isNotEmpty())
+            ->groupBy(fn($u) => ($u->primaryDivision ?? $u->firstDivision)?->name ?? 'Lainnya')
+            ->sortKeys();
+
+        $noDivision = $users->filter(fn($u) => $u->divisions->isEmpty());
+
+        return [$withDiv, $noDivision];
+    }
 
     /**
      * Ambil daftar event aktif milik company untuk select di form.

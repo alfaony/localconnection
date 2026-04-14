@@ -120,24 +120,29 @@
 
         {{-- Invite Form --}}
         @canAccess('invite','events')
+        @php $hasInvitable = $groupedInvitable->isNotEmpty() || $invitableNoDivision->isNotEmpty(); @endphp
+        @if($hasInvitable)
         <div class="card border-0 shadow-sm mb-4" style="background:linear-gradient(135deg,#1a1a2e,#16213e);border-radius:16px;">
             <div style="height:3px;background:linear-gradient(90deg,#38ef7d,#667eea);border-radius:16px 16px 0 0;"></div>
             <div class="card-body p-4">
                 <h6 class="fw-bold mb-3" style="color:#38ef7d;"><i class="fas fa-user-plus me-2"></i>Undang Peserta</h6>
                 <form action="{{ route('event.invite', $event->id) }}" method="POST">
                     @csrf
-                    <select name="users[]" id="invite-select" class="form-select gf mb-2" multiple style="min-height:100px;">
-                        @foreach($invitableUsers as $u)
-                        <option value="{{ $u->id }}">{{ $u->name }}</option>
-                        @endforeach
-                    </select>
-                    <button type="submit" class="btn btn-sm w-100"
+                    @include('components.user-select-grouped', [
+                        'selectName'      => 'users[]',
+                        'selectId'        => 'invite-select',
+                        'groupedUsers'    => $groupedInvitable,
+                        'usersNoDivision' => $invitableNoDivision,
+                        'selectedIds'     => [],
+                    ])
+                    <button type="submit" class="btn btn-sm w-100 mt-3"
                             style="background:rgba(56,239,125,.15);color:#38ef7d;border:1px solid rgba(56,239,125,.3);border-radius:8px;">
                         <i class="fas fa-paper-plane me-1"></i>Undang
                     </button>
                 </form>
             </div>
         </div>
+        @endif
         @endcanAccess
 
         {{-- View History --}}
@@ -313,17 +318,11 @@
 @stop
 
 @section('css')
-<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css" rel="stylesheet" />
+@include('components.user-select-grouped-assets')
 <style>
 .gf { background:#111827!important;border:1px solid rgba(255,255,255,.1)!important;color:#e0e0ff!important;border-radius:8px!important; }
 .gf option { background:#111827; }
-.select2-container .select2-selection--multiple { background-color:#111827!important;border:1px solid rgba(255,255,255,.1)!important;border-radius:8px!important;min-height:44px; }
-.select2-container .select2-search--inline .select2-search__field { color:#e0e0ff!important; }
-.select2-container--default .select2-selection--multiple .select2-selection__choice { background-color:rgba(102,126,234,.15)!important;border:1px solid rgba(102,126,234,.3)!important;color:#e0e0ff!important;border-radius:6px; }
-.select2-container--default .select2-selection--multiple .select2-selection__choice__remove { color:#ff6b6b!important;border-right:none!important; }
-.select2-dropdown { background-color:#16213e!important;border:1px solid rgba(255,255,255,.1)!important;color:#e0e0ff!important; }
-.select2-container--default .select2-results__option--highlighted { background-color:rgba(102,126,234,.3)!important;color:#fff!important; }
-.select2-search--dropdown .select2-search__field { background-color:#111827!important;border:1px solid rgba(255,255,255,.1)!important;color:#e0e0ff!important; }
 
 /* Quill HTML Content Styles */
 .html-content p { margin-bottom: 12px; }
@@ -348,10 +347,6 @@
 @stop
 
 @section('js')
-<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-<script>
-$(document).ready(function() {
-    $('#invite-select').select2({ placeholder: 'Pilih karyawan...', allowClear: true });
-});
-</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
+@include('components.user-select-grouped-js', ['userSelectIds' => ['invite-select']])
 @stop
