@@ -243,7 +243,7 @@ class ChallengeController extends Controller
             ->groupBy(fn($u) => ($u->primaryDivision ?? $u->firstDivision)?->name ?? 'Lainnya')
             ->sortKeys();
 
-        $noDivision = $users->filter(fn($u) => $u->divisions->isEmpty());
+        $noDivision = $users->filter(fn($u) => $u->divisions->isEmpty())->values();
 
         return [$withDiv, $noDivision];
     }

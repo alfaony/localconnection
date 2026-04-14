@@ -234,12 +234,14 @@ class EventController extends Controller
 
         $users = $query->orderBy('name')->get();
 
+        // Pastikan semua user masuk tepat satu grup — cek divisions yang sudah di-load
         $withDiv = $users
             ->filter(fn($u) => $u->divisions->isNotEmpty())
             ->groupBy(fn($u) => ($u->primaryDivision ?? $u->firstDivision)?->name ?? 'Lainnya')
             ->sortKeys();
 
-        $noDivision = $users->filter(fn($u) => $u->divisions->isEmpty());
+        // Hanya user yang benar-benar tidak punya divisi (relasi kosong setelah eager load)
+        $noDivision = $users->filter(fn($u) => $u->divisions->isEmpty())->values();
 
         return [$withDiv, $noDivision];
     }

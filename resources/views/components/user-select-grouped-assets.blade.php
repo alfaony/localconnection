@@ -67,6 +67,16 @@
     border: 1px solid rgba(102,126,234,.25) !important;
     border-radius: 10px !important;
     box-shadow: 0 8px 32px rgba(0,0,0,.5) !important;
+    /* JANGAN overflow:hidden di sini — akan memotong scroll list */
+    z-index: 9999 !important;
+}
+/* Rounded corners hanya di bagian search (atas) */
+.select2-search--dropdown {
+    border-radius: 10px 10px 0 0;
+}
+/* Rounded corners di bagian bawah list */
+.select2-results {
+    border-radius: 0 0 10px 10px;
     overflow: hidden;
 }
 .select2-search--dropdown {
@@ -87,7 +97,7 @@
 }
 
 /* ── Results list ─────────────────────────────────────────── */
-.select2-results__options { max-height: 240px !important; }
+/* .select2-results__options { max-height: 240px !important; } */
 
 /* Reset default #ddd background dulu */
 .select2-results__option,
@@ -149,12 +159,16 @@
 .select2-results__group:first-child { border-top: none; }
 
 /* ── Division pills ───────────────────────────────────────── */
-.division-pill:hover,
-.division-pill.active {
+.division-pill:hover {
     background: rgba(102,126,234,.28) !important;
     color: #e0e0ff !important;
     border-color: rgba(102,126,234,.5) !important;
 }
-.select-all-pill:hover { background: rgba(56,239,125,.2) !important; }
-.clear-all-pill:hover  { background: rgba(248,113,113,.15) !important; }
+.division-pill.active {
+    background: rgba(102,126,234,.32) !important;
+    color: #fff !important;
+    border-color: rgba(102,126,234,.6) !important;
+}
+.select-all-pill:hover  { background: rgba(56,239,125,.22) !important;  color: #fff !important; }
+.clear-all-pill:hover   { background: rgba(248,113,113,.18) !important; color: #fff !important; }
 </style>

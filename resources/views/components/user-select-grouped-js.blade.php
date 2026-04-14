@@ -10,12 +10,15 @@
         if (!$sel.length) return;
 
         // ── Init Select2 ──────────────────────────────────────
+        // dropdownParent: $(document.body) — pastikan dropdown keluar dari
+        // parent yang punya overflow:hidden (card, modal, dll)
         $sel.select2({
-            placeholder: $sel.data('placeholder') || 'Pilih karyawan...',
-            allowClear : true,
-            width      : '100%',
-            templateResult: function (data) {
-                // Indent option slightly inside group
+            placeholder       : $sel.data('placeholder') || 'Pilih karyawan...',
+            allowClear        : true,
+            width             : '100%',
+            dropdownParent    : $(document.body),
+            dropdownAutoWidth : false,
+            templateResult    : function (data) {
                 if (!data.id) return data.text;
                 return $('<span style="padding-left:4px;">').text(data.text);
             },
@@ -50,10 +53,8 @@
 
         var newVals;
         if (allOn) {
-            // Deselect all in this division
             newVals = cur.filter(function (v) { return ids.indexOf(v) === -1; });
         } else {
-            // Select all in this division (merge)
             newVals = cur.slice();
             ids.forEach(function (v) { if (newVals.indexOf(v) === -1) newVals.push(v); });
         }
