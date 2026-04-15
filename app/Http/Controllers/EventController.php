@@ -151,6 +151,12 @@ class EventController extends Controller
     {
         $data = $this->validate($request, $this->rules());
 
+        // ── Snapshot state SEBELUM perubahan ──────────────────
+        $event->load('challenges', 'eventUsers');
+        $oldChallengeIds = $event->challenges->pluck('id')->toArray();
+        $oldUserIds      = $event->eventUsers->pluck('user_id')->toArray();
+
+        // ── Update data event ─────────────────────────────────
         $data['is_routine']        = $request->boolean('is_routine');
         $data['is_active']         = $request->boolean('is_active', true);
         $data['sync_participants'] = $request->boolean('sync_participants');
@@ -164,11 +170,63 @@ class EventController extends Controller
 
         $event->update($data);
 
-        // Sync challenges (replace seluruh asosiasi)
-        $event->challenges()->sync($request->filled('challenges') ? $request->challenges : []);
+        // ── Hitung diff users (dari form) ─────────────────────
+        $newUserIds     = $request->filled('users') ? $request->users : [];
+        $addedUserIds   = array_diff($newUserIds, $oldUserIds);
+        $removedUserIds = array_diff($oldUserIds, $newUserIds);
 
-        if ($event->sync_participants && $request->filled('challenges') && $event->users->count() > 0) {
-            $this->syncUsersToLinkedChallenges($event, $event->users->pluck('id')->toArray());
+        // Terapkan perubahan event_users
+        foreach ($addedUserIds as $userId) {
+            EventUser::firstOrCreate(
+                ['event_id' => $event->id, 'user_id' => $userId],
+                ['invited_by' => Auth::id()]
+            );
+        }
+        if (!empty($removedUserIds)) {
+            EventUser::where('event_id', $event->id)
+                     ->whereIn('user_id', $removedUserIds)
+                     ->delete();
+        }
+
+        // ── Hitung diff challenges ────────────────────────────
+        $newChallengeIds     = $request->filled('challenges') ? $request->challenges : [];
+        $addedChallengeIds   = array_diff($newChallengeIds, $oldChallengeIds);
+        $removedChallengeIds = array_diff($oldChallengeIds, $newChallengeIds);
+
+        $event->challenges()->sync($newChallengeIds);
+
+        // ── Propagasi ke challenges jika sync_participants aktif ─
+        if ($event->sync_participants) {
+            // User baru ditambah → invite ke semua challenge yang masih terhubung
+            if (!empty($addedUserIds)) {
+                $this->syncUsersToLinkedChallenges($event, array_values($addedUserIds));
+            }
+
+            // User dihapus dari event → keluarkan dari semua challenge (lama & baru)
+            if (!empty($removedUserIds)) {
+                $allChallengeIds = array_unique(array_merge($oldChallengeIds, $newChallengeIds));
+                if (!empty($allChallengeIds)) {
+                    ChallengeUser::whereIn('challenge_id', $allChallengeIds)
+                                 ->whereIn('user_id', $removedUserIds)
+                                 ->delete();
+                }
+            }
+
+            // Challenge baru ditambahkan ke event → invite semua user event saat ini
+            if (!empty($addedChallengeIds)) {
+                $currentUserIds = array_values(array_diff(
+                    array_merge($oldUserIds, array_values($addedUserIds)),
+                    $removedUserIds
+                ));
+                $this->syncUsersToSpecificChallenges($addedChallengeIds, $currentUserIds);
+            }
+
+            // Challenge dicopot dari event → keluarkan semua user event dari challenge itu
+            if (!empty($removedChallengeIds)) {
+                ChallengeUser::whereIn('challenge_id', $removedChallengeIds)
+                             ->whereIn('user_id', $oldUserIds)
+                             ->delete();
+            }
         }
 
         return redirect()->route('event.detail', $event->id)
@@ -252,7 +310,31 @@ class EventController extends Controller
      */
     private function syncUsersToLinkedChallenges(Event $event, array $userIds): void
     {
+        if (empty($userIds)) return;
+
         $challenges = $event->challenges()->whereIn('status', ['draft', 'running'])->get();
+
+        foreach ($challenges as $challenge) {
+            foreach ($userIds as $userId) {
+                ChallengeUser::firstOrCreate(
+                    ['challenge_id' => $challenge->id, 'user_id' => $userId],
+                    ['invited_by'   => Auth::id()]
+                );
+            }
+        }
+    }
+
+    /**
+     * Invite daftar user ke challenge berdasarkan challenge ID tertentu (bukan dari relasi event).
+     * Hanya challenge berstatus draft/running yang diproses.
+     */
+    private function syncUsersToSpecificChallenges(array $challengeIds, array $userIds): void
+    {
+        if (empty($challengeIds) || empty($userIds)) return;
+
+        $challenges = Challenge::whereIn('id', $challengeIds)
+            ->whereIn('status', ['draft', 'running'])
+            ->get();
 
         foreach ($challenges as $challenge) {
             foreach ($userIds as $userId) {

@@ -252,7 +252,7 @@
 <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
 @include('components.user-select-grouped-assets')
 <style>
-.gf { background:#111827!important;border:1px solid rgba(255,255,255,.1)!important;color:#e0e0ff!important;border-radius:8px!important; }
+.gf { background:#6f88bd!important;border:1px solid rgba(255,255,255,.1)!important;color:#e0e0ff!important;border-radius:8px!important; }
 .gf::placeholder { color:#55596e!important; }
 .gf option { background:#111827; }
 .color-swatch:hover { border-color:#fff!important; }

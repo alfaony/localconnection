@@ -34,7 +34,7 @@
     display: inline-flex;
     align-items: center;
     gap: 4px;
-    max-width: 180px;
+    /* max-width: 180px; */
 }
 .select2-container--default .select2-selection--multiple .select2-selection__choice__display {
     color: #c8d0e0 !important;

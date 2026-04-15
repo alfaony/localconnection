@@ -132,9 +132,11 @@ class ChallengeController extends Controller
             return redirect()->route('challenge.index')->with('error', 'Challenge yang sedang berjalan atau selesai tidak dapat diedit.');
         }
 
-        $moduleOptions        = Challenge::moduleOptions();
-        $events               = $this->getCompanyEvents();
-        $assignedEventIds     = $challenge->events->pluck('id')->toArray();
+        $challenge->load('events');
+
+        $moduleOptions    = Challenge::moduleOptions();
+        $events           = $this->getCompanyEvents();
+        $assignedEventIds = $challenge->events->pluck('id')->toArray();
 
         return view('challenge.createOrEdit', compact('challenge', 'moduleOptions', 'events', 'assignedEventIds'));
     }
@@ -144,6 +146,9 @@ class ChallengeController extends Controller
         if (in_array($challenge->status, ['running', 'finish'])) {
             return redirect()->route('challenge.index')->with('error', 'Challenge yang sedang berjalan atau selesai tidak dapat diupdate.');
         }
+
+        // Load events sebelum validasi agar snapshot $previousEventIds akurat
+        $challenge->load('events');
 
         $request->validate([
             'name'         => 'required|string|max:150',
@@ -164,16 +169,22 @@ class ChallengeController extends Controller
             'reward_point', 'reward_xp', 'module_type', 'target_count',
         ]));
 
-        // Sync events: hitung event baru yang ditambahkan
+        // ── Hitung diff events ────────────────────────────────
         $previousEventIds = $challenge->events->pluck('id')->toArray();
         $newEventIds      = $request->filled('events') ? $request->events : [];
         $addedEventIds    = array_diff($newEventIds, $previousEventIds);
+        $removedEventIds  = array_diff($previousEventIds, $newEventIds);
 
         $challenge->events()->sync($newEventIds);
 
-        // Auto-invite peserta dari event baru yang punya sync_participants=true
+        // Event baru ditambah & punya sync_participants → invite peserta event ke challenge
         if (!empty($addedEventIds)) {
             $this->syncEventParticipantsToChallenge($challenge, $addedEventIds);
+        }
+
+        // Event dilepas & punya sync_participants → keluarkan peserta event dari challenge
+        if (!empty($removedEventIds)) {
+            $this->removeEventParticipantsFromChallenge($challenge, $removedEventIds);
         }
 
         return redirect()->route('challenge.show', $challenge)->with('success', 'Challenge berhasil diperbarui.');
@@ -265,6 +276,8 @@ class ChallengeController extends Controller
      */
     private function syncEventParticipantsToChallenge(Challenge $challenge, array $eventIds): void
     {
+        if (empty($eventIds)) return;
+
         $syncEvents = Event::whereIn('id', $eventIds)
             ->where('sync_participants', true)
             ->with('eventUsers')
@@ -276,6 +289,29 @@ class ChallengeController extends Controller
                     ['challenge_id' => $challenge->id, 'user_id' => $eu->user_id],
                     ['invited_by'   => Auth::id()]
                 );
+            }
+        }
+    }
+
+    /**
+     * Untuk setiap event dalam $eventIds yang memiliki sync_participants=true,
+     * keluarkan semua peserta event tersebut dari challenge ini.
+     */
+    private function removeEventParticipantsFromChallenge(Challenge $challenge, array $eventIds): void
+    {
+        if (empty($eventIds)) return;
+
+        $syncEvents = Event::whereIn('id', $eventIds)
+            ->where('sync_participants', true)
+            ->with('eventUsers')
+            ->get();
+
+        foreach ($syncEvents as $event) {
+            $userIds = $event->eventUsers->pluck('user_id')->toArray();
+            if (!empty($userIds)) {
+                ChallengeUser::where('challenge_id', $challenge->id)
+                             ->whereIn('user_id', $userIds)
+                             ->delete();
             }
         }
     }

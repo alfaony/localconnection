@@ -699,6 +699,13 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
 
 <style>
+a{
+    color: #ffffff;
+}
+
+a:hover{
+    color: #adabb1ff;
+}
 /* LAPORAN PENGADUAN BANNER */
 .laporan-banner {
     background: linear-gradient(135deg, #2d1b3d, #1a1a2e);
