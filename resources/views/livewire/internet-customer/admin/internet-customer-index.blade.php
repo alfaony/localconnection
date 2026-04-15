@@ -404,13 +404,18 @@
                                             </div>
                                             @endif
 
-                                            <!-- Grouping -->
-                                            @if($customer->grouping_id)
+                                            <!-- Group -->
+                                            @if($customer->group)
                                             <div class="small text-muted d-flex align-items-center">
                                                 <i class="fas fa-users" style="width: 14px;"></i>
-                                                <span> Group {{ $customer->grouping_id }}</span>
+                                                <span> {{ $customer->group->name }}</span>
                                             </div>
-                                            @endif  
+                                            @elseif($customer->grouping_id)
+                                            <div class="small text-muted d-flex align-items-center">
+                                                <i class="fas fa-users" style="width: 14px;"></i>
+                                                <span> {{ $customer->grouping_id }}</span>
+                                            </div>
+                                            @endif
                                             
                                              <!-- Billing Period -->
                                             @if($customer->getOldestUnconfirmed() && $customer->getOldestUnconfirmed()->confirmation_finance_at)
@@ -610,13 +615,15 @@
                         </div>
                     </div>
 
-                    {{-- BARU: Field Grouping --}}
+                    {{-- Group (Master Group) --}}
                     <div class="mb-3">
-                        <label class="form-label">Grouping/Cluster</label>
-                        <input type="text" class="form-control" wire:model="grouping_id" id="groupingInput" 
-                               placeholder="Contoh: Cluster A, Zona 1, RT 05, dll">
+                        <label class="form-label">Group <span class="text-danger">*</span></label>
+                        <select class="form-control" wire:model="group_id" id="groupSelect">
+                            <option value="">— Pilih Group —</option>
+                            {{-- opsi diisi via JS saat modal buka --}}
+                        </select>
                         <div class="form-text">
-                            Isi dengan nama grouping/cluster/RT lokasi pelanggan (opsional).
+                            Pilih group/cluster lokasi pelanggan.
                         </div>
                     </div>
                     
@@ -951,11 +958,19 @@
                 console.error('❌ ODP select element not found!'); // Debug log
             }
 
-            // ✅ RESET GROUPING INPUT
-            const groupingInput = document.getElementById('groupingInput');
-            if (groupingInput) {
-                groupingInput.value = '';
-                @this.set('grouping_id', '');
+            // Populate Group dropdown
+            const groupSelect = document.getElementById('groupSelect');
+            if (groupSelect) {
+                groupSelect.innerHTML = '<option value="">— Pilih Group —</option>';
+                const groups = data.groups || [];
+                groups.forEach(group => {
+                    const option = document.createElement('option');
+                    option.value = group.id;
+                    option.textContent = group.label;
+                    groupSelect.appendChild(option);
+                });
+                groupSelect.value = '';
+                @this.set('group_id', '');
             }
 
             // Populate Router dropdown
@@ -1041,9 +1056,8 @@
             const notes = document.getElementById('modalNotes').value;
             const files = document.getElementById('modalPhotos').files;
             const routerId = document.getElementById('routerSelectMirror').value;
-            const odpId = document.getElementById('odpSelect').value;
-            const grouping = document.getElementById('groupingInput').value;
-            // const odpId = @this.optical_distribution_id;
+            const odpId   = document.getElementById('odpSelect').value;
+            const groupId = document.getElementById('groupSelect').value;
             const username = @this.username;
             const password = document.getElementById('modalPassword').value;
             const override_pool_id = @this.override_pool_id;
@@ -1175,7 +1189,7 @@
                     override_pool_id,
                     local_address,
                     odpId,
-                    grouping
+                    groupId
                 );
                 
                 console.log('completeInstallation result:', success);
@@ -1189,6 +1203,8 @@
                     document.getElementById('modalPhotos').value = '';
                     document.getElementById('photoPreview').innerHTML = '';
                     document.getElementById('modalPassword').value = '';
+                    const gs = document.getElementById('groupSelect');
+                    if (gs) { gs.value = ''; @this.set('group_id', ''); }
                 }
                 
             } catch (error) {

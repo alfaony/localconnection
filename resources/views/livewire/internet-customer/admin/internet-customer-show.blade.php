@@ -731,9 +731,14 @@
 
                             <div class="col-md-6">
                                 <div class="form-group">
-                                    <label for="grouping_id">Grouping</label>
-                                    <input type="text" class="form-control" id="grouping_id" wire:model="grouping_id">
-                                    @error('grouping_id') <span class="text-danger">{{ $message }}</span> @enderror
+                                    <label for="group_id">Group <span class="text-danger">*</span></label>
+                                    <select class="form-control" id="group_id" wire:model="group_id">
+                                        <option value="">— Pilih Group —</option>
+                                        @foreach($groups as $grp)
+                                            <option value="{{ $grp->id }}">{{ $grp->name }}</option>
+                                        @endforeach
+                                    </select>
+                                    @error('group_id') <span class="text-danger">{{ $message }}</span> @enderror
                                 </div>
                             </div>
 
@@ -1177,9 +1182,22 @@
                 document.getElementById('phone_number').value       = e.detail.phone_number || '';
                 document.getElementById('start_billing_date').value = e.detail.start_billing_date || '';
                 document.getElementById('end_billing_date').value   = e.detail.end_billing_date || '';
-                document.getElementById('grouping_id').value        = e.detail.grouping_id || '';
                 document.getElementById('status_active').checked    = !!e.detail.status_active;
                 document.getElementById('address_edit').value       = e.detail.address || '';
+
+                // Populate and set Group select
+                var groupSel = document.getElementById('group_id');
+                if (groupSel) {
+                    groupSel.innerHTML = '<option value="">— Pilih Group —</option>';
+                    (e.detail.groups || []).forEach(function(g) {
+                        var opt = document.createElement('option');
+                        opt.value = g.id;
+                        opt.textContent = g.name;
+                        groupSel.appendChild(opt);
+                    });
+                    groupSel.value = e.detail.group_id || '';
+                    @this.set('group_id', e.detail.group_id || '');
+                }
 
                 var startIn = document.getElementById('start_billing_date');
                 var endIn   = document.getElementById('end_billing_date');
@@ -1338,9 +1356,9 @@
                         @this.set('phone_number',       document.getElementById('phone_number').value);
                         @this.set('start_billing_date', document.getElementById('start_billing_date').value);
                         @this.set('end_billing_date',   document.getElementById('end_billing_date').value);
-                        @this.set('status_active',      document.getElementById('status_active').checked);
-                        @this.set('grouping_id',        document.getElementById('grouping_id').value);
-                        @this.set('address',            document.getElementById('address_edit').value);
+                        @this.set('status_active', document.getElementById('status_active').checked);
+                        @this.set('group_id',      document.getElementById('group_id').value);
+                        @this.set('address',       document.getElementById('address_edit').value);
 
                         // Sync dropdown Select2 values ke Livewire sebelum save
                         var provVal = $('#editPribadiModal #province_id').val() || null;

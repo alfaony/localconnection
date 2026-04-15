@@ -16,6 +16,7 @@ use App\Models\Router;
 use App\Models\CoverageService;
 use App\Models\OpticalDistribution;
 use App\Models\CoverageServiceDistribution;
+use App\Models\InternetCustomerGroup;
 
 use App\Jobs\ProvisionCustomerJob;
 use App\Jobs\GenerateInternetPurchaseCouponJob;
@@ -46,10 +47,11 @@ class InternetCustomerIndex extends Component
     public ?string $override_pool_id = null;
     public array $availablePools = [];
     
-    // BARU: Properties untuk ODP dan Grouping
+    // Properties untuk ODP dan Group
     public ?string $optical_distribution_id = null;
-    public ?string $grouping_id = null;
+    public ?string $group_id = null;
     public array $availableOdps = [];
+    public array $availableGroups = [];
 
     public $search = '';
     public $perPage = 10;
@@ -148,19 +150,21 @@ class InternetCustomerIndex extends Component
             ->get(['id','name','active_status']);
         }
 
-        // BARU: Load ODP dari CoverageService
+        // Load ODP dari CoverageService dan Group berdasarkan company
         $this->loadOdpsForCustomer($cust);
-        
+        $this->loadGroupsForCustomer($cust);
+
         $payload = [
             'customerName'  => $cust->name,
             'customerCode'  => $cust->code,
             'serialNumber'  => '',
             'routers'       => $routers->map(fn($r) => [
-                'id'   => $r->id,
+                'id'       => $r->id,
                 'disabled' => $r->is_online ? false : true,
-                'name' => $r->name . ' (PPPoE: '.$r->pppoe_servers_count.')',
+                'name'     => $r->name . ' (PPPoE: '.$r->pppoe_servers_count.')',
             ])->values(),
-            'odps' => $this->availableOdps, // BARU
+            'odps'   => $this->availableOdps,
+            'groups' => $this->availableGroups,
         ];
 
         $this->dispatchBrowserEvent('open-installation-modal', $payload);
@@ -192,6 +196,15 @@ class InternetCustomerIndex extends Component
             ->toArray();
     }
 
+    protected function loadGroupsForCustomer($customer)
+    {
+        $this->availableGroups = InternetCustomerGroup::where('company_id', $customer->company_id)
+            ->orderBy('name')
+            ->get(['id', 'name'])
+            ->map(fn($g) => ['id' => $g->id, 'label' => $g->name])
+            ->toArray();
+    }
+
     // Method untuk validasi dan submit
     public function updatedUsername($value)
     {
@@ -207,34 +220,34 @@ class InternetCustomerIndex extends Component
     }
 
     public function completeInstallation(
-        $serialNumber, 
-        $notes, 
-        $routerId, 
-        $username, 
-        $password, 
-        $override_pool_id, 
+        $serialNumber,
+        $notes,
+        $routerId,
+        $username,
+        $password,
+        $override_pool_id,
         $local_address,
-        $optical_distribution_id = null,  // BARU
-        $grouping_id = null                // BARU
+        $optical_distribution_id = null,
+        $group_id = null
         ) {
         // Update properties dari parameter
-        $this->deviceSerialNumber = $serialNumber;
-        $this->installationNotes = $notes;
-        $this->router_id = $routerId;
-        $this->username = $username;
-        $this->password = $password;
-        $this->override_pool_id = $override_pool_id;
-        $this->local_address = $local_address;
-        $this->optical_distribution_id = $optical_distribution_id;  // BARU
-        $this->grouping_id = $grouping_id;                          // BARU
-        
+        $this->deviceSerialNumber        = $serialNumber;
+        $this->installationNotes         = $notes;
+        $this->router_id                 = $routerId;
+        $this->username                  = $username;
+        $this->password                  = $password;
+        $this->override_pool_id          = $override_pool_id;
+        $this->local_address             = $local_address;
+        $this->optical_distribution_id   = $optical_distribution_id;
+        $this->group_id                  = $group_id;
+
         Log::info('completeInstallation called', [
-            'serialNumber' => $serialNumber,
-            'notes' => $notes,
-            'photos_count' => count($this->photos),
-            'currentInstallationId' => $this->currentInstallationId,
-            'optical_distribution_id' => $optical_distribution_id,  // BARU
-            'grouping_id' => $grouping_id,                          // BARU
+            'serialNumber'           => $serialNumber,
+            'notes'                  => $notes,
+            'photos_count'           => count($this->photos),
+            'currentInstallationId'  => $this->currentInstallationId,
+            'optical_distribution_id'=> $optical_distribution_id,
+            'group_id'               => $group_id,
         ]);
         
         // Cek apakah photos sudah ada
@@ -259,24 +272,25 @@ class InternetCustomerIndex extends Component
             return false;
         }
         
-        // UPDATED: Validasi dengan field baru
         $validated = $this->validate([
-            'currentInstallationId' => 'required|exists:internet_customers,id',
-            'deviceSerialNumber' => 'required|string|max:255',
-            'router_id' => 'required|exists:routers,id',
-            'username' => 'required|unique:internet_customers,username',
-            'password' => 'required',
-            'local_address' => 'nullable|ip|unique:internet_customers,local_address',
-            'optical_distribution_id' => 'required|exists:optical_distributions,id',  // BARU: Wajib
-            'grouping_id' => 'nullable|string|max:255',                                // BARU: Opsional
+            'currentInstallationId'  => 'required|exists:internet_customers,id',
+            'deviceSerialNumber'     => 'required|string|max:255',
+            'router_id'              => 'required|exists:routers,id',
+            'username'               => 'required|unique:internet_customers,username',
+            'password'               => 'required',
+            'local_address'          => 'nullable|ip|unique:internet_customers,local_address',
+            'optical_distribution_id'=> 'required|exists:optical_distributions,id',
+            'group_id'               => 'required|exists:internet_customer_groups,id',
         ], [
-            'deviceSerialNumber.required' => 'Serial Number wajib diisi',
-            'currentInstallationId.required' => 'Customer ID tidak valid',
-            'currentInstallationId.exists' => 'Customer tidak ditemukan',
-            'username.unique' => 'Username PPPoE sudah digunakan',
-            'local_address.unique' => 'Alamat IP lokal sudah terdaftar',
-            'optical_distribution_id.required' => 'ODP wajib dipilih',           // BARU
-            'optical_distribution_id.exists' => 'ODP tidak valid',               // BARU
+            'deviceSerialNumber.required'     => 'Serial Number wajib diisi',
+            'currentInstallationId.required'  => 'Customer ID tidak valid',
+            'currentInstallationId.exists'    => 'Customer tidak ditemukan',
+            'username.unique'                 => 'Username PPPoE sudah digunakan',
+            'local_address.unique'            => 'Alamat IP lokal sudah terdaftar',
+            'optical_distribution_id.required'=> 'ODP wajib dipilih',
+            'optical_distribution_id.exists'  => 'ODP tidak valid',
+            'group_id.required'               => 'Group wajib dipilih',
+            'group_id.exists'                 => 'Group tidak valid',
         ]);
 
         DB::beginTransaction();
@@ -286,16 +300,16 @@ class InternetCustomerIndex extends Component
             
             Log::info('Customer found', ['id' => $customer->id, 'code' => $customer->code]);
             
-            // 2. UPDATED: Update customer dengan field baru
+            // 2. Update customer dengan group_id dan field lainnya
             $customer->update([
-                'grouping_id' => $grouping_id,
-                'status' => ParamSchema::INSTALLED,
-                'local_address' => $local_address,
-                'router_id' => $routerId,
-                'username' => $username,
-                'pass_hash' => $password,
-                'override_pool_id' => $override_pool_id ?: null,
-                'optical_distribution_id' => $optical_distribution_id,  // BARU
+                'group_id'               => $group_id ?: null,
+                'status'                 => ParamSchema::INSTALLED,
+                'local_address'          => $local_address,
+                'router_id'              => $routerId,
+                'username'               => $username,
+                'pass_hash'              => $password,
+                'override_pool_id'       => $override_pool_id ?: null,
+                'optical_distribution_id'=> $optical_distribution_id,
             ]);
             
             dispatch(new \App\Jobs\ProvisionCustomerJob($customer->id));
@@ -389,10 +403,10 @@ class InternetCustomerIndex extends Component
             \App\Helpers\XpHelper::award(Auth::user(), $customerInstallation, "Internet Instalattion");
             
             Log::info('Installation completed successfully', [
-                'customer_id' => $customer->id,
-                'photos_uploaded' => $photoCount,
-                'odp_id' => $optical_distribution_id,
-                'grouping' => $grouping_id
+                'customer_id'            => $customer->id,
+                'photos_uploaded'        => $photoCount,
+                'odp_id'                 => $optical_distribution_id,
+                'group_id'               => $group_id,
             ]);
 
             // Reset form
@@ -404,8 +418,8 @@ class InternetCustomerIndex extends Component
                 'deviceSerialNumber',
                 'installationNotes',
                 'photos',
-                'optical_distribution_id',  // BARU
-                'grouping_id',              // BARU
+                'optical_distribution_id',
+                'group_id',
             ]);
 
             $this->dispatchBrowserEvent('show-notification', [
@@ -811,9 +825,9 @@ class InternetCustomerIndex extends Component
         $user = Auth::user();
 
         $columns = [
-            'id', 'name', 'code', 'status','address',
+            'id', 'name', 'code', 'status', 'address',
             'internet_package_id', 'user_customer_id', 'company_id',
-            'ktp_number', 'created_at','grouping_id'
+            'ktp_number', 'created_at', 'grouping_id', 'group_id'
         ];
         $query = InternetCustomer::query()
             ->byCompany($user->company_id) // batasi dataset sesuai akses
@@ -821,10 +835,11 @@ class InternetCustomerIndex extends Component
             // eager load minimal yang dipakai di blade
             ->with([
                 'installation:id,internet_customer_id,device_serial_number',
-                'installation.medias:id,internet_installation_id,photo,caption', // eager load photos
+                'installation.medias:id,internet_installation_id,photo,caption',
                 'userCustomer:id,name,email,phone_number,start_billing_date,end_billing_date',
                 'company:id,name',
-                'internetPackage:id,name'
+                'internetPackage:id,name',
+                'group:id,name',
             ]);
 
         // Pencarian data

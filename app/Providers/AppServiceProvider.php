@@ -163,7 +163,7 @@ class AppServiceProvider extends ServiceProvider
             $managementInternetMenu = 
             [
                 'data_centers','pops','optical_distributions','coverage_services',
-                'internet_packages','internet_customers','promos','routers'
+                'internet_packages','internet_customers','promos','routers','internet_customer_groups'
             ];
 
             $managementTokoOnlineMenu = [
@@ -862,6 +862,12 @@ class AppServiceProvider extends ServiceProvider
                     'route' => 'event.index',
                     'icon' => 'fa fa-calendar',
                 ],
+                'internet_customer_groups' =>
+                [
+                    'text' => 'Internet Customer Group',
+                    'route' => 'internet-customer-group.index',
+                    'icon' => 'fa fa-users',
+                ]
             ];
 
             // foreach ($listMenu as $role) 

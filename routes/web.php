@@ -148,6 +148,7 @@ use App\Http\Livewire\Pop\PopIndex;
 use App\Http\Livewire\Pop\PopForm;
 use App\Http\Livewire\Ods\OdsIndex;
 use App\Http\Livewire\Ods\OdsForm;
+use App\Http\Livewire\InternetCustomerGroup\InternetCustomerGroupIndex;
 use App\Http\Livewire\CoverageService\CoverageServiceIndex;
 use App\Http\Livewire\CoverageService\CoverageServiceForm;
 use App\Http\Livewire\InternetPackage\InternetPackageIndex;
@@ -687,6 +688,8 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
   Route::get('internet-package', InternetPackageIndex::class)->name('internet-package.index');
   Route::get('internet-package/create', InternetPackageForm::class)->name('internet-package.create');
   Route::get('internet-package/edit/{id}', InternetPackageForm::class)->name('internet-package.edit');
+
+  Route::get('internet-customer-group', InternetCustomerGroupIndex::class)->name('internet-customer-group.index');
 
   Route::get('internet-customer', InternetCustomerIndex::class)->name('internet-customer.index');
   Route::put('internet-customer/update/{id}', InternetCustomerIndex::class)->name('internet-customer.update');

@@ -16,6 +16,7 @@ use Livewire\WithPagination;
 
 use App\Models\InternetCustomer;
 use App\Models\InternetCustomerPurchase;
+use App\Models\InternetCustomerGroup;
 use App\Models\Router;
 use App\Models\AddressPool;
 use App\Models\InternetPackage;
@@ -46,8 +47,9 @@ class InternetCustomerShow extends Component
     public $showInstallationPhotosModal = false;
 
     // Properties untuk edit data pribadi
-    public $name, $email, $phone_number, $start_billing_date, $end_billing_date, $grouping_id;
+    public $name, $email, $phone_number, $start_billing_date, $end_billing_date, $group_id;
     public $province_id, $city_id, $district_id, $subdistrict_id, $address;
+    public array $availableGroups = [];
     
     // Properties untuk edit data instalasi
     public $local_address, $username, $pass_hash, $device_serial_number;
@@ -379,7 +381,12 @@ class InternetCustomerShow extends Component
         $this->phone_number = $this->customer->userCustomer->phone_number ?? '';
         $this->start_billing_date = $this->customer->status != ParamSchema::INACTIVE ? $this->customer->userCustomer->start_billing_date : Carbon::now()->format('Y-m-d');
         $this->end_billing_date = $this->customer->status != ParamSchema::INACTIVE ? $this->customer->userCustomer->end_billing_date : Carbon::now()->addDays(5)->format('Y-m-d');
-        $this->grouping_id = $this->customer->grouping_id;
+        $this->group_id = $this->customer->group_id;
+        $this->availableGroups = InternetCustomerGroup::where('company_id', $this->customer->company_id)
+            ->orderBy('name')
+            ->get(['id', 'name'])
+            ->map(fn($g) => ['id' => $g->id, 'name' => $g->name])
+            ->toArray();
         $this->province_id = $this->customer->province_id;
         $this->city_id = $this->customer->city_id;
         $this->district_id = $this->customer->district_id;
@@ -404,7 +411,8 @@ class InternetCustomerShow extends Component
             'phone_number'       => $this->customer->userCustomer->phone_number ?? '',
             'start_billing_date' => $this->start_billing_date,
             'end_billing_date'   => $this->end_billing_date,
-            'grouping_id'        => $this->grouping_id,
+            'group_id'           => $this->group_id,
+            'groups'             => $this->availableGroups,
             'province_id'        => $this->province_id,
             'city_id'            => $this->city_id,
             'district_id'        => $this->district_id,
@@ -490,11 +498,15 @@ class InternetCustomerShow extends Component
     public function savePribadi()
     {
         $this->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'nullable|email',
-            'phone_number' => 'nullable|string',
+            'name'               => 'required|string|max:255',
+            'email'              => 'nullable|email',
+            'phone_number'       => 'nullable|string',
             'start_billing_date' => 'nullable|date',
-            'end_billing_date' => 'nullable|date|after:start_billing_date',
+            'end_billing_date'   => 'nullable|date|after:start_billing_date',
+            'group_id'           => 'required|exists:internet_customer_groups,id',
+        ], [
+            'group_id.required' => 'Group wajib dipilih.',
+            'group_id.exists'   => 'Group tidak valid.',
         ]);
 
         DB::beginTransaction();
@@ -539,18 +551,16 @@ class InternetCustomerShow extends Component
                     GenerateIsolirJob::dispatch($this->customer->userCustomer);
                 }
 
-                if($this->grouping_id != $this->customer->grouping_id){
-                    $this->customer->update(['grouping_id' => $this->grouping_id]);
+                if ($this->group_id != $this->customer->group_id) {
+                    $this->customer->update(['group_id' => $this->group_id ?: null]);
                 }
-                
-                
+
                 $this->customer->userCustomer->update([
-                    'name' => $this->name,
-                    'email' => $this->email ?: null,
-                    'phone_number' => $this->phone_number,
+                    'name'               => $this->name,
+                    'email'              => $this->email ?: null,
+                    'phone_number'       => $this->phone_number,
                     'start_billing_date' => $this->start_billing_date,
-                    'end_billing_date' => $this->end_billing_date,
-                    'grouping_id' => $this->grouping_id,
+                    'end_billing_date'   => $this->end_billing_date,
                 ]);
 
                 if($this->customer->partnershipAgreement)
@@ -763,7 +773,11 @@ class InternetCustomerShow extends Component
         $districts = $this->city_id ? District::where('city_id', $this->city_id)->whereHas('districtCoverages')->orderBy('name')->get() : collect();
         $subdistricts = $this->district_id ? Subdistrict::where('district_id', $this->district_id)->whereHas('subdistrictCoverages')->orderBy('name')->get() : collect();
 
-        return view('livewire.internet-customer.admin.internet-customer-show', compact('purchases', 'financeAccess', 'provinces', 'cities', 'districts', 'subdistricts'))
+        $groups = InternetCustomerGroup::where('company_id', $this->customer->company_id)
+            ->orderBy('name')
+            ->get(['id', 'name']);
+
+        return view('livewire.internet-customer.admin.internet-customer-show', compact('purchases', 'financeAccess', 'provinces', 'cities', 'districts', 'subdistricts', 'groups'))
             ->extends('adminlte::page');
     }
 
