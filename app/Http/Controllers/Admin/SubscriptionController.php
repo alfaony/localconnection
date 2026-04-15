@@ -123,16 +123,16 @@ class SubscriptionController extends Controller
     {
         try {
             $this->access('update', $subscription);
-    
+
             $validated = $request->validate([
                 'tanggal_expired' => 'required|date|after:today',
             ]);
-    
+
             $subscription->update([
                 'tanggal_expired' => $validated['tanggal_expired'],
                 'status' => 'active', // Reactivate if was expired
             ]);
-            
+
             return redirect()
                 ->route('subscription.show', $subscription)
                 ->with('success', 'Tanggal expired berhasil diupdate');
@@ -142,6 +142,46 @@ class SubscriptionController extends Controller
             \Log::error($th);
             return redirect()->back()->with('error', "Gagal update tanggal expired");
         }
+    }
+
+    /**
+     * Show form to edit order number
+     */
+    public function editOrderNumber(CustomerSubscription $subscription)
+    {
+        return view('admin.subscriptions.edit-order-number', compact('subscription'));
+    }
+
+    /**
+     * Update order number
+     */
+    public function updateOrderNumber(Request $request, CustomerSubscription $subscription)
+    {
+        $companyId = Auth::user()->company_id;
+
+        $request->validate([
+            'order_number' => 'required|string|max:255',
+        ]);
+
+        // Pastikan order_number unik dalam company (tidak boleh sama dengan subscription lain)
+        $duplicate = CustomerSubscription::where('company_id', $companyId)
+            ->where('order_number', $request->order_number)
+            ->where('id', '!=', $subscription->id)
+            ->exists();
+
+        if ($duplicate) {
+            return redirect()->back()
+                ->withInput()
+                ->with('error', 'Order number "' . $request->order_number . '" sudah digunakan oleh subscription lain.');
+        }
+
+        $subscription->update([
+            'order_number' => $request->order_number,
+        ]);
+
+        return redirect()
+            ->route('subscription.show', $subscription)
+            ->with('success', 'Order number berhasil diupdate.');
     }
 
     /**
@@ -440,28 +480,53 @@ class SubscriptionController extends Controller
         return view('admin.subscriptions.create-marketplace', compact('softwares'));
     }
     /**
-     * Check if user email exists (AJAX)
+     * Check if user exists by email OR username (AJAX) — untuk mode "Pilih User Lama"
      */
     public function checkUserEmail(Request $request)
     {
         $request->validate([
-            'email' => 'required|email'
+            'login_field' => 'required|string|max:255'
         ]);
 
-        $companyId = Auth::user()->company_id;
+        $companyId   = Auth::user()->company_id;
+        $loginField  = $request->login_field;
+
+        // Cari berdasarkan email ATAU username
         $user = User::where('company_id', $companyId)
-                    ->where('email', $request->email)
+                    ->where(function ($q) use ($loginField) {
+                        $q->where('email', $loginField)
+                          ->orWhere('username', $loginField);
+                    })
                     ->first();
 
         if ($user) {
             return response()->json([
-                'exists' => true,
-                'name' => $user->name,
-                'phone' => $user->phone
+                'exists'   => true,
+                'name'     => $user->name,
+                'phone'    => $user->phone,
+                'username' => $user->username,
+                'email'    => $user->email,
             ]);
         }
 
         return response()->json(['exists' => false]);
+    }
+
+    /**
+     * Check apakah username sudah dipakai di perusahaan (AJAX) — untuk mode "Buat User Baru"
+     */
+    public function checkUsername(Request $request)
+    {
+        $request->validate([
+            'username' => 'required|string|max:255'
+        ]);
+
+        $companyId = Auth::user()->company_id;
+        $exists = User::where('company_id', $companyId)
+                      ->where('username', $request->username)
+                      ->exists();
+
+        return response()->json(['exists' => $exists]);
     }
 
     /**
@@ -471,7 +536,6 @@ class SubscriptionController extends Controller
     {
         $rules = [
             'user_type' => 'required|in:new,existing',
-            'user_email' => 'required|string|email|max:255',
             'software_id' => 'required|exists:softwares,id',
             'package_id' => 'required|exists:software_packages,id',
             'tanggal_mulai' => 'required|date',
@@ -480,10 +544,15 @@ class SubscriptionController extends Controller
         ];
 
         if ($request->user_type === 'new') {
-            // Require user info for new users
-            $rules['user_name'] = 'required|string|max:255';
+            // Username wajib untuk user baru (menggantikan / melengkapi email)
+            $rules['user_username'] = 'required|string|max:255';
+            $rules['user_email']    = 'nullable|string|email|max:255';
+            $rules['user_name']     = 'required|string|max:255';
             $rules['user_password'] = 'required|string|min:8';
-            $rules['user_phone'] = 'nullable|string|max:20';
+            $rules['user_phone']    = 'nullable|string|max:20';
+        } else {
+            // Existing user: cari berdasarkan email atau username
+            $rules['user_login'] = 'required|string|max:255';
         }
 
         $request->validate($rules);
@@ -494,39 +563,47 @@ class SubscriptionController extends Controller
 
             // 1. Find or create User
             if ($request->user_type === 'existing') {
+                $loginField = $request->user_login;
                 $user = User::where('company_id', $companyId)
-                            ->where('email', $request->user_email)
+                            ->where(function ($q) use ($loginField) {
+                                $q->where('email', $loginField)
+                                  ->orWhere('username', $loginField);
+                            })
                             ->first();
-                            
+
                 if (!$user) {
-                    return redirect()->back()->withInput()->with('error', 'User dengan email tersebut tidak ditemukan di perusahaan Anda.');
+                    return redirect()->back()->withInput()->with('error', 'User dengan email/username tersebut tidak ditemukan di perusahaan Anda.');
                 }
-                
-                // Ensure user has the CUSTOMER_SOFTWARE role just in case
-                // if (!$user->hasRole(RoleSchema::CUSTOMER_SOFTWARE)) {
-                //     $user->assignRole(RoleSchema::CUSTOMER_SOFTWARE);
-                // }
-                
+
             } else {
-                // Determine if they used an existing email accidentally instead of existing radio
-                $user = User::where('company_id', $companyId)->where('email', $request->user_email)->first();
-                
-                if (!$user) {
-                    $user = User::create([
-                        'company_id' => $companyId,
-                        'name' => $request->user_name,
-                        'email' => $request->user_email,
-                        'password' => Hash::make($request->user_password),
-                        'phone' => $request->user_phone,
-                        'role_id' => Role::where('name', RoleSchema::CUSTOMER_SOFTWARE)->first()->id,
-                        'email_verified_at' => now(), // Auto verify since admin created
-                    ]);
-                } else {
-                    // Update role if they already exist
-                    if (!$user->hasRole(RoleSchema::CUSTOMER_SOFTWARE)) {
-                        $user->assignRole(RoleSchema::CUSTOMER_SOFTWARE);
+                // Cek duplikasi username di perusahaan yang sama
+                $usernameExists = User::where('company_id', $companyId)
+                                      ->where('username', $request->user_username)
+                                      ->exists();
+                if ($usernameExists) {
+                    return redirect()->back()->withInput()->with('error', 'Username "' . $request->user_username . '" sudah digunakan di perusahaan ini.');
+                }
+
+                // Jika email diisi, cek duplikasi email
+                if ($request->filled('user_email')) {
+                    $emailExists = User::where('company_id', $companyId)
+                                       ->where('email', $request->user_email)
+                                       ->exists();
+                    if ($emailExists) {
+                        return redirect()->back()->withInput()->with('error', 'Email "' . $request->user_email . '" sudah terdaftar. Gunakan Jalur "Pilih User Lama".');
                     }
                 }
+
+                $user = User::create([
+                    'company_id'        => $companyId,
+                    'name'              => $request->user_name,
+                    'username'          => $request->user_username,
+                    'email'             => $request->filled('user_email') ? $request->user_email : null,
+                    'password'          => Hash::make($request->user_password),
+                    'phone'             => $request->user_phone,
+                    'role_id'           => Role::where('name', RoleSchema::CUSTOMER_SOFTWARE)->first()->id,
+                    'email_verified_at' => now(), // Auto verify karena dibuat oleh admin
+                ]);
             }
 
             // 2. Calculate Dates

@@ -172,29 +172,52 @@ class SoftwareSharingController extends Controller
     }
 
     /**
-     * Proses login untuk customer software
+     * Proses login untuk customer software — mendukung email ATAU username
      */
     public function login(Request $request, string $companySlug)
     {
         $company = Company::where('slug', $companySlug)->firstOrFail();
 
         $request->validate([
-            'email'    => ['required', 'email'],
-            'password' => ['required'],
+            'login_field' => ['required', 'string'],
+            'password'    => ['required'],
         ]);
 
-        if (auth()->attempt($request->only('email', 'password'), $request->boolean('remember'))) {
+        $loginField = $request->login_field;
+        $password   = $request->password;
+        $remember   = $request->boolean('remember');
+
+        // Coba login via email terlebih dahulu
+        $loggedIn = false;
+        if (filter_var($loginField, FILTER_VALIDATE_EMAIL)) {
+            $loggedIn = auth()->attempt(['email' => $loginField, 'password' => $password], $remember);
+        }
+
+        // Jika gagal atau bukan format email, coba via username (scoped ke company)
+        if (!$loggedIn) {
+            $user = User::where('company_id', $company->id)
+                        ->where('username', $loginField)
+                        ->whereHas('role', fn($q) => $q->where('name', RoleSchema::CUSTOMER_SOFTWARE))
+                        ->first();
+
+            if ($user && Hash::check($password, $user->password)) {
+                auth()->login($user, $remember);
+                $loggedIn = true;
+            }
+        }
+
+        if ($loggedIn) {
             $request->session()->regenerate();
 
-            // Cek verifikasi email sebelum mengizinkan masuk
+            // Cek verifikasi email — user tanpa email (login via username) dianggap terverifikasi
             if (!auth()->user()->hasVerifiedEmail()) {
                 auth()->logout();
                 $request->session()->invalidate();
                 $request->session()->regenerateToken();
 
                 return redirect()->back()
-                    ->withInput($request->only('email'))
-                    ->withErrors(['email' => 'Email Anda belum diverifikasi. Silakan cek inbox dan klik link verifikasi yang kami kirimkan.']);
+                    ->withInput($request->only('login_field'))
+                    ->withErrors(['login_field' => 'Email Anda belum diverifikasi. Silakan cek inbox dan klik link verifikasi yang kami kirimkan.']);
             }
 
             return redirect()
@@ -204,8 +227,8 @@ class SoftwareSharingController extends Controller
 
         return redirect()
             ->back()
-            ->withInput($request->only('email'))
-            ->withErrors(['email' => 'Email atau password tidak cocok.']);
+            ->withInput($request->only('login_field'))
+            ->withErrors(['login_field' => 'Email/username atau password tidak cocok.']);
     }
 
     /**

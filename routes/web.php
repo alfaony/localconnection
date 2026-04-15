@@ -832,9 +832,12 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
     Route::get('subscription/create-marketplace', [AdminSubscriptionController::class, 'createMarketplace'])->name('subscription.create-marketplace');
     Route::post('subscription/store-marketplace', [AdminSubscriptionController::class, 'storeMarketplace'])->name('subscription.store-marketplace');
     Route::post('subscription/check-user-email', [AdminSubscriptionController::class, 'checkUserEmail'])->name('subscription.check-user-email');
+    Route::post('subscription/check-username', [AdminSubscriptionController::class, 'checkUsername'])->name('subscription.check-username');
     Route::get('subscription/{subscription}', [AdminSubscriptionController::class, 'show'])->name('subscription.show');
     Route::get('subscription/{subscription}/edit-expiry', [AdminSubscriptionController::class, 'editExpiry'])->name('subscription.edit-expiry');
     Route::put('subscription/{subscription}/update-expiry', [AdminSubscriptionController::class, 'updateExpiry'])->name('subscription.update-expiry');
+    Route::get('subscription/{subscription}/edit-order-number', [AdminSubscriptionController::class, 'editOrderNumber'])->name('subscription.edit-order-number');
+    Route::put('subscription/{subscription}/update-order-number', [AdminSubscriptionController::class, 'updateOrderNumber'])->name('subscription.update-order-number');
     Route::get('subscription/{subscription}/edit-master-account', [AdminSubscriptionController::class, 'editMasterAccount'])->name('subscription.edit-master-account');
     Route::put('subscription/{subscription}/update-master-account', [AdminSubscriptionController::class, 'updateMasterAccount'])->name('subscription.update-master-account');
     Route::post('subscription/{subscription}/suspend', [AdminSubscriptionController::class, 'suspend'])->name('subscription.suspend');

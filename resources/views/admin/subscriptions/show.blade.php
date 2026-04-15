@@ -240,13 +240,19 @@
                     <h3 class="card-title">Aksi</h3>
                 </div>
                 <div class="card-body">
+                    @canAccess('editOrderNumber', 'subscriptions')
+                    <a href="{{ route('subscription.edit-order-number', $subscription) }}" class="btn btn-secondary btn-block mb-2">
+                        <i class="fas fa-hashtag"></i> Edit Order Number
+                    </a>
+                    @endcanAccess
+
                     @if($subscription->status == \App\Schemas\ParamSchema::ACTIVE)
                         @canAccess('editExpiry', 'subscriptions')
                         <a href="{{ route('subscription.edit-expiry', $subscription) }}" class="btn btn-warning btn-block">
                             <i class="fas fa-calendar"></i> Ubah Tanggal Expired
                         </a>
                         @endcanAccess
-                        
+
                         @canAccess('editMasterAccount', 'subscriptions')
                         <a href="{{ route('subscription.edit-master-account', $subscription) }}" class="btn btn-info btn-block mb-2">
                             <i class="fas fa-exchange-alt"></i> Ganti Master Account
