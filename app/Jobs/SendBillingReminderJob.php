@@ -115,11 +115,42 @@ class SendBillingReminderJob implements ShouldQueue
                 $tutorialPayment = config('services.internet_custom.tutorial_payment');
                 $message = null;
 
-                if($daysBeforeDue == 1)
-                {
+                if ($daysBeforeDue == 0) {
+                    $message = "*Ringkasan Tagihan Layanan Internet*\n\n"
+                            . "*Yth. Bapak/Ibu {$customer->name},*\n"
+                            . "Kami informasikan bahwa tagihan internet Anda *jatuh tempo HARI INI*. Mohon segera lakukan pembayaran untuk menghindari pemutusan layanan.\n\n"
+                            . "Berikut detail tagihan Anda:\n\n"
+                            . "ID Pelanggan: {$customer->internetCustomer->code}\n"
+                            . "Paket Layanan: {$customer->internetCustomer->internetPackage->name}\n"
+                            . "Jatuh Tempo Pembayaran: {$dateJatuhTempo}\n"
+                            . "Total Tagihan: Rp. " . number_format($customer->internetCustomer->internetPackage->price_nett, 2, ',', '.') . "\n\n"
+                            . "⛔ *PERHATIAN:* Layanan internet Anda akan dihentikan jika pembayaran tidak dilakukan hari ini.\n\n"
+                            . "Untuk melakukan pembayaran atau konfirmasi, silakan klik tautan berikut:\n\n"
+                            . "{$url}\n\n"
+                            . "{$tutorialPayment}"
+                            . "Terima kasih atas perhatian dan kerjasama nya 🙏.\n\n"
+                            . "*Hormat kami,*\n"
+                            . "*Hikarinet by KAILI Global*";
+                } elseif ($daysBeforeDue == 1) {
                     $message = "*Ringkasan Tagihan Layanan Internet*\n\n"
                             . "*Yth. Bapak/Ibu {$customer->name},*\n"
                             . "Kami informasikan bahwa jatuh tempo pembayaran tagihan internet akan berakhir kurang dari 1 hari lagi .\n\n"
+                            . "Berikut ini adalah pengingat tagihan Anda dengan detail sebagai berikut:\n\n"
+                            . "ID Pelanggan: {$customer->internetCustomer->code}\n"
+                            . "Paket Layanan: {$customer->internetCustomer->internetPackage->name}\n"
+                            . "Jatuh Tempo Pembayaran: {$dateJatuhTempo}\n"
+                            . "Total Tagihan: Rp. " . number_format($customer->internetCustomer->internetPackage->price_nett, 2, ',', '.') . "\n\n"
+                            . "⛔ Mohon segera lakukan pembayaran sebelum tanggal jatuh tempo untuk menghindari penghentian layanan dan pemutusan koneksi internet.\n\n"
+                            . "Untuk melakukan pembayaran atau konfirmasi, silakan klik tautan berikut:\n\n"
+                            . "{$url}\n\n"
+                            . "{$tutorialPayment}"
+                            . "Terima kasih atas perhatian dan kerjasama nya 🙏.\n\n"
+                            . "*Hormat kami,*\n"
+                            . "*Hikarinet by KAILI Global*";
+                } elseif ($daysBeforeDue == 3) {
+                    $message = "*Ringkasan Tagihan Layanan Internet*\n\n"
+                            . "*Yth. Bapak/Ibu {$customer->name},*\n"
+                            . "Kami informasikan bahwa jatuh tempo pembayaran tagihan internet Anda tinggal *3 hari lagi*.\n\n"
                             . "Berikut ini adalah pengingat tagihan Anda dengan detail sebagai berikut:\n\n"
                             . "ID Pelanggan: {$customer->internetCustomer->code}\n"
                             . "Paket Layanan: {$customer->internetCustomer->internetPackage->name}\n"
