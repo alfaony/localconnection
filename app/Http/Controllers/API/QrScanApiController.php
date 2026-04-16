@@ -122,7 +122,7 @@ class QrScanApiController extends Controller
                         'repair_item' => $r->repair_item,
                         'cost'        => $r->cost,
                     ])->values(),
-
+                    'suggested_price' => $item->suggested_selling_price,
                     'sale_status' => $item->sale_status,
                     'user_name'   => optional($item->user)->name,
                 ]
