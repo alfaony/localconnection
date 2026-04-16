@@ -92,45 +92,111 @@
                     <h5 class="modal-title text-white">
                         <i class="fas fa-exclamation-triangle"></i> Konfirmasi Pembayaran
                     </h5>
-                    <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                    <button type="button" class="close text-white" data-bs-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true">&times;</span>
                     </button>
                 </div>
                 <div class="modal-body">
-                    <div class="text-center mb-4">
-                        <h4>Total Pembayaran</h4>
-                        <h2 class="text-primary">@{{ formatCurrency(paymentMethod === 'cash' ? cashRoundedTotal : grandTotal) }}</h2>
+
+                    {{-- Loading cek stok --}}
+                    <div v-if="isCheckingStock" class="text-center py-3">
+                        <i class="fas fa-spinner fa-spin fa-2x text-primary"></i>
+                        <p class="mt-2 text-muted">Memeriksa ketersediaan stok...</p>
                     </div>
 
-                    <div class="payment-details">
-                        <div class="row">
-                            <div class="col-6"><strong>Metode Pembayaran:</strong></div>
-                            <div class="col-6 text-right">@{{ getPaymentMethodLabel(paymentMethod) }}</div>
+                    <template v-if="!isCheckingStock">
+
+                        {{-- Ringkasan bayar --}}
+                        <div class="text-center mb-3">
+                            <h4 class="mb-0">Total Pembayaran</h4>
+                            <h2 class="text-primary font-weight-bold">@{{ formatCurrency(paymentMethod === 'cash' ? cashRoundedTotal : grandTotal) }}</h2>
                         </div>
-                        <div v-if="paymentMethod === 'cash'" class="row mt-2">
-                            <div class="col-6"><strong>Dibayar:</strong></div>
-                            <div class="col-6 text-right">@{{ formatCurrency(cashAmount) }}</div>
+
+                        <div class="payment-details mb-3">
+                            <div class="row">
+                                <div class="col-6"><strong>Metode Pembayaran:</strong></div>
+                                <div class="col-6 text-right">@{{ getPaymentMethodLabel(paymentMethod) }}</div>
+                            </div>
+                            <div v-if="paymentMethod === 'cash'" class="row mt-1">
+                                <div class="col-6"><strong>Dibayar:</strong></div>
+                                <div class="col-6 text-right">@{{ formatCurrency(cashAmount) }}</div>
+                            </div>
+                            <div v-if="paymentMethod === 'cash'" class="row mt-1">
+                                <div class="col-6"><strong>Kembalian:</strong></div>
+                                <div class="col-6 text-right text-success font-weight-bold">@{{ formatCurrency(cashAmount - cashRoundedTotal) }}</div>
+                            </div>
+                            <div v-if="customerEmail" class="row mt-1">
+                                <div class="col-6"><strong>Email Customer:</strong></div>
+                                <div class="col-6 text-right">@{{ customerEmail }}</div>
+                            </div>
                         </div>
-                        <div v-if="paymentMethod === 'cash'" class="row mt-1">
-                            <div class="col-6"><strong>Kembalian:</strong></div>
-                            <div class="col-6 text-right">@{{ formatCurrency(cashAmount - cashRoundedTotal) }}</div>
+
+                        <hr class="my-2">
+
+                        {{-- Hasil cek stok per item --}}
+                        @canAccess('checkStock','store_sellings')
+                        <div class="mb-1">
+                            <strong><i class="fas fa-boxes mr-1"></i> Info Stok</strong>
+                            <small class="text-muted ml-1">(preview — validasi final saat proses bayar)</small>
                         </div>
-                        <div v-if="customerEmail" class="row mt-2">
-                            <div class="col-6"><strong>Email Customer:</strong></div>
-                            <div class="col-6 text-right">@{{ customerEmail }}</div>
+
+                        {{-- Gagal ambil data stok --}}
+                        <div v-if="stockCheckFailed" class="alert alert-secondary py-2 mb-0">
+                            <i class="fas fa-info-circle mr-1"></i>
+                            Info stok tidak dapat dimuat. Lanjutkan pembayaran, sistem akan memvalidasi saat proses.
                         </div>
-                    </div>
-                    
-                    <div class="alert alert-info mt-3">
-                        <i class="fas fa-info-circle"></i> Pastikan semua data sudah benar sebelum melanjutkan.
-                    </div>
+                        @endcanAccess
+
+                        {{-- Hasil per item --}}
+                        <template v-if="!stockCheckFailed && stockCheckResults.length > 0">
+                            <div v-for="item in stockCheckResults" :key="item.product_store_id"
+                                 class="d-flex align-items-center justify-content-between py-1 px-2 rounded mb-1"
+                                 :class="!item.ok ? 'bg-danger-light' : 'bg-light'">
+                                <div>
+                                    <span class="font-weight-bold" style="font-size:0.9rem;">@{{ item.name }}</span>
+                                    <span class="text-muted ml-2" style="font-size:0.82rem;">
+                                        beli: <strong>@{{ item.requested }} @{{ item.unit }}</strong>
+                                    </span>
+                                </div>
+                                <div class="text-right" style="min-width:180px;">
+                                    <span v-if="!item.ok" class="badge badge-danger px-2 py-1">
+                                        <i class="fas fa-exclamation-triangle mr-1"></i>
+                                        Kurang — tersedia @{{ item.stock }} @{{ item.unit }}
+                                    </span>
+                                    <span v-else-if="!item.has_inventory" class="badge badge-secondary px-2 py-1">
+                                        <i class="fas fa-question mr-1"></i> Belum didata
+                                    </span>
+                                    <span v-else class="badge badge-success px-2 py-1">
+                                        <i class="fas fa-check mr-1"></i>
+                                        Aman (@{{ item.stock }} @{{ item.unit }})
+                                    </span>
+                                </div>
+                            </div>
+
+                            {{-- Warning jika ada stok kurang, tapi TIDAK block tombol --}}
+                            <div v-if="!stockCheckAllOk" class="alert alert-warning py-2 mt-2 mb-0">
+                                <i class="fas fa-exclamation-triangle mr-1"></i>
+                                <strong>Perhatian:</strong> Beberapa item mungkin stoknya tidak cukup.
+                                Sistem akan memvalidasi ulang saat proses pembayaran.
+                            </div>
+                            <div v-else class="alert alert-success py-2 mt-2 mb-0">
+                                <i class="fas fa-check-circle mr-1"></i>
+                                Semua stok tersedia. Siap diproses.
+                            </div>
+                        </template>
+
+                    </template>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" aria-label="Close">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
                         <i class="fas fa-edit"></i> Perbaiki
                     </button>
-                    <button type="button" class="btn btn-success" @click="confirmPayment" :disabled="isLoading">
-                        <i class="fas fa-check"></i> Konfirmasi & Bayar
+                    <button type="button" class="btn btn-success"
+                            @click="confirmPayment"
+                            :disabled="isLoading || isCheckingStock">
+                        <i class="fas fa-check" v-if="!isLoading"></i>
+                        <i class="fas fa-spinner fa-spin" v-if="isLoading"></i>
+                        Konfirmasi & Bayar
                     </button>
                 </div>
             </div>
@@ -160,18 +226,23 @@
                         <table class="table table-hover table-bordered">
                             <thead class="thead-light">
                                 <tr>
-                                    <th width="10%">Kode</th>
-                                    <th width="20%">Nama</th>
-                                    <th width="15%">Varian</th>
-                                    <th width="20%">Spesifikasi</th>
-                                    <th width="12%">Kategori</th>
-                                    <th width="12%">Merk</th>
+                                    <th width="9%">Kode</th>
+                                    <th width="18%">Nama</th>
+                                    <th width="13%">Varian</th>
+                                    <th width="18%">Spesifikasi</th>
+                                    <th width="10%">Kategori</th>
+                                    <th width="10%">Merk</th>
                                     <th width="11%" class="text-right">Harga</th>
+                                    <th width="11%" class="text-center">Stok</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr v-for="product in productSelectionList" :key="product.id" 
-                                    class="product-row" @click="selectProduct(product)" style="cursor: pointer;">
+                                <tr v-for="product in productSelectionList" :key="product.id"
+                                    class="product-row"
+                                    :class="!product.inventory ? 'table-secondary' : (product.inventory.quantity <= 0 ? 'table-danger' : '')"
+                                    @click="selectProduct(product)"
+                                    style="cursor: pointer;"
+                                    :title="!product.inventory ? 'Stok belum didata — tidak bisa dijual' : ''">
                                     <td><code>@{{ product.code || '-' }}</code></td>
                                     <td><strong>@{{ product.name }}</strong></td>
                                     <td>@{{ product.variant || '-' }}</td>
@@ -179,6 +250,20 @@
                                     <td>@{{ product.category?.name || '-' }}</td>
                                     <td>@{{ product.brand?.name || '-' }}</td>
                                     <td class="text-right"><strong>@{{ formatCurrency(product.selling_price) }}</strong></td>
+                                    <td class="text-center">
+                                        <span v-if="!product.inventory" class="badge badge-secondary">
+                                            <i class="fas fa-question"></i> Belum didata
+                                        </span>
+                                        <span v-else-if="product.inventory.quantity <= 0" class="badge badge-danger">
+                                            <i class="fas fa-times"></i> Habis
+                                        </span>
+                                        <span v-else-if="product.inventory.quantity <= 5" class="badge badge-warning">
+                                            <i class="fas fa-exclamation"></i> @{{ product.inventory.quantity }} @{{ product.inventory.unit }}
+                                        </span>
+                                        <span v-else class="badge badge-success">
+                                            @{{ product.inventory.quantity }} @{{ product.inventory.unit }}
+                                        </span>
+                                    </td>
                                 </tr>
                             </tbody>
                         </table>
@@ -330,6 +415,11 @@
     /* Prevent Vue template flash */
     [v-cloak] {
         display: none !important;
+    }
+
+    .bg-danger-light {
+        background-color: #fdecea;
+        border-left: 3px solid #dc3545;
     }
 
     /* Loading Overlay */
@@ -735,6 +825,11 @@ createApp({
         const isLoading = ref(false);
         const loadingMessage = ref('Memproses...');
         const productSelectionList = ref([]);
+        const stockCheckResults  = ref([]);
+        const stockCheckAllOk    = ref(true);
+        const stockCheckFailed   = ref(false);
+        const stockCheckFailedMsg = ref('');
+        const isCheckingStock    = ref(false);
 
         // Computed properties
         const totalItems = computed(() => {
@@ -818,10 +913,37 @@ createApp({
             return labels[method] || method;
         };
 
-        const nextStep = () => {
+        const nextStep = async () => {
             if (currentStep.value === 1 && canGoToStep2.value) {
                 currentStep.value = 2;
             } else if (currentStep.value === 2 && canGoToStep3.value) {
+                // Check stock dari DB sebelum buka modal konfirmasi
+                isCheckingStock.value  = true;
+                stockCheckResults.value = [];
+                stockCheckAllOk.value  = true;
+                stockCheckFailed.value = false;
+
+                try {
+                    const items = cartItems.value.map(item => ({
+                        product_store_id: item.id,
+                        quantity: item.quantity,
+                    }));
+                    const response = await axios.post('/store-selling/checkStock', { items });
+                    stockCheckResults.value = response.data.results;
+                    stockCheckAllOk.value   = response.data.all_ok;
+                } catch (e) {
+                    // checkStock gagal (500, network, dll) → tetap buka modal
+                    // processPayment adalah gatekeeper yang sebenarnya
+                    const status  = e?.response?.status;
+                    const errBody = e?.response?.data;
+                    console.error('[checkStock] status:', status, 'body:', errBody, 'error:', e);
+                    stockCheckFailed.value     = true;
+                    stockCheckFailedMsg.value  = `HTTP ${status ?? 'network'}: ${JSON.stringify(errBody ?? e?.message)}`;
+                    stockCheckAllOk.value  = true; // jangan block tombol
+                } finally {
+                    isCheckingStock.value = false;
+                }
+
                 $('#paymentConfirmationModal').modal('show');
             }
         };
@@ -850,7 +972,23 @@ createApp({
                     } else {
                         // Single product, add directly to cart
                         const product = response.data.product;
-                        addToCart(product);
+                        const result  = addToCart(product);
+
+                        // Toast sukses dengan info stok — hanya jika produk berhasil masuk cart
+                        if (result && product.inventory) {
+                            const sisa = product.inventory.quantity - 1; // sudah dikurangi 1 yang baru masuk
+                            Swal.fire({
+                                icon: 'success',
+                                title: product.name,
+                                html: `Ditambahkan ke keranjang.<br>` +
+                                      `Stok tersedia: <b>${product.inventory.quantity} ${result.unit}</b> &nbsp;|&nbsp; ` +
+                                      `Sisa setelah ini: <b>${sisa} ${result.unit}</b>`,
+                                timer: 2000,
+                                showConfirmButton: false,
+                                toast: true,
+                                position: 'top-end',
+                            });
+                        }
                     }
                     barcodeInput.value = '';
                     setTimeout(() => {
@@ -869,20 +1007,67 @@ createApp({
         };
 
         const addToCart = (product) => {
-            const existingItemIndex = cartItems.value.findIndex(item => item.id === product.id);
-            
-            if (existingItemIndex !== -1) {
-                cartItems.value[existingItemIndex].quantity += 1;
-            } else {
-                cartItems.value.push({
-                    id: product.id,
-                    code: product.code,
-                    name: product.name,
-                    price: product.selling_price,
-                    originalPrice: product.selling_price, // Store original price
-                    quantity: 1
+            // Blok produk yang belum punya data stok (inventory null)
+            if (!product.inventory) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Stok Belum Didata',
+                    html: `<b>${product.name}</b> belum memiliki data stok.<br><br>` +
+                          `Silakan input stok produk ini terlebih dahulu di menu <b>Manajemen Stok</b> sebelum bisa dijual.`,
+                    confirmButtonText: 'OK, Mengerti',
+                    confirmButtonColor: '#f39c12',
                 });
+                return;
             }
+
+            const stock = product.inventory.quantity;
+            const unit  = product.inventory.unit ?? 'pcs';
+            const existingItemIndex = cartItems.value.findIndex(item => item.id === product.id);
+
+            if (existingItemIndex !== -1) {
+                const newQty = cartItems.value[existingItemIndex].quantity + 1;
+                if (newQty > stock) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Stok Tidak Cukup',
+                        html: `Stok tersedia hanya <b>${stock} ${unit}</b>.`,
+                        timer: 2000,
+                        showConfirmButton: false,
+                        toast: true,
+                        position: 'top-end',
+                    });
+                    return;
+                }
+                cartItems.value[existingItemIndex].quantity = newQty;
+                return;
+            }
+
+            // Produk baru — blok jika stok habis
+            if (stock <= 0) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Stok Habis',
+                    html: `<b>${product.name}</b> saat ini tidak memiliki stok tersedia.`,
+                    timer: 2500,
+                    showConfirmButton: false,
+                    toast: true,
+                    position: 'top-end',
+                });
+                return;
+            }
+
+            cartItems.value.push({
+                id:            product.id,
+                code:          product.code,
+                name:          product.name,
+                price:         product.selling_price,
+                originalPrice: product.selling_price,
+                quantity:      1,
+                stock:         stock,
+                unit:          unit,
+            });
+
+            return { stock, unit }; // digunakan oleh caller untuk toast
         };
 
         const updatePrice = (index, newPrice) => {
@@ -895,11 +1080,13 @@ createApp({
 
         const updateQuantity = (index, newQuantity) => {
             if (newQuantity < 1) newQuantity = 1;
+            // Biarkan user input melebihi stok — indikator inline yang akan memberi tahu
             cartItems.value[index].quantity = newQuantity;
         };
 
         const validateQuantity = (item) => {
             if (item.quantity < 1) item.quantity = 1;
+            // Tidak clamp ke stok — biarkan melebihi, indikator inline yang menginformasikan
         };
 
         const removeItem = (index) => {
@@ -956,8 +1143,19 @@ createApp({
                 }
             } catch (error) {
                 console.error('Error processing payment:', error);
-                // alert('Error processing payment: ' + (error.response?.data?.message || error.message));
-                setLoadingResult('Error processing payment', error.response?.data?.message || error.message, false);
+                const errMsg = error.response?.data?.message || error.message;
+                // Tampilkan dengan html jika ada tag <br> (misal: error stok)
+                if (errMsg && errMsg.includes('<br>')) {
+                    setLoading(false);
+                    Swal.fire({
+                        title: 'Stok Tidak Mencukupi',
+                        html: errMsg,
+                        icon: 'error',
+                        confirmButtonText: 'OK'
+                    });
+                } else {
+                    setLoadingResult('Error memproses pembayaran', errMsg, false);
+                }
             } finally {
                 setLoading(false);
             }
@@ -1986,6 +2184,11 @@ createApp({
             isLoading,
             loadingMessage,
             productSelectionList,
+            stockCheckResults,
+            stockCheckAllOk,
+            stockCheckFailed,
+            stockCheckFailedMsg,
+            isCheckingStock,
             totalItems,
             subtotal,
             tax,
