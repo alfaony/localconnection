@@ -28,10 +28,50 @@ class QrScanApiController extends Controller
         try {
             $laptop = UsedLaptop::where('slug', $slug)
                 ->byCompany(Auth::user()->company_id)
-                ->with(['media' => fn($q) => $q->orderBy('order', 'asc')])
+                ->with([
+                    'media' => fn($q) => $q->orderBy('order', 'asc'),
+                    'rack.zone.warehouse',
+                    'checks.item',
+                    'repairs'
+                ])
                 ->firstOrFail();
 
-            return response()->json(['success' => true, 'data' => $laptop], 200);
+            // 🔥 FORMAT RESPONSE
+            $data = [
+                ...$laptop->toArray(),
+
+                // ================= MEDIA =================
+                'medias' => $laptop->media->map(fn($m) => [
+                    'file_path' => $m->file_path,
+                    'caption'   => $m->caption,
+                    'order'     => $m->order,
+                ]),
+
+                // ================= LOCATION =================
+                'warehouse_name' => optional($laptop->rack?->zone?->warehouse)->name,
+                'zone_name'      => optional($laptop->rack?->zone)->name,
+                'rack_name'      => optional($laptop->rack)->name,
+
+                // ================= CHECKLIST =================
+                'checks' => $laptop->checks->map(fn($c) => [
+                    'name'   => $c->item?->name,
+                    'status' => $c->status,
+                    'notes'  => $c->notes,
+                ]),
+
+                // ================= REPAIRS =================
+                'repairs' => $laptop->repairs->map(fn($r) => [
+                    'repair_item' => $r->repair_item,
+                    'cost'        => $r->cost,
+                ]),
+
+                'suggested_price' => $laptop->suggested_selling_price,
+                'jakarta_price'   => $laptop->jakarta_price,
+                'jambi_price'     => $laptop->jambi_price,
+            ];
+
+            return response()->json(['success' => true, 'data' => $data], 200);
+
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => 'Laptop tidak ditemukan'], 404);
         }
@@ -43,11 +83,48 @@ class QrScanApiController extends Controller
     public function getUsedItemDetail($slug)
     {
         try {
-            $usedItem = UsedItem::where('slug', $slug)
+            $item = UsedItem::where('slug', $slug)
                 ->byCompany(Auth::user()->company_id)
+                ->with([
+                    'media',
+                    'rack.zone.warehouse',
+                    'checks.item',
+                    'repairs'
+                ])
                 ->firstOrFail();
 
-            return response()->json(['success' => true, 'data' => $usedItem], 200);
+            $data = array_merge(
+                $item->toArray(),
+                [
+                    'medias' => $item->media->map(fn($m) => [
+                        'file_path' => $m->file_path,
+                        'caption'   => $m->caption,
+                        'order'     => $m->order,
+                    ])->values(),
+
+                    'warehouse_name' => optional($item->rack?->zone?->warehouse)->name,
+                    'zone_name'      => optional($item->rack?->zone)->name,
+                    'rack_name'      => optional($item->rack)->name,
+
+                    'checks' => $item->checks->map(fn($c) => [
+                        'name'   => $c->item?->name,
+                        'status' => $c->status,
+                        'notes'  => $c->notes,
+                    ])->values(),
+
+                    'repairs' => $item->repairs->map(fn($r) => [
+                        'repair_item' => $r->repair_item,
+                        'cost'        => $r->cost,
+                    ])->values(),
+
+                    'suggested_price' => $laptop->suggested_selling_price,
+                ]
+            );
+
+            return response()->json([
+                'success' => true,
+                'data' => $data
+            ]);
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => 'Item tidak ditemukan'], 404);
         }
@@ -61,10 +138,25 @@ class QrScanApiController extends Controller
         try {
             $product = ProductStore::where('barcode', $code)
                 ->byCompany(Auth::user()->company_id)
-                ->with(['category', 'brand'])
+                ->with([
+                    'category',
+                    'brand',
+                    'media' => fn($q) => $q->orderBy('order', 'asc')
+                ])
                 ->firstOrFail();
 
-            return response()->json(['success' => true, 'data' => $product], 200);
+            $data = [
+                ...$product->toArray(),
+
+                'medias' => $product->media->map(fn($m) => [
+                    'file_path' => $m->file_path,
+                    'caption'   => $m->caption,
+                    'order'     => $m->order,
+                ]),
+            ];
+
+            return response()->json(['success' => true, 'data' => $data], 200);
+
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => 'Produk tidak ditemukan'], 404);
         }
