@@ -52,18 +52,39 @@
                                 <tr v-for="(item, index) in cartItems" :key="item.id" class="animate__animated animate__fadeIn">
                                     <td>
                                         <div class="font-weight-bold">@{{ item.name }}</div>
-                                        {{--<small class="text-muted">SKU: @{{ item.code }}</small>--}}
+                                        {{-- Inline stock indicator, reactive terhadap qty --}}
+                                        <div v-if="item.stock !== null && item.stock !== undefined" style="font-size:0.78rem; margin-top:2px;">
+                                            <span v-if="item.quantity > item.stock" class="text-danger">
+                                                <i class="fas fa-times-circle"></i>
+                                                Stok tidak cukup &mdash; tersedia <strong>@{{ item.stock }} pcs</strong>
+                                            </span>
+                                            <span v-else-if="item.stock === 0" class="text-danger">
+                                                <i class="fas fa-times-circle"></i> Stok habis
+                                            </span>
+                                            <span v-else-if="item.stock - item.quantity <= 3" class="text-warning">
+                                                <i class="fas fa-exclamation-triangle"></i>
+                                                Sisa stok <strong>@{{ item.stock - item.quantity }} pcs</strong> setelah transaksi ini
+                                            </span>
+                                            <span v-else class="text-success">
+                                                <i class="fas fa-check-circle"></i>
+                                                Stok: @{{ item.stock }} pcs
+                                                <span class="text-muted">(&minus;@{{ item.quantity }} = sisa @{{ item.stock - item.quantity }})</span>
+                                            </span>
+                                        </div>
+                                        <div v-else style="font-size:0.78rem; margin-top:2px;" class="text-muted">
+                                            <i class="fas fa-question-circle"></i> Stok belum didata
+                                        </div>
                                     </td>
                                     <td class="text-right" style="padding-right: 1rem;">
-                                        <input type="number" 
-                                               class="form-control form-control-sm text-right price-input" 
+                                        <input type="number"
+                                               class="form-control form-control-sm text-right price-input"
                                                v-model.number="item.price"
                                                @change="updatePrice(index, item.price)"
                                                min="0"
                                                step="1000"
                                                title="Klik untuk edit harga"
                                                style="width: 100%; min-width: 120px;">
-                                        <small v-if="item.originalPrice && item.price !== item.originalPrice" 
+                                        <small v-if="item.originalPrice && item.price !== item.originalPrice"
                                                class="text-warning d-block mt-1"
                                                style="font-size: 0.7rem;">
                                             Asli: <del class="text-muted">@{{ formatCurrency(item.originalPrice) }}</del>
@@ -71,20 +92,23 @@
                                     </td>
                                     <td style="padding: 0.5rem 1rem;">
                                         <div class="input-group input-group-sm">
-                                            <button class="btn btn-outline-secondary" 
+                                            <button class="btn btn-outline-secondary"
                                                     @click="updateQuantity(index, item.quantity - 1)"
                                                     :disabled="item.quantity <= 1"
                                                     style="padding: 0.25rem 0.5rem;">
                                                 <i class="fas fa-minus"></i>
                                             </button>
-                                            <input type="number" 
-                                                   class="form-control text-center" 
+                                            <input type="number"
+                                                   class="form-control text-center"
+                                                   :class="item.stock !== null && item.quantity > item.stock ? 'border-danger text-danger' : ''"
                                                    v-model.number="item.quantity"
                                                    @change="validateQuantity(item)"
                                                    min="1"
                                                    style="max-width: 70px;">
-                                            <button class="btn btn-outline-secondary" 
+                                            <button class="btn btn-outline-secondary"
                                                     @click="updateQuantity(index, item.quantity + 1)"
+                                                    :disabled="item.stock !== null && item.stock !== undefined && item.quantity >= item.stock"
+                                                    :title="item.stock !== null && item.quantity >= item.stock ? 'Maksimum stok: ' + item.stock + ' pcs' : ''"
                                                     style="padding: 0.25rem 0.5rem;">
                                                 <i class="fas fa-plus"></i>
                                             </button>

@@ -144,6 +144,13 @@ class Kernel extends ConsoleKernel
             ->withoutOverlapping(10)
             ->appendOutputTo(storage_path('logs/isolir.log'));
 
+        // Kirim WA reminder untuk WaitingPaymentSubs dengan end_billing_date <= 2 hari ke depan (jam 09:00)
+        $schedule->command('billing-or-isolir:generate --type=remainder')
+            ->timezone('Asia/Jakarta')
+            ->dailyAt('09:00')
+            ->withoutOverlapping(10)
+            ->appendOutputTo(storage_path('logs/billing-reminder.log'));
+
         // =============== SUBSCRIPTION EXPIRY =================
         // Notifikasi 7 hari, 3 hari, dan hari-H sekaligus
         $schedule->command('subscription:notify-expiry --days=all')

@@ -170,6 +170,7 @@ use App\Http\Livewire\ProductStore\ProductStoreIndex;
 use App\Http\Livewire\ProductStore\ProductStoreShow;
 use App\Http\Livewire\ProductStore\ProductStoreForm;
 use App\Http\Livewire\ProductStore\ProductStorePrint;
+use App\Http\Livewire\ProductStore\InventoryIndex;
 use App\Http\Livewire\Sale\SaleIndex;
 use App\Http\Livewire\Sale\SaleShow;
 use App\Http\Livewire\BrandProductStoreIndex;
@@ -308,6 +309,7 @@ Route::get('/software-sharing/{companySlug}/forgot-password', [SoftwareSharingCo
 Route::post('/software-sharing/{companySlug}/forgot-password', [SoftwareSharingController::class, 'sendResetLink'])->name('customer.password.email');
 Route::get('/software-sharing/{companySlug}/reset-password/{token}', [SoftwareSharingController::class, 'showResetPassword'])->name('customer.password.reset.form');
 Route::post('/software-sharing/{companySlug}/reset-password', [SoftwareSharingController::class, 'resetPassword'])->name('customer.password.reset');
+
 
 Route::group(['middleware' => ['auth','role.permission','ip.restriction']], function()
 {
@@ -727,6 +729,7 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
   Route::get('category-product-store', CategoryProductStoreIndex::class)->name('category-product-store.index');
 
   Route::get('product-store/print', ProductStorePrint::class)->name('product-store.print');
+  Route::get('product-store/inventory', InventoryIndex::class)->name('product-store.inventory');
   Route::get('product-store/create', ProductStoreForm::class)->name('product-store.create');
   Route::get('product-store/edit/{id}', ProductStoreForm::class)->name('product-store.edit');
   Route::get('product-store/{id}', ProductStoreShow::class)->name('product-store.show');
@@ -734,11 +737,12 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
   Route::get('product-store/print', ProductStorePrint::class)->name('product-store.print');
   
   Route::get('punishment-user', PunishmentUserTable::class)->name('punishment-user.index');
-
+  
   Route::get('sales', \App\Http\Livewire\Sale\SaleIndex::class)->name('sales.index');
   Route::get('sales/{id}', \App\Http\Livewire\Sale\SaleShow::class)->name('sales.show');
   
   Route::get('store-selling', [SaleController::class, 'index'])->name('store-selling.index');
+  Route::post('store-selling/checkStock', [SaleController::class, 'checkStock'])->name('store-selling.checkStock');
   Route::post('store-selling/sendReceiptByEmail', [SaleController::class, 'sendReceiptByEmail'])->name('store-selling.sendReceiptByEmail');
   Route::post('store-selling/searchProduct', [SaleController::class, 'searchProduct'])->name('store-selling.searchProduct');
   Route::post('store-selling/processPayment', [SaleController::class, 'processPayment'])->name('store-selling.processPayment');
@@ -749,7 +753,7 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
   Route::get('store-selling/drafts', [SaleController::class, 'getDrafts'])->name('store-selling.drafts');
   
   Route::get('wfo-rule', App\Http\Livewire\WfoRuleIndex::class)->name('wfo-rule.index');
-
+  
   Route::resource('partner-parameter-type', PartnerParameterTypeController::class);
   Route::patch('partner-parameter-type/toggleActive/{parameterType}', [PartnerParameterTypeController::class, 'toggleActive'])->name('partner-parameter-type.toggle-active');
   

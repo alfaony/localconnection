@@ -26,7 +26,7 @@ class PermissionForProductStoreSeeder extends Seeder
         
         $this->call(ClearPermissionSeeder::class);
 
-        $methods = ['index','edit', 'create', 'update', 'show', 'destroy', 'store',"print",'import','search'];
+        $methods = ['index','edit', 'create', 'update', 'show', 'destroy', 'store',"print",'import','search','inventory'];
 
         foreach ($methods as $method) 
         {
