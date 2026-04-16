@@ -135,13 +135,13 @@
                 @csrf
 
                 <div class="form-group">
-                    <label class="form-label">Alamat Email</label>
+                    <label class="form-label">Email atau Username</label>
                     <div class="input-wrap">
-                        <i class="fas fa-envelope field-icon"></i>
-                        <input type="email" name="email" class="form-control {{ $errors->has('email') ? 'is-invalid' : '' }}"
-                               placeholder="email@example.com" value="{{ old('email') }}" required autofocus>
+                        <i class="fas fa-user field-icon"></i>
+                        <input type="text" name="login_field" class="form-control {{ $errors->has('login_field') ? 'is-invalid' : '' }}"
+                               placeholder="email@example.com atau username" value="{{ old('login_field') }}" required autofocus>
                     </div>
-                    @error('email')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                    @error('login_field')<div class="invalid-feedback">{{ $message }}</div>@enderror
                 </div>
 
                 <div class="form-group">
@@ -205,6 +205,12 @@ function togglePwd() {
 document.getElementById('loginForm').addEventListener('submit', function() {
     document.getElementById('submitBtn').classList.add('loading');
 });
+// Isi ulang form resend-verification jika ada old login_field berupa email
+(function(){
+    const lf = document.querySelector('input[name="login_field"]');
+    const rv = document.querySelector('#resendForm input[name="email"]');
+    if(lf && rv && lf.value.includes('@')) rv.value = lf.value;
+})();
 </script>
 </body>
 </html>

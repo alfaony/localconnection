@@ -100,7 +100,7 @@ class CustomerSubscription extends Model
      */
     public function masterAccount()
     {
-        return $this->belongsTo(MasterAccount::class);
+        return $this->belongsTo(MasterAccount::class)->withTrashed();
     }
 
     /**

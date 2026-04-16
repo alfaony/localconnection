@@ -27,7 +27,7 @@ class PermissionForMenuKasirSeeder extends Seeder
         try {   
 
             $roleSales = ['index','edit', 'create', 'update', 'show', 'destroy'];
-            $roleKasir = ['index','sendReceiptByEmail','searchProduct','processPayment','saveDraft','loadDraft','deleteDraft','printReceipt','getDrafts'];
+            $roleKasir = ['index','sendReceiptByEmail','searchProduct','processPayment','saveDraft','loadDraft','deleteDraft','printReceipt','getDrafts','checkStock'];
             
              foreach ($roleSales as $method) 
              {

@@ -40,13 +40,19 @@ class User extends Authenticatable implements MustVerifyEmail
         // Saat membuat model baru, tetapkan UUID
         static::creating(function ($model) {
             $model->{$model->getKeyName()} = Uuid::uuid4()->toString();
+
+            // Jika email kosong tapi ada username, buat slug dari username
+            if (empty($model->email) && !empty($model->username) && empty($model->slug)) {
+                $model->slug = $model->createUniqueSlug($model->username);
+            }
         });
     }
 
     public function setEmailAttribute($value)
     {
         $this->attributes['email'] = $value;
-        if (empty($this->slug)) {
+        // Hanya buat slug dari email jika email tidak kosong
+        if (!empty($value) && empty($this->slug)) {
             $this->attributes['slug'] = $this->createUniqueSlug($value);
         }
     }
@@ -66,11 +72,13 @@ class User extends Authenticatable implements MustVerifyEmail
 
     protected $fillable = [
         'name',
+        'username',
         'email',
         'password',
         'role_id',
         'company_id',
         'phone',
+        'email_verified_at',
     ];
 
     /**
