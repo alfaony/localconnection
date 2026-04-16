@@ -32,42 +32,47 @@ class QrScanApiController extends Controller
                     'media' => fn($q) => $q->orderBy('order', 'asc'),
                     'rack.zone.warehouse',
                     'checks.item',
-                    'repairs'
+                    'repairs',
+                    'user'
                 ])
                 ->firstOrFail();
 
-            // 🔥 FORMAT RESPONSE
             $data = [
                 ...$laptop->toArray(),
 
-                // ================= MEDIA =================
+                // MEDIA 
                 'medias' => $laptop->media->map(fn($m) => [
                     'file_path' => $m->file_path,
                     'caption'   => $m->caption,
                     'order'     => $m->order,
                 ]),
 
-                // ================= LOCATION =================
+                // LOCATION
                 'warehouse_name' => optional($laptop->rack?->zone?->warehouse)->name,
                 'zone_name'      => optional($laptop->rack?->zone)->name,
                 'rack_name'      => optional($laptop->rack)->name,
 
-                // ================= CHECKLIST =================
+                // CHECKLIST
                 'checks' => $laptop->checks->map(fn($c) => [
                     'name'   => $c->item?->name,
                     'status' => $c->status,
                     'notes'  => $c->notes,
                 ]),
 
-                // ================= REPAIRS =================
+                // REPAIRS
                 'repairs' => $laptop->repairs->map(fn($r) => [
                     'repair_item' => $r->repair_item,
                     'cost'        => $r->cost,
                 ]),
 
+                // PRICE
                 'suggested_price' => $laptop->suggested_selling_price,
                 'jakarta_price'   => $laptop->jakarta_price,
                 'jambi_price'     => $laptop->jambi_price,
+
+                'sale_status' => $laptop->sale_status,
+                'qc_status'   => $laptop->qc_status,
+                'user_name'   => optional($laptop->user)->name,
             ];
 
             return response()->json(['success' => true, 'data' => $data], 200);
@@ -89,7 +94,8 @@ class QrScanApiController extends Controller
                     'media',
                     'rack.zone.warehouse',
                     'checks.item',
-                    'repairs'
+                    'repairs',
+                    'user'
                 ])
                 ->firstOrFail();
 
@@ -117,7 +123,8 @@ class QrScanApiController extends Controller
                         'cost'        => $r->cost,
                     ])->values(),
 
-                    'suggested_price' => $laptop->suggested_selling_price,
+                    'sale_status' => $item->sale_status,
+                    'user_name'   => optional($item->user)->name,
                 ]
             );
 
@@ -141,7 +148,8 @@ class QrScanApiController extends Controller
                 ->with([
                     'category',
                     'brand',
-                    'media' => fn($q) => $q->orderBy('order', 'asc')
+                    'media' => fn($q) => $q->orderBy('order', 'asc'),
+                    'creator'
                 ])
                 ->firstOrFail();
 
@@ -153,6 +161,7 @@ class QrScanApiController extends Controller
                     'caption'   => $m->caption,
                     'order'     => $m->order,
                 ]),
+                'user_name' => optional($product->creator)->name,
             ];
 
             return response()->json(['success' => true, 'data' => $data], 200);
