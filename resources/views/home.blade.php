@@ -229,6 +229,79 @@
 </div>
 @endcanAccess
 
+{{-- ════ ACTIVE CHALLENGES ════ --}}
+@canAccess('activeChallenges','homes')
+<div id="challenge-section" style="display:none;">
+    <div class="mb-2 mt-4 text-uppercase fw-bold text-muted" style="letter-spacing: 1px; font-size: 0.85rem;">
+        <i class="fas fa-fire me-1"></i> Challenge Aktif
+    </div>
+    <div id="challenge-loader" class="mb-3">
+        <div class="d-flex align-items-center justify-content-center py-3"
+             style="background:rgba(255,255,255,.04);border-radius:14px;border:1px dashed rgba(255,255,255,.1);">
+            <div class="spinner-border spinner-border-sm me-2" style="color:#f093fb;" role="status"></div>
+            <small style="color:#a0a8d0;">Memuat challenge...</small>
+        </div>
+    </div>
+    <div id="challenge-container" class="mb-4"></div>
+</div>
+@endcanAccess
+
+{{-- ════ ACTIVE EVENTS CALENDAR ════ --}}
+@canAccess('activeEvents','homes')
+<div id="event-section" style="display:none;">
+    {{-- Header Section --}}
+    <div class="d-flex align-items-center justify-content-between mb-3 mt-4">
+        <div class="text-uppercase fw-bold" style="letter-spacing:2px;font-size:.8rem;color:#667eea;text-shadow:0 0 12px rgba(102,126,234,.5);">
+            <i class="fas fa-calendar-alt me-2"></i>Event Kalender
+        </div>
+        {{-- Week Navigation --}}
+        <div class="d-flex align-items-center gap-2">
+            <button onclick="shiftWeek(-1)"
+                    style="background:rgba(102,126,234,.15);border:1px solid rgba(102,126,234,.4);color:#a5b4fc;border-radius:8px;padding:4px 10px;cursor:pointer;font-size:.75rem;transition:all .2s;"
+                    onmouseover="this.style.background='rgba(102,126,234,.3)'" onmouseout="this.style.background='rgba(102,126,234,.15)'">
+                <i class="fas fa-chevron-left"></i>
+            </button>
+            <span id="event-week-label"
+                  style="color:#285cc3;font-size:.78rem;min-width:130px;text-align:center;font-weight:600;"></span>
+            <button onclick="shiftWeek(1)"
+                    style="background:rgba(102,126,234,.15);border:1px solid rgba(102,126,234,.4);color:#a5b4fc;border-radius:8px;padding:4px 10px;cursor:pointer;font-size:.75rem;transition:all .2s;"
+                    onmouseover="this.style.background='rgba(102,126,234,.3)'" onmouseout="this.style.background='rgba(102,126,234,.15)'">
+                <i class="fas fa-chevron-right"></i>
+            </button>
+        </div>
+    </div>
+
+    {{-- Loader --}}
+    <div id="event-loader" class="mb-3">
+        <div class="d-flex align-items-center justify-content-center py-4"
+             style="background:rgba(102,126,234,.05);border-radius:14px;border:1px dashed rgba(102,126,234,.2);">
+            <div class="spinner-border spinner-border-sm me-2" style="color:#667eea;" role="status"></div>
+            <small style="color:#a0a8d0;">Memuat kalender event...</small>
+        </div>
+    </div>
+
+    {{-- Calendar Card --}}
+    <div id="event-calendar-wrap" style="display:none;margin-bottom:24px;">
+        <div style="background: linear-gradient(160deg, rgba(71,71,71,0.85), rgba(28,29,32,0.95)), url('{{ asset('logo/event_background.png') }}') center/cover no-repeat; border-radius:16px;overflow:hidden;border:1px solid rgba(102,126,234,.2);box-shadow:0 0 30px rgba(102,126,234,.08); height: 300px">
+            {{-- Day Header --}}
+            <div id="event-day-header" style="display:grid;grid-template-columns:repeat(7,1fr);border-bottom:1px solid rgba(102,126,234,.15);background:rgba(102,126,234,.06);"></div>
+            {{-- Today column highlight overlay rendered via JS --}}
+            {{-- Event Rows --}}
+            <div id="event-rows" class="custom-scrollbar" style="padding:12px 10px;display:flex;flex-direction:column;gap:7px;min-height:56px;max-height:350px;overflow-y:auto;position:relative;"></div>
+        </div>
+    </div>
+
+    {{-- Empty state --}}
+    <div id="event-empty" style="display:none;margin-bottom:24px;">
+        <div class="text-center py-4"
+             style="color:#55596e;font-size:.82rem;background:rgba(255,255,255,.02);border-radius:12px;border:1px dashed rgba(255,255,255,.06);">
+            <i class="fas fa-calendar-times fa-lg d-block mb-2" style="color:#2d3561;"></i>
+            Tidak ada event minggu ini
+        </div>
+    </div>
+</div>
+@endcanAccess
+
 <div class="mb-2 mt-4 text-uppercase fw-bold text-muted" style="letter-spacing: 1px; font-size: 0.85rem;">
     <i class="fas fa-scroll me-1"></i> Quests & Team Status
 </div>
@@ -683,6 +756,13 @@
     line-height: 1;
     box-shadow: 0 2px 6px rgba(0,0,0,.3);
 }
+/* CHALLENGE home cards */
+.challenge-home-card { transition: transform .25s, box-shadow .25s; }
+.challenge-home-card:hover { transform: translateY(-4px); box-shadow: 0 12px 32px rgba(0,0,0,.3) !important; }
+/* EVENT home cards */
+.event-home-card { transition: transform .25s, box-shadow .25s; }
+.event-home-card:hover { transform: translateY(-4px); box-shadow: 0 12px 32px rgba(102,126,234,.25) !important; }
+
 /* Legacy badge-icon-wrap (jika masih dipakai) */
 .badge-icon-wrap { transition: transform .2s, box-shadow .2s; }
 .badge-icon-wrap:hover { transform: scale(1.18); box-shadow: 0 4px 16px rgba(240,147,251,.45); }
@@ -717,13 +797,13 @@
 .custom-dark-list .list-group-item {
     background: transparent !important;
     border-color: rgba(255,255,255,.05) !important;
-    color: #c8d0e0;
+    color: #285cc3;
     padding: 10px 12px;
 }
 #leaderboard-list.dark-list .list-group-item {
     background: transparent !important;
     border-color: rgba(255,255,255,.08) !important;
-    color: #c8d0e0;
+    color: #285cc3;
 }
 .xp-leaderboard-card { border-radius: 14px !important; overflow: hidden; background:linear-gradient(145deg,#1a1a2e,#16213e); }
 .xp-header-gradient { background: transparent !important; color: #e0e0ff !important; border-bottom: 1px solid rgba(102,126,234,.3) !important; }
@@ -957,7 +1037,34 @@
         try {
             const response = await fetch("{{ route('reminder.vehicle.pic') }}");
             const data = await response.json();
-            container.innerHTML = data.html;
+
+            // Render STNK/KIR reminder (partial HTML dari server)
+            let html = data.html || '';
+
+            // Render photo reminder (inline JS)
+            if (data.photoReminders && data.photoReminders.length > 0) {
+                const items = data.photoReminders.map(v => `
+                    <li>
+                        Kendaraan <strong>${v.vehicle_id} ${v.vehicle_type}</strong>
+                        belum terdapat foto di bulan <strong>${data.bulan} ${data.tahun}</strong>, segera melakukan foto.
+                        <a href="${v.show_url}" class="ms-1 small"><i class="fas fa-arrow-right"></i> Lihat</a>
+                    </li>
+                `).join('');
+
+                html += `
+                    <div class="alert alert-warning mb-2" style="border-left: 4px solid #ffc107;">
+                        <div class="d-flex align-items-start gap-2">
+                            <i class="fas fa-camera mt-1" style="font-size:1.1rem;color:#856404;flex-shrink:0;"></i>
+                            <div>
+                                <strong>Pengingat Kendaraan Belum Terdapat Foto — ${data.bulan} ${data.tahun}</strong>
+                                <ul class="mb-0 mt-1 ps-3">${items}</ul>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            container.innerHTML = html;
         } catch (error) {
             container.innerHTML = ``;
         }
@@ -1272,7 +1379,7 @@
                     const rankEmoji = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `<span style="color:#a0a8d0;font-size:.75rem;display:inline-block;width:20px;text-align:center;">${index+1}</span>`;
                     const html = `
                         <li class="list-group-item d-flex justify-content-between align-items-center px-2 py-1" style="font-size:.85rem;">
-                            <span>${rankEmoji} <span style="color:#c8d0e0;" class="ms-1">${item.name}</span></span>
+                            <span>${rankEmoji} <span style="color:#285cc3;" class="ms-1">${item.name}</span></span>
                             <span class="badge" style="background:rgba(245,166,35,.2);color:#f5a623;border:1px solid rgba(245,166,35,.3);">${item.currentScore}</span>
                         </li>
                     `;
@@ -1346,6 +1453,191 @@
 </script>
 @endcanAccess
 
+@canAccess('activeChallenges','homes')
+<script>
+document.addEventListener('DOMContentLoaded', function () { loadActiveChallenges(); });
+
+async function loadActiveChallenges() {
+    const section   = document.getElementById('challenge-section');
+    const loader    = document.getElementById('challenge-loader');
+    const container = document.getElementById('challenge-container');
+    if (!section) return;
+    try {
+        const res  = await fetch('{{ route("home.activeChallenges") }}');
+        const json = await res.json();
+        const data = json.data;
+
+        if (!data || data.length === 0) {
+            // Kosong — sembunyikan seluruh section, tidak ganggu elemen lain
+            return;
+        }
+
+        loader.classList.add('d-none');
+        section.style.display = 'block';
+
+        let html = '<div class="list-group gap-2">';
+        data.forEach(c => {
+            const isComplete = c.percent >= 100;
+            const barColor   = isComplete ? '#38ef7d' : c.module_color;
+            const rewardDone = c.reward_given
+                ? `<span class="badge ms-1" style="background:rgba(56,239,125,.2);color:#38ef7d;font-size:.62rem;border:1px solid rgba(56,239,125,.3);"><i class="fas fa-check me-1"></i>Reward ✓</span>`
+                : '';
+            const draftIcon = c.status === 'draft' ? `<span class="badge ms-1" style="background:rgba(255,255,255,.1);color:#a0a8d0;font-size:.62rem;border:1px solid rgba(255,255,255,.2);"><i class="fas fa-pencil-alt me-1"></i>Draft</span>` : '';
+
+            html += `
+            <div class="list-group-item d-flex flex-column flex-md-row justify-content-between align-items-md-center challenge-home-card" style="background:linear-gradient(145deg,#1a1a2e,#16213e);border:none;border-left:4px solid ${c.module_color};border-radius:12px;padding:16px;">
+                <div class="d-flex align-items-center gap-3 mb-3 mb-md-0">
+                    <div style="width:46px;height:46px;background:rgba(255,255,255,.07);border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                        <i class="${c.module_icon}" style="color:${c.module_color};font-size:1.3rem;"></i>
+                    </div>
+                    <div>
+                        <div style="color:#e0e0ff;font-weight:700;font-size:.95rem;margin-bottom:2px;">
+                            ${c.name}${draftIcon}${rewardDone}
+                        </div>
+                        <div style="color:#a0a8d0;font-size:.75rem;">
+                            ${c.module_label} &bull; ${isComplete ? '<span style="color:#38ef7d">Selesai!</span>' : `<span style="color:#f5a623">${c.days_remaining} hari lagi</span>`}
+                            ${c.reward_point > 0 ? ` &bull; <span style="color:#f5a623"><i class="fas fa-coins"></i> +${c.reward_point} Pts</span>` : ''}
+                            ${c.reward_xp > 0 ? ` &bull; <span style="color:#f093fb"><i class="fas fa-star"></i> +${c.reward_xp} XP</span>` : ''}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-flex flex-column" style="min-width:200px;">
+                    <div class="mb-1 d-flex justify-content-between">
+                        <small style="color:#a0a8d0;font-size:.7rem;">Progress</small>
+                        <small style="color:${barColor};font-weight:700;font-size:.75rem;">${c.current.toLocaleString('id-ID')} / ${c.target.toLocaleString('id-ID')} ${c.unit} (${c.percent}%)</small>
+                    </div>
+                    <div style="height:8px;background:rgba(255,255,255,.08);border-radius:4px;overflow:hidden;">
+                        <div style="height:100%;width:${c.percent}%;background:linear-gradient(90deg,${barColor},${c.module_color});border-radius:4px;transition:width 1s ease;box-shadow:0 0 8px ${barColor}55;"></div>
+                    </div>
+                </div>
+            </div>`;
+        });
+        html += '</div>';
+
+        container.innerHTML = html;
+        container.classList.remove('d-none');
+    } catch (e) {
+        if (loader) loader.innerHTML = '<small style="color:#f87171;">Gagal memuat challenge.</small>';
+    }
+}
+</script>
+@endcanAccess
+
+@canAccess('activeEvents','homes')
+<script>
+let _eventWeekOffset = 0;
+
+document.addEventListener('DOMContentLoaded', function () { loadActiveEvents(0); });
+
+function shiftWeek(delta) {
+    _eventWeekOffset += delta;
+    loadActiveEvents(_eventWeekOffset);
+}
+
+async function loadActiveEvents(weekOffset) {
+    const section   = document.getElementById('event-section');
+    const loader    = document.getElementById('event-loader');
+    const calWrap   = document.getElementById('event-calendar-wrap');
+    const emptyDiv  = document.getElementById('event-empty');
+    const dayHeader = document.getElementById('event-day-header');
+    const rowsEl    = document.getElementById('event-rows');
+    const weekLabel = document.getElementById('event-week-label');
+    if (!section) return;
+
+    // Tampilkan loader, sembunyikan calendar
+    loader.classList.remove('d-none');
+    calWrap.style.display  = 'none';
+    emptyDiv.style.display = 'none';
+
+    try {
+        const res  = await fetch(`{{ route("home.activeEvents") }}?week_offset=${weekOffset}`);
+        const json = await res.json();
+        const d    = json.data;
+
+        section.style.display = 'block';
+        loader.classList.add('d-none');
+
+        if (weekLabel) weekLabel.textContent = d.week_label;
+
+        // ── Header hari ────────────────────────────────────────
+        dayHeader.innerHTML = d.days.map((day, i) => `
+            <div style="
+                text-align:center;padding:10px 4px;
+                border-right:${i < 6 ? '1px solid rgba(102,126,234,.1)' : 'none'};
+                background:${day.is_today ? 'rgba(102,126,234,.12)' : 'transparent'};
+                position:relative;">
+                ${day.is_today ? '<div style="position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,#667eea,#f093fb);"></div>' : ''}
+                <div style="color:${day.is_today ? '#a5b4fc' : '#4b5563'};font-size:.6rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;">${day.label}</div>
+                <div style="
+                    color:${day.is_today ? '#fff' : '#6b7280'};
+                    font-size:.85rem;font-weight:${day.is_today ? '700' : '400'};
+                    ${day.is_today ? 'background:rgba(102,126,234,.4);border-radius:50%;width:24px;height:24px;line-height:24px;margin:3px auto 0;box-shadow:0 0 8px rgba(102,126,234,.6);' : 'margin-top:3px;'}
+                ">${day.day_number}</div>
+            </div>`
+        ).join('');
+
+        // ── Rows event ──────────────────────────────────────────
+        if (!d.rows || d.rows.length === 0) {
+            rowsEl.innerHTML = '';
+            calWrap.style.display = 'block';
+            emptyDiv.style.display = 'block';
+            return;
+        }
+
+        calWrap.style.display = 'block';
+
+        // Posisi "hari ini" untuk vertical highlight
+        const todayCol = d.days.findIndex(day => day.is_today);
+
+        rowsEl.innerHTML = d.rows.map(row => {
+            const hex  = row.color || '#667eea';
+            const timeText    = row.time_range ? `<i class="fas fa-clock" style="font-size:.55rem;opacity:.7;margin:0 3px;"></i><span style="font-size:.62rem;opacity:.8;">${row.time_range}</span>` : '';
+            const routineTag  = row.is_routine  ? `<i class="fas fa-sync-alt" style="font-size:.55rem;margin-left:5px;opacity:.6;" title="Rutin"></i>` : '';
+
+            // Render 7 sel, sel dalam span dikosongkan
+            const cells = Array.from({length: 7}, (_, i) => {
+                const isStart  = i === row.col_start;
+                const isInSpan = i > row.col_start && i < row.col_start + row.col_span;
+                const isEmpty  = i < row.col_start || i >= row.col_start + row.col_span;
+
+                if (isStart) {
+                    return `<div style="grid-column:${i+1}/span ${row.col_span};">
+                        <a href="${row.detail_url}" style="text-decoration:none;display:block;">
+                            <div style="
+                                background:linear-gradient(90deg,${hex}cc,${hex}77);
+                                border-left:3px solid ${hex};
+                                border-radius:0 6px 6px 0;
+                                padding:6px 10px;
+                                display:flex;align-items:center;gap:4px;
+                                white-space:nowrap;overflow:hidden;
+                                box-shadow:0 2px 12px ${hex}44,inset 0 0 0 1px ${hex}33;
+                                transition:all .2s;
+                                cursor:pointer;"
+                                onmouseover="this.style.background='linear-gradient(90deg,${hex}ff,${hex}99)';this.style.boxShadow='0 4px 20px ${hex}66,inset 0 0 0 1px ${hex}55';"
+                                onmouseout="this.style.background='linear-gradient(90deg,${hex}cc,${hex}77)';this.style.boxShadow='0 2px 12px ${hex}44,inset 0 0 0 1px ${hex}33';">
+                                <span style="color:#fff;font-size:.72rem;font-weight:700;overflow:hidden;text-overflow:ellipsis;text-shadow:0 1px 4px rgba(0,0,0,.4);">${row.name}</span>
+                                ${timeText}${routineTag}
+                            </div>
+                        </a>
+                    </div>`;
+                }
+                if (isEmpty) return `<div></div>`;
+                return ''; // isInSpan — tidak perlu elemen, sudah di-cover span
+            }).join('');
+
+            return `<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:3px;">${cells}</div>`;
+        }).join('');
+
+        calWrap.style.display = 'block';
+
+    } catch (e) {
+        loader.innerHTML = '<small style="color:#f87171;">Gagal memuat event.</small>';
+    }
+}
+</script>
+@endcanAccess
+
 @canAccess('xpLeaderboard','homes')
 <script>
     document.addEventListener('DOMContentLoaded', function() {
@@ -1373,7 +1665,7 @@
                     <div class="xp-rank-num">${rankLabel}</div>
                     <div class="xp-rank-avatar mx-2">${u.initial}</div>
                     <div class="flex-grow-1" style="min-width:0;">
-                        <div style="font-size:.82rem;color:#c8d0e0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${u.name}</div>
+                        <div style="font-size:.82rem;color:#285cc3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${u.name}</div>
                     </div>
                     <div class="text-end ms-2" style="flex-shrink:0;">
                         <div style="font-size:.72rem;color:#f093fb;font-weight:700;">${u.total_xp.toLocaleString('id-ID')} XP</div>

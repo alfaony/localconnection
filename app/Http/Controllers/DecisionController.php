@@ -76,6 +76,7 @@ class DecisionController extends Controller
                 'user_create_id'      => auth()->id(),
             ]);
 
+            \App\Helpers\ChallengeProgressHelper::userCheckAndGiveReward(auth()->id());
             return redirect()->route('decision.index')->with('store', true);
         } catch (\Throwable $th) {
             Log::error($th->getMessage());

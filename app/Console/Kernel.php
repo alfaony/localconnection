@@ -144,6 +144,13 @@ class Kernel extends ConsoleKernel
             ->withoutOverlapping(10)
             ->appendOutputTo(storage_path('logs/isolir.log'));
 
+        // Kirim WA reminder untuk WaitingPaymentSubs dengan end_billing_date <= 2 hari ke depan (jam 09:00)
+        $schedule->command('billing-or-isolir:generate --type=remainder')
+            ->timezone('Asia/Jakarta')
+            ->dailyAt('09:00')
+            ->withoutOverlapping(10)
+            ->appendOutputTo(storage_path('logs/billing-reminder.log'));
+
         // =============== SUBSCRIPTION EXPIRY =================
         // Notifikasi 7 hari, 3 hari, dan hari-H sekaligus
         $schedule->command('subscription:notify-expiry --days=all')
@@ -171,6 +178,9 @@ class Kernel extends ConsoleKernel
         $schedule->command('billing:send-reminder')->timezone('Asia/Jakarta')->dailyAt('18:00');
 
         $schedule->command('project:set-status-sent-time')->timezone('Asia/Jakarta')->dailyAt('00:00');
+        $schedule->command('challenge:check-completed')->timezone('Asia/Jakarta')->hourly();
+        // Setiap Senin pukul 00:00 — generate occurrence event routine 2 minggu ke depan
+        $schedule->command('event:generate-occurrences --weeks=2')->timezone('Asia/Jakarta')->weeklyOn(1, '00:00');
         $schedule->command('tasks:process-recurring')->timezone('Asia/Jakarta')->dailyAt('00:30');
         $schedule->command('recurring:generate')->timezone('Asia/Jakarta')->dailyAt('01:00');
         $schedule->command('recurring:generate-meetings')->timezone('Asia/Jakarta')->dailyAt('01:10');

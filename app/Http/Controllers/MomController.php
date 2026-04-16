@@ -116,6 +116,8 @@ class MomController extends Controller
             }
 
             DB::commit();
+
+            \App\Helpers\ChallengeProgressHelper::userCheckAndGiveReward(auth()->id());
             return response()->json(['success' => true, 'message' => 'MoM berhasil disimpan!']);
         } catch (\Exception $e) {
             Log::error($e);

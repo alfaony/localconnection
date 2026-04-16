@@ -23,12 +23,9 @@ class SupplierType extends Model
         return $this->belongsTo(Company::class);
     }
 
-    /**
-     * (Optional) Jika SupplierType memiliki relasi ke suppliers
-     */
     public function suppliers()
     {
-        return $this->hasMany(Supplier::class);
+        return $this->hasMany(ProductSupplier::class);
     }
 
     /**

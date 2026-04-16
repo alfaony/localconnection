@@ -264,39 +264,58 @@ class ObjectiveController extends Controller
         return redirect()->route('objective.index')->with('delete',true);
     }
 
-
     // Custom
 
-    public function getresult(Request $request, Objective $objective)
+    public function getresult(Request $request, $objectiveId)
     {
-        $divisionId = $request->division_id;
-        $index      = $request->index ?? 0;
-        $dailyTaskId = $request->dailyTaskId;
-        $selectedKeyResults = [];
-        $hasHead = false;
+        // withTrashed agar objective yang sudah dihapus tetap bisa ditemukan
+        // (Route Model Binding default TIDAK include soft-deleted record → 404)
+        $objective = Objective::withTrashed()->findOrFail($objectiveId);
+        return $this->getresultHandle($request, $objective);
+    }
 
-        // Filter KR berdasarkan division_id yang dipilih;
-        // legacy KR (null division) selalu ikut tampil agar tidak breaking
-        $query = $objective->keyResults();
-        if ($divisionId) {
-            $query->where('division_id', $divisionId);
-        }
-        
+    protected function getresultHandle(Request $request, Objective $objective)
+    {
+        $divisionId         = $request->division_id;
+        $index              = $request->index ?? 0;
+        $dailyTaskId        = $request->dailyTaskId;
+        $selectedKeyResults = []; // ID KR yang tersimpan di pivot daily task ini
+        $hasHead            = false;
+
+        // ── Step 1: Kumpulkan semua ID KR yang tersimpan di daily task via pivot ──
         if ($dailyTaskId) {
             $dailyTask = DailyTask::find($dailyTaskId);
             if ($dailyTask) {
-                $selectedKeyResults = $dailyTask->keyResults()->withTrashed()->pluck('objective_key_results.id')->toArray();
-
-                $query->withTrashed()->where(function ($q) use ($selectedKeyResults) {
-                    $q->whereNull('objective_key_results.deleted_at')
-                      ->orWhereIn('objective_key_results.id', $selectedKeyResults);
-                });
-
-                $hasHead = $dailyTask->head ? true : false;
+                $hasHead = (bool) $dailyTask->head;
+                $selectedKeyResults = DB::table('daily_task_objective_key_result')
+                    ->where('daily_task_id', $dailyTask->id)
+                    ->whereNull('deleted_at')
+                    ->pluck('objective_key_result_id')
+                    ->toArray();
             }
         }
-        
-        $keyResult = $query->get();
+
+        // ── Step 2: KR AKTIF dari objective yang sekarang dipilih ──
+        $activeKrQuery = ObjectiveKeyResult::where('objective_id', $objective->id);
+        if ($divisionId) {
+            $activeKrQuery->where('division_id', $divisionId);
+        }
+        $activeKrs = $activeKrQuery->get(); // default scope: hanya yang deleted_at IS NULL
+
+        // ── Step 3: KR tersimpan di task dari MANAPUN (termasuk dari objective lain / sudah dihapus) ──
+        // Kondisi 4 terpenuhi otomatis: hanya yang ada di $selectedKeyResults yang masuk
+        $savedKrs = collect();
+        if (!empty($selectedKeyResults)) {
+            $alreadyShownIds = $activeKrs->pluck('id')->toArray();
+            $savedKrs = ObjectiveKeyResult::withTrashed()
+                ->whereIn('id', $selectedKeyResults)
+                ->whereNotIn('id', $alreadyShownIds) // hindari duplikat
+                ->get();
+        }
+
+        // ── Gabungkan: aktif dari objective ini + tersimpan di task (dari manapun) ──
+        $keyResult = $activeKrs->merge($savedKrs)->unique('id')->values();
+
         return view('partials.keyresult-fields', compact('keyResult', 'selectedKeyResults', 'index', 'hasHead'));
     }
 

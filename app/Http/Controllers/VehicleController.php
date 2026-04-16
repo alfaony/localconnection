@@ -3,8 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\Vehicle;
+use App\Models\VehiclePhoto;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class VehicleController extends Controller
 {
@@ -85,7 +87,7 @@ class VehicleController extends Controller
             'service_terakhir' => 'nullable|date',
             'subscription_kir' => 'nullable|date',
             'pic_user_id' => 'nullable|uuid|exists:users,id',
-            'subscription_stnk' => 'required|date',
+            'subscription_stnk' => 'nullable|date',
         ]);
 
         $vehicle = Vehicle::byCompany(auth()->user()->company_id)->findOrFail($id);
@@ -112,22 +114,77 @@ class VehicleController extends Controller
         return redirect()->route('vehicle.index')->with('delete', true);
     }
 
+    public function storePhoto(Request $request, $id)
+    {
+        $request->validate([
+            'photo'       => 'required|image|mimes:jpeg,png,jpg|max:5120',
+            'description' => 'nullable|string|max:255',
+        ]);
+
+        $vehicle = Vehicle::byCompany(auth()->user()->company_id)->findOrFail($id);
+
+        $file     = $request->file('photo');
+        $filename = time() . '_' . $file->getClientOriginalName();
+        $path     = $file->storeAs('vehicle-photos', $filename, 'public');
+
+        VehiclePhoto::create([
+            'vehicle_id'  => $vehicle->id,
+            'uploaded_by' => auth()->id(),
+            'photo'       => $path,
+            'description' => $request->description,
+            'taken_at'    => $request->taken_at ?? now()->toDateString(),
+        ]);
+
+        return redirect()->route('vehicle.show', $vehicle->id)->with('photo_uploaded', true);
+    }
+
+    public function destroyPhoto($vehicleId, $photoId)
+    {
+        $vehicle = Vehicle::byCompany(auth()->user()->company_id)->findOrFail($vehicleId);
+        $photo   = VehiclePhoto::where('vehicle_id', $vehicle->id)->findOrFail($photoId);
+
+        Storage::disk('public')->delete($photo->photo);
+        $photo->delete();
+
+        return redirect()->route('vehicle.show', $vehicle->id)->with('photo_deleted', true);
+    }
+
     public function infoPic()
     {
-        $user = auth()->user();
-        $today = now();
+        $user    = auth()->user();
         $deadline = now()->addDays(30);
 
+        // STNK/KIR deadline reminder (existing)
         $vehicles = Vehicle::where('pic_user_id', $user->id)
-        ->where(function ($q) use ($deadline) {
-            $q->whereDate('subscription_stnk', '<=', $deadline)
-              ->orWhereDate('subscription_kir', '<=', $deadline)
-              ;
-        })
-        ->get();
+            ->where(function ($q) use ($deadline) {
+                $q->whereDate('subscription_stnk', '<=', $deadline)
+                  ->orWhereDate('subscription_kir', '<=', $deadline);
+            })
+            ->get();
 
         $html = view('vehicle.partial-vehicle', compact('vehicles'))->render();
-        return response()->json(['html' => $html]);
+
+        // Photo reminder (new) — vehicles without photo this month
+        $photoReminders = Vehicle::where('pic_user_id', $user->id)
+            ->whereDoesntHave('photos', function ($q) {
+                $q->whereYear('taken_at', now()->year)
+                  ->whereMonth('taken_at', now()->month);
+            })
+            ->get(['id', 'vehicle_id', 'vehicle_type', 'type'])
+            ->map(fn($v) => [
+                'id'           => $v->id,
+                'vehicle_id'   => $v->vehicle_id,
+                'vehicle_type' => $v->vehicle_type,
+                'type'         => $v->type,
+                'show_url'     => route('vehicle.show', $v->id),
+            ]);
+
+        return response()->json([
+            'html'           => $html,
+            'photoReminders' => $photoReminders,
+            'bulan'          => now()->locale('id')->monthName,
+            'tahun'          => now()->year,
+        ]);
     }
 
     public function infoManager()
