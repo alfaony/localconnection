@@ -10,6 +10,8 @@ use Ramsey\Uuid\Uuid;
 use App\Models\Role;
 use App\Models\Permission;
 use App\Helpers\Access;
+use App\Schemas\RoleSchema;
+use Illuminate\Support\Facades\Auth;
 
 /**
  * RoleController dengan SAVE PER ACCORDION/MENU
@@ -281,6 +283,61 @@ class RoleController extends Controller
         $role = Role::find($role->id)->delete();
         return redirect()->route('role.index')
             ->with('success','Role deleted successfully');
+    }
+
+    public function duplicate(Role $role)
+    {
+        DB::beginTransaction();
+        try {
+            // Copy role
+            $newRole = new Role();
+            $newRole->name = 'Copy of ' . $role->name;
+            $newRole->save();
+
+            // Copy all permissions
+            $permissions = DB::table('permission_role')
+                ->where('role_id', $role->id)
+                ->pluck('permission_id');
+
+            $insertData = [];
+            foreach ($permissions as $permissionId) {
+                $insertData[] = [
+                    'id'            => Uuid::uuid4()->toString(),
+                    'role_id'       => $newRole->id,
+                    'permission_id' => $permissionId,
+                    'created_at'    => now(),
+                    'updated_at'    => now(),
+                ];
+            }
+
+            if (!empty($insertData)) {
+                foreach (array_chunk($insertData, 500) as $chunk) {
+                    DB::table('permission_role')->insert($chunk);
+                }
+            }
+
+            DB::commit();
+
+            return redirect()->route('role.index')
+                ->with('success', "Role '{$role->name}' berhasil diduplikat menjadi '{$newRole->name}'.");
+
+        } catch (\Throwable $th) {
+            DB::rollback();
+            Log::error($th);
+            return redirect()->route('role.index')
+                ->with('error', 'Duplikat gagal: ' . $th->getMessage());
+        }
+    }
+
+    public function clearAllCache()
+    {
+        $roles = Role::all();
+        foreach ($roles as $role) {
+            Access::clearCacheForRole($role->id);
+        }
+
+        return redirect()->route('role.index')
+            ->with('success', 'Cache semua role (' . $roles->count() . ' role) berhasil dibersihkan.');
     }
 
     private function getMainMenus()

@@ -796,6 +796,12 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
   Route::post('role/deselectAll/{role}', [RoleController::class, 'deselectAll'])
       ->name('role.deselect-all');
 
+  Route::post('role/{role}/duplicate', [RoleController::class, 'duplicate'])
+      ->name('role.duplicate');
+
+  Route::post('role/clearAllCache', [RoleController::class, 'clearAllCache'])
+      ->name('role.clear-all-cache');
+
 
   // Direct Point Routes
   Route::post('direct-point/checkQuota', [App\Http\Controllers\DirectPointController::class, 'checkQuota'])->name('direct-point.check-quota');
