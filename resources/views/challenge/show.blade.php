@@ -59,6 +59,12 @@
                         <small style="color:#a0a8d0;">Tipe Modul</small>
                         <span style="color:#c8d0e0;font-weight:600;font-size:.85rem;">{{ $challenge->moduleLabel() }}</span>
                     </div>
+                    @if($challenge->events->isNotEmpty())
+                    <div class="d-flex justify-content-between mb-2">
+                        <small style="color:#a0a8d0;">Event</small>
+                        <span style="color:#c8d0e0;font-weight:600;font-size:.85rem;">{{ $challenge->events->pluck('name')->implode(', ') }}</span>
+                    </div>
+                    @endif
                     <div class="d-flex justify-content-between">
                         <small style="color:#a0a8d0;">Target</small>
                         <small class="fw-bold" style="color:#e0e0ff;">
@@ -92,20 +98,23 @@
 
         {{-- Invite Card --}}
         @canAccess('invite','challenges')
-        @if($invitableUsers->isNotEmpty() && !$challenge->isFinished())
+        @php $hasInvitable = $groupedInvitable->isNotEmpty() || $invitableNoDivision->isNotEmpty(); @endphp
+        @if($hasInvitable && !$challenge->isFinished())
         <div class="card border-0 shadow-sm" style="background:linear-gradient(145deg,#1a1a2e,#16213e);border-radius:16px;overflow:hidden;">
             <div style="height:3px;background:linear-gradient(90deg,#38ef7d,#4facfe);"></div>
             <div class="card-body p-4">
                 <h6 class="fw-bold mb-3" style="color:#c8d0e0;"><i class="fas fa-user-plus me-2" style="color:#38ef7d;"></i> Invite Peserta</h6>
                 <form action="{{ route('challenge.invite', $challenge) }}" method="POST">
                     @csrf
-                    <select name="user_ids[]" class="form-control gf select2 mb-3" multiple style="min-height:80px;">
-                        @foreach($invitableUsers as $u)
-                        <option value="{{ $u->id }}">{{ $u->name }}</option>
-                        @endforeach
-                    </select>
-                    @error('user_ids')<small class="text-danger d-block mb-2">{{ $message }}</small>@enderror
-                    <button type="submit" class="btn w-100 rounded-pill fw-bold py-2 mt-2"
+                    @include('components.user-select-grouped', [
+                        'selectName'      => 'user_ids[]',
+                        'selectId'        => 'invite-challenge-select',
+                        'groupedUsers'    => $groupedInvitable,
+                        'usersNoDivision' => $invitableNoDivision,
+                        'selectedIds'     => [],
+                    ])
+                    @error('user_ids')<small class="text-danger d-block mt-1">{{ $message }}</small>@enderror
+                    <button type="submit" class="btn w-100 rounded-pill fw-bold py-2 mt-3"
                             style="background:linear-gradient(90deg,#38ef7d,#11998e);border:none;color:#1a1a2e;font-size:.85rem;">
                         <i class="fas fa-paper-plane me-1"></i> Kirim Invite
                     </button>
@@ -203,26 +212,16 @@
 @section('css')
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css">
+@include('components.user-select-grouped-assets')
 <style>
 .gf { background:rgba(255,255,255,.07)!important;border:1px solid rgba(255,255,255,.15)!important;color:#e0e0ff!important;border-radius:10px!important; }
 .gf:focus { border-color:rgba(102,126,234,.6)!important; }
 .participant-row { transition: background .2s; }
 .participant-row:hover { background:rgba(255,255,255,.07) !important; }
-.select2-container .select2-selection--multiple { background-color:#111827!important;border:1px solid rgba(255,255,255,.1)!important;border-radius:8px!important;min-height:44px; }
-.select2-container .select2-search--inline .select2-search__field { color:#e0e0ff!important; }
-.select2-container--default .select2-selection--multiple .select2-selection__choice { background-color:rgba(102,126,234,.15)!important;border:1px solid rgba(102,126,234,.3)!important;color:#e0e0ff!important;border-radius:6px; }
-.select2-container--default .select2-selection--multiple .select2-selection__choice__remove { color:#ff6b6b!important;border-right:none!important; }
-.select2-dropdown { background-color:#16213e!important;border:1px solid rgba(255,255,255,.1)!important;color:#e0e0ff!important; }
-.select2-container--default .select2-results__option--highlighted { background-color:rgba(102,126,234,.3)!important;color:#fff!important; }
-.select2-search--dropdown .select2-search__field { background-color:#111827!important;border:1px solid rgba(255,255,255,.1)!important;color:#e0e0ff!important; }
 </style>
 @stop
 
 @section('js')
 <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
-<script>
-$(document).ready(function() {
-    $('.select2').select2({ placeholder: 'Pilih user...', allowClear: true });
-});
-</script>
+@include('components.user-select-grouped-js', ['userSelectIds' => ['invite-challenge-select']])
 @stop

@@ -74,6 +74,15 @@ class Challenge extends Model
                     ->withTimestamps();
     }
 
+    /**
+     * Event yang mengandung challenge ini (opsional — challenge tidak wajib punya event).
+     */
+    public function events()
+    {
+        return $this->belongsToMany(Event::class, 'event_challenges', 'challenge_id', 'event_id')
+                    ->withTimestamps();
+    }
+
     // ── Scopes ────────────────────────────────────────────────────────────
 
     public function scopeByCompany($query, $companyId)

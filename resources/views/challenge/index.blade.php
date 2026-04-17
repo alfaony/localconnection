@@ -230,7 +230,9 @@
     @endforelse
 </div>
 
-<div class="mt-4">{{ $challenges->links() }}</div>
+<div class="mt-4">
+    {{ $challenges->withQueryString()->links('vendor.pagination.bootstrap-4') }}
+</div>
 @stop
 
 @section('css')
