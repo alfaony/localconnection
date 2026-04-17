@@ -103,6 +103,40 @@
                         @error('status')<div class="invalid-feedback">{{ $message }}</div>@enderror
                     </div>
 
+                    {{-- Event terkait --}}
+                    @if($events->isNotEmpty())
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold" style="color:#c8d0e0;">
+                            <i class="fas fa-calendar-alt me-1" style="color:#667eea;"></i>
+                            Gabungkan ke Event <span style="color:#606880;">(opsional)</span>
+                        </label>
+                        <select name="events[]" id="events-select" class="form-control gf" multiple style="min-height:90px;">
+                            @foreach($events as $ev)
+                            @php
+                                $isSelected = in_array($ev->id, old('events', $assignedEventIds ?? []));
+                            @endphp
+                            <option value="{{ $ev->id }}"
+                                    data-sync="{{ $ev->sync_participants ? '1' : '0' }}"
+                                    {{ $isSelected ? 'selected' : '' }}>
+                                {{ $ev->name }}
+                                ({{ $ev->start_date->format('d M') }} – {{ $ev->end_date->format('d M Y') }})
+                                {{ $ev->sync_participants ? '⚡ Sync' : '' }}
+                            </option>
+                            @endforeach
+                        </select>
+                        @error('events')<small class="text-danger">{{ $message }}</small>@enderror
+
+                        {{-- Info sync banner: muncul saat ada event ber-sync dipilih --}}
+                        <div id="sync-info-banner" class="mt-2 p-2" style="display:none;background:rgba(56,239,125,.07);border-radius:8px;border:1px solid rgba(56,239,125,.2);">
+                            <small style="color:#a0a8d0;font-size:.72rem;line-height:1.5;">
+                                <i class="fas fa-sync-alt me-1" style="color:#38ef7d;"></i>
+                                Event bertanda <strong style="color:#38ef7d;">⚡ Sync</strong> yang kamu pilih memiliki fitur <em>Sinkronisasi Peserta</em> aktif —
+                                semua peserta event tersebut akan <strong style="color:#e0e0ff;">otomatis ditambahkan</strong> ke challenge ini saat disimpan.
+                            </small>
+                        </div>
+                    </div>
+                    @endif
+
                     {{-- Rewards --}}
                     <div class="row g-3 mb-4">
                         <div class="col-6">
@@ -143,6 +177,7 @@
 
 @section('css')
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css">
 <style>
 .gf { background:rgba(255,255,255,.07)!important;border:1px solid rgba(255,255,255,.15)!important;color:#e0e0ff!important;border-radius:10px!important; }
 .gf::placeholder { color:#606880; }
@@ -150,11 +185,52 @@
 .input-group-text { border-radius:10px 0 0 10px !important; }
 .module-radio:checked + .module-card { border-color:#f093fb!important;background:rgba(240,147,251,.12)!important;box-shadow:0 0 14px rgba(240,147,251,.3); }
 .module-card:hover { border-color:rgba(102,126,234,.5)!important;background:rgba(102,126,234,.08)!important; }
+/* Select2 dark */
+.select2-container .select2-selection--multiple { background-color:rgba(255,255,255,.07)!important;border:1px solid rgba(255,255,255,.15)!important;border-radius:10px!important;min-height:44px; }
+.select2-container .select2-search--inline .select2-search__field { color:#e0e0ff!important; }
+.select2-container--default .select2-selection--multiple .select2-selection__choice { background-color:rgba(102,126,234,.2)!important;border:1px solid rgba(102,126,234,.35)!important;color:#e0e0ff!important;border-radius:6px; }
+.select2-container--default .select2-selection--multiple .select2-selection__choice__remove { color:#ff6b6b!important;border-right:none!important; }
+.select2-dropdown { background-color:#16213e!important;border:1px solid rgba(255,255,255,.1)!important;color:#e0e0ff!important; }
+.select2-container--default .select2-results__option--highlighted { background-color:rgba(102,126,234,.3)!important;color:#fff!important; }
+.select2-search--dropdown .select2-search__field { background-color:#111827!important;border:1px solid rgba(255,255,255,.1)!important;color:#e0e0ff!important; }
+.select2-results__option[data-sync="1"] { border-left: 3px solid #38ef7d; }
 </style>
 @stop
 
 @section('js')
+<script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
 <script>
+$(document).ready(function () {
+    var $eventsSelect = $('#events-select');
+    if ($eventsSelect.length) {
+        $eventsSelect.select2({
+            placeholder: 'Pilih event...',
+            allowClear: true,
+            templateResult: function (data) {
+                if (!data.id) return data.text;
+                var sync = $(data.element).data('sync');
+                var $el = $('<span></span>').text(data.text);
+                if (sync == '1') {
+                    $el.css('border-left', '3px solid #38ef7d').css('padding-left', '8px');
+                }
+                return $el;
+            },
+        });
+
+        // Tampilkan banner sync jika ada event ber-sync dipilih
+        function checkSyncBanner() {
+            var selected = $eventsSelect.val() || [];
+            var hasSyncEvent = selected.some(function (id) {
+                return $eventsSelect.find('option[value="' + id + '"]').data('sync') == '1';
+            });
+            $('#sync-info-banner').toggle(hasSyncEvent);
+        }
+
+        $eventsSelect.on('change', checkSyncBanner);
+        checkSyncBanner(); // run on load (edit mode)
+    }
+});
+
 document.querySelectorAll('.module-radio').forEach(function(radio) {
     radio.addEventListener('change', function() {
         const unit = document.getElementById('target-unit');

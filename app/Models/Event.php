@@ -37,14 +37,16 @@ class Event extends Model
         'is_routine',
         'routine_end_date',
         'is_active',
+        'sync_participants',
     ];
 
     protected $casts = [
-        'start_date'       => 'date',
-        'end_date'         => 'date',
-        'routine_end_date' => 'date',
-        'is_routine'       => 'boolean',
-        'is_active'        => 'boolean',
+        'start_date'        => 'date',
+        'end_date'          => 'date',
+        'routine_end_date'  => 'date',
+        'is_routine'        => 'boolean',
+        'is_active'         => 'boolean',
+        'sync_participants' => 'boolean',
     ];
 
     // ── Scopes ─────────────────────────────────────────────────────────────
@@ -87,6 +89,16 @@ class Event extends Model
     public function eventViews()
     {
         return $this->hasMany(EventView::class);
+    }
+
+    /**
+     * Challenge yang tergabung dalam event ini.
+     * Challenge tidak wajib punya event (relasi opsional dari sisi challenge).
+     */
+    public function challenges()
+    {
+        return $this->belongsToMany(Challenge::class, 'event_challenges', 'event_id', 'challenge_id')
+                    ->withTimestamps();
     }
 
     // ── Helpers ─────────────────────────────────────────────────────────────

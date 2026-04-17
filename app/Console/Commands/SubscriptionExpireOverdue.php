@@ -43,7 +43,6 @@ class SubscriptionExpireOverdue extends Command
             if (!$dryRun) {
                 // Use service to properly expire (release slots & expire payments)
                 app(\App\Services\SubscriptionService::class)->expireSubscription($sub);
-                Log::info("subscription:expire-overdue → Expired [{$sub->order_number}] {$userName} | {$soft}, was due {$expStr}");
             }
 
             $prefix = $dryRun ? '[DRY-RUN] ' : '';

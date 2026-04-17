@@ -699,6 +699,13 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
 
 <style>
+.event{
+    color: #ffffff;
+}
+
+.event:hover{
+    color: #adabb1ff;
+}
 /* LAPORAN PENGADUAN BANNER */
 .laporan-banner {
     background: linear-gradient(135deg, #2d1b3d, #1a1a2e);
@@ -1603,7 +1610,7 @@ async function loadActiveEvents(weekOffset) {
 
                 if (isStart) {
                     return `<div style="grid-column:${i+1}/span ${row.col_span};">
-                        <a href="${row.detail_url}" style="text-decoration:none;display:block;">
+                        <a href="${row.detail_url}" style="text-decoration:none;display:block;" class="event">
                             <div style="
                                 background:linear-gradient(90deg,${hex}cc,${hex}77);
                                 border-left:3px solid ${hex};

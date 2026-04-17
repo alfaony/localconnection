@@ -11,44 +11,53 @@
                                 <i class="fas fa-boxes mr-2"></i> Manajemen Produk Toko
                             </h3>
                         </div>
-                        <div class="col-md-6 text-right">
-                            <button 
-                                wire:click="exportProducts" 
-                                wire:loading.attr="disabled"
-                                wire:target="exportProducts"
-                                class="btn btn-success"
-                                title="Export data sesuai filter yang aktif"
-                                {{ $isExporting ? 'disabled' : '' }}>
-                                <i class="fas fa-file-excel" wire:loading.remove wire:target="exportProducts"></i>
-                                <i class="fas fa-spinner fa-spin" wire:loading wire:target="exportProducts"></i>
-                                <span wire:loading.remove wire:target="exportProducts">
-                                    Export to Excel
-                                    @if($search || $categoryFilter || $warehouseFilter || $zoneFilter)
-                                        <small>(Filtered)</small>
-                                    @endif
-                                </span>
-                                <span wire:loading wire:target="exportProducts">Processing...</span>
-                            </button>
-                            @canAccess('import','product_stores')
-                            <button type="button" 
-                                    class="btn btn-success" 
-                                    wire:click="toggleImportSection">
-                                <i class="bi bi-upload"></i> 
-                                {{ $showImportSection ? 'Hide Import' : 'Import CSV' }}
-                            </button>
-                            @endcanAccess
+                        <div class="col-md-6">
+                            <div class="d-flex justify-content-end align-items-center flex-wrap" style="gap: 0.5rem;">
+                                @canAccess('inventory','product_stores')
+                                <a href="{{ route('product-store.inventory') }}" class="btn btn-warning btn-sm shadow-sm">
+                                    <i class="fas fa-cubes mr-1"></i> Inventory Utama
+                                </a>
+                                @endcanAccess
 
-                            @canAccess('create','product_stores')
-                            <a href="{{ route('product-store.create') }}" class="btn btn-light btn-sm">
-                                <i class="fas fa-plus-circle mr-1"></i> Tambah Produk
-                            </a>
-                            @endcanAccess
+                                @canAccess('print','product_stores')
+                                <a href="{{ route('product-store.print') }}" class="btn btn-info btn-sm shadow-sm">
+                                    <i class="fas fa-print mr-1"></i> Print Barcode
+                                </a>
+                                @endcanAccess
 
-                            @canAccess('print','product_stores')
-                            <a href="{{ route('product-store.print') }}" class="btn btn-info btn-sm ml-2">
-                                <i class="fas fa-print mr-1"></i> Print Barcode
-                            </a>
-                            @endcanAccess
+                                @canAccess('import','product_stores')
+                                <button type="button"
+                                        class="btn btn-success btn-sm shadow-sm"
+                                        wire:click="toggleImportSection">
+                                    <i class="fas fa-file-import mr-1"></i>
+                                    {{ $showImportSection ? 'Tutup Import' : 'Import CSV' }}
+                                </button>
+                                @endcanAccess
+
+                                <button
+                                    wire:click="exportProducts"
+                                    wire:loading.attr="disabled"
+                                    wire:target="exportProducts"
+                                    class="btn btn-success btn-sm shadow-sm"
+                                    title="Export data sesuai filter yang aktif"
+                                    {{ $isExporting ? 'disabled' : '' }}>
+                                    <i class="fas fa-file-excel" wire:loading.remove wire:target="exportProducts"></i>
+                                    <i class="fas fa-spinner fa-spin" wire:loading wire:target="exportProducts"></i>
+                                    <span wire:loading.remove wire:target="exportProducts">
+                                        Export
+                                        @if($search || $categoryFilter || $warehouseFilter || $zoneFilter)
+                                            <small>(Filtered)</small>
+                                        @endif
+                                    </span>
+                                    <span wire:loading wire:target="exportProducts">...</span>
+                                </button>
+
+                                @canAccess('create','product_stores')
+                                <a href="{{ route('product-store.create') }}" class="btn btn-info btn-sm">
+                                    <i class="fas fa-plus-circle mr-1"></i> Tambah Produk
+                                </a>
+                                @endcanAccess
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -432,7 +441,16 @@
                                             @endif
                                         </div>
                                     </th>
-                                    <th style="min-width: 120px;">Barcode</th>
+                                    <th wire:click="sortBy('stock')" style="cursor: pointer; min-width: 140px;">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <span>Barcode & Stok</span>
+                                            @if($sortField === 'stock')
+                                                <i class="fas fa-sort-{{ $sortDirection === 'asc' ? 'up' : 'down' }}"></i>
+                                            @else
+                                                <i class="fas fa-sort text-muted"></i>
+                                            @endif
+                                        </div>
+                                    </th>
                                     <th style="min-width: 100px;">Kategori</th>
                                     <th style="min-width: 100px;">Merk</th>
                                     <th style="min-width: 200px;">
@@ -483,6 +501,15 @@
                                         <code class="bg-light px-2 py-1 rounded">
                                             {{ $product->barcode ?? '-' }}
                                         </code>
+                                        @if($product->inventory)
+                                            <small class="badge badge-success mt-2">
+                                              Stok:   {{ $product->inventory->quantity }}
+                                            </small>
+                                        @else
+                                            <span class="badge badge-danger mt-2">
+                                                Belum ada
+                                            </span>
+                                        @endif
                                     </td>
 
                                     <!-- Kategori -->

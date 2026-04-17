@@ -77,18 +77,18 @@ class ProductStore extends Model
 
     public function scopeSearch($query, $value)
     {
-        return $query->where('name', 'like', '%' . $value . '%')
-                    ->orWhere('variant', 'like', '%' . $value . '%')
-                    ->orWhere('specification', 'like', '%' . $value . '%')
-                    ->orWhere('barcode', 'like', '%' . $value . '%')
-                    ->orWhere('code', 'like', '%' . $value . '%')
-                    ;
+        $table = $this->getTable();
+        return $query->where($table . '.name', 'like', '%' . $value . '%')
+                    ->orWhere($table . '.variant', 'like', '%' . $value . '%')
+                    ->orWhere($table . '.specification', 'like', '%' . $value . '%')
+                    ->orWhere($table . '.barcode', 'like', '%' . $value . '%')
+                    ->orWhere($table . '.code', 'like', '%' . $value . '%');
     }
 
     public function scopeByCompany($query,$companyId)
     {
         $companyIds = auth()->user()->accessibleCompanies->pluck('id')->push($companyId)->unique();
-        return $query->whereIn('company_id', $companyIds);
+        return $query->whereIn($this->getTable() . '.company_id', $companyIds);
     }
 
     public function rack(): BelongsTo
@@ -129,5 +129,10 @@ class ProductStore extends Model
     public function primaryMedia()
     {
         return $this->hasOne(ProductStoreMedia::class, 'product_store_id')->orderBy('order')->limit(1);
-}
+    }
+
+    public function inventory()
+    {
+        return $this->hasOne(Inventory::class, 'product_store_id');
+    }
 }

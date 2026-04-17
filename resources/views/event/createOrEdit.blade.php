@@ -112,7 +112,7 @@
             </div>
 
             {{-- Status --}}
-            <div class="card border-0 shadow-sm" style="background:linear-gradient(135deg,#1a1a2e,#16213e);border-radius:16px;">
+            <div class="card border-0 shadow-sm mb-4" style="background:linear-gradient(135deg,#1a1a2e,#16213e);border-radius:16px;">
                 <div class="card-body p-3 d-flex align-items-center gap-3">
                     <div class="form-check form-switch mb-0">
                         <input class="form-check-input" type="checkbox" name="is_active" id="is_active" value="1"
@@ -120,6 +120,43 @@
                         <label class="form-check-label fw-semibold" for="is_active" style="color:#c8d0e0;">Event Aktif</label>
                     </div>
                     <small style="color:#606880;">Event nonaktif tidak muncul di kalender karyawan.</small>
+                </div>
+            </div>
+
+            {{-- Challenges terkait --}}
+            <div class="card border-0 shadow-sm mb-4" style="background:linear-gradient(135deg,#1a1a2e,#16213e);border-radius:16px;">
+                <div style="height:3px;background:linear-gradient(90deg,#ffd700,#f5a623);border-radius:16px 16px 0 0;"></div>
+                <div class="card-body p-4">
+                    <h6 class="fw-bold mb-1" style="color:#ffd700;"><i class="bi bi-trophy-fill me-2"></i>Challenge Terkait</h6>
+                    <small style="color:#606880;" class="d-block mb-3">
+                        Pilih challenge yang ingin dikaitkan dengan event ini. Challenge tidak wajib punya event.
+                    </small>
+
+                    <select name="challenges[]" id="challenges-select" class="form-select gf mb-3" multiple style="min-height:110px;">
+                        @foreach($challenges as $ch)
+                        <option value="{{ $ch->id }}"
+                            {{ in_array($ch->id, old('challenges', $assignedChallengeIds ?? [])) ? 'selected' : '' }}>
+                            {{ $ch->name }}
+                            <span style="color:#606880;">({{ ucfirst($ch->status) }})</span>
+                        </option>
+                        @endforeach
+                    </select>
+                    @error('challenges')<div class="text-danger" style="font-size:.8rem;">{{ $message }}</div>@enderror
+
+                    {{-- Sync toggle --}}
+                    <div class="p-3" style="background:rgba(255,215,0,.06);border-radius:10px;border:1px solid rgba(255,215,0,.15);">
+                        <div class="form-check form-switch mb-1">
+                            <input class="form-check-input" type="checkbox" name="sync_participants" id="sync_participants" value="1"
+                                   {{ old('sync_participants', $event->sync_participants ?? false) ? 'checked' : '' }}>
+                            <label class="form-check-label fw-semibold" for="sync_participants" style="color:#ffd700;">
+                                <i class="fas fa-sync-alt me-1"></i>Sinkronisasi Peserta
+                            </label>
+                        </div>
+                        <small style="color:#a0a8d0;font-size:.72rem;line-height:1.4;">
+                            Jika aktif: setiap orang yang ditambahkan ke event akan otomatis diikutsertakan ke semua challenge terkait.
+                            Sebaliknya, jika dikeluarkan dari event, mereka juga dikeluarkan dari challenge tersebut.
+                        </small>
+                    </div>
                 </div>
             </div>
         </div>
@@ -184,21 +221,23 @@
                 </div>
             </div>
 
-            {{-- Invite users (hanya saat create) --}}
-            @if(!isset($event))
+            {{-- Undang Peserta (create & edit) --}}
             <div class="card border-0 shadow-sm mb-4" style="background:linear-gradient(135deg,#1a1a2e,#16213e);border-radius:16px;">
                 <div style="height:3px;background:linear-gradient(90deg,#38ef7d,#667eea);border-radius:16px 16px 0 0;"></div>
                 <div class="card-body p-4">
-                    <h6 class="fw-bold mb-3" style="color:#38ef7d;"><i class="fas fa-user-plus me-2"></i>Undang Peserta</h6>
-                    <select name="users[]" id="users-select" class="form-select gf" multiple style="min-height:110px;">
-                        @foreach($users as $u)
-                        <option value="{{ $u->id }}">{{ $u->name }}</option>
-                        @endforeach
-                    </select>
-                    <small style="color:#606880;">Bisa ditambah/dikurangi di halaman detail.</small>
+                    <h6 class="fw-bold mb-1" style="color:#38ef7d;"><i class="fas fa-user-plus me-2"></i>Undang Peserta</h6>
+                    <small style="color:#606880;" class="d-block mb-3">
+                        {{ isset($event) ? 'Perubahan peserta langsung tersimpan di halaman detail.' : 'Bisa ditambah/dikurangi di halaman detail.' }}
+                    </small>
+                    @include('components.user-select-grouped', [
+                        'selectName'      => 'users[]',
+                        'selectId'        => 'users-select',
+                        'groupedUsers'    => $groupedUsers,
+                        'usersNoDivision' => $usersNoDivision,
+                        'selectedIds'     => old('users', $assignedUserIds ?? []),
+                    ])
                 </div>
             </div>
-            @endif
 
             <button type="submit" class="btn btn-primary w-100" style="border-radius:12px;padding:12px;font-weight:700;">
                 <i class="fas fa-save me-2"></i>{{ isset($event) ? 'Simpan Perubahan' : 'Buat Event' }}
@@ -209,22 +248,14 @@
 @stop
 
 @section('css')
-<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css" rel="stylesheet" />
 <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+@include('components.user-select-grouped-assets')
 <style>
-.gf { background:#111827!important;border:1px solid rgba(255,255,255,.1)!important;color:#e0e0ff!important;border-radius:8px!important; }
+.gf { background:#6f88bd!important;border:1px solid rgba(255,255,255,.1)!important;color:#e0e0ff!important;border-radius:8px!important; }
 .gf::placeholder { color:#55596e!important; }
 .gf option { background:#111827; }
 .color-swatch:hover { border-color:#fff!important; }
-
-/* Select2 Dark Theme */
-.select2-container .select2-selection--multiple { background-color:#111827!important;border:1px solid rgba(255,255,255,.1)!important;border-radius:8px!important;min-height:44px; }
-.select2-container .select2-search--inline .select2-search__field { color:#e0e0ff!important; }
-.select2-container--default .select2-selection--multiple .select2-selection__choice { background-color:rgba(102,126,234,.15)!important;border:1px solid rgba(102,126,234,.3)!important;color:#e0e0ff!important;border-radius:6px; }
-.select2-container--default .select2-selection--multiple .select2-selection__choice__remove { color:#ff6b6b!important;border-right:none!important; }
-.select2-dropdown { background-color:#16213e!important;border:1px solid rgba(255,255,255,.1)!important;color:#e0e0ff!important; }
-.select2-container--default .select2-results__option--highlighted { background-color:rgba(102,126,234,.3)!important;color:#fff!important; }
-.select2-search--dropdown .select2-search__field { background-color:#111827!important;border:1px solid rgba(255,255,255,.1)!important;color:#e0e0ff!important; }
 
 /* Quill Dark Theme Overrides */
 .ql-toolbar.ql-snow { background-color: #111827 !important; border: 1px solid rgba(255,255,255,.1) !important; border-radius: 8px 8px 0 0 !important; }
@@ -244,8 +275,7 @@ button.ql-active .ql-fill { fill: #fff !important; }
 @stop
 
 @section('js')
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
 <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
 <script src="{{ asset('js/thriveEditor.js') }}"></script>
 <script>
@@ -307,9 +337,10 @@ document.getElementById('image-input')?.addEventListener('change', function () {
     }
 });
 
-// ── Select2 ───────────────────────────────────────────────────────
+// ── Challenges Select2 ───────────────────────────────────────────
 $(document).ready(function() {
-    $('#users-select').select2({ placeholder: 'Pilih karyawan...', allowClear: true });
+    $('#challenges-select').select2({ placeholder: 'Pilih challenge...', allowClear: true, width: '100%' });
 });
 </script>
+@include('components.user-select-grouped-js', ['userSelectIds' => ['users-select']])
 @stop

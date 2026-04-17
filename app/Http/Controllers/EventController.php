@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Challenge;
+use App\Models\ChallengeUser;
 use App\Models\Event;
 use App\Models\EventOccurrence;
 use App\Models\EventUser;
@@ -37,18 +39,25 @@ class EventController extends Controller
 
     public function create()
     {
-        $users = User::byCompany(Auth::user()->company_id)->isActive()->get(['id', 'name']);
-        return view('event.createOrEdit', compact('users'));
+        [$groupedUsers, $usersNoDivision] = $this->loadGroupedUsers();
+
+        $challenges = Challenge::byCompany(Auth::user()->company_id)
+            ->whereIn('status', ['draft', 'running'])
+            ->orderBy('name')
+            ->get(['id', 'name', 'status', 'module_type']);
+
+        return view('event.createOrEdit', compact('groupedUsers', 'usersNoDivision', 'challenges'));
     }
 
     public function store(Request $request)
     {
         $data = $this->validate($request, $this->rules());
 
-        $data['company_id'] = Auth::user()->company_id;
-        $data['created_by'] = Auth::id();
-        $data['is_routine'] = $request->boolean('is_routine');
-        $data['is_active']  = $request->boolean('is_active', true);
+        $data['company_id']        = Auth::user()->company_id;
+        $data['created_by']        = Auth::id();
+        $data['is_routine']        = $request->boolean('is_routine');
+        $data['is_active']         = $request->boolean('is_active', true);
+        $data['sync_participants'] = $request->boolean('sync_participants');
 
         if ($request->hasFile('image')) {
             $file     = $request->file('image');
@@ -67,6 +76,11 @@ class EventController extends Controller
             'end_date'   => $event->end_date->toDateString(),
         ]);
 
+        // Attach challenges ke event
+        if ($request->filled('challenges')) {
+            $event->challenges()->sync($request->challenges);
+        }
+
         // Invite users
         if ($request->filled('users')) {
             foreach ($request->users as $userId) {
@@ -74,6 +88,11 @@ class EventController extends Controller
                     ['event_id' => $event->id, 'user_id' => $userId],
                     ['invited_by' => Auth::id()]
                 );
+            }
+
+            // Sync ke semua challenge terkait jika sync_participants aktif
+            if ($event->sync_participants && $request->filled('challenges')) {
+                $this->syncUsersToLinkedChallenges($event, $request->users);
             }
         }
 
@@ -88,7 +107,7 @@ class EventController extends Controller
 
     public function detail(Event $event)
     {
-        $event->load(['creator', 'eventUsers.user', 'eventUsers.invitedBy', 'occurrences']);
+        $event->load(['creator', 'eventUsers.user', 'eventUsers.invitedBy', 'occurrences', 'challenges']);
 
         // Urutkan occurrences dari yang terbaru
         $occurrences = $event->occurrences->sortByDesc('start_date')->values();
@@ -101,27 +120,46 @@ class EventController extends Controller
             ->unique('user_id')
             ->values();
 
-        $invitableUsers = User::byCompany(Auth::user()->company_id)
-            ->isActive()
-            ->whereNotIn('id', $event->eventUsers->pluck('user_id'))
-            ->get(['id', 'name']);
+        // Invitable users: belum tergabung, dikelompokkan by division
+        $excludeIds = $event->eventUsers->pluck('user_id')->toArray();
+        [$groupedInvitable, $invitableNoDivision] = $this->loadGroupedUsers($excludeIds);
 
-        return view('event.detail', compact('event', 'occurrences', 'viewHistory', 'invitableUsers'));
+        return view('event.detail', compact('event', 'occurrences', 'viewHistory', 'groupedInvitable', 'invitableNoDivision'));
     }
 
     public function edit(Event $event)
     {
-        $users           = User::byCompany(Auth::user()->company_id)->isActive()->get(['id', 'name']);
-        $assignedUserIds = $event->eventUsers->pluck('user_id')->toArray();
-        return view('event.createOrEdit', compact('event', 'users', 'assignedUserIds'));
+        $event->load(['eventUsers', 'challenges']);
+
+        [$groupedUsers, $usersNoDivision] = $this->loadGroupedUsers();
+
+        $assignedUserIds      = $event->eventUsers->pluck('user_id')->toArray();
+        $assignedChallengeIds = $event->challenges->pluck('id')->toArray();
+
+        $challenges = Challenge::byCompany(Auth::user()->company_id)
+            ->whereIn('status', ['draft', 'running'])
+            ->orderBy('name')
+            ->get(['id', 'name', 'status', 'module_type']);
+
+        return view('event.createOrEdit', compact(
+            'event', 'groupedUsers', 'usersNoDivision',
+            'assignedUserIds', 'challenges', 'assignedChallengeIds'
+        ));
     }
 
     public function update(Request $request, Event $event)
     {
         $data = $this->validate($request, $this->rules());
 
-        $data['is_routine'] = $request->boolean('is_routine');
-        $data['is_active']  = $request->boolean('is_active', true);
+        // ── Snapshot state SEBELUM perubahan ──────────────────
+        $event->load('challenges', 'eventUsers');
+        $oldChallengeIds = $event->challenges->pluck('id')->toArray();
+        $oldUserIds      = $event->eventUsers->pluck('user_id')->toArray();
+
+        // ── Update data event ─────────────────────────────────
+        $data['is_routine']        = $request->boolean('is_routine');
+        $data['is_active']         = $request->boolean('is_active', true);
+        $data['sync_participants'] = $request->boolean('sync_participants');
 
         if ($request->hasFile('image')) {
             $file     = $request->file('image');
@@ -131,6 +169,65 @@ class EventController extends Controller
         }
 
         $event->update($data);
+
+        // ── Hitung diff users (dari form) ─────────────────────
+        $newUserIds     = $request->filled('users') ? $request->users : [];
+        $addedUserIds   = array_diff($newUserIds, $oldUserIds);
+        $removedUserIds = array_diff($oldUserIds, $newUserIds);
+
+        // Terapkan perubahan event_users
+        foreach ($addedUserIds as $userId) {
+            EventUser::firstOrCreate(
+                ['event_id' => $event->id, 'user_id' => $userId],
+                ['invited_by' => Auth::id()]
+            );
+        }
+        if (!empty($removedUserIds)) {
+            EventUser::where('event_id', $event->id)
+                     ->whereIn('user_id', $removedUserIds)
+                     ->delete();
+        }
+
+        // ── Hitung diff challenges ────────────────────────────
+        $newChallengeIds     = $request->filled('challenges') ? $request->challenges : [];
+        $addedChallengeIds   = array_diff($newChallengeIds, $oldChallengeIds);
+        $removedChallengeIds = array_diff($oldChallengeIds, $newChallengeIds);
+
+        $event->challenges()->sync($newChallengeIds);
+
+        // ── Propagasi ke challenges jika sync_participants aktif ─
+        if ($event->sync_participants) {
+            // User baru ditambah → invite ke semua challenge yang masih terhubung
+            if (!empty($addedUserIds)) {
+                $this->syncUsersToLinkedChallenges($event, array_values($addedUserIds));
+            }
+
+            // User dihapus dari event → keluarkan dari semua challenge (lama & baru)
+            if (!empty($removedUserIds)) {
+                $allChallengeIds = array_unique(array_merge($oldChallengeIds, $newChallengeIds));
+                if (!empty($allChallengeIds)) {
+                    ChallengeUser::whereIn('challenge_id', $allChallengeIds)
+                                 ->whereIn('user_id', $removedUserIds)
+                                 ->delete();
+                }
+            }
+
+            // Challenge baru ditambahkan ke event → invite semua user event saat ini
+            if (!empty($addedChallengeIds)) {
+                $currentUserIds = array_values(array_diff(
+                    array_merge($oldUserIds, array_values($addedUserIds)),
+                    $removedUserIds
+                ));
+                $this->syncUsersToSpecificChallenges($addedChallengeIds, $currentUserIds);
+            }
+
+            // Challenge dicopot dari event → keluarkan semua user event dari challenge itu
+            if (!empty($removedChallengeIds)) {
+                ChallengeUser::whereIn('challenge_id', $removedChallengeIds)
+                             ->whereIn('user_id', $oldUserIds)
+                             ->delete();
+            }
+        }
 
         return redirect()->route('event.detail', $event->id)
             ->with('success', 'Event berhasil diperbarui.');
@@ -156,31 +253,132 @@ class EventController extends Controller
             );
         }
 
+        // Jika sync_participants aktif, otomatis invite ke semua challenge terkait
+        if ($event->sync_participants) {
+            $this->syncUsersToLinkedChallenges($event, $request->users);
+        }
+
         return back()->with('success', 'User berhasil diundang ke event.');
     }
 
     public function removeUser(Event $event, string $userId)
     {
         EventUser::where('event_id', $event->id)->where('user_id', $userId)->delete();
+
+        // Jika sync_participants aktif, otomatis keluarkan dari semua challenge terkait
+        if ($event->sync_participants) {
+            $this->removeUserFromLinkedChallenges($event, $userId);
+        }
+
         return back()->with('success', 'User berhasil dihapus dari event.');
+    }
+
+    // ── Private helpers ────────────────────────────────────────────────────
+
+    /**
+     * Load semua active users, kelompokkan berdasarkan primary division.
+     * $excludeIds: user IDs yang tidak perlu dimasukkan (misal sudah tergabung).
+     * Returns: [$groupedUsers (keyed by division name), $usersNoDivision]
+     */
+    private function loadGroupedUsers(array $excludeIds = []): array
+    {
+        $query = User::byCompany(Auth::user()->company_id)
+            ->isActive()
+            ->with('divisions');
+
+        if (!empty($excludeIds)) {
+            $query->whereNotIn('id', $excludeIds);
+        }
+
+        $users = $query->orderBy('name')->get();
+
+        // Pastikan semua user masuk tepat satu grup — cek divisions yang sudah di-load
+        $withDiv = $users
+            ->filter(fn($u) => $u->divisions->isNotEmpty())
+            ->groupBy(fn($u) => ($u->primaryDivision ?? $u->firstDivision)?->name ?? 'Lainnya')
+            ->sortKeys();
+
+        // Hanya user yang benar-benar tidak punya divisi (relasi kosong setelah eager load)
+        $noDivision = $users->filter(fn($u) => $u->divisions->isEmpty())->values();
+
+        return [$withDiv, $noDivision];
+    }
+
+    /**
+     * Invite daftar user ke semua challenge yang terkait dengan event ini.
+     * Hanya challenge berstatus draft/running yang diproses.
+     */
+    private function syncUsersToLinkedChallenges(Event $event, array $userIds): void
+    {
+        if (empty($userIds)) return;
+
+        $challenges = $event->challenges()->whereIn('status', ['draft', 'running'])->get();
+
+        foreach ($challenges as $challenge) {
+            foreach ($userIds as $userId) {
+                ChallengeUser::firstOrCreate(
+                    ['challenge_id' => $challenge->id, 'user_id' => $userId],
+                    ['invited_by'   => Auth::id()]
+                );
+            }
+        }
+    }
+
+    /**
+     * Invite daftar user ke challenge berdasarkan challenge ID tertentu (bukan dari relasi event).
+     * Hanya challenge berstatus draft/running yang diproses.
+     */
+    private function syncUsersToSpecificChallenges(array $challengeIds, array $userIds): void
+    {
+        if (empty($challengeIds) || empty($userIds)) return;
+
+        $challenges = Challenge::whereIn('id', $challengeIds)
+            ->whereIn('status', ['draft', 'running'])
+            ->get();
+
+        foreach ($challenges as $challenge) {
+            foreach ($userIds as $userId) {
+                ChallengeUser::firstOrCreate(
+                    ['challenge_id' => $challenge->id, 'user_id' => $userId],
+                    ['invited_by'   => Auth::id()]
+                );
+            }
+        }
+    }
+
+    /**
+     * Keluarkan satu user dari semua challenge yang terkait dengan event ini.
+     */
+    private function removeUserFromLinkedChallenges(Event $event, string $userId): void
+    {
+        $challengeIds = $event->challenges()->pluck('challenges.id');
+
+        if ($challengeIds->isNotEmpty()) {
+            ChallengeUser::whereIn('challenge_id', $challengeIds)
+                         ->where('user_id', $userId)
+                         ->delete();
+        }
     }
 
     private function rules(): array
     {
         return [
-            'name'              => 'required|string|max:255',
-            'description'       => 'nullable|string',
-            'image'             => 'nullable|image|max:5120',
-            'color'             => 'nullable|string|max:20',
-            'start_date'        => 'required|date',
-            'end_date'          => 'required|date|after_or_equal:start_date',
-            'start_time'        => 'nullable|date_format:H:i',
-            'end_time'          => 'nullable|date_format:H:i',
-            'is_routine'        => 'boolean',
-            'routine_end_date'  => 'nullable|date|after:start_date',
-            'is_active'         => 'boolean',
-            'users'             => 'nullable|array',
-            'users.*'           => 'exists:users,id',
+            'name'               => 'required|string|max:255',
+            'description'        => 'nullable|string',
+            'image'              => 'nullable|image|max:5120',
+            'color'              => 'nullable|string|max:20',
+            'start_date'         => 'required|date',
+            'end_date'           => 'required|date|after_or_equal:start_date',
+            'start_time'         => 'nullable|date_format:H:i',
+            'end_time'           => 'nullable|date_format:H:i',
+            'is_routine'         => 'boolean',
+            'routine_end_date'   => 'nullable|date|after:start_date',
+            'is_active'          => 'boolean',
+            'sync_participants'  => 'boolean',
+            'users'              => 'nullable|array',
+            'users.*'            => 'exists:users,id',
+            'challenges'         => 'nullable|array',
+            'challenges.*'       => 'exists:challenges,id',
         ];
     }
 }

@@ -57,45 +57,83 @@
                     </div>
                 </div>
 
-                <!-- Email and Name row -->
-                <div class="row g-4 align-items-start">
-                    <div class="col-md-6">
-                        <label class="form-label fw-semibold">
-                            <i class="fas fa-envelope me-1 text-secondary"></i> Email Address <span class="text-danger">*</span>
-                        </label>
-                        <div class="position-relative">
-                            <input type="email" name="user_email" id="user_email" class="form-control form-control-lg" value="{{ old('user_email') }}" required placeholder="contoh@email.com">
-                            <div class="spinner-border spinner-border-sm text-primary position-absolute" id="emailLoader" role="status" style="right: 15px; top: 50%; transform: translateY(-50%); display: none;"></div>
+                <!-- ── BUAT USER BARU ─────────────────────────────────── -->
+                <div id="newUserFields">
+                    <!-- Username & Full Name -->
+                    <div class="row g-4 align-items-start">
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">
+                                <i class="fas fa-at me-1 text-secondary"></i> Username <span class="text-danger">*</span>
+                            </label>
+                            <div class="position-relative">
+                                <input type="text" name="user_username" id="user_username" class="form-control form-control-lg" value="{{ old('user_username') }}" placeholder="Contoh: johndoe" autocomplete="off">
+                                <div class="spinner-border spinner-border-sm text-primary position-absolute" id="usernameLoader" role="status" style="right: 15px; top: 50%; transform: translateY(-50%); display: none;"></div>
+                            </div>
+                            <div class="invalid-feedback d-block" id="usernameErrorMsg" style="display:none!important"></div>
+                            <div class="valid-feedback d-block" id="usernameSuccessMsg" style="display:none!important"></div>
+                            <small class="text-muted mt-1 d-block"><i class="far fa-lightbulb me-1"></i>Username untuk login — harus unik di perusahaan ini.</small>
                         </div>
-                        <div class="invalid-feedback" id="emailErrorMsg"></div>
-                        <div class="valid-feedback" id="emailSuccessMsg"></div>
-                        <small class="text-muted mt-1 d-block" id="emailStatusText">
-                            <i class="far fa-lightbulb me-1"></i>Masukkan email user yang akan didaftarkan.
-                        </small>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">
+                                <i class="fas fa-user-tag me-1 text-secondary"></i> Full Name <span class="text-danger">*</span>
+                            </label>
+                            <input type="text" name="user_name" id="user_name_new" class="form-control form-control-lg" value="{{ old('user_name') }}" placeholder="Nama lengkap">
+                        </div>
                     </div>
-                    <div class="col-md-6">
-                        <label class="form-label fw-semibold">
-                            <i class="fas fa-user-tag me-1 text-secondary"></i> Full Name <span class="text-danger" id="nameRequiredStar">*</span>
-                        </label>
-                        <input type="text" name="user_name" id="user_name" class="form-control form-control-lg" value="{{ old('user_name') }}" required placeholder="Nama lengkap">
+
+                    <!-- Email (opsional), Password, Phone -->
+                    <div class="row g-4 mt-2">
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">
+                                <i class="fas fa-envelope me-1 text-secondary"></i> Email Address <span class="text-muted fw-normal">(opsional)</span>
+                            </label>
+                            <input type="email" name="user_email" id="user_email_new" class="form-control form-control-lg" value="{{ old('user_email') }}" placeholder="contoh@email.com (boleh kosong)">
+                            <small class="text-muted">Jika dikosongkan, user login pakai username.</small>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">
+                                <i class="fas fa-lock me-1 text-secondary"></i> Password <span class="text-danger">*</span>
+                            </label>
+                            <input type="password" name="user_password" id="user_password" class="form-control form-control-lg" minlength="8" placeholder="Minimal 8 karakter">
+                            <small class="text-muted">Minimal 8 karakter untuk keamanan</small>
+                        </div>
+                    </div>
+                    <div class="row g-4 mt-2">
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">
+                                <i class="fas fa-phone-alt me-1 text-secondary"></i> Phone Number <span class="text-muted fw-normal">(opsional)</span>
+                            </label>
+                            <input type="text" name="user_phone" id="user_phone" class="form-control form-control-lg" value="{{ old('user_phone') }}" placeholder="Contoh: 08123456789">
+                        </div>
                     </div>
                 </div>
 
-                <!-- Password & Phone row (hidden for existing user) -->
-                <div class="row g-4 mt-2" id="passwordPhoneRow">
-                    <div class="col-md-6">
-                        <label class="form-label fw-semibold">
-                            <i class="fas fa-lock me-1 text-secondary"></i> Password <span class="text-danger">*</span>
-                        </label>
-                        <input type="password" name="user_password" id="user_password" class="form-control form-control-lg" required minlength="8" placeholder="Minimal 8 karakter">
-                        <small class="text-muted">Minimal 8 karakter untuk keamanan</small>
+                <!-- ── PILIH USER LAMA ─────────────────────────────────── -->
+                <div id="existingUserFields" style="display:none">
+                    <div class="row g-4 align-items-start">
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">
+                                <i class="fas fa-search me-1 text-secondary"></i> Email atau Username <span class="text-danger">*</span>
+                            </label>
+                            <div class="position-relative">
+                                <input type="text" name="user_login_existing" id="user_login_existing" class="form-control form-control-lg" value="{{ old('user_login_existing') }}" placeholder="email@contoh.com atau username">
+                                <div class="spinner-border spinner-border-sm text-primary position-absolute" id="emailLoader" role="status" style="right: 15px; top: 50%; transform: translateY(-50%); display: none;"></div>
+                            </div>
+                            <div class="invalid-feedback d-block" id="emailErrorMsg" style="display:none!important"></div>
+                            <div class="valid-feedback d-block" id="emailSuccessMsg" style="display:none!important"></div>
+                            <small class="text-muted mt-1 d-block" id="emailStatusText">
+                                <i class="far fa-lightbulb me-1"></i>Ketik email atau username untuk mencari user yang sudah ada.
+                            </small>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">
+                                <i class="fas fa-user-tag me-1 text-secondary"></i> Full Name
+                            </label>
+                            <input type="text" id="user_name_existing" class="form-control form-control-lg" readonly placeholder="Terisi otomatis">
+                        </div>
                     </div>
-                    <div class="col-md-6">
-                        <label class="form-label fw-semibold">
-                            <i class="fas fa-phone-alt me-1 text-secondary"></i> Phone Number <span class="text-muted fw-normal">(opsional)</span>
-                        </label>
-                        <input type="text" name="user_phone" id="user_phone" class="form-control form-control-lg" value="{{ old('user_phone') }}" placeholder="Contoh: 08123456789">
-                    </div>
+                    <!-- Hidden field: nilai yang dikirim ke controller (email atau username) -->
+                    <input type="hidden" name="user_login" id="user_login_hidden">
                 </div>
             </div>
         </div>
@@ -256,121 +294,132 @@
         if (softwareSelect.val()) {
             updatePackages();
         }
-        let emailCheckTimeout;
-
-        function resetEmailValidation() {
-            $('#user_email').removeClass('is-invalid is-valid');
-            $('#emailErrorMsg, #emailSuccessMsg').hide();
-        }
-
+        // ── Toggle tampilan form berdasarkan user_type ──────────────────
         function updateUserTypeView() {
-            resetEmailValidation();
             const isNew = $('#userTypeNew').is(':checked');
             if (isNew) {
-                $('#passwordPhoneRow').slideDown();
-                $('#user_password').prop('required', true);
-                $('#user_name').prop('readonly', false).val('');
-                $('#user_phone').prop('readonly', false).val('');
-                $('#emailStatusText').html('<i class="far fa-lightbulb me-1"></i>Email harus belum terdaftar.').show();
+                $('#newUserFields').slideDown();
+                $('#existingUserFields').slideUp();
+                // Wajibkan field baru
+                $('#user_username, #user_name_new, #user_password').prop('required', true);
+                $('#user_email_existing').prop('required', false);
+                // Kosongkan hidden login field
+                $('#user_login_hidden').val('');
+                // Reset validasi existing
+                resetEmailValidation();
             } else {
-                $('#passwordPhoneRow').slideUp();
-                $('#user_password').prop('required', false);
-                $('#user_name').prop('readonly', true).val('');
-                $('#user_phone').prop('readonly', true).val('');
-                $('#emailStatusText').html('<i class="far fa-lightbulb me-1"></i>Ketik perlahan untuk mencari user yang sudah ada.').show();
-            }
-            // Trigger check if there is an email typed already
-            if ($('#user_email').val()) {
-                checkEmailExistence($('#user_email').val());
+                $('#newUserFields').slideUp();
+                $('#existingUserFields').slideDown();
+                // Wajibkan email existing
+                $('#user_email_existing').prop('required', true);
+                $('#user_username, #user_name_new, #user_password').prop('required', false);
+                // Reset validasi username
+                resetUsernameValidation();
             }
         }
 
         $('input[name="user_type"]').on('change', updateUserTypeView);
-        
-        $('#user_email').on('input', function() {
-            clearTimeout(emailCheckTimeout);
-            const email = $(this).val();
+        updateUserTypeView(); // state awal
 
-            resetEmailValidation();
-            $('#user_name').val('');
-            $('#user_phone').val('');
-            
-            if (!email) {
-                const isNew = $('#userTypeNew').is(':checked');
-                $('#emailStatusText').show();
-                if(!isNew){
-                    $('#user_name').prop('readonly', true);
-                    $('#user_phone').prop('readonly', true);
-                }
+        // ── Cek Username (mode Buat User Baru) ──────────────────────────
+        let usernameCheckTimeout;
+
+        function resetUsernameValidation() {
+            $('#user_username').removeClass('is-invalid is-valid');
+            $('#usernameErrorMsg').hide().text('');
+            $('#usernameSuccessMsg').hide().text('');
+        }
+
+        $('#user_username').on('input', function() {
+            clearTimeout(usernameCheckTimeout);
+            const username = $(this).val().trim();
+            resetUsernameValidation();
+
+            if (!username) {
+                $('#btnSubmit').prop('disabled', false);
                 return;
             }
 
-            // Basic frontend email hint before hitting server
-            if(email.length < 5 || countOccurrences(email, '@') !== 1 || !email.includes('.')) {
-                 return; 
+            $('#usernameLoader').show();
+            usernameCheckTimeout = setTimeout(function() {
+                $.ajax({
+                    url: "{{ route('subscription.check-username') }}",
+                    type: 'POST',
+                    data: { _token: "{{ csrf_token() }}", username: username },
+                    success: function(response) {
+                        $('#usernameLoader').hide();
+                        if (response.exists) {
+                            $('#user_username').addClass('is-invalid');
+                            $('#usernameErrorMsg').text('Username sudah digunakan. Pilih username lain.').show();
+                            $('#btnSubmit').prop('disabled', true);
+                        } else {
+                            $('#user_username').addClass('is-valid');
+                            $('#usernameSuccessMsg').text('Username tersedia.').show();
+                            $('#btnSubmit').prop('disabled', false);
+                        }
+                    },
+                    error: function() {
+                        $('#usernameLoader').hide();
+                        $('#user_username').addClass('is-invalid');
+                        $('#usernameErrorMsg').text('Terjadi kesalahan saat memeriksa username.').show();
+                    }
+                });
+            }, 500);
+        });
+
+        // ── Cek Email / Username (mode Pilih User Lama) ─────────────────
+        let emailCheckTimeout;
+
+        function resetEmailValidation() {
+            $('#user_login_existing').removeClass('is-invalid is-valid');
+            $('#emailErrorMsg').hide().text('');
+            $('#emailSuccessMsg').hide().text('');
+            $('#user_name_existing').val('');
+            $('#user_login_hidden').val('');
+        }
+
+        $('#user_login_existing').on('input', function() {
+            clearTimeout(emailCheckTimeout);
+            const loginField = $(this).val().trim();
+            resetEmailValidation();
+
+            if (!loginField || loginField.length < 2) {
+                return;
             }
 
             $('#emailLoader').show();
-            $('#emailStatusText').hide();
-
             emailCheckTimeout = setTimeout(function() {
-                checkEmailExistence(email);
-            }, 500); // 500ms debounce
-        });
-
-        function checkEmailExistence(email) {
-            $('#emailLoader').show();
-            $.ajax({
-                url: "{{ route('subscription.check-user-email') }}",
-                type: 'POST',
-                data: {
-                    _token: "{{ csrf_token() }}",
-                    email: email
-                },
-                success: function(response) {
-                    const isNew = $('#userTypeNew').is(':checked');
-                    $('#emailLoader').hide();
-
-                    if (isNew) {
-                         // CREATE NEW USER MODE
+                $.ajax({
+                    url: "{{ route('subscription.check-user-email') }}",
+                    type: 'POST',
+                    data: { _token: "{{ csrf_token() }}", login_field: loginField },
+                    success: function(response) {
+                        $('#emailLoader').hide();
                         if (response.exists) {
-                            $('#user_email').addClass('is-invalid');
-                            $('#emailErrorMsg').text('Email ini sudah terdaftar. Silakan gunakan Jalur "Pilih User Lama".').show();
-                            $('#btnSubmit').prop('disabled', true);
-                        } else {
-                            $('#user_email').addClass('is-valid');
-                            $('#emailSuccessMsg').text('Email tersedia untuk didaftarkan.').show();
-                            $('#btnSubmit').prop('disabled', false);
-                        }
-                    } else {
-                         // EXISTING USER MODE
-                        if (response.exists) {
-                            $('#user_email').addClass('is-valid');
-                            $('#emailSuccessMsg').text('User ditemukan!').show();
-                            $('#user_name').val(response.name);
-                            $('#user_phone').val(response.phone);
+                            $('#user_login_existing').addClass('is-valid');
+                            const info = response.email
+                                ? 'User ditemukan! (' + response.email + ')'
+                                : 'User ditemukan! (username: ' + response.username + ')';
+                            $('#emailSuccessMsg').text(info).show();
+                            $('#user_name_existing').val(response.name);
+                            // Kirim nilai asli yang diketik (email/username) ke controller
+                            $('#user_login_hidden').val(loginField);
                             $('#btnSubmit').prop('disabled', false);
                         } else {
-                            $('#user_email').addClass('is-invalid');
-                            $('#emailErrorMsg').text('User tidak ditemukan. Pastikan email terdaftar di sistem.').show();
+                            $('#user_login_existing').addClass('is-invalid');
+                            $('#emailErrorMsg').text('User tidak ditemukan. Pastikan email atau username terdaftar di sistem.').show();
+                            $('#user_login_hidden').val('');
                             $('#btnSubmit').prop('disabled', true);
                         }
+                    },
+                    error: function() {
+                        $('#emailLoader').hide();
+                        $('#user_login_existing').addClass('is-invalid');
+                        $('#emailErrorMsg').text('Terjadi kesalahan saat memeriksa data.').show();
                     }
-                },
-                error: function() {
-                    $('#emailLoader').hide();
-                    $('#user_email').addClass('is-invalid');
-                    $('#emailErrorMsg').text('Terjadi kesalahan saat memeriksa email.').show();
-                }
-            });
-        }
-
-        // Helper string func for basic email check
-        function countOccurrences(str, char) {
-            return str.split(char).length - 1;
-        }
-
-        updateUserTypeView(); // trigger initial state
+                });
+            }, 500);
+        });
     });
 </script>
 @endpush

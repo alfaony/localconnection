@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
+use Carbon\Carbon;
 
 use App\Models\User;
 use App\Models\PassChecking;
@@ -93,14 +94,17 @@ class PassCheckingController extends Controller
     }
 
     public function update(Request $request, $id)
-    {
-        $existingSchedules = PassChecking::where('id', '!=', $id)->where('date', $request->date)->where('user_id', Auth::user()->id)
-        ->where(function ($query) use ($request) {
-            $query->whereBetween('start_time', [$request->start_time, $request->end_time])
-                ->orWhereBetween('end_time', [$request->start_time, $request->end_time])
-                ->orWhere(function ($query) use ($request) {
-                    $query->where('start_time', '<=', $request->start_time)
-                        ->where('end_time', '>=', $request->end_time);
+    {   
+        $start_time = Carbon::parse($request->start_time)->format('H:i');
+        $end_time = Carbon::parse($request->end_time)->format('H:i');
+
+        $existingSchedules = PassChecking::where('id', '!=', $id)->where('user_id', Auth::user()->id)
+        ->where(function ($query) use ($start_time, $end_time) {
+            $query->whereBetween('start_time', [$start_time, $end_time])
+                ->orWhereBetween('end_time', [$start_time, $end_time])
+                ->orWhere(function ($query) use ($start_time, $end_time) {
+                    $query->where('start_time', '<=', $start_time)
+                        ->where('end_time', '>=', $end_time);
                 });
         })
         ->exists();

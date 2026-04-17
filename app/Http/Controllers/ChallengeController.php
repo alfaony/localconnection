@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Helpers\ChallengeProgressHelper;
 use App\Models\Challenge;
 use App\Models\ChallengeUser;
+use App\Models\Event;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -35,7 +36,6 @@ class ChallengeController extends Controller
         if ($request->filled('date_range')) {
             $dates = explode(' - ', $request->date_range);
             if (count($dates) == 2) {
-                // Try to parse dates, assuming MM/DD/YYYY format or YYYY-MM-DD from daterangepicker
                 try {
                     $start = \Carbon\Carbon::parse(trim($dates[0]))->startOfDay();
                     $end = \Carbon\Carbon::parse(trim($dates[1]))->endOfDay();
@@ -61,7 +61,9 @@ class ChallengeController extends Controller
     public function create()
     {
         $moduleOptions = Challenge::moduleOptions();
-        return view('challenge.createOrEdit', compact('moduleOptions'));
+        $events        = $this->getCompanyEvents();
+
+        return view('challenge.createOrEdit', compact('moduleOptions', 'events'));
     }
 
     public function store(Request $request)
@@ -76,6 +78,8 @@ class ChallengeController extends Controller
             'reward_xp'    => 'required|integer|min:0',
             'module_type'  => 'required|in:' . implode(',', array_keys(Challenge::moduleOptions())),
             'target_count' => 'required|integer|min:1',
+            'events'       => 'nullable|array',
+            'events.*'     => 'exists:events,id',
         ]);
 
         $challenge = Challenge::create([
@@ -85,12 +89,20 @@ class ChallengeController extends Controller
             'status'     => $request->status ?? 'draft',
         ]);
 
+        // Attach events ke challenge
+        if ($request->filled('events')) {
+            $challenge->events()->sync($request->events);
+
+            // Untuk setiap event yang sync_participants=true, auto-invite semua peserta event ke challenge ini
+            $this->syncEventParticipantsToChallenge($challenge, $request->events);
+        }
+
         return redirect()->route('challenge.show', $challenge)->with('success', 'Challenge berhasil dibuat.');
     }
 
     public function show(Challenge $challenge)
     {
-        $challenge->load('createdBy');
+        $challenge->load('createdBy', 'events');
 
         $participants = $challenge->challengeUsers()->with('user', 'invitedBy')->get()
             ->map(function ($cu) use ($challenge) {
@@ -108,13 +120,10 @@ class ChallengeController extends Controller
             ->sortByDesc('current')
             ->values();
 
-        $invitableUsers = User::byCompany(Auth::user()->company_id)
-            ->isActive()
-            ->whereNotIn('id', $challenge->invitedUsers->pluck('id'))
-            ->orderBy('name')
-            ->get();
+        $excludeIds = $challenge->invitedUsers->pluck('id')->toArray();
+        [$groupedInvitable, $invitableNoDivision] = $this->loadGroupedUsers($excludeIds);
 
-        return view('challenge.show', compact('challenge', 'participants', 'invitableUsers'));
+        return view('challenge.show', compact('challenge', 'participants', 'groupedInvitable', 'invitableNoDivision'));
     }
 
     public function edit(Challenge $challenge)
@@ -123,8 +132,13 @@ class ChallengeController extends Controller
             return redirect()->route('challenge.index')->with('error', 'Challenge yang sedang berjalan atau selesai tidak dapat diedit.');
         }
 
-        $moduleOptions = Challenge::moduleOptions();
-        return view('challenge.createOrEdit', compact('challenge', 'moduleOptions'));
+        $challenge->load('events');
+
+        $moduleOptions    = Challenge::moduleOptions();
+        $events           = $this->getCompanyEvents();
+        $assignedEventIds = $challenge->events->pluck('id')->toArray();
+
+        return view('challenge.createOrEdit', compact('challenge', 'moduleOptions', 'events', 'assignedEventIds'));
     }
 
     public function update(Request $request, Challenge $challenge)
@@ -132,6 +146,9 @@ class ChallengeController extends Controller
         if (in_array($challenge->status, ['running', 'finish'])) {
             return redirect()->route('challenge.index')->with('error', 'Challenge yang sedang berjalan atau selesai tidak dapat diupdate.');
         }
+
+        // Load events sebelum validasi agar snapshot $previousEventIds akurat
+        $challenge->load('events');
 
         $request->validate([
             'name'         => 'required|string|max:150',
@@ -143,12 +160,32 @@ class ChallengeController extends Controller
             'reward_xp'    => 'required|integer|min:0',
             'module_type'  => 'required|in:' . implode(',', array_keys(Challenge::moduleOptions())),
             'target_count' => 'required|integer|min:1',
+            'events'       => 'nullable|array',
+            'events.*'     => 'exists:events,id',
         ]);
 
         $challenge->update($request->only([
             'name', 'description', 'start_date', 'end_date', 'status',
             'reward_point', 'reward_xp', 'module_type', 'target_count',
         ]));
+
+        // ── Hitung diff events ────────────────────────────────
+        $previousEventIds = $challenge->events->pluck('id')->toArray();
+        $newEventIds      = $request->filled('events') ? $request->events : [];
+        $addedEventIds    = array_diff($newEventIds, $previousEventIds);
+        $removedEventIds  = array_diff($previousEventIds, $newEventIds);
+
+        $challenge->events()->sync($newEventIds);
+
+        // Event baru ditambah & punya sync_participants → invite peserta event ke challenge
+        if (!empty($addedEventIds)) {
+            $this->syncEventParticipantsToChallenge($challenge, $addedEventIds);
+        }
+
+        // Event dilepas & punya sync_participants → keluarkan peserta event dari challenge
+        if (!empty($removedEventIds)) {
+            $this->removeEventParticipantsFromChallenge($challenge, $removedEventIds);
+        }
 
         return redirect()->route('challenge.show', $challenge)->with('success', 'Challenge berhasil diperbarui.');
     }
@@ -191,5 +228,91 @@ class ChallengeController extends Controller
 
         return redirect()->route('challenge.show', $challenge)
             ->with('success', 'User berhasil dikeluarkan dari challenge.');
+    }
+
+    // ── Private helpers ────────────────────────────────────────────────────
+
+    /**
+     * Load active users grouped by primary division.
+     * $excludeIds: IDs to exclude (already participating).
+     * Returns: [$groupedUsers (keyed by division name), $usersNoDivision]
+     */
+    private function loadGroupedUsers(array $excludeIds = []): array
+    {
+        $query = User::byCompany(Auth::user()->company_id)
+            ->isActive()
+            ->with('divisions');
+
+        if (!empty($excludeIds)) {
+            $query->whereNotIn('id', $excludeIds);
+        }
+
+        $users = $query->orderBy('name')->get();
+
+        $withDiv = $users
+            ->filter(fn($u) => $u->divisions->isNotEmpty())
+            ->groupBy(fn($u) => ($u->primaryDivision ?? $u->firstDivision)?->name ?? 'Lainnya')
+            ->sortKeys();
+
+        $noDivision = $users->filter(fn($u) => $u->divisions->isEmpty())->values();
+
+        return [$withDiv, $noDivision];
+    }
+
+    /**
+     * Ambil daftar event aktif milik company untuk select di form.
+     */
+    private function getCompanyEvents()
+    {
+        return Event::byCompany(Auth::user()->company_id)
+            ->where('is_active', true)
+            ->orderBy('start_date', 'desc')
+            ->get(['id', 'name', 'start_date', 'end_date', 'sync_participants', 'color']);
+    }
+
+    /**
+     * Untuk setiap event dalam $eventIds yang memiliki sync_participants=true,
+     * otomatis invite semua peserta event tersebut ke challenge ini.
+     */
+    private function syncEventParticipantsToChallenge(Challenge $challenge, array $eventIds): void
+    {
+        if (empty($eventIds)) return;
+
+        $syncEvents = Event::whereIn('id', $eventIds)
+            ->where('sync_participants', true)
+            ->with('eventUsers')
+            ->get();
+
+        foreach ($syncEvents as $event) {
+            foreach ($event->eventUsers as $eu) {
+                ChallengeUser::firstOrCreate(
+                    ['challenge_id' => $challenge->id, 'user_id' => $eu->user_id],
+                    ['invited_by'   => Auth::id()]
+                );
+            }
+        }
+    }
+
+    /**
+     * Untuk setiap event dalam $eventIds yang memiliki sync_participants=true,
+     * keluarkan semua peserta event tersebut dari challenge ini.
+     */
+    private function removeEventParticipantsFromChallenge(Challenge $challenge, array $eventIds): void
+    {
+        if (empty($eventIds)) return;
+
+        $syncEvents = Event::whereIn('id', $eventIds)
+            ->where('sync_participants', true)
+            ->with('eventUsers')
+            ->get();
+
+        foreach ($syncEvents as $event) {
+            $userIds = $event->eventUsers->pluck('user_id')->toArray();
+            if (!empty($userIds)) {
+                ChallengeUser::where('challenge_id', $challenge->id)
+                             ->whereIn('user_id', $userIds)
+                             ->delete();
+            }
+        }
     }
 }

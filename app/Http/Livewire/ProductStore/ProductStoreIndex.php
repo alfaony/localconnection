@@ -184,7 +184,7 @@ class ProductStoreIndex extends Component
      */
     private function getFilteredQuery()
     {
-        return ProductStore::with(['category', 'brand'])
+        $query = ProductStore::with(['category', 'brand'])
             ->byCompany(auth()->user()->company_id)
             ->search($this->search)
             ->when($this->categoryFilter, function ($query) {
@@ -199,8 +199,18 @@ class ProductStoreIndex extends Component
                 $query->whereHas('rack.zone', function ($q) {
                     $q->where('id', $this->zoneFilter);
                 });
-            })
-            ->orderBy($this->sortField, $this->sortDirection);
+            });
+
+        if ($this->sortField === 'stock') {
+            $query->leftJoin('inventories', 'product_stores.id', '=', 'inventories.product_store_id')
+                  ->orderBy('inventories.quantity', $this->sortDirection)
+                  ->select('product_stores.*');
+        } else {
+            $query->orderBy('product_stores.' . $this->sortField, $this->sortDirection);
+            $query->select('product_stores.*');
+        }
+
+        return $query;
     }
 
     /**
