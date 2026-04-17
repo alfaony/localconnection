@@ -196,30 +196,44 @@ class QrScanApiController extends Controller
     {
         try {
             $searchNumber = str_replace('-', '/', $quoteNumber);
-            $quote = Quote::with(['customer', 'userCreate', 'quoteProduct'])->where('number_result', $searchNumber)->firstOrFail();
+            $quote = Quote::with(['customer', 'userCreate', 'quoteProduct.product'])->where('number_result', $searchNumber)->firstOrFail();
+            $userCompanyId = $quote->company_id ?? Auth::user()->company_id;
 
-            $userCompanyId = Auth::user()->company_id;
-
-            $product = Product::withTrashed()->byCompany($userCompanyId)->get();
             $company = SettingCompany::byCompany($userCompanyId)->get()->pluck('field_value', 'field_title');
-            $customer = Customer::byCompany($userCompanyId)->get();
-            
-            $nomorQuote = $quote->number_result;
-            $today = \Carbon\Carbon::now()->format('d / m / Y');
             $userCreate = $quote->userCreate ? $quote->userCreate->name : 'System';
-
+            $today = \Carbon\Carbon::now()->format('d / m / Y');
             $counting = $this->generateCountingArray($quote);
+            $path = public_path('logo/paraf.png');
+            $base64 = '';
 
-            $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('quote.pdfApi', compact(
-                'product', 'customer', 'nomorQuote', 'quote', 
-                'userCreate', 'company', 'today', 'counting'
+            if (file_exists($path)) {
+                $type = pathinfo($path, PATHINFO_EXTENSION);
+                $data = file_get_contents($path);
+                $base64 = 'data:image/' . $type . ';base64,' . base64_encode($data);
+            }
+
+            $nomorQuote = $quote->number_result;
+            $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('quote.pdfMobile', compact(
+                'nomorQuote', 
+                'quote', 
+                'userCreate', 
+                'company', 
+                'today', 
+                'counting',
+                'base64'
             ));
+            $pdf->setPaper('a4', 'portrait')
+                ->setOptions([
+                    'isHtml5ParserEnabled' => true,
+                    'isRemoteEnabled' => true, 
+                    'defaultFont' => 'sans-serif'
+                ]);
 
-            $safeFileName = str_replace('/', '-', $nomorQuote);
-            return $pdf->download("Quotation_{$safeFileName}.pdf");
+            $safeFileName = str_replace('/', '-', $quote->number_result);
+            return $pdf->stream("Quotation_{$safeFileName}.pdf");
 
         } catch (\Exception $e) {
-            return response()->json(['success' => false, 'message' => 'Gagal generate PDF: ' . $e->getMessage()], 500);
+            return response()->json(['success' => false, 'message' => 'Gagal: ' . $e->getMessage()], 500);
         }
     }
 
