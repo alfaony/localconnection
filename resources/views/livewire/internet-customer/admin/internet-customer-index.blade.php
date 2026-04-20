@@ -507,15 +507,23 @@
                                                     </span>
                                                     @break
                                                 @case(\App\Schemas\ParamSchema::ACTIVE)
+                                                    @if($finance_access)
                                                     <button class="btn btn-sm btn-outline-danger" onclick="return confirm('Anda yakin ingin menon-aktifkan pelanggan ini?') ? @this.call('suspend', @js($customer->id)) : false">
                                                         <i class="fas fa-pause me-1"></i> Suspend
                                                     </button>
+                                                    @else
+                                                    <span class="text-muted">Finance</span>
+                                                    @endif
                                                     @break
 
                                                 @case(\App\Schemas\ParamSchema::SUSPENDED)
+                                                    @if($finance_access)
                                                     <button class="btn btn-sm btn-outline-success" onclick="return confirm('Anda yakin ingin mengaktifkan kembali pelanggan ini?') ? @this.call('reactivate', @js($customer->id)) : false">
                                                         <i class="fas fa-play me-1"></i> Aktifkan
                                                     </button>
+                                                    @else
+                                                    <span class="text-muted">Finance</span>
+                                                    @endif
                                                     @break
                                                 {{-- BARU: Case untuk status CLOSED --}}
                                                 @case(\App\Schemas\ParamSchema::CLOSED)
