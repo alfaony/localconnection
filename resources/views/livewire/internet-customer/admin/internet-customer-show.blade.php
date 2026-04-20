@@ -50,9 +50,11 @@
                             <h4 class="text-primary mb-3">
                                 <i class="fas fa-user-circle mr-2"></i>Data Pribadi
                             </h4>
+                            @canAccess('edit', 'internet_customers')
                             <button onclick="openEditPribadiModal()" class="btn btn-sm btn-warning mb-2">
                                 <i class="fas fa-edit mr-1"></i>Edit Data Pribadi
                             </button>
+                            @endcanAccess
                             <div class="table-responsive">
                                 <table class="table table-bordered table-striped">
                                     <tbody>
