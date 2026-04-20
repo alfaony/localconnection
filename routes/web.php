@@ -81,6 +81,7 @@ use App\Http\Controllers\ShippingCalculationController;
 use App\Http\Controllers\AskBosController;
 use App\Http\Controllers\DecisionController;
 use App\Http\Controllers\PartnershipAgreementController;
+use App\Http\Controllers\UserBlacklistController;
 use App\Http\Controllers\SupplierCategoryController;
 use App\Http\Controllers\ProductSupplierController;
 use App\Http\Controllers\DayoffController;
@@ -310,7 +311,6 @@ Route::post('/software-sharing/{companySlug}/forgot-password', [SoftwareSharingC
 Route::get('/software-sharing/{companySlug}/reset-password/{token}', [SoftwareSharingController::class, 'showResetPassword'])->name('customer.password.reset.form');
 Route::post('/software-sharing/{companySlug}/reset-password', [SoftwareSharingController::class, 'resetPassword'])->name('customer.password.reset');
 
-
 Route::group(['middleware' => ['auth','role.permission','ip.restriction']], function()
 {
   Route::get('home/softwareSharing', [App\Http\Controllers\HomeController::class, 'softwareSharing'])->name('home.softwareSharing');
@@ -334,6 +334,10 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
   Route::resource('project', ProjectController::class);
   Route::resource('employee', EmployeeController::class);
   
+  Route::get('user-blacklist/search', [UserBlacklistController::class, 'search'])->name('user-blacklist.search');
+  Route::post('user-blacklist/import-inactive', [UserBlacklistController::class, 'importInactive'])->name('user-blacklist.importInactive');
+  Route::resource('user-blacklist', UserBlacklistController::class)->only(['index', 'store', 'destroy']);
+
   Route::get('user/profileEdit/{slug}', [UserController::class,'profileEdit'])->name('user.profileEdit');
   Route::put('user/profileUpdate/{slug}', [UserController::class,'profileUpdate'])->name('user.profileUpdate');
   Route::post('user/updatefcm',[UserController::class,'updatefcm'])->name('user.updatefcm');

@@ -122,6 +122,8 @@ class DatabaseSeeder extends Seeder
         $this->call(PermissionForMenuChallengeSeeder::class);
         $this->call(PermissionForMenuEventSeeder::class);
         $this->call(PermissionForMenuMasterGroupSeeder::class);
+        $this->call(PermissionForMenuUserBlackListSeeder::class);
+        
         
 
     }
