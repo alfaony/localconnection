@@ -169,7 +169,6 @@ class UserBlacklistController extends Controller
         }
 
         $results = UserBlacklist::with(['user.company'])
-            ->when(!$isRoot, fn($q) => $q->byCompany($companyId))
             ->where('name', 'like', '%' . $name . '%')
             ->limit(5)
             ->get()
