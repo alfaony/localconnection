@@ -17,7 +17,7 @@ class PermissionForMenuUserBlackListSeeder extends Seeder
         DB::beginTransaction();
         try {
             // ── Event CRUD (Root & Admin) ──────────────────────────────────────
-            $crudMethods = ['index', 'create', 'store', 'show','detail','edit', 'update', 'destroy','search','import_inactive'];
+            $crudMethods = ['index', 'create', 'store', 'show','detail','edit', 'update', 'destroy','search','importInactive'];
             $crudRoles   = Role::whereIn('name', [RoleSchema::ROOT, RoleSchema::ADMIN])->get();
             $showEvent = null;
             foreach ($crudMethods as $method) {

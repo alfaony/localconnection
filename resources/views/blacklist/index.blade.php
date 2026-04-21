@@ -8,7 +8,7 @@
     @include('components.alert')
 </div>
 
-<div class="container p-3 mt-3">
+<div class="container p-3 pt-5">
 
     {{-- ============================================================
          FORM TAMBAH MANUAL
@@ -82,10 +82,12 @@
             </form>
         </div>
     </div>
-
+        
     {{-- ============================================================
          IMPORT DARI USER TIDAK AKTIF
     ============================================================ --}}
+
+    @canAccess('importInactive','user_blacklists')
     <div class="card card-outline card-warning mb-4">
         <div class="card-header">
             <h3 class="card-title"><i class="fas fa-user-slash mr-2"></i>Import dari Pengguna Tidak Aktif</h3>
@@ -150,6 +152,7 @@
             @endif
         </div>
     </div>
+    @endcanAccess
 
     {{-- ============================================================
          DAFTAR BLACKLIST
