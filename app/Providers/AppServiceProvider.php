@@ -157,7 +157,7 @@ class AppServiceProvider extends ServiceProvider
                 'kyes',
                 'challenges',
                 'employees','users','positions','managers','attendances',
-                'shifting_obs','schedule_obs','dayoffs','wfo_rules','barcodes','employee_checkings','office_attendances','trainings'
+                'shifting_obs','schedule_obs','dayoffs','wfo_rules','barcodes','employee_checkings','office_attendances','trainings','user_blacklists'
             ];
 
             $managementInternetMenu = 
@@ -867,7 +867,13 @@ class AppServiceProvider extends ServiceProvider
                     'text' => 'Internet Customer Group',
                     'route' => 'internet-customer-group.index',
                     'icon' => 'fa fa-users',
-                ]
+                ],
+                'user_blacklists' =>
+                [
+                    'text' => 'User Blacklist',
+                    'route' => 'user-blacklist.index',
+                    'icon' => 'fa fa-users',
+                ],
             ];
 
             // foreach ($listMenu as $role) 
