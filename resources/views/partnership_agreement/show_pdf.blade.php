@@ -12,6 +12,7 @@
             <li class="breadcrumb-item active">{{ $agreement->type->name}}</li>
         </ol>
     </div>
+
     @if($agreement->isPermission('messageReject') && $agreement->reason)
     <div class="col-md-12 mt-3">
         <div class="alert alert-danger alert-dismissible fade show" role="alert">
@@ -158,7 +159,7 @@
                                 <!-- Displaying the Signature Image -->
                                 <td>
                                     @if($signature->signature)
-                                        <img src="{{ s3_asset(true,10,$signature->signature) }}" alt="Signature Image" width="250" class="img-thumbnail">
+                                        <img src="{{ s3_asset(true,10,'/public/'.$signature->signature) }}" alt="Signature Image" width="250" class="img-thumbnail">
                                     @else
                                         <span>No Signature Image</span>
                                     @endif

@@ -66,13 +66,18 @@ class PartnershipAgreementController extends Controller
             $dataArray['image_topologi'] = $imageTopologi;
         }
 
-        if ($request->hasFile('fields.image_bast')) 
+        if ($request->hasFile('fields.image_bast'))
         {
             $imageBast = Storage::put('public/images/bast', $request->file('fields.image_bast'));
             $dataArray['image_bast'] = $imageBast;
         }
 
-
+        foreach (['lampiran_1_image', 'lampiran_2_image', 'lampiran_3_image'] as $lampiranKey) {
+            if ($request->hasFile('fields.' . $lampiranKey)) {
+                $path = Storage::put('public/images/lampiran', $request->file('fields.' . $lampiranKey));
+                $dataArray[$lampiranKey] = $path;
+            }
+        }
 
         $data['status'] = ParamSchema::DRAFT;
         $data['letter_number'] = $letter_number;
@@ -122,14 +127,24 @@ class PartnershipAgreementController extends Controller
             $dataArray['image_topologi'] = $imageTopologi;
         }
 
-        if ($request->hasFile('fields.image_bast')) 
+        if ($request->hasFile('fields.image_bast'))
         {
-            if (!empty($partnershipAgreement->fields['image_bast'])) 
+            if (!empty($partnershipAgreement->fields['image_bast']))
             {
                 Storage::delete($partnershipAgreement->fields['image_bast']);
             }
             $imageBast = Storage::put('public/images/bast', $request->file('fields.image_bast'));
             $dataArray['image_bast'] = $imageBast;
+        }
+
+        foreach (['lampiran_1_image', 'lampiran_2_image', 'lampiran_3_image'] as $lampiranKey) {
+            if ($request->hasFile('fields.' . $lampiranKey)) {
+                if (!empty($partnershipAgreement->fields[$lampiranKey])) {
+                    Storage::delete($partnershipAgreement->fields[$lampiranKey]);
+                }
+                $path = Storage::put('public/images/lampiran', $request->file('fields.' . $lampiranKey));
+                $dataArray[$lampiranKey] = $path;
+            }
         }
 
         $data['is_approve'] = false;
@@ -198,13 +213,19 @@ class PartnershipAgreementController extends Controller
             {
                 $ktpPath = $ktp->store('ktps');
             }
-    
+            
+
             // Process and save the signature if it's valid
             if ($signature) {
-                // Decode the base64 string and save it as a file
-                $imageData = base64_decode(preg_replace('#^data:image/\w+;base64,#i', '', $signature));
+                $imageData = base64_decode(
+                    preg_replace('#^data:image/\w+;base64,#i', '', $signature)
+                );
+
                 $signaturePath = 'signatures/' . uniqid() . '.png';
-                file_put_contents(storage_path('app/public/' . $signaturePath), $imageData);
+
+                Storage::disk('s3')->put('public/'.$signaturePath, $imageData);
+
+                $signatureUrl = Storage::disk('s3')->url($signaturePath);
             }
             $partnershipAgreement = PartnershipAgreement::byCompany(Auth::user()->company_id)->findOrFail($id);
     
@@ -266,7 +287,47 @@ class PartnershipAgreementController extends Controller
     {
         $token = $request->query('token');
         $agreement = PartnershipAgreement::where('token', $token)->findOrFail($id);
-        return view('partnership_agreement.show_share_pdf', compact('agreement'));
+
+        $attemptsKey = 'share_attempts_' . $id;
+        $attempts = session($attemptsKey, 0);
+
+        if ($attempts >= 3) {
+            return view('partnership_agreement.share_blocked', compact('agreement'));
+        }
+
+        $needsPassword = $agreement->password && !session('share_authenticated_' . $id);
+
+        return view('partnership_agreement.show_share_pdf', compact('agreement', 'needsPassword', 'attempts', 'token'));
+    }
+
+    public function verifySharePassword(Request $request, $id)
+    {
+        $token = $request->query('token');
+        $agreement = PartnershipAgreement::where('token', $token)->findOrFail($id);
+
+        $attemptsKey = 'share_attempts_' . $id;
+        $attempts = session($attemptsKey, 0);
+
+        if ($attempts >= 3) {
+            return response()->json(['blocked' => true, 'success' => false]);
+        }
+
+        if (!$agreement->password || !Hash::check($request->password, $agreement->password)) {
+            $newAttempts = $attempts + 1;
+            session([$attemptsKey => $newAttempts]);
+            $remaining = 3 - $newAttempts;
+
+            return response()->json([
+                'success' => false,
+                'blocked' => $newAttempts >= 3,
+                'remaining' => max(0, $remaining),
+            ]);
+        }
+
+        session(['share_authenticated_' . $id => true]);
+        session([$attemptsKey => 0]);
+
+        return response()->json(['success' => true]);
     }
 
     public function signatureShare(Request $request, $id)
@@ -304,10 +365,15 @@ class PartnershipAgreementController extends Controller
     
             // Process and save the signature if it's valid
             if ($signature) {
-                // Decode the base64 string and save it as a file
-                $imageData = base64_decode(preg_replace('#^data:image/\w+;base64,#i', '', $signature));
+                $imageData = base64_decode(
+                    preg_replace('#^data:image/\w+;base64,#i', '', $signature)
+                );
+
                 $signaturePath = 'signatures/' . uniqid() . '.png';
-                file_put_contents(storage_path('app/public/' . $signaturePath), $imageData);
+
+                Storage::disk('s3')->put('public/'.$signaturePath, $imageData);
+
+                $signatureUrl = Storage::disk('s3')->url($signaturePath);
             }
             $partnershipAgreement = PartnershipAgreement::findOrFail($id);
     
