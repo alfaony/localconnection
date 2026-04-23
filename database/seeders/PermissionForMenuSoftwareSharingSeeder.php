@@ -29,7 +29,7 @@ class PermissionForMenuSoftwareSharingSeeder extends Seeder
             $software = ['index','create','store','edit','update','destroy','show','toggleStatus','dashboard','importTemplate','import','importStatus'];
             $softwarePackages = ['index','create','store','edit','update','destroy','show','toggleStatus'];
             $masterAccount = ['index','edit', 'create','store','update', 'show', 'destroy','toggleStatus','customers'];
-            $subscriptions = ['index','create','store','edit','update','destroy','show','toggleStatus','editExpiry','updateExpiry','editMasterAccount','updateMasterAccount','suspend','activate','payments','manual-approve','createMarketplace','checkUserEmail','storeMarketplace'];
+            $subscriptions = ['index','create','store','edit','update','destroy','show','toggleStatus','editExpiry','updateExpiry','editMasterAccount','updateMasterAccount','suspend','activate','payments','manual-approve','createMarketplace','checkUserEmail','storeMarketplace','checkUsername','editOrderNumber','updateOrderNumber'];
             
             foreach ($softwareDashboard as $method) 
             {

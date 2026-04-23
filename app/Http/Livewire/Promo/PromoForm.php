@@ -107,7 +107,7 @@ class PromoForm extends Component
             return redirect()->route('promo.index');
         } catch (\Throwable $th) {
             //throw $th;
-            dd($th);
+            // dd($th);
             \Log::error($th->getMessage());
             session()->flash('error', 'Promo gagal disimpan.');
             return redirect()->route('promo.index');

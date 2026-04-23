@@ -118,6 +118,11 @@ class Router extends Model
         return $query->where('active_status', self::STATUS_UP);
     }
 
+    public function internetCustomers()
+    {
+        return $this->hasMany(InternetCustomer::class, 'router_id');
+    }
+
     public function scopeByCompany($query, $company_id)
     {
         return $query->where('company_id', $company_id);

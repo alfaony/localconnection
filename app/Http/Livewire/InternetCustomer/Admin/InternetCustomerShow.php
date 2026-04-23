@@ -20,6 +20,10 @@ use App\Models\Router;
 use App\Models\AddressPool;
 use App\Models\HotspotServer;
 use App\Models\InternetPackage;
+use App\Models\Province;
+use App\Models\City;
+use App\Models\District;
+use App\Models\Subdistrict;
 
 use App\Services\RadiusService;
 use App\Services\MikrotikService;
@@ -45,6 +49,7 @@ class InternetCustomerShow extends Component
 
     // Properties untuk edit data pribadi
     public $name, $email, $phone_number, $start_billing_date, $end_billing_date, $grouping_id;
+    public $province_id, $city_id, $district_id, $subdistrict_id, $address;
     
     // Properties untuk edit data instalasi
     public $local_address, $username, $pass_hash, $device_serial_number;
@@ -392,15 +397,99 @@ class InternetCustomerShow extends Component
         $this->start_billing_date = $this->customer->status != ParamSchema::INACTIVE ? $this->customer->userCustomer->start_billing_date : Carbon::now()->format('Y-m-d');
         $this->end_billing_date = $this->customer->status != ParamSchema::INACTIVE ? $this->customer->userCustomer->end_billing_date : Carbon::now()->addDays(5)->format('Y-m-d');
         $this->grouping_id = $this->customer->grouping_id;
-        
+        $this->province_id = $this->customer->province_id;
+        $this->city_id = $this->customer->city_id;
+        $this->district_id = $this->customer->district_id;
+        $this->subdistrict_id = $this->customer->subdistrict_id;
+        $this->address = $this->customer->address;
+
+        // Fetch option data for cascading selects
+        $cities = $this->province_id
+            ? City::where('province_id', $this->province_id)->whereHas('cityCoverages')->orderBy('name')->get(['id','name'])
+            : collect();
+        $districts = $this->city_id
+            ? District::where('city_id', $this->city_id)->whereHas('districtCoverages')->orderBy('name')->get(['id','name'])
+            : collect();
+        $subdistricts = $this->district_id
+            ? Subdistrict::where('district_id', $this->district_id)->whereHas('subdistrictCoverages')->orderBy('name')->get(['id','name'])
+            : collect();
+
         $this->dispatchBrowserEvent('showEditPribadiModal', [
-            'status_active' => $this->status_active,
-            'name' => $this->customer->name,
-            'email' => $this->customer->userCustomer->email ?? '',
-            'phone_number' => $this->customer->userCustomer->phone_number ?? '',
+            'status_active'      => $this->status_active,
+            'name'               => $this->customer->name,
+            'email'              => $this->customer->userCustomer->email ?? '',
+            'phone_number'       => $this->customer->userCustomer->phone_number ?? '',
             'start_billing_date' => $this->start_billing_date,
-            'end_billing_date' => $this->end_billing_date,
-            'grouping_id' => $this->grouping_id
+            'end_billing_date'   => $this->end_billing_date,
+            'grouping_id'        => $this->grouping_id,
+            'province_id'        => $this->province_id,
+            'city_id'            => $this->city_id,
+            'district_id'        => $this->district_id,
+            'subdistrict_id'     => $this->subdistrict_id,
+            'address'            => $this->address,
+            // Pass option data so JS can populate selects directly
+            'cities'             => $cities->map(fn($c) => ['id' => $c->id, 'name' => $c->name])->toArray(),
+            'districts'          => $districts->map(fn($d) => ['id' => $d->id, 'name' => $d->name])->toArray(),
+            'subdistricts'       => $subdistricts->map(fn($s) => ['id' => $s->id, 'name' => $s->name])->toArray(),
+        ]);
+    }
+
+    /**
+     * Set semua location sekaligus tanpa trigger cascade reset
+     */
+    public function initLocationFields($province_id, $city_id, $district_id, $subdistrict_id)
+    {
+        $this->province_id    = $province_id;
+        $this->city_id        = $city_id;
+        $this->district_id    = $district_id;
+        $this->subdistrict_id = $subdistrict_id;
+    }
+
+    public function updatedProvinceId($value)
+    {
+        $this->city_id = null;
+        $this->district_id = null;
+        $this->subdistrict_id = null;
+
+        $cities = $value
+            ? City::where('province_id', $value)->whereHas('cityCoverages')->orderBy('name')->get(['id','name'])
+            : collect();
+
+        $this->dispatchBrowserEvent('addressCascadeUpdate', [
+            'level'        => 'province',
+            'cities'       => $cities->map(fn($c) => ['id' => $c->id, 'name' => $c->name])->toArray(),
+            'districts'    => [],
+            'subdistricts' => [],
+        ]);
+    }
+
+    public function updatedCityId($value)
+    {
+        $this->district_id = null;
+        $this->subdistrict_id = null;
+
+        $districts = $value
+            ? District::where('city_id', $value)->whereHas('districtCoverages')->orderBy('name')->get(['id','name'])
+            : collect();
+
+        $this->dispatchBrowserEvent('addressCascadeUpdate', [
+            'level'        => 'city',
+            'districts'    => $districts->map(fn($d) => ['id' => $d->id, 'name' => $d->name])->toArray(),
+            'subdistricts' => [],
+        ]);
+    }
+
+    public function updatedDistrictId($value)
+    {
+        $this->subdistrict_id = null;
+
+        $subdistricts = $value
+            ? Subdistrict::where('district_id', $value)->whereHas('subdistrictCoverages')->orderBy('name')->get(['id','name'])
+            : collect();
+
+        $this->dispatchBrowserEvent('addressCascadeUpdate', [
+            'level'        => 'district',
+            'subdistricts' => $subdistricts->map(fn($s) => ['id' => $s->id, 'name' => $s->name])->toArray(),
         ]);
     }
 
@@ -427,7 +516,14 @@ class InternetCustomerShow extends Component
 
         DB::beginTransaction();
         try {
-            $this->customer->update(['name' => $this->name]);
+            $this->customer->update([
+                'name' => $this->name,
+                'address' => $this->address,
+                'province_id' => $this->province_id,
+                'city_id' => $this->city_id,
+                'district_id' => $this->district_id,
+                'subdistrict_id' => $this->subdistrict_id,
+            ]);
             
             if(!$this->status_active)
             {
@@ -730,8 +826,12 @@ class InternetCustomerShow extends Component
     {
         $purchases = $this->customer->purchases()->orderby('created_at','desc')->paginate(5);
         $financeAccess = Access::can('as_finance', 'internet_customers');
-        
-        return view('livewire.internet-customer.admin.internet-customer-show', compact('purchases','financeAccess'))
+        $provinces = Province::whereHas('provinceCoverages')->orderBy('name')->get();
+        $cities = $this->province_id ? City::where('province_id', $this->province_id)->whereHas('cityCoverages')->orderBy('name')->get() : collect();
+        $districts = $this->city_id ? District::where('city_id', $this->city_id)->whereHas('districtCoverages')->orderBy('name')->get() : collect();
+        $subdistricts = $this->district_id ? Subdistrict::where('district_id', $this->district_id)->whereHas('subdistrictCoverages')->orderBy('name')->get() : collect();
+
+        return view('livewire.internet-customer.admin.internet-customer-show', compact('purchases', 'financeAccess', 'provinces', 'cities', 'districts', 'subdistricts'))
             ->extends('adminlte::page');
     }
 

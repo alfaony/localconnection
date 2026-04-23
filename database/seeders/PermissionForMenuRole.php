@@ -21,7 +21,7 @@ class PermissionForMenuRole extends Seeder
     public function run()
     {   
 
-        $methods = ['updateName','updateMenuPermissions','selectAll','deselectAll'];
+        $methods = ['updateName','updateMenuPermissions','selectAll','deselectAll','duplicate','clearAllCache'];
        
         $root = Role::where('name',RoleSchema::ROOT)->first();
 
@@ -30,7 +30,7 @@ class PermissionForMenuRole extends Seeder
         {
             // create permision
             $permission = Permission::firstOrCreate([
-                'name' => ucwords($method).' Shifting Ob',
+                'name' => ucwords($method).' Role',
             ],[
                 'method' => $method,
                 'table' => 'roles',

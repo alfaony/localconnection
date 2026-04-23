@@ -29,6 +29,7 @@ use App\Http\Controllers\API\MeetingApiController;
 use App\Http\Controllers\API\InternetCustomerApiController;
 use App\Http\Controllers\API\EkycController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\API\QrScanApiController;
 
 
 
@@ -70,6 +71,15 @@ Route::group(['middleware' => ['auth:api','role.permission.api']], function()
 
 
     //Mobile
+
+        //QR Api
+    Route::get('used-laptops/detail/{slug}', [QrScanApiController::class, 'getUsedLaptopDetail']);
+    Route::get('used-items/detail/{slug}', [QrScanApiController::class, 'getUsedItemDetail']);
+    Route::get('product-stores/detail/{code}', [QrScanApiController::class, 'getProductStoreDetail']);
+    Route::get('internet-customers/detail/{code}', [QrScanApiController::class, 'getInternetCustomerDetail']);
+    Route::get('quotes/detail-pdf/{quote_number}', [QrScanApiController::class, 'getQuotationPdf'])
+    ->where('quote_number', '.*');
+
     Route::prefix('tasks')->group(function() {
         Route::get('today', [DailyTaskMobileController::class, 'indexToday']);
         Route::get('tomorrow', [DailyTaskMobileController::class, 'indexTomorrow']);

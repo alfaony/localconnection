@@ -50,9 +50,11 @@
                             <h4 class="text-primary mb-3">
                                 <i class="fas fa-user-circle mr-2"></i>Data Pribadi
                             </h4>
+                            @canAccess('edit', 'internet_customers')
                             <button onclick="openEditPribadiModal()" class="btn btn-sm btn-warning mb-2">
                                 <i class="fas fa-edit mr-1"></i>Edit Data Pribadi
                             </button>
+                            @endcanAccess
                             <div class="table-responsive">
                                 <table class="table table-bordered table-striped">
                                     <tbody>
@@ -755,6 +757,66 @@
                                 </div>
                             </div>
                         </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label>Provinsi</label>
+                                    <select class="form-control" id="province_id">
+                                        <option value="">-- Pilih Provinsi --</option>
+                                        @foreach($provinces as $province)
+                                            <option value="{{ $province->id }}">{{ $province->name }}</option>
+                                        @endforeach
+                                    </select>
+                                    @error('province_id') <span class="text-danger">{{ $message }}</span> @enderror
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label>Kota/Kabupaten</label>
+                                    <select class="form-control" id="city_id">
+                                        <option value="">-- Pilih Kota/Kabupaten --</option>
+                                        @foreach($cities as $city)
+                                            <option value="{{ $city->id }}">{{ $city->name }}</option>
+                                        @endforeach
+                                    </select>
+                                    @error('city_id') <span class="text-danger">{{ $message }}</span> @enderror
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label>Kecamatan</label>
+                                    <select class="form-control" id="district_id">
+                                        <option value="">-- Pilih Kecamatan --</option>
+                                        @foreach($districts as $district)
+                                            <option value="{{ $district->id }}">{{ $district->name }}</option>
+                                        @endforeach
+                                    </select>
+                                    @error('district_id') <span class="text-danger">{{ $message }}</span> @enderror
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label>Kelurahan</label>
+                                    <select class="form-control" id="subdistrict_id">
+                                        <option value="">-- Pilih Kelurahan --</option>
+                                        @foreach($subdistricts as $subdistrict)
+                                            <option value="{{ $subdistrict->id }}">{{ $subdistrict->name }}</option>
+                                        @endforeach
+                                    </select>
+                                    @error('subdistrict_id') <span class="text-danger">{{ $message }}</span> @enderror
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="address_edit">Alamat Lengkap</label>
+                            <textarea class="form-control" id="address_edit" wire:model="address" rows="3" placeholder="Masukkan alamat lengkap"></textarea>
+                            @error('address') <span class="text-danger">{{ $message }}</span> @enderror
+                        </div>
+
                         <div class="form-group">
                             <label for="status_active">Status Aktif</label>
                             <div class="form-check">
@@ -956,6 +1018,7 @@
     </div>
 
     @push('js')
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
     <script>
         // Fungsi untuk membuka modal edit data pribadi
         function openEditPribadiModal() {
@@ -1120,51 +1183,163 @@
                 }, event.detail.delay || 3000);
             });
 
-            window.addEventListener('showEditPribadiModal', function(e) 
-            {
-                // Isi nilai-nilai form dari data Livewire
-                document.getElementById('name').value = e.detail.name || '';
-                document.getElementById('email').value = e.detail.email || '';
-                document.getElementById('phone_number').value = e.detail.phone_number || '';
+            // ============================================================
+            // Select2 Alamat — Fixed: populate options from event data
+            // ============================================================
+            var _addrSuppress = false;
+            var _addrFields = ['province_id','city_id','district_id','subdistrict_id'];
+
+            /**
+             * Populate a <select> element with options from an array of {id, name}
+             */
+            function populateSelect(selectId, items, placeholder) {
+                var el = document.querySelector('#editPribadiModal #' + selectId);
+                if (!el) return;
+                var html = '<option value="">' + (placeholder || '-- Pilih --') + '</option>';
+                (items || []).forEach(function(item) {
+                    html += '<option value="' + item.id + '">' + item.name + '</option>';
+                });
+                el.innerHTML = html;
+            }
+
+            /**
+             * Init Select2 on address fields and set their values
+             */
+            function initAddrSelect2(vals) {
+                _addrFields.forEach(function(id) {
+                    var $el = $('#editPribadiModal #' + id);
+                    if (!$el.length) return;
+                    if ($el.hasClass('select2-hidden-accessible')) $el.select2('destroy');
+
+                    $el.select2({ placeholder:'-- Pilih --', allowClear:true, width:'100%',
+                                dropdownParent:$('#editPribadiModal') });
+
+                    $el.off('change.addr').on('change.addr', function() {
+                        if (_addrSuppress) return;
+                        @this.set(id, $(this).val() || null);
+                    });
+
+                    // Set value programmatically without triggering Livewire sync
+                    var v = vals && vals[id] != null ? String(vals[id]) : null;
+                    _addrSuppress = true;
+                    $el.val(v).trigger('change'); // trigger('change') is required for Select2 to update UI
+                    _addrSuppress = false;
+                });
+            }
+
+            window.addEventListener('showEditPribadiModal', function(e) {
+                document.getElementById('name').value               = e.detail.name || '';
+                document.getElementById('email').value              = e.detail.email || '';
+                document.getElementById('phone_number').value       = e.detail.phone_number || '';
                 document.getElementById('start_billing_date').value = e.detail.start_billing_date || '';
-                document.getElementById('end_billing_date').value = e.detail.end_billing_date || '';
-                document.getElementById('grouping_id').value = e.detail.grouping_id || '';
+                document.getElementById('end_billing_date').value   = e.detail.end_billing_date || '';
+                document.getElementById('grouping_id').value        = e.detail.grouping_id || '';
+                document.getElementById('status_active').checked    = !!e.detail.status_active;
+                document.getElementById('address_edit').value       = e.detail.address || '';
 
-                const statusActiveElement = document.getElementById('status_active');
-                if (e.detail.status_active) {
-                    statusActiveElement.checked = true;
-                } else {
-                    statusActiveElement.checked = false;
-                }
+                var startIn = document.getElementById('start_billing_date');
+                var endIn   = document.getElementById('end_billing_date');
+                startIn.onchange = function() {
+                    if (!startIn.value) return;
+                    var d = new Date(startIn.value); d.setDate(d.getDate() + 5);
+                    endIn.value = d.toISOString().slice(0,10);
+                };
 
-                // Setup event listener untuk auto-fill end_billing_date ketika start_billing_date berubah
-                const startDateInput = document.getElementById('start_billing_date');
-                const endDateInput = document.getElementById('end_billing_date');
-                
-                // Remove any existing listeners first
-                startDateInput.removeEventListener('change', handleStartDateChange);
-                
-                // Add new listener
-                startDateInput.addEventListener('change', handleStartDateChange);
-                
-                function handleStartDateChange() {
-                    if (startDateInput.value) {
-                        // Parse tanggal start_billing_date
-                        const startDate = new Date(startDateInput.value);
-                        // Tambahkan 5 hari
-                        startDate.setDate(startDate.getDate() + 5);
-                        // Format ke YYYY-MM-DD untuk input type="date"
-                        const year = startDate.getFullYear();
-                        const month = String(startDate.getMonth() + 1).padStart(2, '0');
-                        const day = String(startDate.getDate()).padStart(2, '0');
-                        const endDateFormatted = `${year}-${month}-${day}`;
-                        // Set nilai end_billing_date
-                        endDateInput.value = endDateFormatted;
-                    }
-                }
-                
-                // Tampilkan modal
+                var pid = e.detail.province_id,
+                    cid = e.detail.city_id,
+                    did = e.detail.district_id,
+                    sid = e.detail.subdistrict_id;
+
+                // Populate city/district/subdistrict options DIRECTLY from event data
+                // This bypasses Livewire DOM morphing race conditions
+                populateSelect('city_id', e.detail.cities || [], '-- Pilih Kota/Kabupaten --');
+                populateSelect('district_id', e.detail.districts || [], '-- Pilih Kecamatan --');
+                populateSelect('subdistrict_id', e.detail.subdistricts || [], '-- Pilih Kelurahan --');
+
                 new bootstrap.Modal(document.getElementById('editPribadiModal')).show();
+
+                // Init Select2 after modal is visible (short delay for Bootstrap animation)
+                setTimeout(function() {
+                    initAddrSelect2({province_id:pid, city_id:cid, district_id:did, subdistrict_id:sid});
+                }, 200);
+            });
+
+            // After user cascade change (province→city→district→subdistrict) → reinit Select2
+            Livewire.hook('message.processed', function(message, component) {
+                var modal = document.getElementById('editPribadiModal');
+                if (!modal || !modal.classList.contains('show')) return;
+                setTimeout(function() {
+                    initAddrSelect2({
+                        province_id:    @this.province_id,
+                        city_id:        @this.city_id,
+                        district_id:    @this.district_id,
+                        subdistrict_id: @this.subdistrict_id,
+                    });
+                    var addr = @this.address;
+                    if (addr) document.getElementById('address_edit').value = addr;
+                }, 100);
+            });
+
+            // Handle cascade update dari server (province/city/district changed)
+            window.addEventListener('addressCascadeUpdate', function(e) {
+                var modal = document.getElementById('editPribadiModal');
+                if (!modal || !modal.classList.contains('show')) return;
+
+                var d = e.detail;
+
+                // Populate selects sesuai level yang berubah
+                if (d.level === 'province') {
+                    populateSelect('city_id',        d.cities        || [], '-- Pilih Kota/Kabupaten --');
+                    populateSelect('district_id',    d.districts     || [], '-- Pilih Kecamatan --');
+                    populateSelect('subdistrict_id', d.subdistricts  || [], '-- Pilih Kelurahan --');
+                    // Reinit Select2 + reset nilai downstream
+                    ['city_id','district_id','subdistrict_id'].forEach(function(id) {
+                        var $el = $('#editPribadiModal #' + id);
+                        if ($el.hasClass('select2-hidden-accessible')) $el.select2('destroy');
+                        $el.select2({ placeholder:'-- Pilih --', allowClear:true, width:'100%',
+                                    dropdownParent:$('#editPribadiModal') });
+                        $el.off('change.addr').on('change.addr', function() {
+                            if (_addrSuppress) return;
+                            @this.set(id, $(this).val() || null);
+                        });
+                        _addrSuppress = true;
+                        $el.val(null).trigger('change');
+                        _addrSuppress = false;
+                    });
+                }
+
+                if (d.level === 'city') {
+                    populateSelect('district_id',    d.districts     || [], '-- Pilih Kecamatan --');
+                    populateSelect('subdistrict_id', d.subdistricts  || [], '-- Pilih Kelurahan --');
+                    ['district_id','subdistrict_id'].forEach(function(id) {
+                        var $el = $('#editPribadiModal #' + id);
+                        if ($el.hasClass('select2-hidden-accessible')) $el.select2('destroy');
+                        $el.select2({ placeholder:'-- Pilih --', allowClear:true, width:'100%',
+                                    dropdownParent:$('#editPribadiModal') });
+                        $el.off('change.addr').on('change.addr', function() {
+                            if (_addrSuppress) return;
+                            @this.set(id, $(this).val() || null);
+                        });
+                        _addrSuppress = true;
+                        $el.val(null).trigger('change');
+                        _addrSuppress = false;
+                    });
+                }
+
+                if (d.level === 'district') {
+                    populateSelect('subdistrict_id', d.subdistricts || [], '-- Pilih Kelurahan --');
+                    var $el = $('#editPribadiModal #subdistrict_id');
+                    if ($el.hasClass('select2-hidden-accessible')) $el.select2('destroy');
+                    $el.select2({ placeholder:'-- Pilih --', allowClear:true, width:'100%',
+                                dropdownParent:$('#editPribadiModal') });
+                    $el.off('change.addr').on('change.addr', function() {
+                        if (_addrSuppress) return;
+                        @this.set('subdistrict_id', $(this).val() || null);
+                    });
+                    _addrSuppress = true;
+                    $el.val(null).trigger('change');
+                    _addrSuppress = false;
+                }
             });
 
             // Event untuk menyembunyikan modal edit data pribadi
@@ -1237,25 +1412,27 @@
                         // Kumpulkan data dari form
                         $("#editPribadiModalClick").click();
 
-                        const name = document.getElementById('name').value;
-                        const email = document.getElementById('email').value;
-                        const phone_number = document.getElementById('phone_number').value;
-                        const start_billing_date = document.getElementById('start_billing_date').value;
-                        const end_billing_date = document.getElementById('end_billing_date').value;
-                        const status_active = document.getElementById('status_active').checked;
-                        const grouping_id = document.getElementById('grouping_id').value;                        
-                        
-                        // Set nilai ke Livewire
-                        @this.set('name', name);
-                        @this.set('email', email);
-                        @this.set('phone_number', phone_number);
-                        @this.set('start_billing_date', start_billing_date);
-                        @this.set('end_billing_date', end_billing_date);
-                        @this.set('status_active', status_active);
-                        @this.set('grouping_id', grouping_id);
-                        
-                        // Panggil method save di Livewire
-                        @this.call('savePribadi');
+                        // Set semua nilai ke Livewire sebelum save
+                        @this.set('name',               document.getElementById('name').value);
+                        @this.set('email',              document.getElementById('email').value);
+                        @this.set('phone_number',       document.getElementById('phone_number').value);
+                        @this.set('start_billing_date', document.getElementById('start_billing_date').value);
+                        @this.set('end_billing_date',   document.getElementById('end_billing_date').value);
+                        @this.set('status_active',      document.getElementById('status_active').checked);
+                        @this.set('grouping_id',        document.getElementById('grouping_id').value);
+                        @this.set('address',            document.getElementById('address_edit').value);
+
+                        // Sync dropdown Select2 values ke Livewire sebelum save
+                        var provVal = $('#editPribadiModal #province_id').val() || null;
+                        var cityVal = $('#editPribadiModal #city_id').val() || null;
+                        var distVal = $('#editPribadiModal #district_id').val() || null;
+                        var subdVal = $('#editPribadiModal #subdistrict_id').val() || null;
+
+                        // Use initLocationFields to set all 4 at once tanpa cascade
+                        @this.call('initLocationFields', provVal, cityVal, distVal, subdVal).then(function() {
+                            // Panggil method save di Livewire
+                            @this.call('savePribadi');
+                        });
                     }
                 });
             });
@@ -1312,6 +1489,11 @@
                 @this.set('phone_number', '{{ $customer->userCustomer->phone_number ?? '' }}');
                 @this.set('start_billing_date', '{{ $customer->userCustomer->start_billing_date ?? '' }}');
                 @this.set('end_billing_date', '{{ $customer->userCustomer->end_billing_date ?? '' }}');
+                @this.set('province_id', '{{ $customer->province_id ?? '' }}' || null);
+                @this.set('city_id', '{{ $customer->city_id ?? '' }}' || null);
+                @this.set('district_id', '{{ $customer->district_id ?? '' }}' || null);
+                @this.set('subdistrict_id', '{{ $customer->subdistrict_id ?? '' }}' || null);
+                @this.set('address', '{{ $customer->address ?? '' }}');
                 @this.set('local_address', '{{ $customer->local_address ?? '' }}');
                 @this.set('username', '{{ $customer->username ?? '' }}');
                 @this.set('pass_hash', '{{ $customer->pass_hash ?? '' }}');
@@ -1319,6 +1501,7 @@
                 @this.set('ip_address', '{{ $customer->ip_address ?? '' }}');
                 @this.set('mac_address', '{{ $customer->mac_address ?? '' }}');
                 
+
                 // Reset error messages
                 @this.resetErrorBag();
                 @this.resetValidation();
@@ -1483,6 +1666,7 @@
     </script>
     @endpush
     @push('css')
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css">
     <style>
         .img-signature
         {

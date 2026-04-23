@@ -55,6 +55,14 @@ class ProvisionCustomerJob implements ShouldQueue
             } else {
                 // Default: PPPoE flow (tidak berubah)
                 $this->handlePppoe($radius, $cust, $pkg, $groupName, $router);
+                    // upsert secret + enable/disable by status
+                $ros->upsertPppSecret($client, $cust, $profile, $cust->local_address);
+            }
+            
+            // ✅ Trigger sync check after 45 seconds to update status to ACTIVE
+            // setelah disconnectIfActive, router butuh waktu reconnect
+            if (in_array($cust->status, [ParamSchema::REACTIVATED, ParamSchema::INSTALLED])) {
+                dispatch(new SyncInstalledCustomersJob([$cust->id]))->delay(now()->addSeconds(45));
             }
 
         } catch (\Throwable $th) {
@@ -282,6 +290,7 @@ class ProvisionCustomerJob implements ShouldQueue
 
             if ($cust->status == ParamSchema::SUSPENDED) {
                 // Suspend: ganti profile ke ISOLIR + disconnect agar reconnect dengan profile baru
+                $ros->ensureSuspendedPppProfile($client, "SUSPENDED");
                 $ros->upsertPppSecret($client, $cust, 'SUSPENDED');
                 $ros->disconnectIfActive($client, $cust->username);
                 Log::info('[ProvisionJob] SUSPENDED via Direct API ✅', ['customer' => $cust->username]);

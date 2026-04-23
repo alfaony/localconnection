@@ -121,6 +121,11 @@ class ItemRequestController extends Controller
                 ]
             );
         }
+        if($request->assigned_pic_id)
+        {
+            \App\Helpers\ChallengeProgressHelper::userCheckAndGiveReward($request->assigned_pic_id);
+        }
+
         return redirect()->route('item-request.show',$item->id)->with('success', 'Request submitted.');
     }
 

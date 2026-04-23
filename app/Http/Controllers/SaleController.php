@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\ProductStore;
+use App\Models\Inventory;
 use App\Models\Sale;
 use App\Models\SaleItem;
 use Illuminate\Http\Request;
@@ -35,7 +36,7 @@ class SaleController extends Controller
         
         $products = ProductStore::byCompany(Auth::user()->company_id)
             ->where('barcode', $barcode)
-            ->with(['category', 'brand'])
+            ->with(['category', 'brand', 'inventory'])
             ->get();
 
         if ($products->isEmpty()) {
@@ -136,6 +137,33 @@ class SaleController extends Controller
                 ]);
             }
 
+            // Validasi stok sebelum transaksi diproses
+            $stockErrors = [];
+            $inventories  = [];
+            foreach ($saleData['items'] as $item) {
+                $inventory = Inventory::where('product_store_id', $item['product_store_id'])->first();
+                $currentStock = $inventory ? $inventory->quantity : 0;
+
+                if ($currentStock < $item['quantity']) {
+                    $product = ProductStore::find($item['product_store_id']);
+                    $stockErrors[] = sprintf(
+                        '"%s" — stok tersedia: %d, diminta: %d',
+                        $product->name ?? $item['product_store_id'],
+                        $currentStock,
+                        $item['quantity']
+                    );
+                }
+                $inventories[$item['product_store_id']] = $inventory;
+            }
+
+            if (!empty($stockErrors)) {
+                DB::rollBack();
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Stok tidak mencukupi untuk produk berikut:<br>' . implode('<br>', $stockErrors),
+                ], 422);
+            }
+
             // Create sale items
             foreach ($saleData['items'] as $item) {
                 SaleItem::create([
@@ -145,9 +173,19 @@ class SaleController extends Controller
                     'unit_price' => $item['unit_price'],
                     'subtotal' => $item['quantity'] * $item['unit_price'],
                 ]);
+
+                // Deduct stok
+                $inventory = $inventories[$item['product_store_id']];
+                if ($inventory) {
+                    $inventory->deductStock(
+                        $item['quantity'],
+                        'Penjualan #' . ($sale->transaction_code ?? $sale->id),
+                        'manual'
+                    );
+                }
             }
             \App\Helpers\XpHelper::award(Auth::user(), $sale, 'Transaksi Kasir');
-            
+
             DB::commit();
 
             return response()->json([
@@ -163,6 +201,47 @@ class SaleController extends Controller
                 'message' => 'Terjadi kesalahan: ' . $e->getMessage()
             ], 500);
         }
+    }
+
+    public function checkStock(Request $request)
+    {
+        $request->validate([
+            'items'                      => 'required|array',
+            'items.*.product_store_id'   => 'required|exists:product_stores,id',
+            'items.*.quantity'           => 'required|integer|min:1',
+        ]);
+
+        $results  = [];
+        $allOk    = true;
+
+        foreach ($request->items as $item) {
+            $product      = ProductStore::find($item['product_store_id']);
+            $inventory    = Inventory::where('product_store_id', $item['product_store_id'])->first();
+            $hasInventory = $inventory !== null;
+            $stock        = $hasInventory ? $inventory->quantity : null;
+
+            // Hanya gagal jika inventory ADA tapi stok kurang
+            // Jika belum ada data inventory → tidak blokir di sini (frontend sudah handle)
+            $ok = !$hasInventory || $stock >= $item['quantity'];
+
+            if (!$ok) $allOk = false;
+
+            $results[] = [
+                'product_store_id' => $item['product_store_id'],
+                'name'             => $product->name ?? '-',
+                'requested'        => $item['quantity'],
+                'stock'            => $stock,
+                'unit'             => $inventory->unit ?? 'pcs',
+                'has_inventory'    => $hasInventory,
+                'ok'               => $ok,
+            ];
+        }
+
+        return response()->json([
+            'success' => true,
+            'all_ok'  => $allOk,
+            'results' => $results,
+        ]);
     }
 
     public function saveDraft(Request $request)

@@ -116,6 +116,7 @@ class InternetCustomer extends Model
         'code_cust',
         'optical_distribution_id',
         'grouping_id',
+        'group_id',
         'action_user_id',
         'hotspot_server_id',
         'ip_binding_type',
@@ -191,6 +192,11 @@ class InternetCustomer extends Model
     public function odp()
     {
         return $this->belongsTo(OpticalDistribution::class, 'optical_distribution_id')->withTrashed();
+    }
+
+    public function group()
+    {
+        return $this->belongsTo(InternetCustomerGroup::class, 'group_id')->withTrashed();
     }
 
      public function installation()

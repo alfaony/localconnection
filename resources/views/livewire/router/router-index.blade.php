@@ -13,10 +13,12 @@
         </div>
         <div class="card-body">
             @if (session()->has('message'))
-                <div class="alert alert-success">
-                    {{ session('message') }}
-                </div>
+                <div class="alert alert-success">{{ session('message') }}</div>
             @endif
+            @if (session()->has('error'))
+                <div class="alert alert-danger">{{ session('error') }}</div>
+            @endif
+
             <table class="table table-bordered">
                 <thead>
                     <tr>
@@ -27,6 +29,7 @@
                         <th>Username</th>
                         <th>SSL</th>
                         <th>Active</th>
+                        <th>Pelanggan</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
@@ -34,7 +37,7 @@
                     @foreach ($mikrotiks as $mikrotik)
                     <tr>
                         <td>{{ $mikrotik->pop ? $mikrotik->pop->name : '-' }}</td>
-                        <td>{{ $mikrotik->name }} </td>
+                        <td>{{ $mikrotik->name }}</td>
                         <td>{{ $mikrotik->host }}</td>
                         <td>{{ $mikrotik->port }}</td>
                         <td>{{ $mikrotik->username }}</td>
@@ -51,6 +54,13 @@
                                     <span class="badge bg-warning">{{ $mikrotik->active_status }}</span>
                             @endswitch
                         </td>
+                        <td class="text-center">
+                            @if($mikrotik->internet_customers_count > 0)
+                                <span class="badge badge-info">{{ $mikrotik->internet_customers_count }} pelanggan</span>
+                            @else
+                                <span class="text-muted">-</span>
+                            @endif
+                        </td>
                         <td>
                             @canAccess('mapping','routers')
                             <a href="{{ route('router.mapping', $mikrotik) }}" class="btn btn-secondary btn-sm mb-1" title="Mapping Paket Profile"><i class="fas fa-sitemap"></i></a>
@@ -65,7 +75,20 @@
                             @endcanAccess
 
                             @canAccess('destroy','routers')
-                            <button type="button" class="btn btn-danger btn-sm mb-1" onclick="confirm('Yakin ingin menghapus router ini?') && @this.delete({{ $mikrotik->id }})" title="Hapus Router"><i class="fas fa-trash"></i></button>
+                            @if($mikrotik->internet_customers_count > 0)
+                                <span title="Tidak dapat dihapus — masih memiliki {{ $mikrotik->internet_customers_count }} pelanggan"
+                                      data-toggle="tooltip">
+                                    <button type="button" class="btn btn-danger btn-sm mb-1" disabled>
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </span>
+                            @else
+                                <button type="button" class="btn btn-danger btn-sm mb-1"
+                                        onclick="confirm('Yakin ingin menghapus router ini?') && @this.delete({{ $mikrotik->id }})"
+                                        title="Hapus Router">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            @endif
                             @endcanAccess
                         </td>
                     </tr>
@@ -80,7 +103,7 @@
 </div>
 @push('js')
 <script>
-     window.addEventListener('toast', (event) => {
+    window.addEventListener('toast', (event) => {
         const Toast = Swal.mixin({
             toast: true,
             position: 'top-end',
@@ -88,11 +111,17 @@
             timer: 3000,
             timerProgressBar: true,
         });
-        
         Toast.fire({
             icon: event.detail.type,
             title: event.detail.message
         });
     });
+
+    // Aktifkan tooltip pada elemen yang ada data-toggle="tooltip"
+    document.addEventListener('livewire:load', () => initTooltips());
+    document.addEventListener('livewire:update', () => initTooltips());
+    function initTooltips() {
+        $('[data-toggle="tooltip"]').tooltip({ boundary: 'window' });
+    }
 </script>
 @endpush

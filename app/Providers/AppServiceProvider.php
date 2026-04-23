@@ -147,6 +147,7 @@ class AppServiceProvider extends ServiceProvider
             $managementUmumMenu = [
                 'punishment_users',
                 'employee_xps',
+                'events',
                 'meetings','moms','dashboard_weekly_reports','weekly_reports','flowcharts',
                 'ask_bos','decisions','partnership_agreements','national_holidays',
                 'letter_submissions','companies'
@@ -154,14 +155,15 @@ class AppServiceProvider extends ServiceProvider
 
             $managementKaryawanMenu = [
                 'kyes',
+                'challenges',
                 'employees','users','positions','managers','attendances',
-                'shifting_obs','schedule_obs','dayoffs','wfo_rules','barcodes','employee_checkings','office_attendances','trainings'
+                'shifting_obs','schedule_obs','dayoffs','wfo_rules','barcodes','employee_checkings','office_attendances','trainings','user_blacklists'
             ];
 
             $managementInternetMenu = 
             [
                 'data_centers','pops','optical_distributions','coverage_services',
-                'internet_packages','internet_customers','promos','routers'
+                'internet_packages','internet_customers','promos','routers','internet_customer_groups'
             ];
 
             $managementTokoOnlineMenu = [
@@ -202,7 +204,7 @@ class AppServiceProvider extends ServiceProvider
             'provinces','cities','districts','subdistricts','postal_codes','partner_parameter_types'
             ];
 
-            $managementSettingMenu = ['xp_configs','partner_types','setting_companies','roles','webhook_settings'];
+            $managementSettingMenu = ['badges','xp_configs','partner_types','setting_companies','roles','webhook_settings'];
 
             $managementSoftwareMenu = [
                 'software_dashboards','software','master_accounts','subscriptions',
@@ -847,6 +849,30 @@ class AppServiceProvider extends ServiceProvider
                     'text' => 'Gelar',
                     'route' => 'badge.index',
                     'icon' => 'fa fa-coins',
+                ],
+                'challenges' =>
+                [
+                    'text' => 'Challenge Pegawai',
+                    'route' => 'challenge.index',
+                    'icon' => 'fa fa-trophy',
+                ],
+                'events' =>
+                [
+                    'text' => 'Event',
+                    'route' => 'event.index',
+                    'icon' => 'fa fa-calendar',
+                ],
+                'internet_customer_groups' =>
+                [
+                    'text' => 'Internet Customer Group',
+                    'route' => 'internet-customer-group.index',
+                    'icon' => 'fa fa-users',
+                ],
+                'user_blacklists' =>
+                [
+                    'text' => 'User Blacklist',
+                    'route' => 'user-blacklist.index',
+                    'icon' => 'fa fa-users',
                 ],
             ];
 

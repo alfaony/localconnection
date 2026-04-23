@@ -81,6 +81,7 @@ use App\Http\Controllers\ShippingCalculationController;
 use App\Http\Controllers\AskBosController;
 use App\Http\Controllers\DecisionController;
 use App\Http\Controllers\PartnershipAgreementController;
+use App\Http\Controllers\UserBlacklistController;
 use App\Http\Controllers\SupplierCategoryController;
 use App\Http\Controllers\ProductSupplierController;
 use App\Http\Controllers\DayoffController;
@@ -148,6 +149,7 @@ use App\Http\Livewire\Pop\PopIndex;
 use App\Http\Livewire\Pop\PopForm;
 use App\Http\Livewire\Ods\OdsIndex;
 use App\Http\Livewire\Ods\OdsForm;
+use App\Http\Livewire\InternetCustomerGroup\InternetCustomerGroupIndex;
 use App\Http\Livewire\CoverageService\CoverageServiceIndex;
 use App\Http\Livewire\CoverageService\CoverageServiceForm;
 use App\Http\Livewire\InternetPackage\InternetPackageIndex;
@@ -173,6 +175,7 @@ use App\Http\Livewire\ProductStore\ProductStoreIndex;
 use App\Http\Livewire\ProductStore\ProductStoreShow;
 use App\Http\Livewire\ProductStore\ProductStoreForm;
 use App\Http\Livewire\ProductStore\ProductStorePrint;
+use App\Http\Livewire\ProductStore\InventoryIndex;
 use App\Http\Livewire\Sale\SaleIndex;
 use App\Http\Livewire\Sale\SaleShow;
 use App\Http\Livewire\BrandProductStoreIndex;
@@ -322,6 +325,8 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
   Route::get('home/xp-leaderboard', [App\Http\Controllers\HomeController::class, 'xpLeaderboard'])->name('home.xpLeaderboard');
   Route::get('home/overdueRanking', [App\Http\Controllers\HomeController::class, 'overdueRanking'])->name('home.overdueRanking');
   Route::get('home/user-badges', [App\Http\Controllers\HomeController::class, 'userBadges'])->name('home.userBadges');
+  Route::get('home/active-challenges', [App\Http\Controllers\HomeController::class, 'activeChallenges'])->name('home.activeChallenges');
+  Route::get('home/active-events', [App\Http\Controllers\HomeController::class, 'activeEvents'])->name('home.activeEvents');
 
   Route::resource('office-media', OfficeMediaController::class)->only(['index', 'store','destroy']);
   // Xero Setting
@@ -333,6 +338,10 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
   Route::resource('project', ProjectController::class);
   Route::resource('employee', EmployeeController::class);
   
+  Route::get('user-blacklist/search', [UserBlacklistController::class, 'search'])->name('user-blacklist.search');
+  Route::post('user-blacklist/import-inactive', [UserBlacklistController::class, 'importInactive'])->name('user-blacklist.importInactive');
+  Route::resource('user-blacklist', UserBlacklistController::class)->only(['index', 'store', 'destroy']);
+
   Route::get('user/profileEdit/{slug}', [UserController::class,'profileEdit'])->name('user.profileEdit');
   Route::put('user/profileUpdate/{slug}', [UserController::class,'profileUpdate'])->name('user.profileUpdate');
   Route::post('user/updatefcm',[UserController::class,'updatefcm'])->name('user.updatefcm');
@@ -622,6 +631,8 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
   
   Route::get('vehicle/infoPic', [VehicleController::class, 'infoPic'])->name('reminder.vehicle.pic');
   Route::get('vehicle/infoManager', [VehicleController::class, 'infoManager'])->name('reminder.vehicle.manager');
+  Route::post('vehicle/{vehicle}/photos', [VehicleController::class, 'storePhoto'])->name('vehicle.photo.store');
+  Route::delete('vehicle/{vehicle}/photos/{photo}', [VehicleController::class, 'destroyPhoto'])->name('vehicle.photo.destroy');
   Route::resource('vehicle', VehicleController::class);
   
   Route::get('subscribe-letter/infoPic', [SubscribeLetterController::class, 'infoPic'])->name('reminder.letter.pic');
@@ -688,6 +699,8 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
   Route::get('internet-package/create', InternetPackageForm::class)->name('internet-package.create');
   Route::get('internet-package/edit/{id}', InternetPackageForm::class)->name('internet-package.edit');
 
+  Route::get('internet-customer-group', InternetCustomerGroupIndex::class)->name('internet-customer-group.index');
+
   Route::get('internet-customer', InternetCustomerIndex::class)->name('internet-customer.index');
   Route::put('internet-customer/update/{id}', InternetCustomerIndex::class)->name('internet-customer.update');
   Route::get('internet-customer/edit/{id}', InternetCustomerForm::class)->name('internet-customer.edit');
@@ -724,6 +737,7 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
   Route::get('category-product-store', CategoryProductStoreIndex::class)->name('category-product-store.index');
 
   Route::get('product-store/print', ProductStorePrint::class)->name('product-store.print');
+  Route::get('product-store/inventory', InventoryIndex::class)->name('product-store.inventory');
   Route::get('product-store/create', ProductStoreForm::class)->name('product-store.create');
   Route::get('product-store/edit/{id}', ProductStoreForm::class)->name('product-store.edit');
   Route::get('product-store/{id}', ProductStoreShow::class)->name('product-store.show');
@@ -731,11 +745,12 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
   Route::get('product-store/print', ProductStorePrint::class)->name('product-store.print');
   
   Route::get('punishment-user', PunishmentUserTable::class)->name('punishment-user.index');
-
+  
   Route::get('sales', \App\Http\Livewire\Sale\SaleIndex::class)->name('sales.index');
   Route::get('sales/{id}', \App\Http\Livewire\Sale\SaleShow::class)->name('sales.show');
   
   Route::get('store-selling', [SaleController::class, 'index'])->name('store-selling.index');
+  Route::post('store-selling/checkStock', [SaleController::class, 'checkStock'])->name('store-selling.checkStock');
   Route::post('store-selling/sendReceiptByEmail', [SaleController::class, 'sendReceiptByEmail'])->name('store-selling.sendReceiptByEmail');
   Route::post('store-selling/searchProduct', [SaleController::class, 'searchProduct'])->name('store-selling.searchProduct');
   Route::post('store-selling/processPayment', [SaleController::class, 'processPayment'])->name('store-selling.processPayment');
@@ -746,7 +761,7 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
   Route::get('store-selling/drafts', [SaleController::class, 'getDrafts'])->name('store-selling.drafts');
   
   Route::get('wfo-rule', App\Http\Livewire\WfoRuleIndex::class)->name('wfo-rule.index');
-
+  
   Route::resource('partner-parameter-type', PartnerParameterTypeController::class);
   Route::patch('partner-parameter-type/toggleActive/{parameterType}', [PartnerParameterTypeController::class, 'toggleActive'])->name('partner-parameter-type.toggle-active');
   
@@ -788,6 +803,12 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
 
   Route::post('role/deselectAll/{role}', [RoleController::class, 'deselectAll'])
       ->name('role.deselect-all');
+
+  Route::post('role/{role}/duplicate', [RoleController::class, 'duplicate'])
+      ->name('role.duplicate');
+
+  Route::post('role/clearAllCache', [RoleController::class, 'clearAllCache'])
+      ->name('role.clear-all-cache');
 
 
   // Direct Point Routes
@@ -832,9 +853,12 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
     Route::get('subscription/create-marketplace', [AdminSubscriptionController::class, 'createMarketplace'])->name('subscription.create-marketplace');
     Route::post('subscription/store-marketplace', [AdminSubscriptionController::class, 'storeMarketplace'])->name('subscription.store-marketplace');
     Route::post('subscription/check-user-email', [AdminSubscriptionController::class, 'checkUserEmail'])->name('subscription.check-user-email');
+    Route::post('subscription/check-username', [AdminSubscriptionController::class, 'checkUsername'])->name('subscription.check-username');
     Route::get('subscription/{subscription}', [AdminSubscriptionController::class, 'show'])->name('subscription.show');
     Route::get('subscription/{subscription}/edit-expiry', [AdminSubscriptionController::class, 'editExpiry'])->name('subscription.edit-expiry');
     Route::put('subscription/{subscription}/update-expiry', [AdminSubscriptionController::class, 'updateExpiry'])->name('subscription.update-expiry');
+    Route::get('subscription/{subscription}/edit-order-number', [AdminSubscriptionController::class, 'editOrderNumber'])->name('subscription.edit-order-number');
+    Route::put('subscription/{subscription}/update-order-number', [AdminSubscriptionController::class, 'updateOrderNumber'])->name('subscription.update-order-number');
     Route::get('subscription/{subscription}/edit-master-account', [AdminSubscriptionController::class, 'editMasterAccount'])->name('subscription.edit-master-account');
     Route::put('subscription/{subscription}/update-master-account', [AdminSubscriptionController::class, 'updateMasterAccount'])->name('subscription.update-master-account');
     Route::post('subscription/{subscription}/suspend', [AdminSubscriptionController::class, 'suspend'])->name('subscription.suspend');
@@ -925,6 +949,24 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
       Route::post('badge/assign', [App\Http\Controllers\BadgeController::class, 'assignStore'])->name('badge.assign.store');
       Route::delete('badge/revoke/{userBadge}', [App\Http\Controllers\BadgeController::class, 'revokeUserBadge'])->name('badge.revoke');
       Route::resource('badge', App\Http\Controllers\BadgeController::class)->except(['show']);
+
+      // ========================================================================
+      // CHALLENGE SYSTEM
+      // ========================================================================
+      Route::delete('challenge/{challenge}/user/{userId}', [App\Http\Controllers\ChallengeController::class, 'removeUser'])->name('challenge.removeUser');
+      Route::resource('challenge', App\Http\Controllers\ChallengeController::class)->except(['show']);
+      Route::post('challenge/{challenge}/invite', [App\Http\Controllers\ChallengeController::class, 'invite'])->name('challenge.invite');
+      Route::get('challenge/{challenge}', [App\Http\Controllers\ChallengeController::class, 'show'])->name('challenge.show');
+
+      // ========================================================================
+      // EVENT SYSTEM
+      // ========================================================================
+      Route::delete('event/{event}/user/{userId}', [App\Http\Controllers\EventController::class, 'removeUser'])->name('event.removeUser');
+      Route::post('event/{event}/invite', [App\Http\Controllers\EventController::class, 'invite'])->name('event.invite');
+      Route::post('event/{event}/mark-viewed', [App\Http\Controllers\EventController::class, 'markViewed'])->name('event.markViewed');
+      Route::resource('event', App\Http\Controllers\EventController::class)->except(['show']);
+      Route::get('event/{event}', [App\Http\Controllers\EventController::class, 'show'])->name('event.show');
+      Route::get('event/{event}/detail', [App\Http\Controllers\EventController::class, 'detail'])->name('event.detail');
     });
   // Hotspot Server
   Route::get('hotspot-server', HotspotServerIndex::class)->name('hotspot-server.index');

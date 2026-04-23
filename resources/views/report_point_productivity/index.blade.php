@@ -78,6 +78,7 @@
                                 <th>Point Tugas</th>
                                 <th>Point Punishment</th>
                                 <th>Direct Point</th>
+                                <th>Point Challenge</th>
                                 <th>Total Poin</th>
                                 @canAccess('details','report_productivities')
                                 <th>Action</th>
@@ -94,6 +95,7 @@
                                     <td>{{ $report['daily_task_points'] }}</td>
                                     <td>{{ $report['punishment_points'] }}</td>
                                     <td>{{ $report['direct_points'] ?? 0 }}</td>
+                                    <td>{{ $report['challenge_points'] ?? 0 }}</td>
                                     <td>{{ $report['total_points'] }}</td>
                                     @canAccess('details','report_productivities')
                                     <td>
@@ -254,12 +256,18 @@
             html += buildCategorySection('directpoint', 'Direct Point', data.direct_points.items, data.direct_points.total, 'secondary');
         }
         
+        // Challenge Points
+        if (data.challenge_points && data.challenge_points.items.length > 0) {
+            html += buildCategorySection('challengepoint', 'Point Challenge', data.challenge_points.items, data.challenge_points.total, 'dark');
+        }
+        
         html += '</div>';
         
         if (data.trainings.items.length === 0 && data.ip_rights.items.length === 0 && 
             data.sales_achievements.items.length === 0 && data.daily_tasks.items.length === 0 && 
             data.punishment_tasks.items.length === 0 && 
-            (!data.direct_points || data.direct_points.items.length === 0)) {
+            (!data.direct_points || data.direct_points.items.length === 0) &&
+            (!data.challenge_points || data.challenge_points.items.length === 0)) {
             html = '<div class="alert alert-info">Tidak ada detail poin untuk pengguna ini pada periode yang dipilih.</div>';
         }
         

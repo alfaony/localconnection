@@ -730,13 +730,21 @@ class InternetCustomerIndex extends Component
             fputcsv($file, [
                 'email', 'phone', 'code', 'username', 'password',
                 'grouping', 'serial_number', 'router',
-                'pppoe_pool', 'start_billing_date', 'end_billing_date',
+                'pppoe_pool', 'start_billing_date', 'end_billing_date', 'action',
             ]);
 
+            // Contoh instalasi baru (tanpa action)
             fputcsv($file, [
                 'pelanggan@email.com', '081234567890', 'KL-0001', 'pppoe_user1', 'P@ssw0rd',
                 'GRPAB', 'SN-123456789', 'Router-Utama',
-                'Pool-Main', '2025-01-01', '2025-02-01',
+                'Pool-Main', '2025-01-01', '2025-02-01', '',
+            ]);
+
+            // Contoh SYNC: reaktivasi / perpanjang billing pelanggan existing
+            fputcsv($file, [
+                '', '', 'KL-0002', '', '',
+                '', '', '',
+                '', '2025-02-01', '2025-03-01', 'SYNC',
             ]);
 
             fclose($file);
