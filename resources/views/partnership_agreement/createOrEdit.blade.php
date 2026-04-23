@@ -1547,7 +1547,7 @@
                                         <input type="text" name="fields[bandwidth_mbps]" class="form-control" placeholder="cth: 100" value="${partnershipAgreement['bandwidth_mbps'] || ''}" required>
                                     </div>
                                 </div>
-                                <div class="col-md-6">
+                                <div class="col-md-12">
                                     <div class="form-group">
                                         <label>Lokasi Instalasi <span class="text-danger">*</span></label>
                                         <input type="text" name="fields[lokasi_instalasi]" class="form-control" value="${partnershipAgreement['lokasi_instalasi'] || ''}" required>
@@ -1557,6 +1557,12 @@
                                     <div class="form-group">
                                         <label>Kebutuhan Pihak Kedua <span class="text-danger">*</span></label>
                                         <input type="text" name="fields[kebutuhan_pihak_kedua]" class="form-control" placeholder="cth: operasional bisnis" value="${partnershipAgreement['kebutuhan_pihak_kedua'] || ''}" required>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label>Kebutuhan Pihak Kedua (English) <span class="text-danger">*</span></label>
+                                        <input type="text" name="fields[kebutuhan_pihak_kedua_en]" class="form-control" placeholder="cth: business operations" value="${partnershipAgreement['kebutuhan_pihak_kedua_en'] || ''}" required>
                                     </div>
                                 </div>
                             </div>
@@ -1603,6 +1609,12 @@
                                     <div class="form-group">
                                         <label>Komponen Biaya Layanan <span class="text-danger">*</span></label>
                                         <input type="text" name="fields[biaya_layanan_komponen]" class="form-control" placeholder="cth: Bandwidth bulanan dan biaya registrasi" value="${partnershipAgreement['biaya_layanan_komponen'] || ''}" required>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label>Komponen Biaya Layanan (English) <span class="text-danger">*</span></label>
+                                        <input type="text" name="fields[biaya_layanan_komponen_en]" class="form-control" placeholder="cth: Bandwidth bulanan dan biaya registrasi" value="${partnershipAgreement['biaya_layanan_komponen_en'] || ''}" required>
                                     </div>
                                 </div>
                                 <div class="col-md-3">

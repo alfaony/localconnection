@@ -49,7 +49,7 @@
                         {{ $agreement->getFields("nama_perwakilan_pihak_kedua") }} sebagai
                         {{ $agreement->getFields("jabatan_perwakilan_pihak_kedua") }}, secara sah bertindak untuk dan
                         atas nama {{ $agreement->getFields("entitas_di_wakili") }}, (untuk selanjutnya disebut sebagai
-                        "Pihak kedua").
+                        <strong>"Pihak kedua"</strong>).
                     </p>
                 </li>
             </ol>
@@ -91,7 +91,7 @@
         <div class="col-6 ps-3 text-justify">
             <p>
                 The First Party and the Second Party will hereinafter be referred to collectively in this
-                Agreement as the "Parties", while each is referred to as a <strong>"Party"</strong>.
+                Agreement as the <strong>"Parties"</strong>, while each is referred to as a <strong>"Party"</strong>.
             </p>
         </div>
     </div>
@@ -187,7 +187,7 @@
                     The Parties agree that the First Party shall provide {{ $agreement->getFields("nama_layanan") }}.
                     The service specifications are as follows: Bandwidth of {{ $agreement->getFields("bandwidth_mbps") }} Mbps,
                     Installation Location: {{ $agreement->getFields("lokasi_instalasi") }}, whereby the services are to
-                    be utilized by the Second Party in accordance with its {{ $agreement->getFields("kebutuhan_pihak_kedua") }}.
+                    be utilized by the Second Party in accordance with its {{ $agreement->getFields("kebutuhan_pihak_kedua_en") }}.
                 </li>
             </ol>
         </div>
@@ -219,7 +219,7 @@
         </div>
         <div class="col-6 ps-3 text-justify">
             <p class="mb-0">
-                This agreement is valid for {{ $agreement->getFields("masa_berlaku_en") }} years effective from
+                This agreement is valid for {{ $agreement->getFields("masa_berlaku_en") }} effective from
                 {{ $agreement->getFields("tanggal_mulai_perjanjian") ? \Carbon\Carbon::parse($agreement->getFields("tanggal_mulai_perjanjian"))->format('d-m-Y') : '-' }}
                 until
                 {{ $agreement->getFields("tanggal_berakhir_perjanjian") ? \Carbon\Carbon::parse($agreement->getFields("tanggal_berakhir_perjanjian"))->format('d-m-Y') : '-' }}
@@ -354,7 +354,7 @@
         <div class="col-6 ps-3 text-justify">
             <ol>
                 <li style="margin-bottom: 15px;">
-                    The service fees shall consist of {{ $agreement->getFields("biaya_layanan_komponen") }}.
+                    The service fees shall consist of {{ $agreement->getFields("biaya_layanan_komponen_en") }}.
                 </li>
                 <li style="margin-bottom: 15px;">
                     The Parties agree to a monthly payment scheme, whereby payment shall be made no later than
