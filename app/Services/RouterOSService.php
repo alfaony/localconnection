@@ -126,6 +126,16 @@ public function upsertPppSecret(Client $c, InternetCustomer $cust, string $profi
                 $q->equal('local-address', $localAddress);
             }
             $c->query($q)->read();
+
+            $meta = (array) $cust->meta;
+            $meta['ros_secret'] = [
+                'id'       => $row['.id'] ?? null,
+                'disabled' => "no",
+                'profile'  => $profile,
+                'comment'  => $row['comment'] ?? null,
+            ];
+            $cust->meta = $meta;
+            $cust->save();
             
         }
     } catch (\Throwable $th) {
