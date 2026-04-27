@@ -78,10 +78,10 @@
 <body>
     @if(!empty($company['header']) && !empty($company['footer']))
     <header>
-        <img src="{{ public_path('storage/' . $company['header']) }}" alt="Company Logo" class="header-image" style="margin-bottom: 150px">
+        <img src="{{ s3_to_base64($company['header']) }}" alt="Company Logo" class="header-image" style="margin-bottom: 150px">
     </header>
     <footer>
-        <img src="{{ public_path('storage/' . $company['footer']) }}" alt="Company Footer" class="footer-image">
+        <img src="{{ s3_to_base64($company['footer']) }}" alt="Company Footer" class="footer-image">
     </footer>
     @endif
     
