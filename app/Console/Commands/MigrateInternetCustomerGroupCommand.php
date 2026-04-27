@@ -32,7 +32,7 @@ class MigrateInternetCustomerGroupCommand extends Command
 
         // Ambil customer yang harus dimigrasikan
         $query = InternetCustomer::query()
-            ->whereIn('status', [ParamSchema::ACTIVE, ParamSchema::WAITING_PAYMENT_SUBSCRIPTION])
+            ->whereIn('status', [ParamSchema::ACTIVE, ParamSchema::WAITING_PAYMENT_SUBSCRIPTION, ParamSchema::INSTALLED, ParamSchema::RE])
             ->whereNull('group_id')                     // belum dimigrasikan
             ->with(['installation:id,internet_customer_id,device_serial_number']);
 
@@ -52,7 +52,7 @@ class MigrateInternetCustomerGroupCommand extends Command
             return self::SUCCESS;
         }
 
-        $stats = ['matched' => 0, 'not_found' => 0];
+        $stats = ['matched' => 0, 'odp_added' => 0, 'not_found' => 0];
 
         $bar = $this->output->createProgressBar($customers->count());
         $bar->start();
@@ -67,8 +67,32 @@ class MigrateInternetCustomerGroupCommand extends Command
                     "  [MATCH] #{$customer->code} → Group \"{$group->name}\" (id: {$group->id})"
                     . " | via: {$this->lastMatchReason}"
                 );
+
                 if (!$isDry) {
                     $customer->update(['group_id' => $group->id]);
+                }
+
+                // Check if the customer's ODP is already registered in the group
+                $odpId = $customer->optical_distribution_id;
+                if ($odpId) {
+                    $group->loadMissing('odps:id');
+                    $alreadyLinked = $group->odps->contains('id', $odpId);
+
+                    if (!$alreadyLinked) {
+                        $stats['odp_added']++;
+                        $this->line(
+                            "    [ODP] optical_distribution_id={$odpId} belum terdaftar di group → auto-attach"
+                        );
+                        if (!$isDry) {
+                            $group->odps()->attach($odpId);
+                            // Refresh collection so subsequent customers in the same group see it
+                            $group->unsetRelation('odps');
+                        }
+                    } else {
+                        $this->line("    [ODP] optical_distribution_id={$odpId} sudah terdaftar di group.");
+                    }
+                } else {
+                    $this->line("    [ODP] pelanggan tidak memiliki ODP.");
                 }
             } else {
                 $stats['not_found']++;
@@ -90,7 +114,8 @@ class MigrateInternetCustomerGroupCommand extends Command
         $this->table(
             ['Status', 'Jumlah'],
             [
-                ['Matched (group_id diisi)', $stats['matched']],
+                ['Matched (group_id diisi)',          $stats['matched']],
+                ['ODP baru di-attach ke group',       $stats['odp_added']],
                 ['Tidak ditemukan (group_id = null)', $stats['not_found']],
             ]
         );

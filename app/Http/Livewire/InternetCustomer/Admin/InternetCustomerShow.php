@@ -13,8 +13,11 @@ use App\Jobs\GenerateIsolirJob;
 
 use Livewire\Component;
 use Livewire\WithPagination;
+use Livewire\WithFileUploads;
+use Illuminate\Support\Facades\Storage;
 
 use App\Models\InternetCustomer;
+use App\Models\InternetCustomerGroup;
 use App\Models\InternetCustomerPurchase;
 use App\Models\Router;
 use App\Models\AddressPool;
@@ -34,7 +37,7 @@ use App\Helpers\InboxHelper;
 
 class InternetCustomerShow extends Component
 {
-    use WithPagination;
+    use WithPagination, WithFileUploads;
 
     public $customer;
     public $agreementFields;
@@ -48,6 +51,21 @@ class InternetCustomerShow extends Component
     // Properties untuk edit data pribadi
     public $name, $email, $phone_number, $start_billing_date, $end_billing_date, $grouping_id;
     public $province_id, $city_id, $district_id, $subdistrict_id, $address;
+    public $ktp_number;
+    public ?string $edit_group_id = null;
+    public array $availableGroupsForEdit = [];
+    public $npwp_number;
+
+    // Inline KTP upload (table)
+    public $ktp_photo_upload;
+    public ?string $ktp_photo_pending_path = null;
+    public bool $showKtpUpload = false;
+
+    // Inline NPWP upload (table)
+    public $npwp_photo_upload;
+    public ?string $npwp_photo_pending_path = null;
+    public ?string $npwp_photo_url = null;
+    public bool $showNpwpUpload = false;
     
     // Properties untuk edit data instalasi
     public $local_address, $username, $pass_hash, $device_serial_number;
@@ -96,7 +114,8 @@ class InternetCustomerShow extends Component
             $this->agreementFields = json_decode($this->customer->partnershipAgreement->fields, true);
         }
 
-        $this->ktpPhotoUrl = $this->customer->ktp_photo;
+        $this->ktpPhotoUrl    = $this->customer->ktp_photo;
+        $this->npwp_photo_url = $this->customer->npwp_photo;
 
         if ($this->customer->installation && $this->customer->installation->medias->count() > 0) {
             $this->installationPhotos = $this->customer->installation->medias
@@ -369,18 +388,177 @@ class InternetCustomerShow extends Component
     }
 
     // ========================================
+    // NPWP VIEW / DOWNLOAD METHODS
+    // ========================================
+
+    public function viewNpwpPhoto()
+    {
+        if (!$this->customer->npwp_photo) {
+            $this->dispatchBrowserEvent('show-notification', [
+                'type' => 'error',
+                'message' => 'Foto NPWP tidak tersedia'
+            ]);
+            return;
+        }
+
+        $url = s3_asset(true, 10, $this->customer->npwp_photo);
+
+        $this->dispatchBrowserEvent('showImageModal', [
+            'title'    => 'Foto NPWP — ' . $this->customer->name,
+            'imageUrl' => $url,
+        ]);
+    }
+
+    public function downloadNpwpPhoto()
+    {
+        if (!$this->customer->npwp_photo) {
+            $this->dispatchBrowserEvent('show-notification', [
+                'type' => 'error',
+                'message' => 'Foto NPWP tidak tersedia'
+            ]);
+            return;
+        }
+
+        try {
+            $url      = s3_asset(true, 10, $this->customer->npwp_photo);
+            $filename = 'NPWP_' . $this->customer->code . '_' . str_replace(' ', '_', $this->customer->name) . '.jpg';
+
+            $this->dispatchBrowserEvent('downloadFile', [
+                'url'      => $url,
+                'filename' => $filename,
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Failed to download NPWP', [
+                'error'       => $e->getMessage(),
+                'customer_id' => $this->customer->id,
+            ]);
+
+            $this->dispatchBrowserEvent('show-notification', [
+                'type'    => 'error',
+                'message' => 'Gagal mendownload foto NPWP',
+            ]);
+        }
+    }
+
+    // ========================================
+    // INLINE KTP UPLOAD (table)
+    // ========================================
+
+    public function toggleKtpUpload()
+    {
+        $this->showKtpUpload = !$this->showKtpUpload;
+        if (!$this->showKtpUpload) {
+            $this->ktp_photo_upload       = null;
+            $this->ktp_photo_pending_path = null;
+            $this->resetErrorBag('ktp_photo_upload');
+        }
+    }
+
+    public function updatedKtpPhotoUpload()
+    {
+        $this->validateOnly('ktp_photo_upload', [
+            'ktp_photo_upload' => ['required', 'file', 'mimes:jpg,jpeg,png,pdf', 'max:2048'],
+        ]);
+
+        if (!$this->ktp_photo_upload) return;
+
+        try {
+            $this->ktp_photo_pending_path = $this->ktp_photo_upload->store('ktps', 's3');
+            $this->ktp_photo_upload       = null;
+        } catch (\Exception $e) {
+            Log::error('KTP photo upload failed', ['error' => $e->getMessage(), 'customer_id' => $this->customer->id]);
+            $this->ktp_photo_pending_path = null;
+            $this->addError('ktp_photo_upload', 'Gagal mengunggah foto KTP, silakan coba lagi.');
+        }
+    }
+
+    public function saveKtpPhoto()
+    {
+        if (!$this->ktp_photo_pending_path) {
+            $this->addError('ktp_photo_upload', 'Pilih file terlebih dahulu.');
+            return;
+        }
+
+        $this->customer->update(['ktp_photo' => $this->ktp_photo_pending_path]);
+        $this->ktpPhotoUrl            = $this->ktp_photo_pending_path;
+        $this->ktp_photo_pending_path = null;
+        $this->showKtpUpload          = false;
+
+        $this->dispatchBrowserEvent('show-notification', ['type' => 'success', 'message' => 'Foto KTP berhasil diperbarui.']);
+    }
+
+    // ========================================
+    // INLINE NPWP UPLOAD (table)
+    // ========================================
+
+    public function toggleNpwpUpload()
+    {
+        $this->showNpwpUpload = !$this->showNpwpUpload;
+        if (!$this->showNpwpUpload) {
+            $this->npwp_photo_upload       = null;
+            $this->npwp_photo_pending_path = null;
+            $this->resetErrorBag('npwp_photo_upload');
+        }
+    }
+
+    public function saveNpwpPhoto()
+    {
+        if (!$this->npwp_photo_pending_path) {
+            $this->addError('npwp_photo_upload', 'Pilih file terlebih dahulu.');
+            return;
+        }
+
+        $this->customer->update(['npwp_photo' => $this->npwp_photo_pending_path]);
+        $this->npwp_photo_url          = $this->npwp_photo_pending_path;
+        $this->npwp_photo_pending_path = null;
+        $this->showNpwpUpload          = false;
+
+        $this->dispatchBrowserEvent('show-notification', ['type' => 'success', 'message' => 'Foto NPWP berhasil diperbarui.']);
+    }
+
+    // ========================================
+    // NPWP FILE UPLOAD — eager upload on select
+    // ========================================
+
+    public function updatedNpwpPhotoUpload()
+    {
+        $this->validateOnly('npwp_photo_upload', [
+            'npwp_photo_upload' => ['nullable', 'file', 'mimes:jpg,jpeg,png,pdf', 'max:2048'],
+        ]);
+
+        if (!$this->npwp_photo_upload) {
+            return;
+        }
+
+        try {
+            $this->npwp_photo_pending_path = $this->npwp_photo_upload->store('npwps', 's3');
+            $this->npwp_photo_upload       = null; // release tmp reference
+        } catch (\Exception $e) {
+            Log::error('NPWP photo upload failed in edit modal', [
+                'error'       => $e->getMessage(),
+                'customer_id' => $this->customer->id,
+            ]);
+            $this->npwp_photo_pending_path = null;
+            $this->addError('npwp_photo_upload', 'Gagal mengunggah foto NPWP, silakan coba lagi.');
+        }
+    }
+
+    // ========================================
     // EXISTING METHODS (unchanged)
     // ========================================
 
     public function openEditPribadiModal()
     {
-        $this->name = $this->customer->name;
-        $this->email = $this->customer->userCustomer->email ?? '';
-        $this->phone_number = $this->customer->userCustomer->phone_number ?? '';
+        $this->name           = $this->customer->name;
+        $this->email          = $this->customer->userCustomer->email ?? '';
+        $this->phone_number   = $this->customer->userCustomer->phone_number ?? '';
+        $this->ktp_number     = $this->customer->ktp_number;
+        $this->npwp_number    = $this->customer->npwp_number;
         $this->start_billing_date = $this->customer->status != ParamSchema::INACTIVE ? $this->customer->userCustomer->start_billing_date : Carbon::now()->format('Y-m-d');
-        $this->end_billing_date = $this->customer->status != ParamSchema::INACTIVE ? $this->customer->userCustomer->end_billing_date : Carbon::now()->addDays(5)->format('Y-m-d');
-        $this->grouping_id = $this->customer->grouping_id;
-        $this->province_id = $this->customer->province_id;
+        $this->end_billing_date   = $this->customer->status != ParamSchema::INACTIVE ? $this->customer->userCustomer->end_billing_date : Carbon::now()->addDays(5)->format('Y-m-d');
+        $this->grouping_id    = $this->customer->grouping_id;
+        $this->edit_group_id  = $this->customer->group_id;
+        $this->province_id    = $this->customer->province_id;
         $this->city_id = $this->customer->city_id;
         $this->district_id = $this->customer->district_id;
         $this->subdistrict_id = $this->customer->subdistrict_id;
@@ -397,6 +575,21 @@ class InternetCustomerShow extends Component
             ? Subdistrict::where('district_id', $this->district_id)->whereHas('subdistrictCoverages')->orderBy('name')->get(['id','name'])
             : collect();
 
+        // Load groups only when customer has no group yet
+        $groups = [];
+        if (!$this->customer->group_id) {
+            $groups = InternetCustomerGroup::byCompany(Auth::user()->company_id)
+                ->orderBy('name')
+                ->get(['id', 'name', 'description'])
+                ->map(fn($g) => [
+                    'id'          => $g->id,
+                    'name'        => $g->name,
+                    'description' => $g->description,
+                ])
+                ->toArray();
+            $this->availableGroupsForEdit = $groups;
+        }
+
         $this->dispatchBrowserEvent('showEditPribadiModal', [
             'status_active'      => $this->status_active,
             'name'               => $this->customer->name,
@@ -410,10 +603,14 @@ class InternetCustomerShow extends Component
             'district_id'        => $this->district_id,
             'subdistrict_id'     => $this->subdistrict_id,
             'address'            => $this->address,
-            // Pass option data so JS can populate selects directly
             'cities'             => $cities->map(fn($c) => ['id' => $c->id, 'name' => $c->name])->toArray(),
             'districts'          => $districts->map(fn($d) => ['id' => $d->id, 'name' => $d->name])->toArray(),
             'subdistricts'       => $subdistricts->map(fn($s) => ['id' => $s->id, 'name' => $s->name])->toArray(),
+            'has_group'          => (bool) $this->customer->group_id,
+            'groups_for_edit'    => $groups,
+            'edit_group_id'      => $this->edit_group_id,
+            'ktp_number'         => $this->ktp_number,
+            'npwp_number'        => $this->npwp_number,
         ]);
     }
 
@@ -489,24 +686,57 @@ class InternetCustomerShow extends Component
 
     public function savePribadi()
     {
-        $this->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'nullable|email',
-            'phone_number' => 'nullable|string',
+        $rules = [
+            'name'               => 'required|string|max:255',
+            'email'              => 'nullable|email',
+            'phone_number'       => 'nullable|string',
             'start_billing_date' => 'nullable|date',
-            'end_billing_date' => 'nullable|date|after:start_billing_date',
-        ]);
+            'end_billing_date'   => 'nullable|date|after:start_billing_date',
+        ];
+
+        // Validate grouping_id if customer has a group assigned
+        if ($this->customer->group_id) {
+            $group  = $this->customer->group;
+            $prefix = $group ? $group->grouping_prefix : '';
+            $selfId = $this->customer->id;
+
+            $rules['grouping_id'] = [
+                'nullable',
+                'string',
+                'max:50',
+                function ($attribute, $value, $fail) use ($prefix) {
+                    if ($value && !str_starts_with($value, $prefix)) {
+                        $fail("Grouping ID harus diawali dengan kode group: {$prefix}");
+                    }
+                },
+                "unique:internet_customers,grouping_id,{$selfId},id",
+            ];
+        }
+
+        $rules['ktp_number'] = ['nullable', 'string', 'max:20'];
+        if ($this->customer->customer_type === 'bisnis') {
+            $rules['npwp_number'] = ['nullable', 'string', 'max:30'];
+        }
+
+        $this->validate($rules);
 
         DB::beginTransaction();
         try {
-            $this->customer->update([
-                'name' => $this->name,
-                'address' => $this->address,
-                'province_id' => $this->province_id,
-                'city_id' => $this->city_id,
-                'district_id' => $this->district_id,
+            $customerUpdate = [
+                'name'           => $this->name,
+                'ktp_number'     => $this->ktp_number ?: null,
+                'address'        => $this->address,
+                'province_id'    => $this->province_id,
+                'city_id'        => $this->city_id,
+                'district_id'    => $this->district_id,
                 'subdistrict_id' => $this->subdistrict_id,
-            ]);
+            ];
+
+            if ($this->customer->customer_type === 'bisnis') {
+                $customerUpdate['npwp_number'] = $this->npwp_number ?: null;
+            }
+            
+            $this->customer->update($customerUpdate);
             
             if(!$this->status_active)
             {
@@ -539,18 +769,22 @@ class InternetCustomerShow extends Component
                     GenerateIsolirJob::dispatch($this->customer->userCustomer);
                 }
 
-                if($this->grouping_id != $this->customer->grouping_id){
-                    $this->customer->update(['grouping_id' => $this->grouping_id]);
+                if ($this->grouping_id !== $this->customer->grouping_id) {
+                    $this->customer->update(['grouping_id' => $this->grouping_id ?: null]);
                 }
-                
-                
+
+                // Assign group if customer didn't have one yet → queue generates grouping_id
+                if (!$this->customer->group_id && $this->edit_group_id) {
+                    $this->customer->update(['group_id' => $this->edit_group_id]);
+                    \App\Jobs\GenerateGroupingIdJob::dispatch($this->customer->id);
+                }
+
                 $this->customer->userCustomer->update([
-                    'name' => $this->name,
-                    'email' => $this->email ?: null,
-                    'phone_number' => $this->phone_number,
+                    'name'               => $this->name,
+                    'email'              => $this->email ?: null,
+                    'phone_number'       => $this->phone_number,
                     'start_billing_date' => $this->start_billing_date,
-                    'end_billing_date' => $this->end_billing_date,
-                    'grouping_id' => $this->grouping_id,
+                    'end_billing_date'   => $this->end_billing_date,
                 ]);
 
                 if($this->customer->partnershipAgreement)
@@ -571,6 +805,7 @@ class InternetCustomerShow extends Component
             $this->dispatchBrowserEvent('showSuccessAlert', ['message' => 'Data pribadi berhasil diperbarui']);
             $this->mount($this->customer->id);
         } catch (\Exception $e) {
+            // dd($e);
             DB::rollBack();
             $this->dispatchBrowserEvent('showErrorAlert', ['message' => 'Gagal memperbarui data pribadi: ' . $e->getMessage()]);
         }

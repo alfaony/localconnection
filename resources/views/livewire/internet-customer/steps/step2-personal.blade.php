@@ -130,6 +130,33 @@
         <input type="text" wire:model="ktp_number" class="form-control" @if($ktp_input_mode === 'auto' && $isReadingKtp) disabled @endif>
         @error('ktp_number') <small class="text-danger">{{ $message }}</small> @enderror
     </div>
+
+    @if($customer_type === 'bisnis')
+    <div class="col-md-6">
+        <label class="form-label">Nomor NPWP</label>
+        <input type="text" wire:model="npwp_number" class="form-control" placeholder="00.000.000.0-000.000">
+        @error('npwp_number') <small class="text-danger">{{ $message }}</small> @enderror
+    </div>
+    <div class="col-md-6">
+        <label class="form-label">Foto NPWP</label>
+        <input type="file"
+               wire:model="npwp_photo"
+               class="form-control"
+               accept="image/*,application/pdf">
+        @if($npwp_photo)
+            <small class="text-success d-block mt-1">
+                <i class="fas fa-check-circle me-1"></i>
+                File terpilih: {{ $npwp_photo->getClientOriginalName() }}
+            </small>
+        @else
+            <small class="text-muted d-block mt-1">Format: JPG, PNG, PDF (maks. 2MB)</small>
+        @endif
+        <div wire:loading wire:target="npwp_photo" class="mt-1">
+            <small class="text-warning"><i class="fas fa-spinner fa-spin me-1"></i> Mengunggah...</small>
+        </div>
+        @error('npwp_photo') <small class="text-danger">{{ $message }}</small> @enderror
+    </div>
+    @endif
 </div>
 
 @if($step === 2)
