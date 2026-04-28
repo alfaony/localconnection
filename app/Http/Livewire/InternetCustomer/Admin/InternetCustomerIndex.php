@@ -1281,6 +1281,29 @@ class InternetCustomerIndex extends Component
         }
     }
 
+    public function checkGroupingIdAvailability(?string $value): void
+    {
+        $value = trim($value ?? '');
+
+        if (strlen($value) < 2) {
+            $this->dispatchBrowserEvent('groupingIdCheckComplete', ['available' => true]);
+            return;
+        }
+
+        $existing = InternetCustomer::where('grouping_id', $value)
+            ->when($this->currentInstallationId, fn($q) => $q->where('id', '!=', $this->currentInstallationId))
+            ->first(['id', 'code', 'name']);
+
+        if ($existing) {
+            $this->dispatchBrowserEvent('groupingIdCheckComplete', [
+                'available' => false,
+                'existing'  => ['code' => $existing->code, 'name' => $existing->name],
+            ]);
+        } else {
+            $this->dispatchBrowserEvent('groupingIdCheckComplete', ['available' => true]);
+        }
+    }
+
     // TAMBAHKAN method baru:
     public function updatedLocalAddress($value)
     {

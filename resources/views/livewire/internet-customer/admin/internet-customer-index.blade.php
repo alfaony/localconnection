@@ -978,6 +978,54 @@
             };
         });
 
+        // ── Grouping ID duplicate check ──────────────────────────────────────
+        function resetGroupingIdState() {
+            const input = document.getElementById('groupingIdPreview');
+            if (!input) return;
+            input.classList.remove('is-valid', 'is-invalid');
+            const err = input.closest('.input-group')?.parentElement?.querySelector('.grouping-id-error-msg');
+            if (err) err.remove();
+            window._groupingIdAvailable = true;
+        }
+
+        window.addEventListener('groupingIdCheckComplete', function(event) {
+            const data  = event.detail;
+            const input = document.getElementById('groupingIdPreview');
+            if (!input) return;
+
+            const wrap = input.closest('.input-group')?.parentElement;
+            let errorDiv = wrap?.querySelector('.grouping-id-error-msg');
+
+            if (data.available) {
+                input.classList.remove('is-invalid');
+                input.classList.add('is-valid');
+                if (errorDiv) errorDiv.remove();
+                window._groupingIdAvailable = true;
+            } else {
+                input.classList.remove('is-valid');
+                input.classList.add('is-invalid');
+                if (!errorDiv) {
+                    errorDiv = document.createElement('div');
+                    errorDiv.className = 'invalid-feedback d-block grouping-id-error-msg';
+                    wrap.appendChild(errorDiv);
+                }
+                errorDiv.innerHTML = `Grouping ID sudah digunakan oleh: <strong>${data.existing.code} - ${data.existing.name}</strong>`;
+                window._groupingIdAvailable = false;
+            }
+        });
+
+        // Debounced manual-edit check on groupingIdPreview
+        let _groupingTimer = null;
+        document.addEventListener('input', function(e) {
+            if (!e.target || e.target.id !== 'groupingIdPreview') return;
+            clearTimeout(_groupingTimer);
+            const val = e.target.value.trim();
+            if (!val || val.length < 2) { resetGroupingIdState(); return; }
+            _groupingTimer = setTimeout(function() {
+                @this.call('checkGroupingIdAvailability', val);
+            }, 400);
+        });
+
         // Show grouping_id preview returned by Livewire
         window.addEventListener('grouping-id-preview', function (e) {
             const preview    = e.detail.preview;
@@ -988,11 +1036,14 @@
             if (!preview) {
                 previewBox.style.display = 'none';
                 previewInput.value = '';
+                resetGroupingIdState();
                 return;
             }
 
             previewInput.value       = preview;
             previewBox.style.display = 'block';
+            // Auto-check the server-generated ID too
+            @this.call('checkGroupingIdAvailability', preview);
 
             // Auto-suggest as username if username field is empty
             const usernameInput = document.getElementById('modalUsername');
@@ -1079,6 +1130,7 @@
             if (previewBox) previewBox.style.display = 'none';
             const previewInput = document.getElementById('groupingIdPreview');
             if (previewInput) previewInput.value = '';
+            resetGroupingIdState();
 
             // Reset Livewire ODP + group state
             @this.set('optical_distribution_id', null);
@@ -1245,7 +1297,16 @@
                 });
                 return;
             }
-            
+
+            if (manualGroupingId && window._groupingIdAvailable === false) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Grouping ID Duplikat',
+                    text: 'Grouping ID sudah digunakan pelanggan lain. Silakan ganti terlebih dahulu.'
+                });
+                return;
+            }
+
             // Konfirmasi
             const result = await Swal.fire({
                 icon: 'question',

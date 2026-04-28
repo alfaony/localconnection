@@ -677,6 +677,29 @@ class InternetCustomerShow extends Component
      * Auto-update end_billing_date when start_billing_date changes
      * end_billing_date = start_billing_date + 5 days
      */
+    public function checkGroupingIdAvailabilityShow(?string $value): void
+    {
+        $value = trim($value ?? '');
+
+        if (strlen($value) < 2) {
+            $this->dispatchBrowserEvent('groupingIdCheckComplete', ['available' => true]);
+            return;
+        }
+
+        $existing = InternetCustomer::where('grouping_id', $value)
+            ->where('id', '!=', $this->customer->id)
+            ->first(['id', 'code', 'name']);
+
+        if ($existing) {
+            $this->dispatchBrowserEvent('groupingIdCheckComplete', [
+                'available' => false,
+                'existing'  => ['code' => $existing->code, 'name' => $existing->name],
+            ]);
+        } else {
+            $this->dispatchBrowserEvent('groupingIdCheckComplete', ['available' => true]);
+        }
+    }
+
     public function updatedStartBillingDate($value)
     {
         if ($value) {

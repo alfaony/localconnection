@@ -878,7 +878,7 @@
                                         <input type="text"
                                                class="form-control @error('grouping_id') is-invalid @enderror"
                                                id="grouping_id"
-                                               wire:model="grouping_id"
+                                               autocomplete="off"
                                                placeholder="{{ ($customer->group->grouping_prefix ?? '') . 'XXXX' }}">
                                         @error('grouping_id')
                                             <span class="invalid-feedback">{{ $message }}</span>
@@ -1347,6 +1347,54 @@
                 });
             }
 
+            // ── Grouping ID duplicate check (show page) ──────────────────────
+            function resetGroupingIdStateShow() {
+                var input = document.getElementById('grouping_id');
+                if (!input) return;
+                input.classList.remove('is-valid', 'is-invalid');
+                var err = input.parentElement?.querySelector('.grouping-id-error-msg');
+                if (err) err.remove();
+                window._showGroupingIdAvailable = true;
+            }
+
+            // Debounced check — fired when user stops typing in #grouping_id (edit pribadi)
+            var _showGroupingTimer = null;
+            document.addEventListener('input', function(e) {
+                if (!e.target || e.target.id !== 'grouping_id') return;
+                clearTimeout(_showGroupingTimer);
+                var val = e.target.value.trim();
+                if (!val || val.length < 2) { resetGroupingIdStateShow(); return; }
+                _showGroupingTimer = setTimeout(function() {
+                    @this.call('checkGroupingIdAvailabilityShow', val);
+                }, 400);
+            });
+
+            window.addEventListener('groupingIdCheckComplete', function(event) {
+                var data  = event.detail;
+                var input = document.getElementById('grouping_id');
+                if (!input) return; // tidak semua customer punya input ini
+
+                var wrap = input.parentElement;
+                var errorDiv = wrap?.querySelector('.grouping-id-error-msg');
+
+                if (data.available) {
+                    input.classList.remove('is-invalid');
+                    input.classList.add('is-valid');
+                    if (errorDiv) errorDiv.remove();
+                    window._showGroupingIdAvailable = true;
+                } else {
+                    input.classList.remove('is-valid');
+                    input.classList.add('is-invalid');
+                    if (!errorDiv) {
+                        errorDiv = document.createElement('div');
+                        errorDiv.className = 'invalid-feedback d-block grouping-id-error-msg';
+                        wrap.appendChild(errorDiv);
+                    }
+                    errorDiv.innerHTML = 'Grouping ID sudah digunakan oleh: <strong>' + data.existing.code + ' - ' + data.existing.name + '</strong>';
+                    window._showGroupingIdAvailable = false;
+                }
+            });
+
             window.addEventListener('showEditPribadiModal', function(e) {
                 document.getElementById('name').value               = e.detail.name || '';
                 document.getElementById('email').value              = e.detail.email || '';
@@ -1365,7 +1413,10 @@
 
                 // grouping_id input (may not exist if customer has no group yet)
                 var gidEl = document.getElementById('grouping_id');
-                if (gidEl) gidEl.value = e.detail.grouping_id || '';
+                if (gidEl) {
+                    gidEl.value = e.detail.grouping_id || '';
+                    resetGroupingIdStateShow();
+                }
 
                 // Group select (shown only when customer has no group_id)
                 var groupSel = document.getElementById('editGroupSelect');
@@ -1422,8 +1473,11 @@
                         district_id:    @this.district_id,
                         subdistrict_id: @this.subdistrict_id,
                     });
-                    var addr = @this.address;
-                    if (addr) document.getElementById('address_edit').value = addr;
+                    var addr = document.getElementById('address_edit')?.value;
+                    if (!addr) {
+                        var _lwAddr = @this.get('address');
+                        if (_lwAddr) document.getElementById('address_edit').value = _lwAddr;
+                    }
                 }, 100);
             });
 
@@ -1547,6 +1601,11 @@
                         var _statusActive    = document.getElementById('status_active').checked;
                         var _groupingId      = document.getElementById('grouping_id')?.value || null;
                         var _address         = document.getElementById('address_edit').value;
+
+                        if (_groupingId && window._showGroupingIdAvailable === false) {
+                            Swal.fire({ icon: 'error', title: 'Grouping ID Duplikat', text: 'Grouping ID sudah digunakan pelanggan lain. Silakan ganti terlebih dahulu.' });
+                            return;
+                        }
                         var _provVal         = $('#editPribadiModal #province_id').val() || null;
                         var _cityVal         = $('#editPribadiModal #city_id').val() || null;
                         var _distVal         = $('#editPribadiModal #district_id').val() || null;
