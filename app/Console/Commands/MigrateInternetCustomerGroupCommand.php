@@ -32,7 +32,7 @@ class MigrateInternetCustomerGroupCommand extends Command
 
         // Ambil customer yang harus dimigrasikan
         $query = InternetCustomer::query()
-            ->whereIn('status', [ParamSchema::ACTIVE, ParamSchema::WAITING_PAYMENT_SUBSCRIPTION, ParamSchema::INSTALLED, ParamSchema::RE])
+            ->whereIn('status', [ParamSchema::ACTIVE, ParamSchema::WAITING_PAYMENT_SUBSCRIPTION, ParamSchema::INSTALLED, ParamSchema::REACTIVATED])
             ->whereNull('group_id')                     // belum dimigrasikan
             ->with(['installation:id,internet_customer_id,device_serial_number']);
 
