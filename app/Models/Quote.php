@@ -140,7 +140,8 @@ class Quote extends Model
         {
             return $query->whereHas('userCreate', function ($query) use ($companyId) 
             {
-                $query->where('company_id', $companyId);
+                $companyIds = auth()->user()->accessibleCompanies->pluck('id')->push($companyId)->unique();
+                $query->whereIn('company_id', $companyIds);
             });
         }
     }

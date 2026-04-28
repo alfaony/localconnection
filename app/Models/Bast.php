@@ -86,6 +86,7 @@ class Bast extends Model
         {
             return $query->whereHas('userCreate', function ($query) use ($companyId) 
             {
+                $companyIds = auth()->user()->accessibleCompanies->pluck('id')->push($companyId)->unique();
                 $query->where('company_id', $companyId);
             });
         }
