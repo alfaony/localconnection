@@ -75,8 +75,11 @@ class MigrateInternetCustomerGroupCommand extends Command
                 // Check if the customer's ODP is already registered in the group
                 $odpId = $customer->optical_distribution_id;
                 if ($odpId) {
-                    $group->loadMissing('odps:id');
-                    $alreadyLinked = $group->odps->contains('id', $odpId);
+                    // Query DB directly — Eloquent collection cache can miss concurrent inserts
+                    $alreadyLinked = DB::table('internet_customer_group_odp')
+                        ->where('group_id', $group->id)
+                        ->where('optical_distribution_id', $odpId)
+                        ->exists();
 
                     if (!$alreadyLinked) {
                         $stats['odp_added']++;
@@ -84,9 +87,8 @@ class MigrateInternetCustomerGroupCommand extends Command
                             "    [ODP] optical_distribution_id={$odpId} belum terdaftar di group → auto-attach"
                         );
                         if (!$isDry) {
-                            $group->odps()->attach($odpId);
-                            // Refresh collection so subsequent customers in the same group see it
-                            $group->unsetRelation('odps');
+                            // syncWithoutDetaching is idempotent — safe even if a race condition slips through
+                            $group->odps()->syncWithoutDetaching([$odpId]);
                         }
                     } else {
                         $this->line("    [ODP] optical_distribution_id={$odpId} sudah terdaftar di group.");
