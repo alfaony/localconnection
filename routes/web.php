@@ -651,6 +651,7 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
   Route::resource('item-purchase', ItemPurchaseController::class)->only(['store','update']);  
 
   Route::post('meeting/join', [MeetingController::class, 'join'])->name('meeting.join');
+  Route::get('meeting/export', [MeetingController::class, 'export'])->name('meeting.export');
   Route::resource('meeting', MeetingController::class);
 
   Route::put('mom/storeAgenda/{id}', [MomController::class,'storeAgenda'])->name('mom.storeAgenda');

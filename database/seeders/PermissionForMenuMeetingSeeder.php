@@ -26,7 +26,7 @@ class PermissionForMenuMeetingSeeder extends Seeder
         DB::beginTransaction();
         try {
 
-            $itemRequest = ['index','edit', 'create', 'update', 'show', 'destroy', 'store', 'select2','join'];
+            $itemRequest = ['index','edit', 'create', 'update', 'show', 'destroy', 'store', 'select2','join','export'];
             $dashboard = ['meetingAgenda'];
             
              foreach ($itemRequest as $method) 
