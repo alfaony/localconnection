@@ -1879,7 +1879,7 @@ createApp({
                                 }
 
                                 .receipt-logo img {
-                                    width: 30mm;
+                                    width: 15mm;
                                     height: auto;
                                     display: block;
                                     margin: 0 auto;
