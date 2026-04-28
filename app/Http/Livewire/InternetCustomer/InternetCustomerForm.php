@@ -72,6 +72,8 @@ class InternetCustomerForm extends Component
     public $address;
     public $ktp_number;
     public $ktp_photo;
+    public $npwp_number;
+    public $npwp_photo;
     public $terms = false;
     public $agreement;
     
@@ -266,6 +268,13 @@ class InternetCustomerForm extends Component
         }
     }
 
+
+    public function updatedNpwpPhoto($value)
+    {
+        $this->validateOnly('npwp_photo', [
+            'npwp_photo' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:2048',
+        ]);
+    }
 
     public function updatedPaymentProof($value)
     {
@@ -638,20 +647,21 @@ class InternetCustomerForm extends Component
 
     private function validateStep2()
     {
-        $this->validate([
-            'name' => 'required|min:3',
-            'email' => [
-                'required',
-                'email',
-            ],
+        $rules = [
+            'name'         => 'required|min:3',
+            'email'        => ['required', 'email'],
             'phone_number' => 'required|string',
-            'address' => 'required|min:10',
-            'ktp_number' => [
-                'required',
-                'digits:16',
-            ],
-            'ktp_photo' => 'required|file|mimes:jpg,jpeg,png,pdf|max:2048',
-        ], [
+            'address'      => 'required|min:10',
+            'ktp_number'   => ['required', 'digits:16'],
+            'ktp_photo'    => 'required|file|mimes:jpg,jpeg,png,pdf|max:2048',
+        ];
+
+        if ($this->customer_type === 'bisnis') {
+            $rules['npwp_number'] = ['nullable', 'string', 'max:30'];
+            $rules['npwp_photo']  = ['nullable', 'file', 'mimes:jpg,jpeg,png,pdf', 'max:2048'];
+        }
+
+        $this->validate($rules, [
             'email.unique' => 'Email ini sudah terdaftar. Silakan gunakan email lain atau hubungi admin jika ini adalah akun Anda.',
             'email.required' => 'Email wajib diisi.',
             'email.email' => 'Format email tidak valid.',
@@ -787,6 +797,17 @@ class InternetCustomerForm extends Component
             }
         }
         
+        $npwpPhotoPath = null;
+        if ($this->customer_type === 'bisnis' && $this->npwp_photo) {
+            try {
+                $npwpPhotoPath = $this->npwp_photo->store('npwps', 's3');
+            } catch (\Exception $e) {
+                Log::error('Failed to store NPWP photo to S3', ['error' => $e->getMessage()]);
+                session()->flash('error', 'Gagal mengunggah foto NPWP ke server. Silakan coba lagi.');
+                return;
+            }
+        }
+
         $paymentProofPath = null;
         if ($this->payment_method === 'manual_transfer' && $this->payment_proof) {
             try {
@@ -831,7 +852,9 @@ class InternetCustomerForm extends Component
                 'name' => $this->name,
                 'address' => $this->address,
                 'ktp_number' => $this->ktp_number,
-                'ktp_photo' => $ktpPath ? $ktpPath : null,
+                'ktp_photo'    => $ktpPath ?: null,
+                'npwp_number'  => $this->customer_type === 'bisnis' ? ($this->npwp_number ?: null) : null,
+                'npwp_photo'   => $npwpPhotoPath ?: null,
                 'is_paid' => false,
                 'customer_type' => $this->customer_type,
                 'status' => $this->hasFreeMonthsPromo

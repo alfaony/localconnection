@@ -47,6 +47,16 @@ class OpticalDistribution extends Model
         return $this->hasOne(CoverageServiceDistribution::class);
     }
 
+    public function groups()
+    {
+        return $this->belongsToMany(
+            InternetCustomerGroup::class,
+            'internet_customer_group_odp',
+            'optical_distribution_id',
+            'group_id'
+        );
+    }
+
     public function scopeByCompany($query, $company_id)
     {
         $company_ids = Auth::user()->accessibleCompanies->pluck('id')->push($company_id)->unique();
