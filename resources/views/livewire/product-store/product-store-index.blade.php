@@ -481,10 +481,17 @@
                                     <!-- Produk Info -->
                                     <td class="align-middle">
                                         <div class="d-flex align-items-center">
+                                            @if($product->media->first())
+                                                <img src="{{ s3_asset(true,10,$product->media->sortBy('order')->first()->file_path) }}" 
+                                                    alt="{{ $product->name }}"
+                                                    class="img-thumbnail mr-2"
+                                                    style="width: 50px; height: 50px; object-fit: cover;">
+                                            @else
                                             <div class="bg-light border rounded mr-2 d-flex align-items-center justify-content-center" 
                                                  style="width: 40px; height: 40px; min-width: 40px;">
                                                 <i class="fas fa-box text-muted"></i>
                                             </div>
+                                            @endif
                                             <div>
                                                 <div class="font-weight-bold">{{ $product->name }}</div>
                                                 @if($product->specification || $product->code)

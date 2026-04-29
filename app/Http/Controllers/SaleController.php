@@ -36,7 +36,7 @@ class SaleController extends Controller
         
         $products = ProductStore::byCompany(Auth::user()->company_id)
             ->where('barcode', $barcode)
-            ->with(['category', 'brand', 'inventory'])
+            ->with(['category', 'brand', 'inventory', 'primaryMedia'])
             ->get();
 
         if ($products->isEmpty()) {
