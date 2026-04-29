@@ -976,19 +976,26 @@ createApp({
                         const product = response.data.product;
                         const result  = addToCart(product);
 
-                        // Toast sukses dengan info stok — hanya jika produk berhasil masuk cart
+                        // Notifikasi sukses dengan gambar produk — hanya jika produk berhasil masuk cart
                         if (result && product.inventory) {
-                            const sisa = product.inventory.quantity - 1; // sudah dikurangi 1 yang baru masuk
+                            const sisa = product.inventory.quantity - 1;
+                            const imageUrl = product.primary_media?.file_url ?? null;
                             Swal.fire({
                                 icon: 'success',
                                 title: product.name,
                                 html: `Ditambahkan ke keranjang.<br>` +
                                       `Stok tersedia: <b>${product.inventory.quantity} ${result.unit}</b> &nbsp;|&nbsp; ` +
                                       `Sisa setelah ini: <b>${sisa} ${result.unit}</b>`,
-                                timer: 2000,
+                                ...(imageUrl ? {
+                                    imageUrl: imageUrl,
+                                    imageWidth: 200,
+                                    imageHeight: 200,
+                                    imageAlt: product.name,
+                                } : {}),
+                                timer: 3000,
+                                timerProgressBar: true,
                                 showConfirmButton: false,
-                                toast: true,
-                                position: 'top-end',
+                                position: 'center',
                             });
                         }
                     }
@@ -1067,6 +1074,7 @@ createApp({
                 quantity:      1,
                 stock:         stock,
                 unit:          unit,
+                image:         product.primary_media?.file_url ?? null,
             });
 
             return { stock, unit }; // digunakan oleh caller untuk toast
