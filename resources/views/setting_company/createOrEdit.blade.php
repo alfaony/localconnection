@@ -270,7 +270,7 @@
                             <div class="card-body">
                                 <div class="form-group">
                                     <label for="header">Upload Header</label>
-                                    @if(isset($data['header']) && file_exists(public_path('storage/' . $data['header']))) 
+                                    @if(isset($data['header']) && s3_exists($data['header']))
                                         <div class="mb-2">
                                             <a href="{{ s3_asset(true,10,$data['header']) }}"  class="btn btn-sm btn-primary" download><i class="fa fa-download"></i> Header</a>
                                             <div class="custom-control custom-checkbox d-inline ml-2">
@@ -286,7 +286,7 @@
                                 </div>
                                 <div class="form-group">
                                     <label for="footer">Upload Footer</label>
-                                    @if(isset($data['footer']) && file_exists(public_path('storage/' . $data['footer']))) 
+                                    @if(isset($data['footer']) && s3_exists($data['footer']))
                                         <div class="mb-2">
                                             <a href="{{ s3_asset(true,10,$data['footer']) }}"  class="btn btn-sm btn-primary" download><i class="fa fa-download"></i> Footer</a>
                                             <div class="custom-control custom-checkbox d-inline ml-2">
