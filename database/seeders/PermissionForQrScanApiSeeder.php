@@ -22,12 +22,15 @@ class PermissionForQrScanApiSeeder extends Seeder
         $permissions = [
             // Used Laptop
             ['table' => 'used_laptops', 'method' => 'getUsedLaptopDetail', 'name' => 'Get Detail Used Laptop (Mobile)'],
+            ['table' => 'used_laptops', 'method' => 'updateUsedLaptop', 'name' => 'Update Used Laptop (Mobile)'],
             
             // Used Item
             ['table' => 'used_items', 'method' => 'getUsedItemDetail', 'name' => 'Get Detail Used Item (Mobile)'],
+            ['table' => 'used_items', 'method' => 'updateUsedItem', 'name' => 'Update Used Item (Mobile)'],
             
             // Product Store
             ['table' => 'product_stores', 'method' => 'getProductStoreDetail', 'name' => 'Get Detail Product Store (Mobile)'],
+            ['table' => 'product_stores', 'method' => 'updateProductStore', 'name' => 'Update Product Store (Mobile)'],
             
             // Internet Customer
             ['table' => 'internet_customers', 'method' => 'getInternetCustomerDetail', 'name' => 'Get Detail Internet Customer (Mobile)'],

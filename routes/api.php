@@ -74,8 +74,11 @@ Route::group(['middleware' => ['auth:api','role.permission.api']], function()
 
         //QR Api
     Route::get('used-laptops/detail/{slug}', [QrScanApiController::class, 'getUsedLaptopDetail']);
+    Route::post('used-laptops/update/{slug}', [QrScanApiController::class, 'updateUsedLaptop']);
     Route::get('used-items/detail/{slug}', [QrScanApiController::class, 'getUsedItemDetail']);
+    Route::post('used-items/update/{slug}', [QrScanApiController::class, 'updateUsedItem']);
     Route::get('product-stores/detail/{code}', [QrScanApiController::class, 'getProductStoreDetail']);
+    Route::post('product-stores/update/{code}', [QrScanApiController::class, 'updateProductStore']);
     Route::get('internet-customers/detail/{code}', [QrScanApiController::class, 'getInternetCustomerDetail']);
     Route::get('quotes/detail-pdf/{quote_number}', [QrScanApiController::class, 'getQuotationPdf'])
     ->where('quote_number', '.*');
