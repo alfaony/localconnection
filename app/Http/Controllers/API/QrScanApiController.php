@@ -7,8 +7,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
 use Barryvdh\DomPDF\Facade\Pdf;
-
-// Models
 use App\Models\UsedLaptop;
 use App\Models\UsedItem;
 use App\Models\ProductStore;
@@ -16,9 +14,8 @@ use App\Models\InternetCustomer;
 use App\Models\Quote;
 use App\Models\Product;
 use App\Models\Customer;
+use App\Models\MasterCheckItem;
 use App\Models\SettingCompany;
-
-//new
 use App\Models\UsedItemMedia;
 use App\Models\UsedLaptopMedia;
 use App\Models\UsedItemCheck;
@@ -27,6 +24,13 @@ use App\Models\UsedItemRepair;
 use App\Models\UsedLaptopRepair;
 use App\Helpers\WebhookHelper;
 use App\Models\WebhookSetting;
+use App\Models\ProductStoreMedia;
+use App\Models\CategoryProductStore;
+use App\Models\BrandProductStore;
+use App\Models\Warehouse;
+use App\Models\Zone;
+use App\Models\Rack;
+
 use App\Http\Resources\UsedLaptopResource;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -134,7 +138,7 @@ class QrScanApiController extends Controller
                 'notes'            => 'nullable|string',
                 'photos'           => 'nullable|array',
                 'photos.*'         => 'image|mimes:jpeg,png,jpg,gif|max:10240',
-                'check_items'      => 'nullable|array', // Sudah nullable
+                'check_items'      => 'nullable|array', 
                 'repairs'          => 'nullable|array',
                 'is_sold'          => 'nullable|string',
             ]);
@@ -172,7 +176,7 @@ class QrScanApiController extends Controller
                 }
             }
 
-            // Checklist logic - Ditambah pengecekan has() agar tidak error jika null
+            // Checklist logic 
             if ($request->has('check_items')) {
                 foreach ($request->input('check_items', []) as $checkItemId => $checkData) {
                     if (isset($checkData['condition']) && !empty($checkData['condition'])) {
@@ -204,7 +208,6 @@ class QrScanApiController extends Controller
             }
             $laptop->repairs()->whereNotIn('id', $submittedRepairIds)->delete();
             $appName = 'used_laptops';
-            // Webhook trigger
             $shouldRun = WebhookSetting::byCompany(Auth::user()->company_id)->hasApp($appName)->exists();
             if ($shouldRun && ($laptop->rack_id || $rackChanged)) {
                 $payload = (new UsedLaptopResource($laptop))->resolve();
@@ -296,7 +299,7 @@ class QrScanApiController extends Controller
             'category_ids'   => 'nullable|array',
             'category_ids.*' => 'nullable|exists:item_categories,id',
             'check_items'    => 'nullable|array', 
-            'repairs'        => 'nullable|array', // Repairs nullable
+            'repairs'        => 'nullable|array',
         ]);
 
         $item->update([
@@ -338,7 +341,6 @@ class QrScanApiController extends Controller
 
         if ($request->has('repairs')) {
             foreach ($request->input('repairs') as $repairData) {
-                // Hanya proses jika deskripsi tidak kosong
                 if (!empty($repairData['description'])) {
                     $repair = UsedItemRepair::updateOrCreate(
                         ['id' => $repairData['id'] ?? null],
@@ -352,8 +354,6 @@ class QrScanApiController extends Controller
                 }
             }
         }
-
-        // Hapus repair yang ada di DB tapi tidak ada di input (User menghapus baris repair)
         $repairsToDelete = array_diff($existingRepairIds, $submittedRepairIds);
         if (!empty($repairsToDelete)) {
             UsedItemRepair::destroy($repairsToDelete);
@@ -416,10 +416,10 @@ class QrScanApiController extends Controller
         DB::beginTransaction();
         try {
             $validated = $request->validate([
-                'name'                      => 'required|string|max:255',
+                'name'                      => 'nullable|string|max:255',
                 'category_product_store_id' => 'nullable|exists:category_product_stores,id', // Diubah ke nullable
                 'brand_product_store_id'    => 'nullable|exists:brand_product_stores,id',
-                'selling_price'             => 'required|integer',
+                'selling_price'             => 'nullable|integer',
                 'warehouse_id'              => 'nullable|exists:warehouses,id',
                 'zone_id'                   => 'nullable|exists:zones,id',
                 'rack_id'                   => 'nullable|exists:racks,id',
@@ -432,16 +432,18 @@ class QrScanApiController extends Controller
                 'photos'                    => 'nullable|array',
                 'photos.*'                  => 'image|mimes:jpeg,png,jpg,gif,webp|max:5120',
                 'photo_captions'            => 'nullable|array',
+                'photos_to_delete'          => 'nullable|array',
+                'photos_to_delete.*'        => 'exists:product_store_media,id',
             ]);
 
             $oldRackId = $product->rack_id;
 
             // Update Data Produk
             $product->update([
-                'name'                      => $validated['name'],
+                'name'                      => $validated['name'] ?? $product->name,
                 'category_product_store_id' => $validated['category_product_store_id'] ?? $product->category_product_store_id,
                 'brand_product_store_id'    => $validated['brand_product_store_id'] ?? $product->brand_product_store_id,
-                'selling_price'             => $validated['selling_price'],
+                'selling_price'             => $validated['selling_price']?? $product->selling_price,
                 'variant'                   => $validated['variant'] ?? null,
                 'specification'             => $validated['specification'] ?? null,
                 'length'                    => $validated['length'] ?? 0,
@@ -454,32 +456,39 @@ class QrScanApiController extends Controller
             ]);
 
             $rackChanged = $oldRackId != $product->rack_id;
+                if ($request->has('photos_to_delete') && !empty($request->photos_to_delete)) {
+                $mediaToDelete = ProductStoreMedia::whereIn('id', $request->photos_to_delete)
+                    ->where('product_store_id', $product->id)
+                    ->get();
 
-            // Handle Photo Uploads ke S3 (Sesuai logic awal Mas Heri)
+                foreach ($mediaToDelete as $media) {
+                    try {
+                        Storage::disk('s3')->delete($media->file_path);
+                        $media->delete();
+                    } catch (\Exception $e) {
+                        \Log::error('Delete S3 failed: ' . $e->getMessage());
+                    }
+                }
+            }
             if ($request->hasFile('photos')) {
                 $currentMaxOrder = $product->media()->max('order') ?? -1;
                 
                 foreach ($request->file('photos') as $index => $photo) {
-                    // Generate filename unik
                     $fileName = time() . '_' . uniqid() . '.' . $photo->getClientOriginalExtension();
-                    
-                    // Upload langsung ke S3
                     $path = $photo->storeAs(
                         'product-store-media', 
                         $fileName, 
                         's3'
                     );
 
-                    // Simpan ke table media (Asumsi model: ProductStoreMedia)
                     $product->media()->create([
-                        'file_path' => $path,
-                        'caption'   => $request->photo_captions[$index] ?? null,
-                        'order'     => $currentMaxOrder + $index + 1,
+                        'product_store_id' => $product->id,
+                        'file_path'        => $path,
+                        'caption'          => $request->photo_captions[$index] ?? null,
+                        'order'            => $currentMaxOrder + $index + 1,
                     ]);
                 }
             }
-
-            
 
             DB::commit();
             return response()->json([
@@ -501,7 +510,6 @@ class QrScanApiController extends Controller
     public function getInternetCustomerDetail($code)
     {
         try {
-            // Mencari berdasarkan customer_code (atau sesuaikan nama kolom kodenya)
             $customer = InternetCustomer::where('code', $code)
                 ->byCompany(Auth::user()->company_id)
                 ->with([
@@ -592,5 +600,346 @@ class QrScanApiController extends Controller
             'grand_total_raw'        => $grandTotal,
             'remaining_budget'       => 0,
         ];
+    }
+
+    //New
+    public function destroyLaptopMedia($id)
+    {
+        try {
+            $media = UsedLaptopMedia::findOrFail($id);
+            Storage::delete('public/' . $media->file_path);
+            $media->delete();
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Media laptop berhasil dihapus!'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal menghapus media laptop: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Destroy Image Used Item
+     */
+    public function destroyItemMedia($id)
+    {
+        try {
+            $media = UsedItemMedia::findOrFail($id);
+            Storage::delete($media->file_path);
+            $media->delete();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Media item berhasil dihapus!'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal menghapus media item: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Get Kategori Product Store
+     */
+    public function getCategories()
+    {
+        $categories = CategoryProductStore::byCompany(Auth::user()->company_id)
+            ->select('id', 'name')
+            ->orderBy('name')
+            ->get();
+
+        return response()->json(['success' => true, 'data' => $categories], 200);
+    }
+
+    /**
+     * Merk/Brand Product Store
+     */
+    public function getBrands()
+    {
+        $brands = BrandProductStore::byCompany(Auth::user()->company_id)
+            ->select('id', 'name')
+            ->orderBy('name')
+            ->get();
+
+        return response()->json(['success' => true, 'data' => $brands], 200);
+    }
+
+    /**
+     * Get Warehouse Product Store
+     */
+    public function getWarehouses()
+    {
+        $warehouses = Warehouse::byCompany(Auth::user()->company_id)
+            ->select('id', 'name')
+            ->orderBy('name')
+            ->get();
+
+        return response()->json(['success' => true, 'data' => $warehouses], 200);
+    }
+
+    /**
+     * Get Zone Product Store
+     */
+    public function getZones(Request $request)
+    {
+        $warehouseId = $request->query('warehouse_id');
+        
+        if (!$warehouseId) {
+            return response()->json(['success' => false, 'message' => 'warehouse_id diperlukan'], 400);
+        }
+
+        $zones = Zone::where('warehouse_id', $warehouseId)
+            ->select('id', 'name')
+            ->orderBy('name')
+            ->get();
+
+        return response()->json(['success' => true, 'data' => $zones], 200);
+    }
+
+    /**
+     * Get Rack Product Store
+     */
+    public function getRacks(Request $request)
+    {
+        $zoneId = $request->query('zone_id');
+
+        if (!$zoneId) {
+            return response()->json(['success' => false, 'message' => 'zone_id diperlukan'], 400);
+        }
+
+        $racks = Rack::where('zone_id', $zoneId)
+            ->select('id', 'name')
+            ->orderBy('name')
+            ->get();
+
+        return response()->json(['success' => true, 'data' => $racks], 200);
+    }
+
+    public function getLaptopStatusList()
+    {
+        $statusList = config('custom.postion_latpop');
+        
+        $formatted = [];
+        foreach ($statusList as $label => $value) {
+            $formatted[] = [
+                'label' => $label,
+                'value' => is_null($value) ? "" : (string)$value 
+            ];
+        }
+
+        return response()->json([
+            'success' => true,
+            'data' => $formatted
+        ]);
+    }
+
+    /**
+     * Get All List Product Store
+     */
+    public function getProductStoreList(Request $request)
+    {
+        $query = ProductStore::byCompany(Auth::user()->company_id)
+            ->with(['category', 'brand'])
+            ->orderBy('created_at', 'desc');
+
+        if ($request->has('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('barcode', 'like', "%{$search}%");
+            });
+        }
+
+        $products = $query->paginate(20);
+
+        return response()->json([
+            'success' => true,
+            'data' => $products
+        ], 200);
+    }
+
+    /**
+     * Generate Barcode & Cek Ketersediaan
+     */
+    public function handleBarcode(Request $request)
+    {
+        $barcode = $request->query('barcode');
+        $productId = $request->query('product_id'); 
+
+        if ($barcode) {
+            $query = ProductStore::withTrashed()->where('barcode', $barcode);
+            if ($productId) {
+                $query->where('id', '!=', $productId);
+            }
+
+            $duplicates = $query->with(['category', 'brand'])->get();
+
+            if ($duplicates->isEmpty()) {
+                return response()->json([
+                    'success' => true,
+                    'available' => true,
+                    'message' => 'Barcode tersedia'
+                ]);
+            }
+
+            $duplicateInfo = $duplicates->map(fn($p) => $p->name)->take(3)->implode(', ');
+            return response()->json([
+                'success' => true,
+                'available' => false,
+                'message' => 'Barcode sudah digunakan oleh: ' . $duplicateInfo,
+                'isDuplicate' => true
+            ]);
+        }
+
+        do {
+            $newBarcode = now()->format('Y') . str_pad(mt_rand(0, 999999999), 9, '0', STR_PAD_LEFT);
+        } while (ProductStore::withTrashed()->where('barcode', $newBarcode)->exists());
+
+        return response()->json([
+            'success' => true,
+            'barcode' => $newBarcode,
+            'message' => 'Barcode baru berhasil di-generate'
+        ]);
+    }
+
+    /**
+     * Delete Product Store
+     */
+    public function deleteProductStore($id)
+    {
+        try {
+            $product = ProductStore::byCompany(Auth::user()->company_id)->findOrFail($id);
+            $product->delete();
+
+            return response()->json(['success' => true, 'message' => 'Produk berhasil dihapus']);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => 'Gagal menghapus produk'], 404);
+        }
+    }
+
+    /**
+     * Mark as Sold untuk Used Laptop
+     */
+    public function markLaptopAsSold(Request $request, $slug)
+    {
+        DB::beginTransaction();
+        try {
+            $laptop = UsedLaptop::byCompany(Auth::user()->company_id)->where('slug', $slug)->firstOrFail();
+            
+            $laptop->update([
+                'is_sold' => true,
+                'sold_price' => $request->sold_price,
+                'sold_at' => $request->sold_at ?? now(),
+            ]);
+
+            $payload = (new UsedLaptopResource($laptop))->resolve();
+
+            if ($laptop->rack_id) {
+                WebhookHelper::sendWebhook(Auth::user()->company_id, 'used-laptop', 'sold', $payload);
+            }
+
+            DB::commit();
+            return response()->json(['success' => true, 'message' => 'Laptop berhasil ditandai sebagai terjual', 'data' => $payload]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * Mark As Sold untuk Used Item
+     */
+    public function markItemAsSold(Request $request, $slug)
+    {
+        DB::beginTransaction();
+        try {
+            $item = UsedItem::byCompany(Auth::user()->company_id)->where('slug', $slug)->firstOrFail();
+            
+            $item->update([
+                'is_sold' => true,
+                'sold_price' => $request->sold_price,
+                'sold_at' => $request->sold_at ?? now(),
+            ]);
+
+            DB::commit();
+            return response()->json(['success' => true, 'message' => 'Item berhasil ditandai sebagai terjual']);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * Get Checklist for Used Laptop
+     */
+    public function getLaptopChecklist($slug)
+    {
+        try {
+            $laptop = UsedLaptop::where('slug', $slug)
+                ->byCompany(Auth::user()->company_id)
+                ->firstOrFail();
+
+            $checkItems = MasterCheckItem::where('type', 'laptop_type')
+                ->byCompany(Auth::user()->company_id)
+                ->withTrashed()
+                ->where(function ($query) use ($laptop) {
+                    $query->whereNull('deleted_at')
+                          ->orWhereHas('checks', function ($q) use ($laptop) {
+                              $q->where('used_laptop_id', $laptop->id)
+                                ->whereNotNull('status');
+                          });
+                })
+                ->with(['checks' => function($q) use ($laptop) {
+                    $q->where('used_laptop_id', $laptop->id);
+                }])
+                ->get();
+
+            return response()->json([
+                'success' => true,
+                'data' => $checkItems
+            ]);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => 'Gagal mengambil checklist laptop'], 404);
+        }
+    }
+
+    /**
+     * Get Checklist for Used Item
+     */
+    public function getItemChecklist($slug)
+    {
+        try {
+            $usedItem = UsedItem::where('slug', $slug)
+                ->byCompany(Auth::user()->company_id)
+                ->firstOrFail();
+
+            $checkItems = MasterCheckItem::where('type', 'item_type')
+                ->byCompany(Auth::user()->company_id)
+                ->withTrashed()
+                ->where(function ($query) use ($usedItem) {
+                    $query->whereNull('deleted_at')
+                          ->orWhereHas('checksUsed', function ($q) use ($usedItem) {
+                              $q->where('used_item_id', $usedItem->id)
+                                ->whereNotNull('status');
+                          });
+                })
+                ->with(['checksUsed' => function($q) use ($usedItem) {
+                    $q->where('used_item_id', $usedItem->id);
+                }])
+                ->get();
+
+            return response()->json([
+                'success' => true,
+                'data' => $checkItems
+            ]);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => 'Gagal mengambil checklist item'], 404);
+        }
     }
 }
