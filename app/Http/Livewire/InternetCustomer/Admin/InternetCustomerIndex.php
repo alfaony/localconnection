@@ -985,6 +985,34 @@ class InternetCustomerIndex extends Component
             $query->whereBetween('created_at', [$from . ' 00:00:00', $to . ' 23:59:59']);
         }
 
+        // Filter region — hanya berlaku untuk user dengan permission as_finance/as_marketing/as_technician
+        $hasRegionPermission = Access::can('as_finance', 'internet_customers')
+            || Access::can('as_marketing', 'internet_customers')
+            || Access::can('as_technician', 'internet_customers')
+            || Access::can('as_manager', 'internet_customers')
+            ;
+
+        if ($hasRegionPermission) {
+            $userRegions = $user->internetCustomerRegions()->get();
+            if ($userRegions->isNotEmpty()) {
+                $query->where(function ($q) use ($userRegions) {
+                    foreach ($userRegions as $region) {
+                        $q->orWhere(function ($q2) use ($region) {
+                            if ($region->subdistrict_id) {
+                                $q2->where('subdistrict_id', $region->subdistrict_id);
+                            } elseif ($region->district_id) {
+                                $q2->where('district_id', $region->district_id);
+                            } elseif ($region->city_id) {
+                                $q2->where('city_id', $region->city_id);
+                            } elseif ($region->province_id) {
+                                $q2->where('province_id', $region->province_id);
+                            }
+                        });
+                    }
+                });
+            }
+        }
+
         // Sorting + paginate
         $internetCustomers = $query
             ->byCompany($user->company_id)

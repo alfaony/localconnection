@@ -159,6 +159,7 @@ use App\Http\Livewire\InternetCustomer\Admin\InternetCustomerIndex;
 use App\Http\Livewire\InternetCustomer\Admin\InternetCustomerShow;
 use App\Http\Livewire\InternetCustomer\InternetCustomerShow as CustomerShow;
 use App\Http\Livewire\InternetCustomer\CustomerCodeInput;
+use App\Http\Livewire\InternetCustomer\InternetCustomerUserRegionIndex;
 use App\Http\Livewire\Promo\PromoIndex;
 use App\Http\Livewire\Promo\PromoForm;
 use App\Http\Livewire\Router\RouterForm;
@@ -697,6 +698,7 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
   Route::get('internet-package/edit/{id}', InternetPackageForm::class)->name('internet-package.edit');
 
   Route::get('internet-customer-group', InternetCustomerGroupIndex::class)->name('internet-customer-group.index');
+  Route::get('internet-customer-user-region', InternetCustomerUserRegionIndex::class)->name('internet-customer-user-region.index');
 
   Route::get('internet-customer', InternetCustomerIndex::class)->name('internet-customer.index');
   Route::put('internet-customer/update/{id}', InternetCustomerIndex::class)->name('internet-customer.update');
