@@ -29,6 +29,8 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\Session;
 
 use App\Services\GoogleService;
+use App\Exports\MeetingExport;
+use Maatwebsite\Excel\Facades\Excel;
 
 class MeetingController extends Controller
 {
@@ -36,6 +38,35 @@ class MeetingController extends Controller
     public function index()
     {
         return view('meeting.index');
+    }
+
+    public function export(Request $request)
+    {
+        $companyId = Auth::user()->company_id;
+
+        $query = Meeting::query()
+            ->with(['user', 'participants'])
+            ->byCompany($companyId)
+            ->when($request->search, function ($q) use ($request) {
+                $q->where('meeting_name', 'LIKE', '%' . $request->search . '%')
+                  ->orWhere('meeting_agenda', 'LIKE', '%' . $request->search . '%');
+            })
+            ->when($request->meeting_type, fn ($q) => $q->where('meeting_type', $request->meeting_type))
+            ->when($request->date_start && $request->date_end, fn ($q) => $q->whereBetween('start_date', [$request->date_start, $request->date_end]))
+            ->when($request->filled('user_ids'), function ($q) use ($request) {
+                $ids = $request->user_ids;
+                $q->where(function ($q2) use ($ids) {
+                    $q2->whereIn('user_id', $ids)
+                       ->orWhereHas('participants', fn ($q3) => $q3->whereIn('users.id', $ids));
+                });
+            })
+            ->orderBy('start_date', 'desc');
+
+        $meetings = $query->get();
+
+        $filename = 'rapat_' . now()->format('Ymd_His') . '.xlsx';
+
+        return Excel::download(new MeetingExport($meetings), $filename);
     }
 
     public function create()

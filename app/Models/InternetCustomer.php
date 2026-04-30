@@ -117,6 +117,8 @@ class InternetCustomer extends Model
         'grouping_id',
         'group_id',
         'action_user_id',
+        'npwp_number',
+        'npwp_photo',
     ];
 
     // ✅ RELATIONS

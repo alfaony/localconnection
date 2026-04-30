@@ -35,6 +35,20 @@ public function quickPing(\RouterOS\Client $c): bool {
     } catch (\Throwable $e) { return false; }
 }
 
+public function ensureSuspendedPppProfile(Client $c, string $profileName = 'SUSPENDED'): void
+{
+    $exists = $c->query((new Query('/ppp/profile/print'))->where('name', $profileName))->read();
+
+    if (empty($exists)) {
+        $c->query(
+            (new Query('/ppp/profile/add'))
+                ->equal('name', $profileName)
+                ->equal('rate-limit', '2M/2M')
+                ->equal('only-one', 'yes')
+        )->read();
+    }
+}
+
 public function ensurePppProfile(
     Client $c,
     InternetPackage $pkg,

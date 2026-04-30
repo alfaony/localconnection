@@ -29,7 +29,19 @@ $totalUser = $totalUser + 1; // Get the total number of projects
         <form action="{{ route('user.store') }}" method="post">
             @csrf
             <label for="name">Nama:</label>
-            <input type="text" id="name" name="name" placeholder="Anwar" value="{{ old('name') ?? @$userEdit->name }}" required>
+            <input type="text" id="name" name="name" placeholder="Anwar" value="{{ old('name') ?? @$userEdit->name }}" required autocomplete="off">
+
+            @canAccess('search','user_blacklists')
+            {{-- Blacklist warning card --}}
+            <div id="blacklist-alert" style="display:none;" class="mt-2 mb-3">
+                <div class="bl-warning-header">
+                    <i class="fas fa-ban mr-2"></i>
+                    <span>Peringatan! Nama ini cocok dengan data Blacklist</span>
+                    <span id="bl-count-badge" class="bl-count-badge"></span>
+                </div>
+                <div id="blacklist-results"></div>
+            </div>
+            @endcanAccess
 
             <label for="email">Email:</label>
             <input type="email" id="email" name="email" placeholder="Budiman@gmail.com" value="{{ old('email') ?? @$userEdit->email }}" required>
@@ -929,6 +941,115 @@ $totalUser = $totalUser + 1; // Get the total number of projects
         toggleAdditionalSettings();
     });
 </script>
+
+@canAccess('search','user_blacklists')
+<script>
+// ===== Blacklist check saat mengetik nama (form create user) =====
+(function () {
+    const nameInput  = document.getElementById('name');
+    if (!nameInput) return;
+
+    @if(@$userEdit) return; @endif
+
+    const alertBox   = document.getElementById('blacklist-alert');
+    const resultsBox = document.getElementById('blacklist-results');
+    const countBadge = document.getElementById('bl-count-badge');
+    const searchUrl  = '{{ route("user-blacklist.search") }}';
+
+    let debounceTimer = null;
+
+    function esc(str) {
+        if (!str) return '';
+        return String(str)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;');
+    }
+
+    function buildCard(p) {
+        // Avatar
+        const avatar = p.avatar_url
+            ? `<img src="${esc(p.avatar_url)}" class="bl-avatar" alt="foto">`
+            : `<div class="bl-avatar-placeholder"><i class="fas fa-user"></i></div>`;
+
+        // Company tag
+        const company = p.company_name
+            ? `<span class="bl-company-tag"><i class="fas fa-building mr-1"></i>${esc(p.company_name)}</span>`
+            : '';
+
+        // Detail fields grid
+        const fields = [
+            p.email   ? `<div class="bl-field"><i class="fas fa-envelope"></i><span>${esc(p.email)}</span></div>`           : '',
+            p.phone   ? `<div class="bl-field"><i class="fas fa-phone"></i><span>${esc(p.phone)}</span></div>`               : '',
+            p.id_card ? `<div class="bl-field"><i class="fas fa-id-card"></i><span>KTP: ${esc(p.id_card)}</span></div>`      : '',
+            p.address ? `<div class="bl-field"><i class="fas fa-map-marker-alt"></i><span>${esc(p.address)}</span></div>`    : '',
+        ].filter(Boolean).join('');
+
+        // Reason box
+        const reason = p.reason
+            ? `<div class="bl-reason-box mt-2">
+                <i class="fas fa-exclamation-circle"></i>
+                <span><strong>Alasan:</strong> ${esc(p.reason)}</span>
+               </div>`
+            : '';
+
+        return `
+        <div class="bl-person-card">
+            <div class="bl-avatar-wrap">
+                ${avatar}
+                <div class="bl-ban-stamp"><i class="fas fa-ban"></i></div>
+            </div>
+            <div class="bl-body">
+                <div class="bl-name-row">
+                    <span class="bl-name">${esc(p.name)}</span>
+                    <span class="bl-badge"><i class="fas fa-ban mr-1"></i>BLACKLIST</span>
+                    ${company}
+                </div>
+                ${fields ? `<div class="bl-grid">${fields}</div>` : ''}
+                ${reason}
+            </div>
+        </div>`;
+    }
+
+    nameInput.addEventListener('input', function () {
+        clearTimeout(debounceTimer);
+        const val = this.value.trim();
+
+        if (val.length < 2) {
+            alertBox.style.display = 'none';
+            resultsBox.innerHTML   = '';
+            return;
+        }
+
+        debounceTimer = setTimeout(function () {
+            fetch(searchUrl + '?name=' + encodeURIComponent(val), {
+                headers: { 'Accept': 'application/json' }
+            })
+            .then(function (r) {
+                if (!r.ok) throw new Error('HTTP ' + r.status);
+                return r.json();
+            })
+            .then(function (data) {
+                if (!Array.isArray(data) || data.length === 0) {
+                    alertBox.style.display = 'none';
+                    resultsBox.innerHTML   = '';
+                    return;
+                }
+
+                countBadge.textContent   = data.length + ' data ditemukan';
+                resultsBox.innerHTML     = data.map(buildCard).join('');
+                alertBox.style.display   = 'block';
+            })
+            .catch(function () {
+                alertBox.style.display = 'none';
+                resultsBox.innerHTML   = '';
+            });
+        }, 400);
+    });
+})();
+</script>
+@endcanAccess
 @stop
 
 
@@ -1022,5 +1143,106 @@ $totalUser = $totalUser + 1; // Get the total number of projects
         .badge-induk-on { display: none; background-color: #ffc107; color: #212529; border: 1px solid #e0a800; }
         .primary-division-radio:checked + .primary-division-label .badge-induk-off { display: none; }
         .primary-division-radio:checked + .primary-division-label .badge-induk-on { display: inline-block; }
+
+        /* ===== Blacklist Alert Styles ===== */
+        .bl-warning-header {
+            display: flex;
+            align-items: center;
+            background: linear-gradient(135deg, #c0392b, #e74c3c);
+            color: #fff;
+            font-weight: 700;
+            font-size: 0.88rem;
+            padding: 10px 14px;
+            border-radius: 8px 8px 0 0;
+            letter-spacing: 0.3px;
+        }
+        .bl-count-badge {
+            margin-left: auto;
+            background: rgba(255,255,255,0.25);
+            border-radius: 20px;
+            padding: 2px 10px;
+            font-size: 0.78rem;
+            font-weight: 600;
+        }
+        #blacklist-results {
+            border: 2px solid #e74c3c;
+            border-top: none;
+            border-radius: 0 0 8px 8px;
+            background: #fff;
+            overflow: hidden;
+        }
+        .bl-person-card {
+            display: flex;
+            align-items: flex-start;
+            padding: 12px 14px;
+            border-bottom: 1px solid #fde8e8;
+            transition: background 0.15s;
+        }
+        .bl-person-card:last-child { border-bottom: none; }
+        .bl-person-card:hover { background: #fff8f8; }
+        .bl-avatar-wrap {
+            flex-shrink: 0;
+            margin-right: 14px;
+            position: relative;
+        }
+        .bl-avatar {
+            width: 62px; height: 62px; object-fit: cover;
+            border-radius: 50%;
+            border: 3px solid #e74c3c;
+            box-shadow: 0 2px 8px rgba(231,76,60,.3);
+        }
+        .bl-avatar-placeholder {
+            width: 62px; height: 62px; border-radius: 50%;
+            background: linear-gradient(135deg, #c0392b, #e74c3c);
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 2px 8px rgba(231,76,60,.3);
+        }
+        .bl-avatar-placeholder i { color: #fff; font-size: 1.4rem; }
+        .bl-ban-stamp {
+            position: absolute; bottom: -4px; right: -4px;
+            background: #c0392b; border-radius: 50%;
+            width: 20px; height: 20px;
+            display: flex; align-items: center; justify-content: center;
+            border: 2px solid #fff;
+        }
+        .bl-ban-stamp i { color: #fff; font-size: 0.6rem; }
+        .bl-body { flex: 1; min-width: 0; }
+        .bl-name-row {
+            display: flex; align-items: center; flex-wrap: wrap; gap: 6px;
+            margin-bottom: 6px;
+        }
+        .bl-name {
+            font-weight: 700; font-size: 0.97rem; color: #c0392b;
+        }
+        .bl-badge {
+            display: inline-flex; align-items: center;
+            background: #c0392b; color: #fff;
+            font-size: 0.67rem; font-weight: 700; letter-spacing: 0.5px;
+            padding: 2px 8px; border-radius: 20px;
+        }
+        .bl-company-tag {
+            display: inline-flex; align-items: center;
+            background: #fde8e8; color: #922b21;
+            font-size: 0.72rem; padding: 2px 8px; border-radius: 20px;
+            border: 1px solid #f5c6cb;
+        }
+        .bl-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 4px 16px;
+            margin-bottom: 6px;
+        }
+        .bl-field {
+            display: flex; align-items: flex-start; gap: 5px;
+            font-size: 0.78rem; color: #555; line-height: 1.4;
+        }
+        .bl-field i { color: #e74c3c; margin-top: 2px; flex-shrink: 0; font-size: 0.72rem; }
+        .bl-reason-box {
+            display: flex; align-items: flex-start; gap: 6px;
+            background: #fdf0ef; border: 1px solid #f5b7b1;
+            border-radius: 6px; padding: 6px 10px;
+            font-size: 0.78rem; color: #922b21;
+        }
+        .bl-reason-box i { flex-shrink: 0; margin-top: 2px; }
 </style>
 @stop

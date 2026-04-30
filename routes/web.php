@@ -81,6 +81,7 @@ use App\Http\Controllers\ShippingCalculationController;
 use App\Http\Controllers\AskBosController;
 use App\Http\Controllers\DecisionController;
 use App\Http\Controllers\PartnershipAgreementController;
+use App\Http\Controllers\UserBlacklistController;
 use App\Http\Controllers\SupplierCategoryController;
 use App\Http\Controllers\ProductSupplierController;
 use App\Http\Controllers\DayoffController;
@@ -275,6 +276,7 @@ Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name
 Route::get('employee-checking/report', [EmployeeCheckingController::class, 'report'])->name('employee-checking.report');
 
 Route::get('partnership-agreement/sharePdf/{id}',[PartnershipAgreementController::class,'sharePdf'])->name('partnership-agreement.sharePdf');
+Route::post('partnership-agreement/verifySharePassword/{id}',[PartnershipAgreementController::class,'verifySharePassword'])->name('partnership-agreement.verifySharePassword');
 Route::put('partnership-agreement/signatureShare/{id}',[PartnershipAgreementController::class,'signatureShare'])->name('partnership-agreement.signatureShare');
 
 Route::get('used-laptop/showQr/{slug}', [UsedLaptopController::class,'showQr'])->name('used-laptop.show-qr');
@@ -310,7 +312,6 @@ Route::post('/software-sharing/{companySlug}/forgot-password', [SoftwareSharingC
 Route::get('/software-sharing/{companySlug}/reset-password/{token}', [SoftwareSharingController::class, 'showResetPassword'])->name('customer.password.reset.form');
 Route::post('/software-sharing/{companySlug}/reset-password', [SoftwareSharingController::class, 'resetPassword'])->name('customer.password.reset');
 
-
 Route::group(['middleware' => ['auth','role.permission','ip.restriction']], function()
 {
   Route::get('home/softwareSharing', [App\Http\Controllers\HomeController::class, 'softwareSharing'])->name('home.softwareSharing');
@@ -334,6 +335,10 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
   Route::resource('project', ProjectController::class);
   Route::resource('employee', EmployeeController::class);
   
+  Route::get('user-blacklist/search', [UserBlacklistController::class, 'search'])->name('user-blacklist.search');
+  Route::post('user-blacklist/import-inactive', [UserBlacklistController::class, 'importInactive'])->name('user-blacklist.importInactive');
+  Route::resource('user-blacklist', UserBlacklistController::class)->only(['index', 'store', 'destroy']);
+
   Route::get('user/profileEdit/{slug}', [UserController::class,'profileEdit'])->name('user.profileEdit');
   Route::put('user/profileUpdate/{slug}', [UserController::class,'profileUpdate'])->name('user.profileUpdate');
   Route::post('user/updatefcm',[UserController::class,'updatefcm'])->name('user.updatefcm');
@@ -647,6 +652,7 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
   Route::resource('item-purchase', ItemPurchaseController::class)->only(['store','update']);  
 
   Route::post('meeting/join', [MeetingController::class, 'join'])->name('meeting.join');
+  Route::get('meeting/export', [MeetingController::class, 'export'])->name('meeting.export');
   Route::resource('meeting', MeetingController::class);
 
   Route::put('mom/storeAgenda/{id}', [MomController::class,'storeAgenda'])->name('mom.storeAgenda');
@@ -795,6 +801,12 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
 
   Route::post('role/deselectAll/{role}', [RoleController::class, 'deselectAll'])
       ->name('role.deselect-all');
+
+  Route::post('role/{role}/duplicate', [RoleController::class, 'duplicate'])
+      ->name('role.duplicate');
+
+  Route::post('role/clearAllCache', [RoleController::class, 'clearAllCache'])
+      ->name('role.clear-all-cache');
 
 
   // Direct Point Routes

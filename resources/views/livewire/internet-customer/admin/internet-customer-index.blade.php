@@ -34,7 +34,7 @@
             </div>
             <div class="card-body">
                 <div class="row g-3">
-                    <div class="col-md-3">
+                    <div class="col-md-2">
                         <label class="form-label">Paket Internet</label>
                         <select wire:model="selectedPackage" class="form-control">
                             <option value="">Semua Paket</option>
@@ -61,6 +61,14 @@
                         </select>
                     </div>
                     <div class="col-md-2">
+                        <label class="form-label">Tipe Pelanggan</label>
+                        <select wire:model="customerTypeFilter" class="form-control">
+                            <option value="">Semua Tipe</option>
+                            <option value="rumah">Rumah</option>
+                            <option value="bisnis">Bisnis</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
                         <label class="form-label">Dari Tanggal</label>
                         <input wire:model="dateFrom" type="date" class="form-control">
                     </div>
@@ -68,13 +76,13 @@
                         <label class="form-label">Sampai Tanggal</label>
                         <input wire:model="dateTo" type="date" class="form-control">
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-md-2">
                         <label class="form-label">Search</label>
                         <div class="input-group">
                             <span class="input-group-text bg-white">
                                 <i class="fas fa-search"></i>
                             </span>
-                            <input wire:model.debounce.300ms="search" type="text" class="form-control" 
+                            <input wire:model.debounce.300ms="search" type="text" class="form-control"
                                     placeholder="Cari pelanggan...">
                         </div>
                     </div>
@@ -366,6 +374,12 @@
                                     class="{{ $loop->odd ? 'bg-light' : '' }}">
                                     <td>
                                         <span class="badge bg-info">{{ $customer->code }}</span>
+                                        @php $ct = $customer->customer_type ?? 'home'; @endphp
+                                        @if($ct === 'bisnis')
+                                            <span class="badge badge-primary" title="Bisnis"><i class="fas fa-building mr-1"></i>Bisnis</span>
+                                        @else
+                                            <span class="badge badge-success" title="Home"><i class="fas fa-home mr-1"></i>Rumah</span>
+                                        @endif
                                         @if($customer->installation && ($customer->installation->grouping_id || $customer->installation->grouping_id))
                                             <div class="mt-1 d-flex gap-1">
                                                 <span class="badge bg-light text-primary border border-primary-subtle" title="Grouping">
@@ -507,15 +521,23 @@
                                                     </span>
                                                     @break
                                                 @case(\App\Schemas\ParamSchema::ACTIVE)
+                                                    @if($finance_access)
                                                     <button class="btn btn-sm btn-outline-danger" onclick="return confirm('Anda yakin ingin menon-aktifkan pelanggan ini?') ? @this.call('suspend', @js($customer->id)) : false">
                                                         <i class="fas fa-pause me-1"></i> Suspend
                                                     </button>
+                                                    @else
+                                                    <span class="text-muted">Finance</span>
+                                                    @endif
                                                     @break
 
                                                 @case(\App\Schemas\ParamSchema::SUSPENDED)
+                                                    @if($finance_access)
                                                     <button class="btn btn-sm btn-outline-success" onclick="return confirm('Anda yakin ingin mengaktifkan kembali pelanggan ini?') ? @this.call('reactivate', @js($customer->id)) : false">
                                                         <i class="fas fa-play me-1"></i> Aktifkan
                                                     </button>
+                                                    @else
+                                                    <span class="text-muted">Finance</span>
+                                                    @endif
                                                     @break
                                                 {{-- BARU: Case untuk status CLOSED --}}
                                                 @case(\App\Schemas\ParamSchema::CLOSED)
@@ -596,27 +618,42 @@
                         <input type="text" class="form-control" wire:model="serialNumber" id="modalSerialNumber" required>
                     </div>
 
-                    {{-- BARU: Field ODP --}}
-                    <div class="mb-3">
-                        <label class="form-label">ODP (Optical Distribution Point) <span class="text-danger">*</span></label>
-                        <select class="form-control" wire:model="optical_distribution_id" id="odpSelect">
-                            <option value="">— Pilih ODP —</option>
-                            @foreach($availableOdps as $odp)
-                                <option value="{{ $odp['id'] }}">{{ $odp['label'] }}</option>
-                            @endforeach
-                        </select>
-                        <div class="form-text">
-                            Pilih ODP sesuai lokasi pemasangan pelanggan.
+                    {{-- ODP: wire:ignore so Livewire never wipes JS-injected options --}}
+                    <div wire:ignore>
+                        <div class="mb-3">
+                            <label class="form-label">ODP (Optical Distribution Point) <span class="text-danger">*</span></label>
+                            <select class="form-control" id="odpSelect">
+                                <option value="">— Pilih ODP —</option>
+                            </select>
+                            <div class="form-text">Pilih ODP sesuai lokasi pemasangan pelanggan.</div>
                         </div>
                     </div>
 
-                    {{-- BARU: Field Grouping --}}
-                    <div class="mb-3">
-                        <label class="form-label">Grouping/Cluster</label>
-                        <input type="text" class="form-control" wire:model="grouping_id" id="groupingInput" 
-                               placeholder="Contoh: Cluster A, Zona 1, RT 05, dll">
-                        <div class="form-text">
-                            Isi dengan nama grouping/cluster/RT lokasi pelanggan (opsional).
+                    {{-- Group: wire:ignore — JS-populated via groups-loaded event --}}
+                    <div wire:ignore>
+                        <div class="mb-3">
+                            <label class="form-label">Group <span class="text-danger">*</span></label>
+                            <select class="form-control" id="groupSelect">
+                                <option value="">— Pilih ODP dulu —</option>
+                            </select>
+                            <div class="form-text" id="groupSelectHint">Group difilter otomatis dari ODP yang dipilih.</div>
+                        </div>
+
+                        {{-- Grouping ID preview --}}
+                        <div class="mb-3" id="groupingPreviewBox" style="display:none;">
+                            <label class="form-label">Grouping ID <small class="text-muted font-weight-normal">(bisa diubah jika perlu)</small></label>
+                            <div class="input-group input-group-sm">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text"><i class="fas fa-tag"></i></span>
+                                </div>
+                                <input type="text" class="form-control font-weight-bold" id="groupingIdPreview" placeholder="e.g. HN110001">
+                                <div class="input-group-append">
+                                    <button type="button" class="btn btn-outline-secondary btn-sm" id="useAsUsernameBtn" title="Gunakan sebagai username">
+                                        <i class="fas fa-arrow-right"></i> Pakai sbg Username
+                                    </button>
+                                </div>
+                            </div>
+                            <small class="text-muted">Saran otomatis — bisa diubah jika nomor sudah terpakai.</small>
                         </div>
                     </div>
                     
@@ -894,6 +931,140 @@
             @this.set('local_address', e.target.value);
         });
 
+        // Populate group select when Livewire sends groups after ODP change
+        window.addEventListener('groups-loaded', function (e) {
+            const groupSelect = document.getElementById('groupSelect');
+            const hint        = document.getElementById('groupSelectHint');
+            if (!groupSelect) return;
+
+            const groups = e.detail.groups || [];
+            groupSelect.innerHTML = '';
+
+            // Hide preview when group list reloads
+            const previewBox = document.getElementById('groupingPreviewBox');
+            if (previewBox) previewBox.style.display = 'none';
+
+            if (groups.length === 0) {
+                const opt    = document.createElement('option');
+                opt.value    = '';
+                opt.textContent = '— Tidak ada group untuk ODP ini —';
+                groupSelect.appendChild(opt);
+                if (hint) hint.classList.add('text-warning');
+            } else {
+                const placeholder    = document.createElement('option');
+                placeholder.value    = '';
+                placeholder.textContent = '— Pilih Group —';
+                groupSelect.appendChild(placeholder);
+
+                groups.forEach(function (g) {
+                    const opt    = document.createElement('option');
+                    opt.value    = g.id;
+                    opt.textContent = g.description ? g.name + ' — ' + g.description : g.name;
+                    groupSelect.appendChild(opt);
+                });
+
+                if (hint) hint.classList.remove('text-warning');
+            }
+
+            // When group changes: request grouping_id preview from Livewire
+            groupSelect.onchange = function () {
+                const val = groupSelect.value || null;
+                const previewBox = document.getElementById('groupingPreviewBox');
+                if (!val) {
+                    if (previewBox) previewBox.style.display = 'none';
+                    return;
+                }
+                @this.call('previewGroupingId', val);
+            };
+        });
+
+        // ── Grouping ID duplicate check ──────────────────────────────────────
+        function resetGroupingIdState() {
+            const input = document.getElementById('groupingIdPreview');
+            if (!input) return;
+            input.classList.remove('is-valid', 'is-invalid');
+            const err = input.closest('.input-group')?.parentElement?.querySelector('.grouping-id-error-msg');
+            if (err) err.remove();
+            window._groupingIdAvailable = true;
+        }
+
+        window.addEventListener('groupingIdCheckComplete', function(event) {
+            const data  = event.detail;
+            const input = document.getElementById('groupingIdPreview');
+            if (!input) return;
+
+            const wrap = input.closest('.input-group')?.parentElement;
+            let errorDiv = wrap?.querySelector('.grouping-id-error-msg');
+
+            if (data.available) {
+                input.classList.remove('is-invalid');
+                input.classList.add('is-valid');
+                if (errorDiv) errorDiv.remove();
+                window._groupingIdAvailable = true;
+            } else {
+                input.classList.remove('is-valid');
+                input.classList.add('is-invalid');
+                if (!errorDiv) {
+                    errorDiv = document.createElement('div');
+                    errorDiv.className = 'invalid-feedback d-block grouping-id-error-msg';
+                    wrap.appendChild(errorDiv);
+                }
+                errorDiv.innerHTML = `Grouping ID sudah digunakan oleh: <strong>${data.existing.code} - ${data.existing.name}</strong>`;
+                window._groupingIdAvailable = false;
+            }
+        });
+
+        // Debounced manual-edit check on groupingIdPreview
+        let _groupingTimer = null;
+        document.addEventListener('input', function(e) {
+            if (!e.target || e.target.id !== 'groupingIdPreview') return;
+            clearTimeout(_groupingTimer);
+            const val = e.target.value.trim();
+            if (!val || val.length < 2) { resetGroupingIdState(); return; }
+            _groupingTimer = setTimeout(function() {
+                @this.call('checkGroupingIdAvailability', val);
+            }, 400);
+        });
+
+        // Show grouping_id preview returned by Livewire
+        window.addEventListener('grouping-id-preview', function (e) {
+            const preview    = e.detail.preview;
+            const previewBox = document.getElementById('groupingPreviewBox');
+            const previewInput = document.getElementById('groupingIdPreview');
+            if (!previewBox || !previewInput) return;
+
+            if (!preview) {
+                previewBox.style.display = 'none';
+                previewInput.value = '';
+                resetGroupingIdState();
+                return;
+            }
+
+            previewInput.value       = preview;
+            previewBox.style.display = 'block';
+            // Auto-check the server-generated ID too
+            @this.call('checkGroupingIdAvailability', preview);
+
+            // Auto-suggest as username if username field is empty
+            const usernameInput = document.getElementById('modalUsername');
+            if (usernameInput && !usernameInput.value) {
+                usernameInput.value = preview;
+                @this.set('username', preview);
+            }
+        });
+
+        // "Pakai sbg Username" button
+        document.addEventListener('click', function (e) {
+            if (e.target.closest('#useAsUsernameBtn')) {
+                const preview     = document.getElementById('groupingIdPreview')?.value;
+                const usernameInput = document.getElementById('modalUsername');
+                if (preview && usernameInput) {
+                    usernameInput.value = preview;
+                    @this.set('username', preview);
+                }
+            }
+        });
+
         // Listen pools-options event
         window.addEventListener('pools-options', (e) => {
             const select = document.querySelector('select[wire\\:model="override_pool_id"]');
@@ -944,19 +1115,31 @@
                     console.warn('⚠️ No ODPs available!'); // Debug log
                 }
                 
-                // Reset ODP selection
+                // Reset ODP selection (DOM only — Livewire reset handled below)
                 odpSelect.value = '';
-                @this.set('optical_distribution_id', '');
             } else {
                 console.error('❌ ODP select element not found!'); // Debug log
             }
 
-            // ✅ RESET GROUPING INPUT
-            const groupingInput = document.getElementById('groupingInput');
-            if (groupingInput) {
-                groupingInput.value = '';
-                @this.set('grouping_id', '');
+            // Reset group select + preview
+            const groupSelect = document.getElementById('groupSelect');
+            if (groupSelect) {
+                groupSelect.innerHTML = '<option value="">— Pilih ODP dulu —</option>';
             }
+            const previewBox = document.getElementById('groupingPreviewBox');
+            if (previewBox) previewBox.style.display = 'none';
+            const previewInput = document.getElementById('groupingIdPreview');
+            if (previewInput) previewInput.value = '';
+            resetGroupingIdState();
+
+            // Reset Livewire ODP + group state
+            @this.set('optical_distribution_id', null);
+
+            // ODP onchange: notify Livewire → updatedOpticalDistributionId → groups-loaded event
+            odpSelect.onchange = function () {
+                const val = odpSelect.value || null;
+                @this.set('optical_distribution_id', val);
+            };
 
             // Populate Router dropdown
             const routerSelect = document.getElementById('routerSelect');
@@ -1041,34 +1224,35 @@
             const notes = document.getElementById('modalNotes').value;
             const files = document.getElementById('modalPhotos').files;
             const routerId = document.getElementById('routerSelectMirror').value;
-            const odpId = document.getElementById('odpSelect').value;
-            const grouping = document.getElementById('groupingInput').value;
-            // const odpId = @this.optical_distribution_id;
+            const odpId   = document.getElementById('odpSelect').value;
+            const groupId = document.getElementById('groupSelect').value;
+            const manualGroupingId = (document.getElementById('groupingIdPreview')?.value || '').trim();
             const username = @this.username;
             const password = document.getElementById('modalPassword').value;
             const override_pool_id = @this.override_pool_id;
             const local_address = @this.local_address;
 
-            console.log('📝 Form data:', { // Debug log
+            console.log('📝 Form data:', {
                 serialNumber,
                 routerId,
                 odpId,
-                grouping,
+                groupId,
                 username,
                 filesCount: files.length
             });
 
-            // ✅ VALIDASI ODP
+            // Validasi ODP
             if (!odpId) {
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'Perhatian',
-                    text: 'ODP harus dipilih'
-                });
+                Swal.fire({ icon: 'warning', title: 'Perhatian', text: 'ODP harus dipilih' });
                 return;
             }
 
-            // Validasi lainnya
+            // Validasi Group
+            if (!groupId) {
+                Swal.fire({ icon: 'warning', title: 'Perhatian', text: 'Group harus dipilih' });
+                return;
+            }
+
             if (!serialNumber) {
                 Swal.fire({
                     icon: 'warning',
@@ -1113,7 +1297,16 @@
                 });
                 return;
             }
-            
+
+            if (manualGroupingId && window._groupingIdAvailable === false) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Grouping ID Duplikat',
+                    text: 'Grouping ID sudah digunakan pelanggan lain. Silakan ganti terlebih dahulu.'
+                });
+                return;
+            }
+
             // Konfirmasi
             const result = await Swal.fire({
                 icon: 'question',
@@ -1175,7 +1368,8 @@
                     override_pool_id,
                     local_address,
                     odpId,
-                    grouping
+                    groupId,
+                    manualGroupingId
                 );
                 
                 console.log('completeInstallation result:', success);

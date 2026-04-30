@@ -67,35 +67,28 @@ class ProvisionCustomerJob implements ShouldQueue
             }
             elseif ($cust->status == ParamSchema::SUSPENDED)
             {
-                // $ros->disableSecret($client, $cust->username);
                 $ros->disconnectIfActive($client, $cust->username);
 
-                // Set profile to "SUSPED" if exists, otherwise clear profile
                 $suspendProfileName = 'SUSPENDED';
-                $pppProfiles = $client->query(
-                    (new \RouterOS\Query('/ppp/profile/print'))->where('name', $suspendProfileName)
-                )->read();
-                $targetProfile = !empty($pppProfiles) ? $suspendProfileName : '';
+                // buat profile SUSPENDED di MikroTik jika belum ada (2M/2M, tanpa pool)
+                $ros->ensureSuspendedPppProfile($client, $suspendProfileName);
 
-                // (opsional) simpan meta status terakhir dari router
                 $row = $client->query(
                     (new \RouterOS\Query('/ppp/secret/print'))->where('name', $cust->username)
                 )->read()[0] ?? null;
 
-                if ($row) 
+                if ($row)
                 {
-                    // Apply target profile ("SUSPED" or clear)
                     $qSet = (new \RouterOS\Query('/ppp/secret/set'))
                         ->equal('.id', $row['.id'])
-                        ->equal('profile', $targetProfile);
+                        ->equal('profile', $suspendProfileName);
                     $client->query($qSet)->read();
 
                     $meta = (array) $cust->meta;
-                    $meta['ros_secret'] = 
-                    [
+                    $meta['ros_secret'] = [
                         'id'       => $row['.id'] ?? null,
                         'disabled' => "no",
-                        'profile'  => ($targetProfile !== '' ? $targetProfile : null),
+                        'profile'  => $suspendProfileName,
                         'comment'  => $row['comment'] ?? null,
                     ];
                     $cust->meta = $meta;

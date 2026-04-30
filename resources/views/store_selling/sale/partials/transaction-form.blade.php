@@ -51,28 +51,36 @@
                             <tbody>
                                 <tr v-for="(item, index) in cartItems" :key="item.id" class="animate__animated animate__fadeIn">
                                     <td>
-                                        <div class="font-weight-bold">@{{ item.name }}</div>
-                                        {{-- Inline stock indicator, reactive terhadap qty --}}
-                                        <div v-if="item.stock !== null && item.stock !== undefined" style="font-size:0.78rem; margin-top:2px;">
-                                            <span v-if="item.quantity > item.stock" class="text-danger">
-                                                <i class="fas fa-times-circle"></i>
-                                                Stok tidak cukup &mdash; tersedia <strong>@{{ item.stock }} pcs</strong>
-                                            </span>
-                                            <span v-else-if="item.stock === 0" class="text-danger">
-                                                <i class="fas fa-times-circle"></i> Stok habis
-                                            </span>
-                                            <span v-else-if="item.stock - item.quantity <= 3" class="text-warning">
-                                                <i class="fas fa-exclamation-triangle"></i>
-                                                Sisa stok <strong>@{{ item.stock - item.quantity }} pcs</strong> setelah transaksi ini
-                                            </span>
-                                            <span v-else class="text-success">
-                                                <i class="fas fa-check-circle"></i>
-                                                Stok: @{{ item.stock }} pcs
-                                                <span class="text-muted">(&minus;@{{ item.quantity }} = sisa @{{ item.stock - item.quantity }})</span>
-                                            </span>
-                                        </div>
-                                        <div v-else style="font-size:0.78rem; margin-top:2px;" class="text-muted">
-                                            <i class="fas fa-question-circle"></i> Stok belum didata
+                                        <div class="d-flex align-items-start">
+                                            <img v-if="item.image"
+                                                 :src="item.image"
+                                                 :alt="item.name"
+                                                 style="width:44px;height:44px;object-fit:cover;border-radius:6px;margin-right:10px;flex-shrink:0;border:1px solid #dee2e6;">
+                                            <div style="min-width:0;">
+                                                <div class="font-weight-bold">@{{ item.name }}</div>
+                                                {{-- Inline stock indicator, reactive terhadap qty --}}
+                                                <div v-if="item.stock !== null && item.stock !== undefined" style="font-size:0.78rem; margin-top:2px;">
+                                                    <span v-if="item.quantity > item.stock" class="text-danger">
+                                                        <i class="fas fa-times-circle"></i>
+                                                        Stok tidak cukup &mdash; tersedia <strong>@{{ item.stock }} pcs</strong>
+                                                    </span>
+                                                    <span v-else-if="item.stock === 0" class="text-danger">
+                                                        <i class="fas fa-times-circle"></i> Stok habis
+                                                    </span>
+                                                    <span v-else-if="item.stock - item.quantity <= 3" class="text-warning">
+                                                        <i class="fas fa-exclamation-triangle"></i>
+                                                        Sisa stok <strong>@{{ item.stock - item.quantity }} pcs</strong> setelah transaksi ini
+                                                    </span>
+                                                    <span v-else class="text-success">
+                                                        <i class="fas fa-check-circle"></i>
+                                                        Stok: @{{ item.stock }} pcs
+                                                        <span class="text-muted">(&minus;@{{ item.quantity }} = sisa @{{ item.stock - item.quantity }})</span>
+                                                    </span>
+                                                </div>
+                                                <div v-else style="font-size:0.78rem; margin-top:2px;" class="text-muted">
+                                                    <i class="fas fa-question-circle"></i> Stok belum didata
+                                                </div>
+                                            </div>
                                         </div>
                                     </td>
                                     <td class="text-right" style="padding-right: 1rem;">
