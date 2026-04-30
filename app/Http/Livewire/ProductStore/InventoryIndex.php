@@ -19,9 +19,10 @@ class InventoryIndex extends Component
     public $showForm      = false;
 
     // ── Search & found product
-    public $searchQuery   = '';
-    public $foundProduct  = null;
-    public $inventory     = null;
+    public $searchQuery       = '';
+    public $foundProduct      = null;
+    public $inventory         = null;
+    public $multipleProducts  = [];
 
     // ── Form input stok
     public $actionType    = 'in';   // in | out | adjustment
@@ -43,27 +44,61 @@ class InventoryIndex extends Component
     public function updatedSearchQuery()
     {
         $this->resetPage();
-        $this->foundProduct = null;
-        $this->inventory    = null;
+        $this->foundProduct     = null;
+        $this->inventory        = null;
+        $this->multipleProducts = [];
         $this->resetForm();
 
         if (strlen($this->searchQuery) < 2) {
             return;
         }
 
-        $product = ProductStore::with('inventory')
+        $products = ProductStore::with(['inventory', 'primaryMedia', 'category', 'brand'])
             ->byCompany(auth()->user()->company_id)
             ->where(function ($q) {
                 $q->where('barcode', $this->searchQuery)
                   ->orWhere('code', $this->searchQuery)
                   ->orWhere('name', 'like', '%' . $this->searchQuery . '%');
             })
-            ->first();
+            ->get();
 
-        if ($product) {
-            $this->foundProduct = $product;
-            $this->inventory    = $product->inventory;
+        if ($products->isEmpty()) {
+            return;
         }
+
+        if ($products->count() === 1) {
+            $this->foundProduct = $products->first();
+            $this->inventory    = $this->foundProduct->inventory;
+            return;
+        }
+
+        $this->multipleProducts = $products->map(fn($p) => [
+            'id'       => $p->id,
+            'name'     => $p->name,
+            'barcode'  => $p->barcode,
+            'code'     => $p->code,
+            'stock'    => $p->inventory?->quantity ?? 0,
+            'unit'     => $p->inventory?->unit ?? 'pcs',
+            'image'    => $p->primaryMedia?->file_url ?? null,
+            'category' => $p->category?->name ?? '-',
+            'brand'    => $p->brand?->name ?? '-',
+        ])->toArray();
+
+    }
+
+    public function selectProduct(string $id)
+    {
+        $product = ProductStore::with('inventory')
+            ->byCompany(auth()->user()->company_id)
+            ->find($id);
+
+        if (!$product) {
+            return;
+        }
+
+        $this->foundProduct     = $product;
+        $this->inventory        = $product->inventory;
+        $this->multipleProducts = [];
     }
 
     public function selectAction(string $type)
@@ -141,9 +176,10 @@ class InventoryIndex extends Component
 
     public function clearSearch()
     {
-        $this->searchQuery  = '';
-        $this->foundProduct = null;
-        $this->inventory    = null;
+        $this->searchQuery      = '';
+        $this->foundProduct     = null;
+        $this->inventory        = null;
+        $this->multipleProducts = [];
         $this->resetForm();
     }
 

@@ -226,14 +226,15 @@
                         <table class="table table-hover table-bordered">
                             <thead class="thead-light">
                                 <tr>
+                                    <th width="5%"></th>
                                     <th width="9%">Kode</th>
-                                    <th width="18%">Nama</th>
-                                    <th width="13%">Varian</th>
-                                    <th width="18%">Spesifikasi</th>
-                                    <th width="10%">Kategori</th>
-                                    <th width="10%">Merk</th>
-                                    <th width="11%" class="text-right">Harga</th>
-                                    <th width="11%" class="text-center">Stok</th>
+                                    <th width="16%">Nama</th>
+                                    <th width="12%">Varian</th>
+                                    <th width="16%">Spesifikasi</th>
+                                    <th width="9%">Kategori</th>
+                                    <th width="9%">Merk</th>
+                                    <th width="12%" class="text-right">Harga</th>
+                                    <th width="12%" class="text-center">Stok</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -243,14 +244,26 @@
                                     @click="selectProduct(product)"
                                     style="cursor: pointer;"
                                     :title="!product.inventory ? 'Stok belum didata — tidak bisa dijual' : ''">
-                                    <td><code>@{{ product.code || '-' }}</code></td>
-                                    <td><strong>@{{ product.name }}</strong></td>
-                                    <td>@{{ product.variant || '-' }}</td>
-                                    <td><small>@{{ product.specification || '-' }}</small></td>
-                                    <td>@{{ product.category?.name || '-' }}</td>
-                                    <td>@{{ product.brand?.name || '-' }}</td>
-                                    <td class="text-right"><strong>@{{ formatCurrency(product.selling_price) }}</strong></td>
-                                    <td class="text-center">
+                                    <td class="text-center align-middle p-1">
+                                        <img v-if="product.primary_media"
+                                             :src="product.primary_media.file_url"
+                                             class="rounded"
+                                             style="width:40px;height:40px;object-fit:cover;"
+                                             alt="">
+                                        <div v-else
+                                             class="rounded bg-light d-flex align-items-center justify-content-center mx-auto"
+                                             style="width:40px;height:40px;font-size:1rem;color:#bbb;">
+                                            <i class="fas fa-box"></i>
+                                        </div>
+                                    </td>
+                                    <td class="align-middle"><code>@{{ product.code || '-' }}</code></td>
+                                    <td class="align-middle"><strong>@{{ product.name }}</strong></td>
+                                    <td class="align-middle">@{{ product.variant || '-' }}</td>
+                                    <td class="align-middle"><small>@{{ product.specification || '-' }}</small></td>
+                                    <td class="align-middle">@{{ product.category?.name || '-' }}</td>
+                                    <td class="align-middle">@{{ product.brand?.name || '-' }}</td>
+                                    <td class="text-right align-middle"><strong>@{{ formatCurrency(product.selling_price) }}</strong></td>
+                                    <td class="text-center align-middle">
                                         <span v-if="!product.inventory" class="badge badge-secondary">
                                             <i class="fas fa-question"></i> Belum didata
                                         </span>
