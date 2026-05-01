@@ -109,7 +109,7 @@
     
     <div class="col-md-6">
         <label class="form-label">Nomor Telepon <span class="text-danger">*</span></label>
-        <input type="text" wire:model="phone_number" class="form-control">
+        <input type="text" wire:model="phone_number" class="form-control" inputmode="numeric" pattern="[0-9]*" oninput="this.value=this.value.replace(/[^0-9]/g,'')">
         @error('phone_number') <small class="text-danger">{{ $message }}</small> @enderror
     </div>
     

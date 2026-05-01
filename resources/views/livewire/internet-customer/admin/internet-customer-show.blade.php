@@ -853,7 +853,7 @@
                             <div class="col-md-6">
                                 <div class="form-group">
                                     <label for="phone_number">Nomor Telepon</label>
-                                    <input type="text" class="form-control" id="phone_number" wire:model="phone_number">
+                                    <input type="text" class="form-control" id="phone_number" wire:model="phone_number" inputmode="numeric" pattern="[0-9]*" oninput="this.value=this.value.replace(/[^0-9]/g,'')">
                                     @error('phone_number') <span class="text-danger">{{ $message }}</span> @enderror
                                 </div>
                             </div>
