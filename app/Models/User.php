@@ -342,6 +342,11 @@ class User extends Authenticatable implements MustVerifyEmail
             });
     }
 
+    public function internetCustomerRegions()
+    {
+        return $this->hasMany(InternetCustomerUserRegion::class);
+    }
+
     public function showName(): Attribute
     {
         return Attribute::make(

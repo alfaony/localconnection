@@ -74,7 +74,7 @@ class PermissionForMenuInternetCustomerSeeder extends Seeder
                 return;
             }
 
-            $itemCustomerInternet = ['index','edit', 'create', 'update', 'show', 'destroy', 'store', 'select2','workflow','dataTableJson','delivery','as_technician','as_finance','closed','editInstalasi','moveRouter','editPackage','as_marketing','import'];
+            $itemCustomerInternet = ['index','edit', 'create', 'update', 'show', 'destroy', 'store', 'select2','workflow','dataTableJson','delivery','as_technician','as_finance','closed','editInstalasi','moveRouter','editPackage','as_marketing',"as_manager",'import','export'];
             $chatMessage = ['index','store','show','edit'];
             
             
