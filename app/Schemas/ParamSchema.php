@@ -141,6 +141,7 @@ class ParamSchema
     const CANCELLED = "cancelled";
     const SUSPENDED = "suspended";
     const REACTIVATED = "reactivated";
+    const DISCONNECTED = "disconnected";
     const CUSTOMER_EXISTING = "customer_existing";
     const INACTIVE = "inactive";
     const CHALLENGE = "challenge";
