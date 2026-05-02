@@ -54,6 +54,7 @@
                             <option value="process_installation">Proses Instalasi</option>
                             <option value="installed">Terpasang</option>
                             <option value="reactivated">Reaktivasi</option>
+                            <option value="disconnected">Tidak Terhubung</option>
                             <option value="active">Aktif</option>
                             <option value="suspended">Dihentikan</option>
                             <option value="inactive">Tidak Aktif</option>

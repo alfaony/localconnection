@@ -10,6 +10,7 @@ use RouterOS\Client;
 use RouterOS\Query;
 use App\Models\Router;
 use App\Models\InternetCustomer;
+use App\Schemas\ParamSchema;
 use Illuminate\Foundation\Bus\Dispatchable;
 
 
@@ -46,7 +47,7 @@ class SyncActiveSessionsJob implements ShouldQueue
             }else
             {
                 $cust->update([
-                    'status'     => 'disconnected',
+                    'status'     => ParamSchema::DISCONNECTED,
                     'ip_address' => null,
                     'mac_address'=> null,
                 ]);
