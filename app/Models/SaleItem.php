@@ -14,12 +14,16 @@ class SaleItem extends Model
         'product_store_id',
         'quantity',
         'unit_price',
-        'subtotal'
+        'original_price',
+        'discount_percent',
+        'subtotal',
     ];
 
     protected $casts = [
-        'unit_price' => 'decimal:2',
-        'subtotal' => 'decimal:2',
+        'unit_price'       => 'decimal:2',
+        'original_price'   => 'decimal:2',
+        'discount_percent' => 'decimal:2',
+        'subtotal'         => 'decimal:2',
     ];
 
     public function sale()

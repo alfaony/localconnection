@@ -70,14 +70,16 @@ class SaleController extends Controller
         try {
             $saleData = $request->validate([
                 'items' => 'required|array',
-                'items.*.product_store_id' => 'required|exists:product_stores,id',
-                'items.*.quantity' => 'required|integer|min:1',
-                'items.*.unit_price' => 'required|numeric|min:0',
+                'items.*.product_store_id'  => 'required|exists:product_stores,id',
+                'items.*.quantity'          => 'required|integer|min:1',
+                'items.*.unit_price'        => 'required|numeric|min:0',
+                'items.*.original_price'    => 'nullable|numeric|min:0',
+                'items.*.discount_percent'  => 'nullable|numeric|min:0|max:100',
                 'payment_method' => 'required|in:cash,debit_credit,qris',
                 'customer_email' => 'nullable|email',
                 'payment_details' => 'nullable|array',
                 'tax_value' => 'required|numeric|min:0|max:100',
-                'draft_id' => 'nullable|exists:sales,id' // Tambahkan validasi untuk draft_id
+                'draft_id' => 'nullable|exists:sales,id'
             ]);
 
             // Calculate totals
@@ -167,11 +169,13 @@ class SaleController extends Controller
             // Create sale items
             foreach ($saleData['items'] as $item) {
                 SaleItem::create([
-                    'sale_id' => $sale->id,
+                    'sale_id'          => $sale->id,
                     'product_store_id' => $item['product_store_id'],
-                    'quantity' => $item['quantity'],
-                    'unit_price' => $item['unit_price'],
-                    'subtotal' => $item['quantity'] * $item['unit_price'],
+                    'quantity'         => $item['quantity'],
+                    'unit_price'       => $item['unit_price'],
+                    'original_price'   => $item['original_price'] ?? $item['unit_price'],
+                    'discount_percent' => $item['discount_percent'] ?? 0,
+                    'subtotal'         => $item['quantity'] * $item['unit_price'],
                 ]);
 
                 // Deduct stok
@@ -251,14 +255,16 @@ class SaleController extends Controller
         try {
             $saleData = $request->validate([
                 'items' => 'required|array',
-                'items.*.product_store_id' => 'required|exists:product_stores,id',
-                'items.*.quantity' => 'required|integer|min:1',
-                'items.*.unit_price' => 'required|numeric|min:0',
+                'items.*.product_store_id'  => 'required|exists:product_stores,id',
+                'items.*.quantity'          => 'required|integer|min:1',
+                'items.*.unit_price'        => 'required|numeric|min:0',
+                'items.*.original_price'    => 'nullable|numeric|min:0',
+                'items.*.discount_percent'  => 'nullable|numeric|min:0|max:100',
                 'payment_method' => 'nullable|in:cash,debit_credit,qris',
                 'customer_email' => 'nullable|email',
                 'payment_details' => 'nullable|array',
                 'tax_value' => 'required|numeric|min:0|max:100',
-                'draft_id' => 'nullable|exists:sales,id' // Tambahkan validasi untuk draft_id
+                'draft_id' => 'nullable|exists:sales,id'
             ]);
 
             // Calculate totals
@@ -311,11 +317,13 @@ class SaleController extends Controller
             // Create sale items
             foreach ($saleData['items'] as $item) {
                 SaleItem::create([
-                    'sale_id' => $sale->id,
+                    'sale_id'          => $sale->id,
                     'product_store_id' => $item['product_store_id'],
-                    'quantity' => $item['quantity'],
-                    'unit_price' => $item['unit_price'],
-                    'subtotal' => $item['quantity'] * $item['unit_price'],
+                    'quantity'         => $item['quantity'],
+                    'unit_price'       => $item['unit_price'],
+                    'original_price'   => $item['original_price'] ?? $item['unit_price'],
+                    'discount_percent' => $item['discount_percent'] ?? 0,
+                    'subtotal'         => $item['quantity'] * $item['unit_price'],
                 ]);
             }
 

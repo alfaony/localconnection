@@ -29,8 +29,10 @@
                                 <thead>
                                     <tr>
                                         <th>Produk</th>
+                                        <th>Variant</th>
                                         <th>Jumlah</th>
                                         <th>Harga Satuan</th>
+                                        <th>Diskon</th>
                                         <th>Subtotal</th>
                                     </tr>
                                 </thead>
@@ -40,13 +42,33 @@
                                             <td>
                                                 @if($item->productStore)
                                                     <div class="fw-bold">{{ $item->productStore->name }}</div>
+                                                    @if($item->productStore->specification || $item->productStore->code)
+                                                        <small class="text-muted">
+                                                            {{ $item->productStore->code }} {{ $item->productStore->specification }}
+                                                        </small>
+                                                    @endif
                                                 @else
                                                     <div class="text-muted">Produk tidak ditemukan</div>
                                                 @endif
                                             </td>
+                                            <td class="align-middle">{{ $item->productStore->variant ?? '-' }}</td>
                                             <td>{{ $item->quantity }}</td>
-                                            <td>Rp {{ number_format($item->unit_price, 2) }}</td>
-                                            <td>Rp {{ number_format($item->subtotal, 2) }}</td>
+                                            <td>
+                                                @if($item->discount_percent > 0 && $item->original_price)
+                                                    <del class="text-muted small">Rp {{ number_format($item->original_price, 0, ',', '.') }}</del><br>
+                                                    <span class="fw-bold text-success">Rp {{ number_format($item->unit_price, 0, ',', '.') }}</span>
+                                                @else
+                                                    Rp {{ number_format($item->unit_price, 0, ',', '.') }}
+                                                @endif
+                                            </td>
+                                            <td>
+                                                @if($item->discount_percent > 0)
+                                                    <span class="badge bg-danger">{{ number_format($item->discount_percent, 0) }}%</span>
+                                                @else
+                                                    <span class="text-muted">-</span>
+                                                @endif
+                                            </td>
+                                            <td>Rp {{ number_format($item->subtotal, 0, ',', '.') }}</td>
                                         </tr>
                                     @endforeach
                                 </tbody>
@@ -66,7 +88,7 @@
                             <label class="form-label fw-bold">Kode Transaksi:</label>
                             <p>{{ $sale->transaction_code ?? 'N/A' }}</p>
                         </div>
-                        
+
                         <div class="mb-3">
                             <label class="form-label fw-bold">Nomor Transaksi:</label>
                             <p>{{ $sale->transaction_number ?? 'N/A' }}</p>
@@ -98,27 +120,27 @@
                     <div class="card-body">
                         <div class="d-flex justify-content-between mb-2">
                             <span>Total Jumlah:</span>
-                            <strong>Rp {{ number_format($sale->total_amount, 2) }}</strong>
+                            <strong>Rp {{ number_format($sale->total_amount, 0, ',', '.') }}</strong>
                         </div>
-                        
+
                         @if($sale->tax_amount > 0)
                             <div class="d-flex justify-content-between mb-2">
                                 <span>Pajak ({{ $sale->tax_value }}%):</span>
-                                <strong>Rp {{ number_format($sale->tax_amount, 2) }}</strong>
+                                <strong>Rp {{ number_format($sale->tax_amount, 0, ',', '.') }}</strong>
                             </div>
                         @endif
 
                         @if($sale->discount_amount > 0)
                             <div class="d-flex justify-content-between mb-2">
                                 <span>Diskon:</span>
-                                <strong>-Rp {{ number_format($sale->discount_amount, 2) }}</strong>
+                                <strong>-Rp {{ number_format($sale->discount_amount, 0, ',', '.') }}</strong>
                             </div>
                         @endif
 
                         <hr>
                         <div class="d-flex justify-content-between mb-2">
                             <span class="fw-bold">Jumlah Akhir:</span>
-                            <strong class="fs-5 text-primary">Rp {{ number_format($sale->final_amount, 2) }}</strong>
+                            <strong class="fs-5 text-primary">Rp {{ number_format($sale->final_amount, 0, ',', '.') }}</strong>
                         </div>
                     </div>
                 </div>
@@ -161,4 +183,3 @@
         </div>
     @endif
 </div>
-

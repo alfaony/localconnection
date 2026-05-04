@@ -13,8 +13,9 @@
                 </div>
                 <div class="card-body">
                     <div class="input-group input-group-lg">
-                        <input v-model="barcodeInput"
-                            class="form-control" 
+                        <input id="barcodeSearchInput"
+                            v-model="barcodeInput"
+                            class="form-control"
                             placeholder="Scan barcode atau ketik kode produk..."
                             @keyup.enter="searchProduct"
                             autofocus>
@@ -41,10 +42,11 @@
                         <table class="table table-hover mb-0">
                             <thead class="bg-light">
                                 <tr>
-                                    <th width="35%">Produk</th>
-                                    <th width="20%" class="text-right">Harga</th>
-                                    <th width="20%" class="text-center">Qty</th>
-                                    <th width="17%" class="text-right">Subtotal</th>
+                                    <th width="30%">Produk</th>
+                                    <th width="17%" class="text-right">Harga</th>
+                                    <th width="13%" class="text-center">Diskon</th>
+                                    <th width="18%" class="text-center">Qty</th>
+                                    <th width="14%" class="text-right">Subtotal</th>
                                     <th width="8%" class="text-center">Aksi</th>
                                 </tr>
                             </thead>
@@ -83,7 +85,7 @@
                                             </div>
                                         </div>
                                     </td>
-                                    <td class="text-right" style="padding-right: 1rem;">
+                                    <td class="text-right" style="padding-right: 0.5rem;">
                                         <input type="number"
                                                class="form-control form-control-sm text-right price-input"
                                                v-model.number="item.price"
@@ -91,14 +93,39 @@
                                                min="0"
                                                step="1000"
                                                title="Klik untuk edit harga"
-                                               style="width: 100%; min-width: 120px;">
+                                               style="width: 100%; min-width: 100px;">
                                         <small v-if="item.originalPrice && item.price !== item.originalPrice"
                                                class="text-warning d-block mt-1"
                                                style="font-size: 0.7rem;">
                                             Asli: <del class="text-muted">@{{ formatCurrency(item.originalPrice) }}</del>
                                         </small>
+                                        <small v-if="item.discountPercent > 0"
+                                               class="text-success d-block mt-1"
+                                               style="font-size: 0.7rem;">
+                                            Jual: @{{ formatCurrency(effectiveItemPrice(item)) }}
+                                        </small>
                                     </td>
-                                    <td style="padding: 0.5rem 1rem;">
+                                    <td class="text-center" style="padding: 0.5rem 0.3rem;">
+                                        <div class="input-group input-group-sm" style="min-width: 80px;">
+                                            <input type="number"
+                                                   class="form-control text-center"
+                                                   v-model.number="item.discountPercent"
+                                                   @change="updateDiscount(index, item.discountPercent)"
+                                                   min="0"
+                                                   max="100"
+                                                   step="1"
+                                                   placeholder="0">
+                                            <div class="input-group-append">
+                                                <span class="input-group-text">%</span>
+                                            </div>
+                                        </div>
+                                        <small v-if="item.discountPercent > 0"
+                                               class="text-danger d-block mt-1"
+                                               style="font-size: 0.7rem;">
+                                            -@{{ formatCurrency(item.price * item.discountPercent / 100) }}
+                                        </small>
+                                    </td>
+                                    <td style="padding: 0.5rem 0.5rem;">
                                         <div class="input-group input-group-sm">
                                             <button class="btn btn-outline-secondary"
                                                     @click="updateQuantity(index, item.quantity - 1)"
@@ -122,7 +149,7 @@
                                             </button>
                                         </div>
                                     </td>
-                                    <td class="text-right font-weight-bold">@{{ formatCurrency(item.quantity * item.price) }}</td>
+                                    <td class="text-right font-weight-bold">@{{ formatCurrency(effectiveItemPrice(item) * item.quantity) }}</td>
                                     <td class="text-center">
                                         <button class="btn btn-danger btn-sm" @click="removeItem(index)"
                                                 title="Hapus item">
@@ -131,7 +158,7 @@
                                     </td>
                                 </tr>
                                 <tr v-if="cartItems.length === 0">
-                                    <td colspan="5" class="text-center text-muted py-5">
+                                    <td colspan="6" class="text-center text-muted py-5">
                                         <i class="fas fa-shopping-cart fa-3x mb-3"></i>
                                         <p>Belum ada produk yang ditambahkan</p>
                                         <small>Gunakan scanner atau input kode produk manual</small>
@@ -312,9 +339,9 @@
                                 <div class="col-6">
                                     <div class="form-group">
                                         <label>Nama Bank</label>
-                                        <input type="text" class="form-control" 
+                                        <input type="text" class="form-control"
                                                v-model="paymentDetails.bankName"
-                                               placeholder="BCA" maxlength="3" required>
+                                               placeholder="BCA / Mandiri / BRI" required>
                                     </div>
                                 </div>
                                 <div class="col-6">

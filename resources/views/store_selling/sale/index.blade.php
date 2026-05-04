@@ -238,9 +238,12 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr v-for="product in productSelectionList" :key="product.id"
+                                <tr v-for="(product, index) in productSelectionList" :key="product.id"
                                     class="product-row"
-                                    :class="!product.inventory ? 'table-secondary' : (product.inventory.quantity <= 0 ? 'table-danger' : '')"
+                                    :class="[
+                                        !product.inventory ? 'table-secondary' : (product.inventory.quantity <= 0 ? 'table-danger' : ''),
+                                        index === selectedProductIndex ? 'selected-product-row' : ''
+                                    ]"
                                     @click="selectProduct(product)"
                                     style="cursor: pointer;"
                                     :title="!product.inventory ? 'Stok belum didata — tidak bisa dijual' : ''">
@@ -354,8 +357,18 @@
                                     </div>
                                     <div class="item-total">@{{ formatCurrency(item.subtotal) }}</div>
                                 </div>
-                                <div class="d-flex justify-content-between">
-                                    <small class="text-muted">@{{ item.quantity }} x @{{ formatCurrency(item.unit_price) }}</small>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <template v-if="getSnapshotItem(item.product_store_id) && getSnapshotItem(item.product_store_id).discountPercent > 0">
+                                        <small class="text-muted">
+                                            @{{ item.quantity }} x
+                                            <del>@{{ formatCurrency(getSnapshotItem(item.product_store_id).originalPrice) }}</del>
+                                            <span class="text-success ml-1">-@{{ getSnapshotItem(item.product_store_id).discountPercent }}%</span>
+                                            = @{{ formatCurrency(item.unit_price) }}
+                                        </small>
+                                    </template>
+                                    <template v-else>
+                                        <small class="text-muted">@{{ item.quantity }} x @{{ formatCurrency(item.unit_price) }}</small>
+                                    </template>
                                 </div>
                             </div>
                         </div>
@@ -434,6 +447,11 @@
     .bg-danger-light {
         background-color: #fdecea;
         border-left: 3px solid #dc3545;
+    }
+
+    .selected-product-row {
+        background-color: #cfe2ff !important;
+        outline: 2px solid #0d6efd;
     }
 
     /* Loading Overlay */
@@ -827,7 +845,8 @@ createApp({
         const paymentMethod = ref('cash');
         const cashAmount = ref(0);
         const customerEmail = ref('');
-        const taxValue = ref('{{ $settingCompany["default_tax"] ?? "" }}');
+        const defaultTaxValue = '{{ $settingCompany["default_tax"] ?? "" }}';
+        const taxValue = ref(defaultTaxValue);
         const paymentDetails = ref({
             cardNumber: '',
             bankName: '',
@@ -845,14 +864,23 @@ createApp({
         const stockCheckFailed   = ref(false);
         const stockCheckFailedMsg = ref('');
         const isCheckingStock    = ref(false);
+        const selectedProductIndex = ref(-1);
+        const cartSnapshot = ref([]);
 
         // Computed properties
         const totalItems = computed(() => {
             return cartItems.value.reduce((total, item) => total + item.quantity, 0);
         });
 
+        const effectiveItemPrice = (item) => {
+            const disc = item.discountPercent || 0;
+            return item.price * (1 - disc / 100);
+        };
+
         const subtotal = computed(() => {
-            return cartItems.value.reduce((total, item) => total + (item.quantity * item.price), 0);
+            return cartItems.value.reduce((total, item) => {
+                return total + (item.quantity * effectiveItemPrice(item));
+            }, 0);
         });
 
         const tax = computed(() => {
@@ -1013,10 +1041,7 @@ createApp({
                         }
                     }
                     barcodeInput.value = '';
-                    setTimeout(() => {
-                        const barcodeInputEl = document.querySelector('input[v-model="barcodeInput"]');
-                        if (barcodeInputEl) barcodeInputEl.focus();
-                    }, 100);
+                    setTimeout(() => focusBarcodeInput(), 100);
                 } else {
                     setLoadingResult('Produk tidak ditemukan', response.data.message, false);
                 }
@@ -1079,15 +1104,16 @@ createApp({
             }
 
             cartItems.value.push({
-                id:            product.id,
-                code:          product.code,
-                name:          product.name,
-                price:         product.selling_price,
-                originalPrice: product.selling_price,
-                quantity:      1,
-                stock:         stock,
-                unit:          unit,
-                image:         product.primary_media?.file_url ?? null,
+                id:              product.id,
+                code:            product.code,
+                name:            product.name,
+                price:           product.selling_price,
+                originalPrice:   product.selling_price,
+                quantity:        1,
+                stock:           stock,
+                unit:            unit,
+                image:           product.primary_media?.file_url ?? null,
+                discountPercent: 0,
             });
 
             return { stock, unit }; // digunakan oleh caller untuk toast
@@ -1116,6 +1142,45 @@ createApp({
             cartItems.value.splice(index, 1);
         };
 
+        const updateDiscount = (index, val) => {
+            let v = parseFloat(val) || 0;
+            if (v < 0) v = 0;
+            if (v > 100) v = 100;
+            cartItems.value[index].discountPercent = v;
+        };
+
+        const getSnapshotItem = (productStoreId) => {
+            return cartSnapshot.value.find(s => s.product_store_id === productStoreId) || null;
+        };
+
+        const focusBarcodeInput = () => {
+            document.getElementById('barcodeSearchInput')?.focus();
+        };
+
+        const handleProductModalKeydown = (e) => {
+            const list = productSelectionList.value;
+            if (!list.length) return;
+
+            if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                selectedProductIndex.value = Math.min(selectedProductIndex.value + 1, list.length - 1);
+                const rows = document.querySelectorAll('#productSelectionModal .product-row');
+                if (rows[selectedProductIndex.value]) {
+                    rows[selectedProductIndex.value].scrollIntoView({ block: 'nearest' });
+                }
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                selectedProductIndex.value = Math.max(selectedProductIndex.value - 1, 0);
+                const rows = document.querySelectorAll('#productSelectionModal .product-row');
+                if (rows[selectedProductIndex.value]) {
+                    rows[selectedProductIndex.value].scrollIntoView({ block: 'nearest' });
+                }
+            } else if (e.key === 'Enter' && selectedProductIndex.value >= 0) {
+                e.preventDefault();
+                selectProduct(list[selectedProductIndex.value]);
+            }
+        };
+
         const confirmPayment = async () => {
             $('#paymentConfirmationModal').modal('hide');
             setLoading(true, 'Memproses pembayaran...');
@@ -1124,10 +1189,19 @@ createApp({
 
         const processPayment = async () => {
             try {
+                cartSnapshot.value = cartItems.value.map(item => ({
+                    product_store_id: item.id,
+                    originalPrice:    item.price,
+                    discountPercent:  item.discountPercent || 0,
+                    effectivePrice:   effectiveItemPrice(item),
+                }));
+
                 const items = cartItems.value.map(item => ({
                     product_store_id: item.id,
-                    quantity: item.quantity,
-                    unit_price: item.price
+                    quantity:         item.quantity,
+                    unit_price:       effectiveItemPrice(item),
+                    original_price:   item.price,
+                    discount_percent: item.discountPercent || 0,
                 }));
 
                 if (paymentMethod.value === 'cash') {
@@ -1196,8 +1270,10 @@ createApp({
             try {
                 const items = cartItems.value.map(item => ({
                     product_store_id: item.id,
-                    quantity: item.quantity,
-                    unit_price: item.price
+                    quantity:         item.quantity,
+                    unit_price:       effectiveItemPrice(item),
+                    original_price:   item.price,
+                    discount_percent: item.discountPercent || 0,
                 }));
 
                 const response = await axios.post('/store-selling/saveDraft', {
@@ -1315,19 +1391,14 @@ createApp({
             addToCart(product);
             $('#productSelectionModal').modal('hide');
             productSelectionList.value = [];
-            
-            // Focus back to barcode input after selection
-            setTimeout(() => {
-                const barcodeInputEl = document.querySelector('input[v-model="barcodeInput"]');
-                if (barcodeInputEl) barcodeInputEl.focus();
-            }, 300);
+            // Focus dikembalikan otomatis via hidden.bs.modal event
         };
 
         const resetTransaction = () => {
             cartItems.value = [];
             cashAmount.value = 0;
             customerEmail.value = '';
-            taxValue.value = 0;
+            taxValue.value = defaultTaxValue;
             paymentMethod.value = 'cash';
             paymentDetails.value = {
                 cardNumber: '',
@@ -2040,15 +2111,29 @@ createApp({
                             <hr>
 
                             <div class="receipt-items">
-                                ${transactionResult.value.items.map(item => `
-                                    <div class="receipt-item">
-                                        <div class="item-name">${item.product_store.name}</div>
-                                        <div class="item-row">
-                                            <span>${item.quantity} x ${formatCurrency(item.unit_price)}</span>
-                                            <span class="item-total">${formatCurrency(item.subtotal)}</span>
+                                ${transactionResult.value.items.map(item => {
+                                    const snap = cartSnapshot.value.find(s => s.product_store_id === item.product_store_id);
+                                    const hasDisc = snap && snap.discountPercent > 0;
+                                    const priceLabel = hasDisc
+                                        ? `<del>${formatCurrency(snap.originalPrice)}</del> -${snap.discountPercent}%`
+                                        : formatCurrency(item.unit_price);
+                                    const discLine = hasDisc
+                                        ? `<div class="item-row" style="color:#555;">
+                                               <span>Diskon ${snap.discountPercent}%</span>
+                                               <span>-${formatCurrency(snap.originalPrice * snap.discountPercent / 100 * item.quantity)}</span>
+                                           </div>`
+                                        : '';
+                                    return `
+                                        <div class="receipt-item">
+                                            <div class="item-name">${item.product_store.name}</div>
+                                            <div class="item-row">
+                                                <span>${item.quantity} x ${priceLabel}</span>
+                                                <span class="item-total">${formatCurrency(item.subtotal)}</span>
+                                            </div>
+                                            ${discLine}
                                         </div>
-                                    </div>
-                                `).join('')}
+                                    `;
+                                }).join('')}
                             </div>
 
                             <hr>
@@ -2176,6 +2261,17 @@ createApp({
             // Add keyboard event listener
             document.addEventListener('keypress', handleKeyPress);
 
+            // Product modal keyboard navigation
+            $('#productSelectionModal').on('shown.bs.modal', () => {
+                selectedProductIndex.value = 0;
+                document.addEventListener('keydown', handleProductModalKeydown);
+            });
+            $('#productSelectionModal').on('hidden.bs.modal', () => {
+                document.removeEventListener('keydown', handleProductModalKeydown);
+                selectedProductIndex.value = -1;
+                focusBarcodeInput();
+            });
+
             // Load drafts
             setLoading(true, 'Memuat data...');
             axios.get('/store-selling/drafts').then(response => {
@@ -2235,7 +2331,13 @@ createApp({
             startNewTransaction,
             resetTransaction,
             printReceipt,
-            sendReceiptByEmail
+            sendReceiptByEmail,
+            selectedProductIndex,
+            cartSnapshot,
+            effectiveItemPrice,
+            updateDiscount,
+            getSnapshotItem,
+            focusBarcodeInput,
         };
     }
 }).mount('#app');
