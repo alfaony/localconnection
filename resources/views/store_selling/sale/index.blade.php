@@ -114,19 +114,19 @@
 
                         <div class="payment-details mb-3">
                             <div class="row">
-                                <div class="col-6"><strong>Metode Pembayaran:</strong></div>
+                                <div class="col-6"><p>Metode Pembayaran:</p></div>
                                 <div class="col-6 text-right">@{{ getPaymentMethodLabel(paymentMethod) }}</div>
                             </div>
                             <div v-if="paymentMethod === 'cash'" class="row mt-1">
-                                <div class="col-6"><strong>Dibayar:</strong></div>
+                                <div class="col-6"><p>Dibayar:</p></div>
                                 <div class="col-6 text-right">@{{ formatCurrency(cashAmount) }}</div>
                             </div>
                             <div v-if="paymentMethod === 'cash'" class="row mt-1">
-                                <div class="col-6"><strong>Kembalian:</strong></div>
+                                <div class="col-6"><p>Kembalian:</p></div>
                                 <div class="col-6 text-right text-success font-weight-bold">@{{ formatCurrency(cashAmount - cashRoundedTotal) }}</div>
                             </div>
                             <div v-if="customerEmail" class="row mt-1">
-                                <div class="col-6"><strong>Email Customer:</strong></div>
+                                <div class="col-6"><p>Email Customer:</p></div>
                                 <div class="col-6 text-right">@{{ customerEmail }}</div>
                             </div>
                         </div>
@@ -327,7 +327,7 @@
                             @endif
                             
                             <div class="mt-3">
-                                <h6><strong>STRUK PENJUALAN</strong></h6>
+                                <h6><p>STRUK PENJUALAN</p></h6>
                                 <p class="mb-1">@{{ transactionResult.transaction_code }}</p>
                                 <small>@{{ new Date().toLocaleString('id-ID') }}</small>
                             </div>
@@ -336,11 +336,11 @@
                         
                         <div class="receipt-operator mb-3">
                             <div class="row">
-                                <div class="col-6"><strong>Kasir:</strong></div>
+                                <div class="col-6"><p>Kasir:</p></div>
                                 <div class="col-6 text-right">{{ Auth::user()->name }}</div>
                             </div>
                             <div class="row">
-                                <div class="col-6"><strong>Metode Bayar:</strong></div>
+                                <div class="col-6"><p>Metode Bayar:</p></div>
                                 <div class="col-6 text-right">@{{ getPaymentMethodLabel(transactionResult.payment_method) }}</div>
                             </div>
                             <hr>
@@ -665,7 +665,7 @@
     }
     
     .total-line {
-        border-top: 2px solid #000;
+        border-top: 1px solid #edededfc;
         padding-top: 8px;
         margin-top: 8px;
         font-size: 1.1em;
@@ -804,7 +804,7 @@
     .total-line {
         font-size: 1.2em;
         padding-top: 10px;
-        border-top: 2px solid #333;
+        border-top: 1px solid #edededfc;
         margin-top: 10px;
     }
 </style>
@@ -1880,7 +1880,7 @@ createApp({
                                 }
 
                                 body {
-                                    font-family: 'Courier New', monospace;
+                                    font-family: Arial;
                                     width: 46mm;
                                     margin: 0;
                                     padding: 2mm 2mm;
@@ -1924,13 +1924,11 @@ createApp({
 
                                 .receipt-title h6 {
                                     font-size: 9px;
-                                    font-weight: bold;
                                     margin-bottom: 2px;
                                 }
 
                                 .transaction-code {
                                     font-size: 8px;
-                                    font-weight: bold;
                                     margin-bottom: 1px;
                                 }
 
@@ -1982,7 +1980,6 @@ createApp({
                                 }
 
                                 .item-total {
-                                    font-weight: bold;
                                     white-space: nowrap;
                                 }
 
@@ -2001,7 +1998,6 @@ createApp({
                                     border-top: 1px solid #000;
                                     padding-top: 3px;
                                     margin-top: 3px;
-                                    font-weight: bold;
                                     font-size: 9px;
                                 }
 
@@ -2067,8 +2063,8 @@ createApp({
                                     <span>${formatCurrency(transactionResult.value.tax_amount)}</span>
                                 </div>
                                 <div class="total-row total-line">
-                                    <strong>TOTAL:</strong>
-                                    <strong>${formatCurrency(transactionResult.value.final_amount)}</strong>
+                                    <p>TOTAL:</p>
+                                    <p>${formatCurrency(transactionResult.value.final_amount)}</p>
                                 </div>
                                 ${transactionResult.value.payment_method === 'cash' ? `
                                     <div class="total-row" style="margin-top: 4px;">
