@@ -26,7 +26,7 @@ class PermissionForMenuKasirSeeder extends Seeder
         DB::beginTransaction();
         try {   
 
-            $roleSales = ['index','edit', 'create', 'update', 'show', 'destroy'];
+            $roleSales = ['index','edit', 'create', 'update', 'show', 'destroy',"printReceiptManagement"];
             $roleKasir = ['index','sendReceiptByEmail','searchProduct','processPayment','saveDraft','loadDraft','deleteDraft','printReceipt','getDrafts','checkStock'];
             
              foreach ($roleSales as $method) 

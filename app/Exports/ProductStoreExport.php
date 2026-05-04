@@ -95,6 +95,7 @@ class ProductStoreExport implements FromCollection, WithHeadings, WithMapping, W
             'Warehouse',
             'Zone',
             'Rack',
+            'Stock',
             'Created At'
         ];
     }
@@ -120,7 +121,7 @@ class ProductStoreExport implements FromCollection, WithHeadings, WithMapping, W
             $product->rack->zone->warehouse->name ?? '-',
             $product->rack->zone->name ?? '-',
             $product->rack->name ?? '-',
-            $product->stock ?? 0,
+            $product->inventory?->quantity ? $product->inventory->quantity : 0,
             $product->created_at ? $product->created_at->format('d/m/Y H:i') : '-'
         ];
     }
