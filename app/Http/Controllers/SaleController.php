@@ -371,10 +371,35 @@ class SaleController extends Controller
             ->where('id', $saleId)
             ->where('user_id', Auth::id())
             ->firstOrFail();
-        
+
         return response()->json([
             'success' => true,
             'sale' => $sale
+        ]);
+    }
+
+    public function printReceiptManagement($saleId)
+    {
+        $sale = Sale::byCompany(Auth::user()->company_id)
+            ->with(['items.productStore', 'user'])
+            ->findOrFail($saleId);
+
+        $settingCompany = SettingCompany::byCompany(Auth::user()->company_id)
+            ->where('menu', 'store')
+            ->get()
+            ->pluck('field_value', 'field_title');
+
+        return response()->json([
+            'success' => true,
+            'sale' => $sale,
+            'settings' => [
+                'header_store_image' => !empty($settingCompany['header_store_image'])
+                    ? s3_asset(true, 10, $settingCompany['header_store_image'])
+                    : '',
+                'store_name'         => $settingCompany['store_name'] ?? config('app.name'),
+                'store_address'      => $settingCompany['store_address'] ?? '',
+                'footer_store_message' => $settingCompany['footer_store_message'] ?? 'Terima kasih atas kunjungan Anda',
+            ],
         ]);
     }
 
