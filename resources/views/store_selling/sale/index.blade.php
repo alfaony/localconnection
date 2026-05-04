@@ -318,7 +318,7 @@
                             </div>
                             @endif
                             
-                            <h5><strong>{{ $settingCompany['store_name'] ?? config('app.name') }}</strong></h5>
+                            <h5>{{ $settingCompany['store_name'] ?? config('app.name') }}</h5>
                             
                             @if(!empty($settingCompany['store_address']))
                             <div class="receipt-address">
@@ -328,7 +328,7 @@
                             
                             <div class="mt-3">
                                 <h6><strong>STRUK PENJUALAN</strong></h6>
-                                <p class="mb-1"><strong>@{{ transactionResult.transaction_code }}</strong></p>
+                                <p class="mb-1">@{{ transactionResult.transaction_code }}</p>
                                 <small>@{{ new Date().toLocaleString('id-ID') }}</small>
                             </div>
                             <hr>
@@ -350,7 +350,7 @@
                             <div v-for="item in transactionResult.items" :key="item.id" class="receipt-item mb-2">
                                 <div class="d-flex justify-content-between">
                                     <div class="item-name">
-                                        <strong>@{{ item.product_store.name }}</strong>
+                                        <p>@{{ item.product_store.name }}</p>
                                     </div>
                                     <div class="item-total">@{{ formatCurrency(item.subtotal) }}</div>
                                 </div>
@@ -372,8 +372,8 @@
                                 <span>@{{ formatCurrency(transactionResult.tax_amount) }}</span>
                             </div>
                             <div class="d-flex justify-content-between total-line">
-                                <strong>TOTAL:</strong>
-                                <strong>@{{ formatCurrency(transactionResult.final_amount) }}</strong>
+                                <span>TOTAL:</span>
+                                <span>@{{ formatCurrency(transactionResult.final_amount) }}</span>
                             </div>
                             <div v-if="transactionResult.payment_method === 'cash'" class="d-flex justify-content-between mt-2">
                                 <span>Dibayar:</span>
@@ -1971,7 +1971,6 @@ createApp({
 
                                 .item-name {
                                     font-size: 8px;
-                                    font-weight: bold;
                                     word-break: break-word;
                                     margin-bottom: 1px;
                                 }
