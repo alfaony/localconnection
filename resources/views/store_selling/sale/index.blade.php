@@ -1954,7 +1954,7 @@ createApp({
                                     font-family: Arial;
                                     width: 46mm;
                                     margin: 0;
-                                    padding: 2mm 2mm;
+                                    padding: 2mm 2mm 8mm 2mm;
                                     font-size: 8px;
                                     line-height: 1.3;
                                     color: #000;
