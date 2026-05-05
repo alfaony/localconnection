@@ -1926,7 +1926,7 @@ createApp({
             
             try {
                 // Get settings from PHP (already loaded in blade template)
-                const headerImage = '{{ !empty($settingCompany["header_store_image"]) ? s3_asset(true, 10, $settingCompany["header_store_image"]) : "" }}';
+                const headerImage = '{{ !empty($settingCompany["header_store_image"]) ? s3_asset(true, 1440, $settingCompany["header_store_image"]) : "" }}';
                 const footerMessage = `{!! $settingCompany["footer_store_message"] ?? "Terima kasih atas kunjungan Anda" !!}`;
                 const companyName = '{{ $settingCompany["store_name"] ?? config("app.name") }}';
                 const companyAddress = '{{ $settingCompany["store_address"] ?? "" }}';
@@ -1954,7 +1954,7 @@ createApp({
                                     font-family: Arial;
                                     width: 46mm;
                                     margin: 0;
-                                    padding: 2mm 2mm;
+                                    padding: 2mm 2mm 8mm 2mm;
                                     font-size: 8px;
                                     line-height: 1.3;
                                     color: #000;

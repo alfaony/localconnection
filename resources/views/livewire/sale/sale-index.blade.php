@@ -674,7 +674,7 @@
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 @page{size:46mm auto;margin:0}
-body{font-family:Arial;width:46mm;margin:0;padding:2mm 2mm;font-size:8px;line-height:1.3;color:#000}
+body{font-family:Arial;width:46mm;margin:0;padding:2mm 2mm 8mm 2mm;font-size:8px;line-height:1.3;color:#000}
 .header{text-align:center;margin-bottom:4px}
 .receipt-logo{text-align:center;margin-bottom:4px}
 .receipt-logo img{width:15mm;height:auto;display:block;margin:0 auto;object-fit:contain}
