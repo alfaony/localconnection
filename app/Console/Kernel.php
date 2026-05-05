@@ -202,9 +202,10 @@ class Kernel extends ConsoleKernel
         foreach ($company as $a) 
         {
             $schedule->command("validity:userOfCompany --id={$a->id} --type=wfo")->timezone('Asia/Jakarta')
-            ->dailyAt('23:00')
-                        // ->dailyAt('14:36')
-            ;
+            ->dailyAt('23:00');
+
+            $schedule->command("validity:userOfCompany --id={$a->id} --type=wfo_shifting")->timezone('Asia/Jakarta')
+            ->dailyAt('23:00');
 
             
 

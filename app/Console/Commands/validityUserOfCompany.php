@@ -6,6 +6,7 @@ use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
 use App\Models\User;
 use App\Models\OfficeAttendance;
+use App\Models\ScheduleOb;
 use App\Models\TaskStatus;
 use App\Models\Division;
 use App\Models\DailyTask;
@@ -116,8 +117,10 @@ class validityUserOfCompany extends Command
                 $toleranceMinutes = (int) $setting['tolerance'];
                 $checkinTarget = (int) $setting['checkin_onday'];
 
-                $users = User::where('company_id', $id)->where('wfo_check_in', true)
-                ->get();
+                $users = User::where('company_id', $id)
+                    ->where('wfo_check_in', true)
+                    ->where('is_shift_attendance', false)
+                    ->get();
 
 
                 foreach ($users as $user) {
@@ -159,6 +162,68 @@ class validityUserOfCompany extends Command
                 }
 
                 $this->info('Punishment WFO check completed.');
+            }
+            if ($type == 'wfo_shifting') {
+                $today = Carbon::today();
+                $toleranceMinutes = (int) $setting['tolerance'];
+                $checkinTarget    = (int) $setting['checkin_onday'];
+
+                $users = User::where('company_id', $id)
+                    ->where('wfo_check_in', true)
+                    ->where('is_shift_attendance', true)
+                    ->get();
+
+                foreach ($users as $user) {
+                    if ($user->isDayoff()) {
+                        continue;
+                    }
+
+                    $scheduleToday = ScheduleOb::where('user_id', $user->id)
+                        ->whereDate('date', $today)
+                        ->with('shiftingOb')
+                        ->first();
+
+                    if (!$scheduleToday || !$scheduleToday->shiftingOb) {
+                        continue;
+                    }
+
+                    $shiftClockIn = Carbon::createFromFormat('H:i:s', $scheduleToday->shiftingOb->clock_in);
+
+                    $attendances = OfficeAttendance::where('user_id', $user->id)
+                        ->whereDate('created_at', $today)
+                        ->orderBy('created_at', 'asc')
+                        ->get();
+
+                    $totalCheckin = $attendances->count();
+                    $firstCheckin = $attendances->first();
+                    $terlambat    = false;
+                    $message      = null;
+
+                    $userCheckinTarget = isset($firstCheckin->barcode->userCreate) && $firstCheckin->barcode->userCreate->wfoRules
+                        ? $firstCheckin->barcode->userCreate->wfoRules->times_checkin_in_day
+                        : $checkinTarget;
+                    $point = isset($firstCheckin->barcode->userCreate) && $firstCheckin->barcode->userCreate->wfoRules
+                        ? $firstCheckin->barcode->userCreate->wfoRules->point_checkin_in_day
+                        : $setting['punishment_point_wfo'];
+
+                    if ($firstCheckin) {
+                        $actualCheckin = Carbon::parse($firstCheckin->time);
+                        $graceTime     = $shiftClockIn->copy()->addMinutes($toleranceMinutes);
+                        $terlambat     = $actualCheckin->gt($graceTime);
+                        $message       = $terlambat
+                            ? 'Terlambat ' . $actualCheckin->diffInMinutes($graceTime) . ' menit dari jam ' . $graceTime->format('H:i') . ' (Shift: ' . $scheduleToday->shiftingOb->name . ')'
+                            : null;
+                    }
+
+                    if (($totalCheckin < $userCheckinTarget || $terlambat) && $point && $user) {
+                        if (!isset($message) && $totalCheckin < $userCheckinTarget) {
+                            $message = 'Belum memenuhi target check-in per hari ' . $totalCheckin . ' dari ' . $userCheckinTarget . ' (Shift: ' . $scheduleToday->shiftingOb->name . ')';
+                        }
+                        $this->addPoint($user, $message, $point);
+                    }
+                }
+
+                $this->info('Punishment WFO Shifting check completed.');
             }
 
         } catch (\Throwable $th) {
