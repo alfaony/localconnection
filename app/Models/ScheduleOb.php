@@ -9,6 +9,7 @@ use Illuminate\Support\Str;
 use Ramsey\Uuid\Uuid;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
+use App\Schemas\RoleSchema;
 
 use App\Schemas\ParamSchema;
 
