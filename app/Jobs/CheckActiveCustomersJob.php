@@ -184,7 +184,7 @@ class CheckActiveCustomersJob implements ShouldQueue
         try {
             // Update status and clear connection info
             $customer->update([
-                'status' => ParamSchema::REACTIVATED,
+                'status' => ParamSchema::DISCONNECTED,
                 'ip_address' => null,
                 'mac_address' => null,
             ]);
