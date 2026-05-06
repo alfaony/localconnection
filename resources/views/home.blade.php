@@ -581,7 +581,7 @@
         @canAccess('showScheduleOb','homes')
         <div class="card border-0 shadow-sm mb-4" style="border-radius: 14px;">
             <div class="card-header bg-white border-bottom pt-4 px-4">
-                <h5 class="fw-bold mb-0"><i class="far fa-calendar-alt text-primary me-2"></i> Jadwal OB</h5>
+                <h5 class="fw-bold mb-0"><i class="far fa-calendar-alt text-primary me-2"></i> Jadwal Shifting</h5>
             </div>
             <div class="card-body p-4">
                 <div id="calendar" class="rounded-3 border p-2 bg-light"></div>

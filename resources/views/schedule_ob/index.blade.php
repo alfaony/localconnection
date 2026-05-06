@@ -21,11 +21,14 @@
     </div>
     @endcanAccess
 
+    @canAccess('calendar','schedule_obs')
     <div class="card">
         <div class="card-body">
             <div id="calendar"></div>
         </div>
     </div>
+    @endcanAccess
+    
 
     @canAccess('create','schedule_obs')
     <!-- Create Modal -->
