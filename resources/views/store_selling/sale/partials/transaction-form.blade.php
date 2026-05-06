@@ -8,7 +8,10 @@
                 <div class="card-header">
                     <h3 class="card-title">
                         <i class="fas fa-barcode"></i> Scan Produk
-                        <small class="float-right">Tekan <kbd>Spasi</kbd> untuk lanjut</small>
+                        <small class="float-right">
+                            <kbd>Esc</kbd> keluar fokus &nbsp;
+                            <kbd>Spasi</kbd> lanjut bayar
+                        </small>
                     </h3>
                 </div>
                 <div class="card-body">
@@ -260,7 +263,15 @@
 
                     <!-- Payment Method Selection -->
                     <div class="form-group">
-                        <label class="font-weight-bold">Pilih Metode Pembayaran</label>
+                        <label class="font-weight-bold">
+                            Pilih Metode Pembayaran
+                            <small class="text-muted font-weight-normal ml-2">
+                                <kbd>↑</kbd><kbd>↓</kbd> navigasi &nbsp;
+                                <kbd>Enter</kbd> masuk/keluar field &nbsp;
+                                <kbd>Esc</kbd> hapus &nbsp;
+                                <kbd>Spasi</kbd> konfirmasi
+                            </small>
+                        </label>
                         <div class="payment-methods">
                             <div class="payment-method-card" 
                                  :class="{ 'active': paymentMethod === 'cash' }"
@@ -305,7 +316,8 @@
                         <!-- Cash Payment -->
                         <div v-if="paymentMethod === 'cash'" class="form-group">
                             <label class="font-weight-bold">Jumlah Bayar</label>
-                            <input type="number" class="form-control form-control-lg"
+                            <input id="cashAmountInput"
+                                   type="number" class="form-control form-control-lg"
                                    v-model="cashAmount"
                                    placeholder="Masukkan jumlah bayar"
                                    :min="cashRoundedTotal">
@@ -329,7 +341,8 @@
                                 <div class="col-12">
                                     <div class="form-group">
                                         <label>Nomor Kartu</label>
-                                        <input type="text" class="form-control" 
+                                        <input id="cardNumberInput"
+                                               type="text" class="form-control"
                                                v-model="paymentDetails.cardNumber"
                                                placeholder="1234 5678 9012 3456" required>
                                     </div>
@@ -339,7 +352,8 @@
                                 <div class="col-6">
                                     <div class="form-group">
                                         <label>Nama Bank</label>
-                                        <input type="text" class="form-control"
+                                        <input id="cardBankInput"
+                                               type="text" class="form-control"
                                                v-model="paymentDetails.bankName"
                                                placeholder="BCA / Mandiri / BRI" required>
                                     </div>
@@ -347,7 +361,8 @@
                                 <div class="col-6">
                                     <div class="form-group">
                                         <label>Nomor EDC Approver</label>
-                                        <input type="text" class="form-control" 
+                                        <input id="cardEdcInput"
+                                               type="text" class="form-control"
                                                v-model="paymentDetails.cardEdcApprover"
                                                placeholder="1234" required>
                                     </div>
@@ -358,7 +373,8 @@
                         <!-- QRIS Payment -->
                         <div v-if="paymentMethod === 'qris'" class="form-group">
                             <label>Nama Bank QRIS</label>
-                            <input type="text" class="form-control" 
+                            <input id="qrisBankInput"
+                                   type="text" class="form-control"
                                    v-model="paymentDetails.bankName"
                                    placeholder="BCA" required>
                             <small class="text-muted">Gunakan scanner untuk scan QR code</small>

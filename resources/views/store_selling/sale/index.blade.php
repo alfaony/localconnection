@@ -188,6 +188,7 @@
                     </template>
                 </div>
                 <div class="modal-footer">
+                    <small class="text-muted mr-auto"><kbd>Spasi</kbd> untuk Konfirmasi & Bayar</small>
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
                         <i class="fas fa-edit"></i> Perbaiki
                     </button>
@@ -411,6 +412,7 @@
                 </div>
                 <div class="modal-footer">
                     @canAccess('printReceipt','store_sellings')
+                    <small class="text-muted mr-auto"><kbd>Spasi</kbd> untuk Cetak Struk</small>
                     <button class="btn btn-primary" @click="printReceipt" :disabled="isLoading">
                         <i class="fas fa-print"></i> Cetak Struk
                     </button>
@@ -2243,23 +2245,100 @@ createApp({
             }
         };
 
-        // Keyboard shortcut for space bar
-        const handleKeyPress = (event) => {
-            if (event.code === 'Space' && event.target.tagName !== 'INPUT' && event.target.tagName !== 'TEXTAREA') {
+        // Payment methods order for keyboard navigation
+        const paymentMethodsList = ['cash', 'debit_credit', 'qris'];
+
+        // Focus first input of the currently selected payment method
+        const focusFirstPaymentField = () => {
+            let id = null;
+            if (paymentMethod.value === 'cash') id = 'cashAmountInput';
+            else if (paymentMethod.value === 'debit_credit') id = 'cardNumberInput';
+            else if (paymentMethod.value === 'qris') id = 'qrisBankInput';
+            if (id) document.getElementById(id)?.focus();
+        };
+
+        // Clear the focused payment input and its Vue ref, then blur it
+        const clearPaymentField = (el) => {
+            const id = el?.id;
+            if (id === 'cashAmountInput') cashAmount.value = 0;
+            else if (id === 'cardNumberInput') paymentDetails.value.cardNumber = '';
+            else if (id === 'cardBankInput') paymentDetails.value.bankName = '';
+            else if (id === 'cardEdcInput') paymentDetails.value.cardEdcApprover = '';
+            else if (id === 'qrisBankInput') paymentDetails.value.bankName = '';
+            el?.blur();
+        };
+
+        // Unified keyboard handler
+        const handleKeyDown = (event) => {
+            const tag = event.target.tagName;
+            const isInInput = tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT';
+            const isProductModalOpen = document.getElementById('productSelectionModal')?.classList.contains('show');
+            const isConfirmModalOpen  = document.getElementById('paymentConfirmationModal')?.classList.contains('show');
+
+            // Product modal keyboard nav is handled by handleProductModalKeydown — skip here
+            if (isProductModalOpen) return;
+
+            // ── SPACE ──────────────────────────────────────────────────────────────
+            if (event.code === 'Space') {
+                if (isInInput) return; // let normal typing/behaviour happen
                 event.preventDefault();
-                nextStep();
+                const isSuccessModalOpen = document.getElementById('successModal')?.classList.contains('show');
+                // Block Space while payment is processing
+                if (isLoading.value) return;
+                if (isSuccessModalOpen) {
+                    printReceipt();
+                } else if (isConfirmModalOpen) {
+                    if (!isCheckingStock.value) confirmPayment();
+                } else {
+                    nextStep();
+                }
+                return;
+            }
+
+            // ── ESCAPE ─────────────────────────────────────────────────────────────
+            if (event.code === 'Escape') {
+                if (currentStep.value === 1 && isInInput) {
+                    event.target.blur(); // exit barcode input focus
+                } else if (currentStep.value === 2 && isInInput) {
+                    event.preventDefault();
+                    clearPaymentField(event.target); // clear & blur the focused payment field
+                }
+                return;
+            }
+
+            // ── ENTER — Step 2 ────────────────────────────────────────────────────
+            if (event.code === 'Enter' && currentStep.value === 2 && !isConfirmModalOpen) {
+                event.preventDefault();
+                if (isInInput) {
+                    // Keluar dari payment field → user bisa tekan Space untuk lanjut
+                    event.target.blur();
+                } else {
+                    // Belum di input → fokus ke field pertama metode yang dipilih
+                    focusFirstPaymentField();
+                }
+                return;
+            }
+
+            // ── ARROW KEYS — Step 2 payment method navigation ─────────────────────
+            if (currentStep.value === 2 && !isInInput && !isConfirmModalOpen) {
+                const currentIdx = paymentMethodsList.indexOf(paymentMethod.value);
+                if (event.code === 'ArrowDown') {
+                    event.preventDefault();
+                    paymentMethod.value = paymentMethodsList[Math.min(currentIdx + 1, paymentMethodsList.length - 1)];
+                } else if (event.code === 'ArrowUp') {
+                    event.preventDefault();
+                    paymentMethod.value = paymentMethodsList[Math.max(currentIdx - 1, 0)];
+                }
             }
         };
 
         onMounted(() => {
             // Auto-focus barcode input
-            const barcodeInputEl = document.querySelector('input[v-model="barcodeInput"]');
-            if (barcodeInputEl) {
-                barcodeInputEl.focus();
-            }
+            const barcodeInputEl = document.getElementById('barcodeSearchInput');
+            if (barcodeInputEl) barcodeInputEl.focus();
 
-            // Add keyboard event listener
-            document.addEventListener('keypress', handleKeyPress);
+            // Unified keyboard handler (replaces old keypress handler)
+            document.addEventListener('keydown', handleKeyDown);
 
             // Product modal keyboard navigation
             $('#productSelectionModal').on('shown.bs.modal', () => {
@@ -2338,6 +2417,9 @@ createApp({
             updateDiscount,
             getSnapshotItem,
             focusBarcodeInput,
+            focusFirstPaymentField,
+            clearPaymentField,
+            paymentMethodsList,
         };
     }
 }).mount('#app');
