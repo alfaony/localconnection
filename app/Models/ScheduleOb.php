@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Str;
 use Ramsey\Uuid\Uuid;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Auth;
 
 use App\Schemas\ParamSchema;
 
