@@ -514,6 +514,7 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
   Route::resource('daily-task-category', DailyTaskCategoryController::class);
 
   Route::resource('shifting-ob', ShiftingObController::class)->only(['index','store','update','destroy']);
+  Route::get('schedule-ob/calendar', [App\Http\Controllers\ScheduleObController::class, 'calendar'])->name('schedule-ob.calendar');
   Route::resource('schedule-ob', ScheduleObController::class)->except(['edit','create','show']);
 
   Route::post('division-budget/approve/{divisionBudget}', [DivisionBudgetController::class, 'approve'])->name('division-budget.approve');

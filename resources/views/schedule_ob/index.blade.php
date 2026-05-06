@@ -167,19 +167,13 @@
         var calendarEl = document.getElementById('calendar');
         var calendar = new FullCalendar.Calendar(calendarEl, {
             initialView: 'dayGridMonth',
-            events: [
-                @foreach($schedules as $schedule)
-                {
-                    title: '{{ $schedule->user->name }} - {{ $schedule->shiftingOb->name }}',
-                    start: '{{ $schedule->date }}',
-                    id: '{{ $schedule->id }}',
-                    extendedProps: {
-                        user_id: '{{ $schedule->user_id }}',
-                        shifting_ob_id: '{{ $schedule->shifting_ob_id }}'
-                    }
-                },
-                @endforeach
-            ],
+            events: {
+                url: '{{ route("schedule-ob.calendar") }}',
+                method: 'GET',
+                failure: function() {
+                    alert('Gagal memuat data jadwal.');
+                }
+            },
             editable: true,
             eventClick: function(info) {
                 if (!info.jsEvent.target.closest('.fc-event')) {
