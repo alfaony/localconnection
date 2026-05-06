@@ -1757,10 +1757,10 @@ document.addEventListener('DOMContentLoaded', function() {
         initialView: 'dayGridMonth',
         events: [
             @foreach($schedules as $schedule) {
-                title: '{{ $schedule->user->name }} - {{ $schedule->shiftingOb->name }}',
+                title: '{{ $schedule?->user?->name }} - {{ $schedule?->shiftingOb?->name }}',
                 start: '{{ $schedule->date }}',
                 description: `
-                            <b>User:</b> {{ $schedule->user->name }}<br>
+                            <b>User:</b> {{ $schedule->user?->name }}<br>
                             <b>Shift:</b> {{ $schedule->shiftingOb->name }}<br>
                             <b>Clock In:</b> {{ $schedule->shiftingOb->clock_in }}<br>
                             <b>Clock Out:</b> {{ $schedule->shiftingOb->clock_out }}<br>
