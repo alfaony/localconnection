@@ -231,7 +231,7 @@ class MidtransService
                 'Accept' => 'application/json',
                 'Content-Type' => 'application/json',
                 'Authorization' => 'Basic ' . base64_encode($this->serverKey . ':'),
-            ])->post($this->getApiUrl(), $payload);
+            ])->timeout(30)->post($this->getApiUrl(), $payload);
 
 
             if ($response->failed()) {
@@ -374,7 +374,7 @@ class MidtransService
                 'Accept' => 'application/json',
                 'Content-Type' => 'application/json',
                 'Authorization' => 'Basic ' . base64_encode($this->serverKey . ':'),
-            ])->post($this->getApiUrl(), $payload);
+            ])->timeout(30)->post($this->getApiUrl(), $payload);
 
 
             if ($response->failed()) {
