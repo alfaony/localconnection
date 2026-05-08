@@ -21,7 +21,7 @@ class PermissionForMenuSecheduleOb extends Seeder
     public function run()
     {   
 
-        $methods = ['index','create', 'show', 'edit', 'update', 'destroy', 'store', 'select2'];
+        $methods = ['index','create', 'show', 'edit', 'update', 'destroy', 'store', 'select2', 'calendar'];
        
         $root = Role::where('name',RoleSchema::ROOT)->first();
         $bm = Role::where('name',RoleSchema::BM)->first();

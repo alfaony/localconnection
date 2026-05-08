@@ -712,7 +712,7 @@ class InternetCustomerShow extends Component
         $rules = [
             'name'               => 'required|string|max:255',
             'email'              => 'nullable|email',
-            'phone_number'       => 'nullable|string',
+            'phone_number'       => ['nullable', 'string', 'regex:/^[0-9]+$/'],
             'start_billing_date' => 'nullable|date',
             'end_billing_date'   => 'nullable|date|after:start_billing_date',
         ];
@@ -741,7 +741,9 @@ class InternetCustomerShow extends Component
             $rules['npwp_number'] = ['nullable', 'string', 'max:30'];
         }
 
-        $this->validate($rules);
+        $this->validate($rules, [
+            'phone_number.regex' => 'Nomor telepon hanya boleh berisi angka, tanpa simbol.',
+        ]);
 
         DB::beginTransaction();
         try {

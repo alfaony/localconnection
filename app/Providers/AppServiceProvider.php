@@ -163,7 +163,7 @@ class AppServiceProvider extends ServiceProvider
             $managementInternetMenu = 
             [
                 'data_centers','pops','optical_distributions','coverage_services',
-                'internet_packages','internet_customers','promos','routers','internet_customer_groups'
+                'internet_packages','internet_customers','promos','routers','internet_customer_groups','internet_customer_user_regions'
             ];
 
             $managementTokoOnlineMenu = [
@@ -872,6 +872,12 @@ class AppServiceProvider extends ServiceProvider
                 [
                     'text' => 'User Blacklist',
                     'route' => 'user-blacklist.index',
+                    'icon' => 'fa fa-users',
+                ],
+                'internet_customer_user_regions' =>
+                [
+                    'text' => 'Internet User Regions',
+                    'route' => 'internet-customer-user-region.index',
                     'icon' => 'fa fa-users',
                 ],
             ];

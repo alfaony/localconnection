@@ -1,4 +1,14 @@
 <div>
+    {{-- Data untuk JS print --}}
+    <div id="saleIndexMeta"
+        data-print-url="{{ rtrim(url('/sales/print-receipt'), '/') }}"
+        data-header-image="{{ !empty($settingCompany['header_store_image']) ? s3_asset(true, 10, $settingCompany['header_store_image']) : '' }}"
+        data-footer-message="{{ $settingCompany['footer_store_message'] ?? 'Terima kasih atas kunjungan Anda' }}"
+        data-company-name="{{ $settingCompany['store_name'] ?? config('app.name') }}"
+        data-company-address="{{ $settingCompany['store_address'] ?? '' }}"
+        style="display:none;">
+    </div>
+
     <div class="row">
         <div class="col-md-12 mt-2">
             <!-- Header Section -->
@@ -193,17 +203,47 @@
             <!-- Sales Table Card -->
             <div class="card shadow-sm">
                 <div class="card-header bg-light">
-                    <div class="d-flex justify-content-between align-items-center">
+                    <!-- Baris 1: judul + total count + total amount -->
+                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
                         <h5 class="mb-0">
                             <i class="fas fa-list"></i> Data Penjualan
+                            @if($filter_user_id)
+                                <span class="badge bg-warning text-dark ms-2" style="font-size:0.75rem;">
+                                    <i class="fas fa-user"></i> {{ $users->find($filter_user_id)->name ?? '' }}
+                                </span>
+                            @endif
                         </h5>
-                        <div class="d-flex gap-2 align-items-center">
-                            <span class="badge bg-primary mr-2 mb-1">Total: {{ $sales->total() }} transaksi</span>
-                            <span class="badge bg-success mb-1">
-                                <i class="fas fa-calculator"></i> Total Jumlah Akhir: Rp {{ number_format($totalFinalAmount, 0, ',', '.') }}
+                        <div class="d-flex flex-wrap gap-2 align-items-center">
+                            <span class="badge bg-primary mb-1 mr-1">
+                                <i class="fas fa-receipt"></i> {{ $sales->total() }} transaksi
+                            </span>
+                            <span class="badge bg-success mb-1" style="font-size:0.85rem; padding:0.4rem 0.75rem;">
+                                <i class="fas fa-calculator"></i>
+                                Total Akhir: <strong>Rp {{ number_format($totalFinalAmount, 0, ',', '.') }}</strong>
                             </span>
                         </div>
                     </div>
+
+                    <!-- Baris 2: rincian per metode pembayaran (hanya saat Semua Metode) -->
+                    @if($paymentBreakdown !== null)
+                    <div class="mt-2 pt-2 border-top d-flex flex-wrap align-items-center gap-3" style="font-size:0.85rem;">
+                        <span class="text-muted fw-semibold">Rincian Pembayaran:</span>
+                        <span>
+                            <i class="fas fa-money-bill-wave text-success"></i>
+                            Cash: <strong>Rp {{ number_format($paymentBreakdown['cash'], 0, ',', '.') }}</strong>
+                        </span>
+                        <span class="text-muted">|</span>
+                        <span>
+                            <i class="fas fa-qrcode text-info"></i>
+                            QRIS: <strong>Rp {{ number_format($paymentBreakdown['qris'], 0, ',', '.') }}</strong>
+                        </span>
+                        <span class="text-muted">|</span>
+                        <span>
+                            <i class="fas fa-credit-card text-primary"></i>
+                            Debit: <strong>Rp {{ number_format($paymentBreakdown['debit_credit'], 0, ',', '.') }}</strong>
+                        </span>
+                    </div>
+                    @endif
                 </div>
                 <div class="card-body">
                     <!-- Loading State -->
@@ -270,15 +310,24 @@
                                             <td>
                                                 <div class="btn-group" role="group">
                                                     @canAccess('show','sales')
-                                                    <a href="{{ route('sales.show', $sale->id) }}" 
+                                                    <a href="{{ route('sales.show', $sale->id) }}"
                                                        class="btn btn-sm btn-outline-primary"
                                                        title="Lihat Detail">
                                                         <i class="fas fa-eye"></i>
                                                     </a>
                                                     @endcanAccess
 
+                                                    @canAccess('printReceiptManagement','sales')
+                                                    <button type="button"
+                                                            class="btn btn-sm btn-outline-secondary btn-print-receipt"
+                                                            data-sale-id="{{ $sale->id }}"
+                                                            title="Cetak Struk">
+                                                        <i class="fas fa-print"></i>
+                                                    </button>
+                                                    @endcanAccess
+
                                                     @canAccess('destroy','sales')
-                                                    <button wire:click="confirmDelete('{{ $sale->id }}')" 
+                                                    <button wire:click="confirmDelete('{{ $sale->id }}')"
                                                             class="btn btn-sm btn-outline-danger"
                                                             title="Hapus">
                                                         <i class="fas fa-trash"></i>
@@ -310,6 +359,7 @@
                     @endif
                 </div>
             </div>
+            
         </div>
     </div>
 </div>
@@ -381,111 +431,99 @@
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
+    // ─── Select2 ────────────────────────────────────────────────────────────────
     function initializeSelect2() {
         if ($('#userSelect').hasClass('select2-hidden-accessible')) {
             $('#userSelect').select2('destroy');
         }
-
         $('#userSelect').select2({
-            theme: 'bootstrap-5',
-            placeholder: 'Pilih User',
-            allowClear: true,
-            width: '100%',
-            dropdownParent: $('#filterPanel')
+            theme: 'bootstrap-5', placeholder: 'Pilih User',
+            allowClear: true, width: '100%', dropdownParent: $('#filterPanel')
         });
 
+        if ($('#paymentMethodSelect').hasClass('select2-hidden-accessible')) {
+            $('#paymentMethodSelect').select2('destroy');
+        }
         $('#paymentMethodSelect').select2({
-            theme: 'bootstrap-5',
-            allowClear: true,
-            width: '100%',
-            dropdownParent: $('#filterPanel')
+            theme: 'bootstrap-5', allowClear: true,
+            width: '100%', dropdownParent: $('#filterPanel')
         });
 
-        $('#userSelect').off('change').on('change', function() {
-            // Skip jika sedang programmatic clear
-            if ($(this).data('clearing')) {
-                return;
-            }
-            
-            @this.set('temp_user_id', $(this).val());
-            
-            setTimeout(function() {
-                syncFiltersToLivewire();
-                @this.call('applyFilters');
-            }, 100);
+        // User select → auto-apply
+        $('#userSelect').off('change.sales').on('change.sales', function() {
+            if ($(this).data('clearing')) return;
+            triggerApplyFilters();
+        });
+
+        // Payment method select → auto-apply
+        $('#paymentMethodSelect').off('change.sales').on('change.sales', function() {
+            triggerApplyFilters();
         });
     }
 
-    function removeIndividualFilter(filterType) 
-    {
+    // ─── Kirim semua filter sekaligus via 1 request ───────────────────────────
+    function triggerApplyFilters() {
+        @this.call(
+            'applyFiltersFromInput',
+            $('#tempSearch').val(),
+            $('#tempStartDate').val(),
+            $('#tempEndDate').val(),
+            $('#tempStartTime').val(),
+            $('#tempEndTime').val(),
+            $('#userSelect').val() || '',
+            $('#paymentMethodSelect').val() || ''
+        );
+    }
+
+    // ─── Hapus filter individual dari badge ──────────────────────────────────
+    function removeIndividualFilter(filterType) {
         switch(filterType) {
             case 'search':
-                @this.set('filter_search', '').then(() => {
-                    @this.set('temp_search', '');
-                    $('#tempSearch').val('');
-                    @this.call('applyFilters');
-                });
+                $('#tempSearch').val('');
                 break;
             case 'user':
                 $('#userSelect').data('clearing', true);
-                @this.set('filter_user_id', '').then(() => {
-                    @this.set('temp_user_id', '');
-                    $('#userSelect').val(null).trigger('change.select2');
-                    $('#userSelect').data('clearing', false);
-                    @this.call('applyFilters');
-                });
+                $('#userSelect').val(null).trigger('change.select2');
+                $('#userSelect').data('clearing', false);
                 break;
             case 'start_date':
-                @this.set('filter_start_date', '').then(() => {
-                    @this.set('temp_start_date', '');
-                    $('#tempStartDate').val('');
-                    @this.call('applyFilters');
-                });
+                $('#tempStartDate').val('');
                 break;
             case 'end_date':
-                @this.set('filter_end_date', '').then(() => {
-                    @this.set('temp_end_date', '');
-                    $('#tempEndDate').val('');
-                    @this.call('applyFilters');
-                });
+                $('#tempEndDate').val('');
                 break;
             case 'start_time':
-                @this.set('filter_start_time', '').then(() => {
-                    @this.set('temp_start_time', '');
-                    $('#tempStartTime').val('');
-                    @this.call('applyFilters');
-                });
+                $('#tempStartTime').val('');
                 break;
             case 'end_time':
-                @this.set('filter_end_time', '').then(() => {
-                    @this.set('temp_end_time', '');
-                    $('#tempEndTime').val('');
-                    @this.call('applyFilters');
-                });
+                $('#tempEndTime').val('');
                 break;
             case 'payment_method':
-                @this.set('filter_payment_method', '').then(() => {
-                    @this.set('temp_payment_method', '');
-                    $('#paymentMethodSelect').val('');
-                    @this.call('applyFilters');
-                });
+                $('#paymentMethodSelect').val(null).trigger('change.select2');
                 break;
+        }
+        triggerApplyFilters();
+    }
+
+    // ─── Sinkronisasi input ke DOM setelah Livewire re-render ────────────────
+    function syncInputsFromLivewire() {
+        initializeSelect2();
+        $('#tempSearch').val(@this.temp_search);
+        $('#tempStartDate').val(@this.temp_start_date);
+        $('#tempEndDate').val(@this.temp_end_date);
+        $('#tempStartTime').val(@this.temp_start_time);
+        $('#tempEndTime').val(@this.temp_end_time);
+        $('#userSelect').val(@this.temp_user_id || '').trigger('change.select2');
+        $('#paymentMethodSelect').val(@this.temp_payment_method || '');
+        if ($('#paymentMethodSelect').hasClass('select2-hidden-accessible')) {
+            $('#paymentMethodSelect').trigger('change.select2');
         }
     }
 
-    function syncFiltersToLivewire() {
-        @this.set('temp_search', $('#tempSearch').val());
-        @this.set('temp_start_date', $('#tempStartDate').val());
-        @this.set('temp_end_date', $('#tempEndDate').val());
-        @this.set('temp_start_time', $('#tempStartTime').val());
-        @this.set('temp_end_time', $('#tempEndTime').val());
-        @this.set('temp_user_id', $('#userSelect').val());
-        @this.set('temp_payment_method', $('#paymentMethodSelect').val());
-    }
-
+    // ─── DOMContentLoaded ────────────────────────────────────────────────────
     document.addEventListener('DOMContentLoaded', function() {
         initializeSelect2();
-        
+
         $('#searchToggleBtn').on('click', function() {
             $('#filterPanel').collapse('toggle');
         });
@@ -494,50 +532,62 @@
             $('#filterPanel').collapse('show');
         @endif
 
+        // Tombol Cari
         $(document).on('click', '#applyFiltersBtn', function(e) {
             e.preventDefault();
-            syncFiltersToLivewire();
-            @this.call('applyFilters');
+            triggerApplyFilters();
         });
 
+        // Tombol Hapus Semua Filter
         $(document).on('click', '#clearFiltersBtn', function(e) {
             e.preventDefault();
             @this.call('clearFilters');
         });
 
+        // Hapus badge individual
         $(document).on('click', '.badge-remove', function() {
             removeIndividualFilter($(this).data('filter'));
         });
 
-        $(document).on('keypress', '#tempSearch, #tempStartDate, #tempEndDate, #tempStartTime, #tempEndTime', function(e) {
-            if (e.which === 13) {
-                e.preventDefault();
-                $('#applyFiltersBtn').click();
+        // Enter di input → apply filter
+        $(document).on('keypress', '#tempSearch', function(e) {
+            if (e.which === 13) { e.preventDefault(); triggerApplyFilters(); }
+        });
+
+        // Auto-fill: tanggal mulai → tanggal akhir (jika akhir masih kosong)
+        $(document).on('change', '#tempStartDate', function() {
+            if (!$('#tempEndDate').val()) {
+                $('#tempEndDate').val($(this).val());
             }
+        });
+
+        // Auto-fill: waktu mulai → waktu akhir + 7 jam (jika akhir masih kosong)
+        $(document).on('change', '#tempStartTime', function() {
+            if (!$('#tempEndTime').val()) {
+                const startVal = $(this).val();
+                if (startVal) {
+                    const [h, m] = startVal.split(':').map(Number);
+                    const endH = String((h + 7) % 24).padStart(2, '0');
+                    const endM = String(m).padStart(2, '0');
+                    $('#tempEndTime').val(`${endH}:${endM}`);
+                }
+            }
+        });
+
+        // Tombol cetak struk per baris
+        $(document).on('click', '.btn-print-receipt', function() {
+            printSaleReceipt($(this).data('sale-id'));
         });
     });
 
+    // ─── Livewire hooks ───────────────────────────────────────────────────────
     document.addEventListener('livewire:load', function() {
-        Livewire.hook('message.processed', (message, component) => {
-            initializeSelect2();
-            $('#userSelect').val(@this.temp_user_id).trigger('change.select2');
-            $('#tempSearch').val(@this.temp_search);
-            $('#tempStartDate').val(@this.temp_start_date);
-            $('#tempEndDate').val(@this.temp_end_date);
-            $('#tempStartTime').val(@this.temp_start_time);
-            $('#tempEndTime').val(@this.temp_end_time);
-            $('#paymentMethodSelect').val(@this.temp_payment_method);
+        Livewire.hook('message.processed', () => {
+            syncInputsFromLivewire();
         });
 
         window.addEventListener('filters-applied', function() {
-            initializeSelect2();
-            $('#userSelect').val(@this.filter_user_id).trigger('change.select2');
-            $('#tempSearch').val(@this.filter_search);
-            $('#tempStartDate').val(@this.filter_start_date);
-            $('#tempEndDate').val(@this.filter_end_date);
-            $('#tempStartTime').val(@this.filter_start_time);
-            $('#tempEndTime').val(@this.filter_end_time);
-            $('#paymentMethodSelect').val(@this.filter_payment_method);
+            syncInputsFromLivewire();
         });
 
         window.addEventListener('filters-cleared', function() {
@@ -547,21 +597,21 @@
             $('#tempEndDate').val('');
             $('#tempStartTime').val('');
             $('#tempEndTime').val('');
-            $('#userSelect').val('').trigger('change.select2');
-            $('#paymentMethodSelect').val('');
+            $('#userSelect').val(null).trigger('change.select2');
+            $('#paymentMethodSelect').val(null).trigger('change.select2');
         });
 
         window.addEventListener('confirm-delete', function(event) {
             Swal.fire({
                 title: 'Hapus Penjualan?',
-                text: "Anda tidak dapat mengembalikan data ini!",
+                text: 'Anda tidak dapat mengembalikan data ini!',
                 icon: 'warning',
                 showCancelButton: true,
                 confirmButtonColor: '#d33',
                 cancelButtonColor: '#3085d6',
                 confirmButtonText: 'Ya, Hapus!',
                 cancelButtonText: 'Batal'
-            }).then((result) => {
+            }).then(result => {
                 if (result.isConfirmed) {
                     @this.call('deleteSale', event.detail.saleId);
                 }
@@ -573,12 +623,128 @@
                 icon: event.detail.type,
                 title: event.detail.type === 'success' ? 'Berhasil!' : 'Error!',
                 text: event.detail.message,
-                timer: 3000,
-                showConfirmButton: false,
-                toast: true,
-                position: 'top-end'
+                timer: 3000, showConfirmButton: false,
+                toast: true, position: 'top-end'
             });
         });
     });
+
+    // ─── Print struk thermal (sama dengan store-selling) ────────────────────
+    async function printSaleReceipt(saleId) {
+        const meta        = document.getElementById('saleIndexMeta');
+        const printUrl    = meta.dataset.printUrl + '/' + saleId;
+        const headerImage = meta.dataset.headerImage;
+        const footerMsg   = meta.dataset.footerMessage;
+        const companyName = meta.dataset.companyName;
+        const companyAddr = meta.dataset.companyAddress;
+
+        try {
+            const resp = await fetch(printUrl, {
+                headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }
+            });
+            if (!resp.ok) throw new Error('Gagal memuat data struk (status ' + resp.status + ')');
+            const json = await resp.json();
+            if (!json.success) throw new Error('Data struk tidak ditemukan');
+
+            const sale = json.sale;
+            const fmt  = val => 'Rp ' + (parseFloat(val) || 0).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+            const pmLabel = { cash: 'Tunai', qris: 'QRIS', debit_credit: 'Debit / Kredit' };
+
+            const itemsHtml = (sale.items || []).map(item => `
+                <div class="receipt-item">
+                    <div class="item-name">${item.product_store ? item.product_store.name : '-'}</div>
+                    <div class="item-row">
+                        <span>${item.quantity} x ${fmt(item.unit_price)}</span>
+                        <span class="item-total">${fmt(item.subtotal)}</span>
+                    </div>
+                </div>`).join('');
+
+            const cashChange = sale.payment_method === 'cash' ? `
+                <div class="total-row" style="margin-top:4px;">
+                    <span>Dibayar:</span><span>${fmt(sale.payment_details?.cash_amount ?? 0)}</span>
+                </div>
+                <div class="total-row">
+                    <span>Kembalian:</span>
+                    <span>${fmt((sale.payment_details?.cash_amount ?? 0) - parseFloat(sale.final_amount))}</span>
+                </div>` : '';
+
+            const html = `<!DOCTYPE html><html><head>
+<meta charset="UTF-8">
+<title>Struk ${sale.transaction_code}</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+@page{size:46mm auto;margin:0}
+body{font-family:Arial;width:46mm;margin:0;padding:2mm 2mm 8mm 2mm;font-size:8px;line-height:1.3;color:#000}
+.header{text-align:center;margin-bottom:4px}
+.receipt-logo{text-align:center;margin-bottom:4px}
+.receipt-logo img{width:15mm;height:auto;display:block;margin:0 auto;object-fit:contain}
+.company-name{font-size:10px;font-weight:bold;margin-bottom:2px}
+.receipt-address{font-size:7px;margin-top:2px}
+.receipt-title{margin-top:4px}
+.receipt-title h6{font-size:9px;margin-bottom:2px}
+.transaction-code{font-size:8px;margin-bottom:1px}
+.date-time{font-size:7px}
+hr{border:none;border-top:1px dashed #000;margin:4px 0}
+.receipt-operator{margin-bottom:4px}
+.info-row{display:flex;justify-content:space-between;margin-bottom:1px;font-size:8px}
+.receipt-items{margin-bottom:4px}
+.receipt-item{margin-bottom:4px;border-bottom:1px dotted #999;padding-bottom:3px}
+.receipt-item:last-child{border-bottom:none}
+.item-name{font-size:8px;word-break:break-word;margin-bottom:1px}
+.item-row{display:flex;justify-content:space-between;font-size:7px}
+.item-total{white-space:nowrap}
+.receipt-totals{margin-top:2px}
+.total-row{display:flex;justify-content:space-between;margin-bottom:2px;font-size:8px}
+.total-line{border-top:1px solid #000;padding-top:3px;margin-top:3px;font-size:9px}
+.footer-section{margin-top:6px;text-align:center;font-size:7px}
+</style></head><body>
+<div class="header">
+    ${headerImage ? `<div class="receipt-logo"><img src="${headerImage}" alt="${companyName}" crossorigin="anonymous"></div>` : ''}
+    <div class="company-name"><strong>${companyName}</strong></div>
+    ${companyAddr ? `<div class="receipt-address">${companyAddr}</div>` : ''}
+    <div class="receipt-title">
+        <h6>STRUK PENJUALAN</h6>
+        <p class="transaction-code">${sale.transaction_code}</p>
+        <span class="date-time">${new Date(sale.created_at).toLocaleString('id-ID')}</span>
+    </div>
+</div>
+<hr>
+<div class="receipt-operator">
+    <div class="info-row"><span>Kasir:</span><span>${sale.user ? sale.user.name : '-'}</span></div>
+    <div class="info-row"><span>Bayar:</span><span>${pmLabel[sale.payment_method] ?? sale.payment_method}</span></div>
+</div>
+<hr>
+<div class="receipt-items">${itemsHtml}</div>
+<hr>
+<div class="receipt-totals">
+    <div class="total-row"><span>Subtotal:</span><span>${fmt(sale.total_amount)}</span></div>
+    <div class="total-row"><span>Pajak (${sale.tax_value}%):</span><span>${fmt(sale.tax_amount)}</span></div>
+    <div class="total-row total-line"><p>TOTAL:</p><p>${fmt(sale.final_amount)}</p></div>
+    ${cashChange}
+</div>
+<hr>
+<div class="footer-section">${footerMsg || 'Terima kasih atas kunjungan Anda'}</div>
+</body></html>`;
+
+            const win = window.open('', '_blank');
+            win.document.write(html);
+            win.document.close();
+
+            win.onload = function() {
+                const imgs = win.document.images;
+                if (!imgs.length) { win.focus(); win.print(); return; }
+                let n = 0;
+                const tryPrint = () => { if (++n >= imgs.length) { win.focus(); win.print(); } };
+                for (const img of imgs) {
+                    if (img.complete) tryPrint();
+                    else { img.onload = tryPrint; img.onerror = tryPrint; }
+                }
+            };
+
+        } catch (err) {
+            Swal.fire({ icon: 'error', title: 'Gagal Cetak', text: err.message,
+                timer: 3000, showConfirmButton: false });
+        }
+    }
 </script>
 @endpush

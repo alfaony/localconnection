@@ -22,13 +22,29 @@ class Sale extends Model
         parent::boot();
 
         static::creating(function ($model) {
-            if (empty($model->id)) 
+            if (empty($model->id))
             {
                 $model->{$model->getKeyName()} = Uuid::uuid4()->toString();
             }
             if(empty($model->transaction_code))
             {
                 $model->genreateTransactionCode();
+            }
+        });
+
+        static::deleting(function ($sale) {
+            if ($sale->status === 'completed') {
+                foreach ($sale->items()->with('productStore.inventory')->get() as $item) {
+                    $inventory = optional($item->productStore)->inventory;
+                    if ($inventory) {
+                        $inventory->addStock(
+                            (int) $item->quantity,
+                            'Pembatalan Penjualan #' . ($sale->transaction_code ?? $sale->id),
+                            'manual',
+                            $sale->id
+                        );
+                    }
+                }
             }
         });
     }

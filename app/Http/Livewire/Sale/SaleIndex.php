@@ -6,6 +6,7 @@ use Livewire\Component;
 use Livewire\WithPagination;
 use Illuminate\Support\Facades\DB;
 use App\Models\Sale;
+use App\Models\SettingCompany;
 use Illuminate\Support\Facades\Auth;
 use App\Helpers\Access;
 
@@ -40,31 +41,55 @@ class SaleIndex extends Component
 
     public function mount()
     {
-        // Initialize temp values with filter values on mount
-        $this->temp_search = $this->filter_search;
-        $this->temp_start_date = $this->filter_start_date;
-        $this->temp_end_date = $this->filter_end_date;
-        $this->temp_start_time = $this->filter_start_time;
-        $this->temp_end_time = $this->filter_end_time;
-        $this->temp_user_id = $this->filter_user_id;
+        // Default filter ke user yang sedang login
+        if (empty($this->filter_user_id)) {
+            $this->filter_user_id = auth()->id();
+            $this->temp_user_id   = auth()->id();
+        }
+
+        // Default filter tanggal hari ini
+        if (empty($this->filter_start_date)) {
+            $today = now()->toDateString();
+            $this->filter_start_date = $today;
+            $this->filter_end_date   = $today;
+            $this->temp_start_date   = $today;
+            $this->temp_end_date     = $today;
+        }
+
+        $this->temp_search         = $this->filter_search;
+        $this->temp_start_date     = $this->filter_start_date;
+        $this->temp_end_date       = $this->filter_end_date;
+        $this->temp_start_time     = $this->filter_start_time;
+        $this->temp_end_time       = $this->filter_end_time;
         $this->temp_payment_method = $this->filter_payment_method;
     }
 
     public function applyFilters()
     {
-        // Copy temp filters to active filters
-        $this->filter_search = $this->temp_search;
-        $this->filter_start_date = $this->temp_start_date;
-        $this->filter_end_date = $this->temp_end_date;
-        $this->filter_start_time = $this->temp_start_time;
-        $this->filter_end_time = $this->temp_end_time;
-        $this->filter_user_id = $this->temp_user_id;
+        $this->filter_search         = $this->temp_search;
+        $this->filter_start_date     = $this->temp_start_date;
+        $this->filter_end_date       = $this->temp_end_date;
+        $this->filter_start_time     = $this->temp_start_time;
+        $this->filter_end_time       = $this->temp_end_time;
+        $this->filter_user_id        = $this->temp_user_id;
         $this->filter_payment_method = $this->temp_payment_method;
-        
+
         $this->resetPage();
-        
-        // Emit event to notify JavaScript that filters have been applied
         $this->dispatchBrowserEvent('filters-applied');
+    }
+
+    public function applyFiltersFromInput(
+        $search, $startDate, $endDate, $startTime, $endTime, $userId, $paymentMethod
+    ) {
+        $this->temp_search         = $search;
+        $this->temp_start_date     = $startDate;
+        $this->temp_end_date       = $endDate;
+        $this->temp_start_time     = $startTime;
+        $this->temp_end_time       = $endTime;
+        $this->temp_user_id        = $userId;
+        $this->temp_payment_method = $paymentMethod;
+
+        $this->applyFilters();
     }
 
     public function clearFilters()
@@ -134,6 +159,11 @@ class SaleIndex extends Component
     {
         $users = \App\Models\User::byCompany(auth()->user()->company_id)->get();
 
+        $settingCompany = SettingCompany::byCompany(auth()->user()->company_id)
+            ->where('menu', 'store')
+            ->get()
+            ->pluck('field_value', 'field_title');
+
         $baseQuery = Sale::byCompany(auth()->user()->company_id)
             ->when($this->filter_search, function ($query) {
                 $query->where(function ($q) {
@@ -168,11 +198,25 @@ class SaleIndex extends Component
 
         $totalFinalAmount = (clone $baseQuery)->sum('final_amount');
 
+        $paymentBreakdown = null;
+        if (!$this->filter_payment_method) {
+            $breakdown = (clone $baseQuery)
+                ->selectRaw('payment_method, SUM(final_amount) as total')
+                ->groupBy('payment_method')
+                ->pluck('total', 'payment_method');
+
+            $paymentBreakdown = [
+                'cash'         => $breakdown['cash'] ?? 0,
+                'qris'         => $breakdown['qris'] ?? 0,
+                'debit_credit' => $breakdown['debit_credit'] ?? 0,
+            ];
+        }
+
         $sales = $baseQuery->with(['user', 'items.productStore'])
             ->latest()
             ->paginate($this->perPage);
 
-        return view('livewire.sale.sale-index', compact('sales', 'users', 'totalFinalAmount'))
+        return view('livewire.sale.sale-index', compact('sales', 'users', 'totalFinalAmount', 'paymentBreakdown', 'settingCompany'))
             ->extends('adminlte::page');
     }
 }

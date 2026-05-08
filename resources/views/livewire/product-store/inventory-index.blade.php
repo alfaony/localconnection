@@ -57,11 +57,21 @@
                             </div>
 
                             {{-- Tidak ditemukan --}}
-                            @if($searchQuery && strlen($searchQuery) >= 2 && !$foundProduct)
+                            @if($searchQuery && strlen($searchQuery) >= 2 && !$foundProduct && empty($multipleProducts))
                             <div wire:loading.remove wire:target="searchQuery">
                                 <div class="alert alert-warning py-2 mb-0">
                                     <i class="fas fa-exclamation-triangle mr-1"></i>
                                     Produk "<strong>{{ $searchQuery }}</strong>" tidak ditemukan.
+                                </div>
+                            </div>
+                            @endif
+
+                            {{-- Multiple products found --}}
+                            @if(!empty($multipleProducts))
+                            <div wire:loading.remove wire:target="searchQuery">
+                                <div class="alert alert-info py-2 mb-0">
+                                    <i class="fas fa-layer-group mr-1"></i>
+                                    Ditemukan <strong>{{ count($multipleProducts) }}</strong> produk — pilih di bawah.
                                 </div>
                             </div>
                             @endif
@@ -99,6 +109,50 @@
                         </div>
                         @endif
                     </div>
+
+                    {{-- Pilih produk (multiple results) --}}
+                    @if(!empty($multipleProducts))
+                    <div wire:loading.remove wire:target="searchQuery" class="mt-3">
+                        <div class="list-group">
+                            @foreach($multipleProducts as $p)
+                            <button type="button"
+                                wire:click="selectProduct('{{ $p['id'] }}')"
+                                class="list-group-item list-group-item-action d-flex align-items-center py-2 px-3">
+                                {{-- Gambar --}}
+                                @if($p['image'])
+                                <img src="{{ $p['image'] }}" class="rounded mr-3 flex-shrink-0"
+                                     style="width:40px;height:40px;object-fit:cover;" alt="">
+                                @else
+                                <div class="rounded bg-light d-flex align-items-center justify-content-center mr-3 flex-shrink-0"
+                                     style="width:40px;height:40px;font-size:1.1rem;color:#bbb;">
+                                    <i class="fas fa-box"></i>
+                                </div>
+                                @endif
+                                {{-- Nama & barcode --}}
+                                <div class="flex-grow-1 min-width-0">
+                                    <div class="font-weight-bold text-truncate" style="font-size:0.9rem;">
+                                        {{ $p['name'] }}
+                                    </div>
+                                    <small class="text-muted">
+                                        <i class="fas fa-barcode mr-1"></i>{{ $p['barcode'] ?? '-' }}
+                                        @if($p['code'])
+                                            &nbsp;·&nbsp;<i class="fas fa-hashtag mr-1"></i>{{ $p['code'] }}
+                                        @endif
+                                        &nbsp;·&nbsp;{{ $p['category'] }}
+                                    </small>
+                                </div>
+                                {{-- Stok --}}
+                                <div class="text-right ml-3 flex-shrink-0">
+                                    <span class="font-weight-bold text-primary" style="font-size:1rem;">
+                                        {{ $p['stock'] }}
+                                    </span>
+                                    <small class="text-muted d-block">{{ $p['unit'] }}</small>
+                                </div>
+                            </button>
+                            @endforeach
+                        </div>
+                    </div>
+                    @endif
 
                     {{-- Form aksi (muncul hanya jika ada produk) --}}
                     @if($foundProduct)
@@ -341,7 +395,14 @@
     </div>
 </div>
 
+
 @push('js')
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
 <script>
     window.addEventListener('stock-saved', event => {
         Swal.fire({

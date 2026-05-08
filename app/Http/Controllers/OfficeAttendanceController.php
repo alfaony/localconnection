@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\BarcodeAttendance;
 use App\Models\OfficeAttendance;
+use App\Models\ScheduleOb;
 use App\Jobs\ProcessScanAttendanceJob;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -99,9 +100,16 @@ class OfficeAttendanceController extends Controller
             return redirect()->route('office-attendance.index')->with('error', 'Absensi WFH belum diaktifkan. Silahkan hubungi admin.');
         }
         
-        if(!Auth::user()->shouldWorkToday())
-        {
-            return redirect()->route('office-attendance.index')->with('error', 'Tidak ada jadwal absensi untuk hari ini.');   
+        $authUser = Auth::user();
+        if ($authUser->wfo_check_in && $authUser->is_shift_attendance) {
+            $hasScheduleToday = ScheduleOb::where('user_id', $authUser->id)
+                ->whereDate('date', today())
+                ->exists();
+            if (!$hasScheduleToday) {
+                return redirect()->route('office-attendance.index')->with('error', 'Tidak ada jadwal hari ini.');
+            }
+        } elseif (!$authUser->shouldWorkToday()) {
+            return redirect()->route('office-attendance.index')->with('error', 'Tidak ada jadwal absensi untuk hari ini.');
         }
 
         $timesPerDay = config('services.checking_setting.times_per_day');

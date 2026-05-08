@@ -370,7 +370,7 @@ class RoleController extends Controller
 
             // i
             'inboxes', 'internet_customers', 'internet_packages', 'invoices', 'ip_rights',
-            'item_purchases', 'item_requests','internet_customer_groups',
+            'item_purchases', 'item_requests','internet_customer_groups','internet_customer_user_regions',
 
             // k
             'kyes',

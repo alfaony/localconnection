@@ -97,9 +97,10 @@ class UserController extends Controller
         $user->use_ip_restriction = $request->post('use_ip_restriction', 0);
         $user->ip_addresses = $request->has('ip_addresses') ? $request->ip_addresses : NULL;
         // Checkin
-        $user->is_shift_attendance = $request->post('is_checkin') ==  ParamSchema::SHIFT ? true : false;
-        $user->is_checkin = $request->post('is_checkin') == ParamSchema::WFH ? true : false; 
-        $user->wfo_check_in = $request->post('is_checkin') == ParamSchema::WFO ? true : false; 
+        $isCheckin = $request->post('is_checkin');
+        $user->is_shift_attendance = in_array($isCheckin, [ParamSchema::SHIFT, ParamSchema::WFO_SHIFT]);
+        $user->is_checkin = $isCheckin == ParamSchema::WFH ? true : false;
+        $user->wfo_check_in = in_array($isCheckin, [ParamSchema::WFO, ParamSchema::WFO_SHIFT]);
         $user->manual_checkin = $request->post('manual_checkin', 0);
         $user->requires_photo = $request->post('requires_photo', 0);
         $user->requires_location = $request->post('requires_location', 0);
@@ -108,12 +109,12 @@ class UserController extends Controller
         $user->rest_time = $request->post('rest_time');
         $user->end_rest_time = $request->post('end_rest_time');
 
-        if ($request->has('custom_rest_times')) 
+        if ($request->has('custom_rest_times'))
         {
             $user->custom_rest_times = $request->custom_rest_times;
         }
-        
-        if ($request->post('is_checkin') == ParamSchema::WFO) {
+
+        if ($isCheckin == ParamSchema::WFO) {
             $wfoWorkingDays = [];
             foreach (config('custom.daysOfWeek') as $dayName => $dayValue) {
                 $wfoWorkingDays[$dayValue] = $request->has("wfo_working_days.$dayValue");
@@ -265,32 +266,32 @@ class UserController extends Controller
         $user->use_ip_restriction = $request->post('use_ip_restriction', 0);
         $user->ip_addresses = $request->has('ip_addresses') ? $request->ip_addresses : NULL;
 
-        // 
-        $user->is_shift_attendance = $request->post('is_checkin') ==  ParamSchema::SHIFT ? true : false;
-        $user->is_checkin = $request->post('is_checkin') ==  ParamSchema::WFH ? true : false;
-        $user->wfo_check_in = $request->post('is_checkin') ==  ParamSchema::WFO ? true : false;
+        //
+        $isCheckin = $request->post('is_checkin');
+        $user->is_shift_attendance = in_array($isCheckin, [ParamSchema::SHIFT, ParamSchema::WFO_SHIFT]);
+        $user->is_checkin = $isCheckin == ParamSchema::WFH ? true : false;
+        $user->wfo_check_in = in_array($isCheckin, [ParamSchema::WFO, ParamSchema::WFO_SHIFT]);
 
-        $user->manual_checkin = $request->post('is_checkin') ==  ParamSchema::WFH ? $request->post('manual_checkin', 0) : false;
-        $user->requires_photo = $request->post('is_checkin') ==  ParamSchema::WFH ?$request->post('requires_photo', 0) : false;
-        $user->requires_location = $request->post('is_checkin') ==  ParamSchema::WFH ? $request->post('requires_location', 0) : false;
-        $user->start_time = $request->post('is_checkin') ==  ParamSchema::WFH ? $request->post('start_time') : NULL;
-        $user->end_time = $request->post('is_checkin') ==  ParamSchema::WFH ? $request->post('end_time') : NULL;
-        $user->rest_time = $request->post('is_checkin') ==  ParamSchema::WFH ? $request->post('rest_time') : NULL;
-        $user->end_rest_time = $request->post('is_checkin') ==  ParamSchema::WFH ? $request->post('end_rest_time') : NULL;
+        $user->manual_checkin = $isCheckin == ParamSchema::WFH ? $request->post('manual_checkin', 0) : false;
+        $user->requires_photo = $isCheckin == ParamSchema::WFH ? $request->post('requires_photo', 0) : false;
+        $user->requires_location = $isCheckin == ParamSchema::WFH ? $request->post('requires_location', 0) : false;
+        $user->start_time = $isCheckin == ParamSchema::WFH ? $request->post('start_time') : null;
+        $user->end_time = $isCheckin == ParamSchema::WFH ? $request->post('end_time') : null;
+        $user->rest_time = $isCheckin == ParamSchema::WFH ? $request->post('rest_time') : null;
+        $user->end_rest_time = $isCheckin == ParamSchema::WFH ? $request->post('end_rest_time') : null;
 
-        if ($request->has('custom_rest_times')) 
+        if ($request->has('custom_rest_times'))
         {
             $user->custom_rest_times = $request->custom_rest_times;
         }
 
-        if ($request->post('is_checkin') == ParamSchema::WFO) {
+        if ($isCheckin == ParamSchema::WFO) {
             $wfoWorkingDays = [];
             foreach (config('custom.daysOfWeek') as $dayName => $dayValue) {
                 $wfoWorkingDays[$dayValue] = $request->has("wfo_working_days.$dayValue");
             }
             $user->wfo_working_days = $wfoWorkingDays;
-        } else 
-        {
+        } else {
             $user->wfo_working_days = null;
         }
 

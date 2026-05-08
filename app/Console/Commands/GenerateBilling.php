@@ -40,6 +40,8 @@ class GenerateBilling extends Command
                     $query->whereIn('status', [
                         ParamSchema::ACTIVE,
                         ParamSchema::INSTALLED,
+                        ParamSchema::REACTIVATED,
+                        ParamSchema::DISCONNECTED,
                     ]);
                 })
                 ->get();

@@ -159,6 +159,7 @@ use App\Http\Livewire\InternetCustomer\Admin\InternetCustomerIndex;
 use App\Http\Livewire\InternetCustomer\Admin\InternetCustomerShow;
 use App\Http\Livewire\InternetCustomer\InternetCustomerShow as CustomerShow;
 use App\Http\Livewire\InternetCustomer\CustomerCodeInput;
+use App\Http\Livewire\InternetCustomer\InternetCustomerUserRegionIndex;
 use App\Http\Livewire\Promo\PromoIndex;
 use App\Http\Livewire\Promo\PromoForm;
 use App\Http\Livewire\Router\RouterForm;
@@ -513,6 +514,7 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
   Route::resource('daily-task-category', DailyTaskCategoryController::class);
 
   Route::resource('shifting-ob', ShiftingObController::class)->only(['index','store','update','destroy']);
+  Route::get('schedule-ob/calendar', [App\Http\Controllers\ScheduleObController::class, 'calendar'])->name('schedule-ob.calendar');
   Route::resource('schedule-ob', ScheduleObController::class)->except(['edit','create','show']);
 
   Route::post('division-budget/approve/{divisionBudget}', [DivisionBudgetController::class, 'approve'])->name('division-budget.approve');
@@ -698,6 +700,7 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
   Route::get('internet-package/edit/{id}', InternetPackageForm::class)->name('internet-package.edit');
 
   Route::get('internet-customer-group', InternetCustomerGroupIndex::class)->name('internet-customer-group.index');
+  Route::get('internet-customer-user-region', InternetCustomerUserRegionIndex::class)->name('internet-customer-user-region.index');
 
   Route::get('internet-customer', InternetCustomerIndex::class)->name('internet-customer.index');
   Route::put('internet-customer/update/{id}', InternetCustomerIndex::class)->name('internet-customer.update');
@@ -745,6 +748,7 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
   Route::get('punishment-user', PunishmentUserTable::class)->name('punishment-user.index');
   
   Route::get('sales', \App\Http\Livewire\Sale\SaleIndex::class)->name('sales.index');
+  Route::get('sales/print-receipt/{sale}', [SaleController::class, 'printReceiptManagement'])->name('sales.printReceipt');
   Route::get('sales/{id}', \App\Http\Livewire\Sale\SaleShow::class)->name('sales.show');
   
   Route::get('store-selling', [SaleController::class, 'index'])->name('store-selling.index');
