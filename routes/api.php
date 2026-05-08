@@ -96,9 +96,14 @@ Route::group(['middleware' => ['auth:api','role.permission.api']], function()
     Route::get('product-stores/warehouses', [QrScanApiController::class, 'getWarehouses']);
     Route::get('product-stores/zones', [QrScanApiController::class, 'getZones']);
     Route::get('product-stores/racks', [QrScanApiController::class, 'getRacks']);
-    Route::get('product-store', [QrScanApiController::class, 'getProductStoreList']);
+    Route::get('product-store/inventory-history', [QrScanApiController::class, 'getInventoryHistory']);
+    Route::post('product-store/save-stock', [QrScanApiController::class, 'saveStock']);
     Route::get('product-store/barcode-handler', [QrScanApiController::class, 'handleBarcode']);
     Route::delete('product-store/{id}', [QrScanApiController::class, 'deleteProductStore']);
+    Route::get('product-store', [QrScanApiController::class, 'getProductStoreList']);
+
+
+
 
 
     Route::get('internet-customers/detail/{code}', [QrScanApiController::class, 'getInternetCustomerDetail']);

@@ -30,6 +30,8 @@ use App\Models\BrandProductStore;
 use App\Models\Warehouse;
 use App\Models\Zone;
 use App\Models\Rack;
+use App\Models\Inventory;
+use App\Models\InventoryMovement;
 
 use App\Http\Resources\UsedLaptopResource;
 use Illuminate\Support\Facades\DB;
@@ -75,6 +77,7 @@ class QrScanApiController extends Controller
 
                 // CHECKLIST
                 'checks' => $laptop->checks->map(fn($c) => [
+                    'id' => $c->id,
                     'name'   => $c->item?->name,
                     'status' => $c->status,
                     'notes'  => $c->notes,
@@ -82,6 +85,7 @@ class QrScanApiController extends Controller
 
                 // REPAIRS
                 'repairs' => $laptop->repairs->map(fn($r) => [
+                    'id' => $r->id,
                     'repair_item' => $r->repair_item,
                     'cost'        => $r->cost,
                 ]),
@@ -304,7 +308,7 @@ class QrScanApiController extends Controller
 
         $item->update([
             'name'           => $validated['name'],
-            'serial_number'  => $validated['serial_number'],
+            'serial_number'  => $validated['serial_number'] ?? $item->serial_number,
             'purchase_price' => $validated['purchase_price'],
             'notes'          => $validated['notes'] ?? null,
             'rack_id'        => $validated['rack_id'] ?? $item->rack_id,
@@ -380,6 +384,8 @@ class QrScanApiController extends Controller
                 ->with([
                     'category',
                     'brand',
+                    'inventory',
+                    'rack.zone.warehouse',
                     'media' => fn($q) => $q->orderBy('order', 'asc'),
                     'creator'
                 ])
@@ -393,6 +399,7 @@ class QrScanApiController extends Controller
                     'caption'   => $m->caption,
                     'order'     => $m->order,
                 ]),
+
                 'user_name' => optional($product->creator)->name,
             ];
 
@@ -444,13 +451,13 @@ class QrScanApiController extends Controller
                 'category_product_store_id' => $validated['category_product_store_id'] ?? $product->category_product_store_id,
                 'brand_product_store_id'    => $validated['brand_product_store_id'] ?? $product->brand_product_store_id,
                 'selling_price'             => $validated['selling_price']?? $product->selling_price,
-                'variant'                   => $validated['variant'] ?? null,
-                'specification'             => $validated['specification'] ?? null,
-                'length'                    => $validated['length'] ?? 0,
-                'width'                     => $validated['width'] ?? 0,
-                'height'                    => $validated['height'] ?? 0,
-                'weight'                    => $validated['weight'] ?? 0,
-                'dimension'                 => ($validated['length'] ?? 0) . ' x ' . ($validated['width'] ?? 0) . ' x ' . ($validated['height'] ?? 0),
+                'variant'                   => $validated['variant'] ?? $product->variant,
+                'specification'             => $validated['specification'] ?? $product->specification,
+                'length'                    => $validated['length'] ?? $product->length,
+                'width'                     => $validated['width'] ?? $product->width,
+                'height'                    => $validated['height'] ?? $product->height,
+                'weight'                    => $validated['weight'] ?? $product->weight,
+                'dimension'                 => ($validated['length'] ?? $product->length) . ' x ' . ($validated['width'] ?? $product->width) . ' x ' . ($validated['height'] ?? $product->height),
                 'rack_id'                   => $validated['rack_id'] ?? $product->rack_id,
                 'user_modified_id'          => Auth::id(),
             ]);
@@ -940,6 +947,116 @@ class QrScanApiController extends Controller
             ]);
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => 'Gagal mengambil checklist item'], 404);
+        }
+    }
+
+
+    /**
+     * 1. API Index Riwayat Inventory (History)
+     * URL: GET product-store/inventory-history?barcode=...
+     */
+    public function getInventoryHistory(Request $request)
+    {
+        $barcode = $request->query('barcode');
+        $searchMovement = $request->query('search'); // filter nama/barcode tambahan
+        $filterType = $request->query('type'); // Masuk, Keluar, Set
+
+        $movements = InventoryMovement::with(['inventory.productStore', 'creator'])
+            ->whereHas('inventory.productStore', function ($q) {
+                $q->byCompany(Auth::user()->company_id);
+            })
+            // Filter Berdasarkan Barcode Spesifik (jika dari halaman detail)
+            ->when($barcode, function ($q) use ($barcode) {
+                $q->whereHas('inventory.productStore', function ($q2) use ($barcode) {
+                    $q2->where('barcode', $barcode);
+                });
+            })
+            // Filter Tipe (Masuk/Keluar/Set)
+            ->when($filterType, fn($q) => $q->where('type', $filterType))
+            // Filter Search Global di tabel history
+            ->when($searchMovement, function ($q) use ($searchMovement) {
+                $q->whereHas('inventory.productStore', function ($q2) use ($searchMovement) {
+                    $q2->where('name', 'like', '%' . $searchMovement . '%')
+                       ->orWhere('barcode', 'like', '%' . $searchMovement . '%')
+                       ->orWhere('code', 'like', '%' . $searchMovement . '%');
+                });
+            })
+            ->latest()
+            ->paginate(15);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Riwayat stok berhasil diambil',
+            'data' => $movements
+        ], 200);
+    }
+
+    /**
+     * 2. API Save Stock
+     * URL: POST product-store/save-stock
+     */
+    public function saveStock(Request $request)
+    {
+        $request->validate([
+            'product_id' => 'required|exists:product_stores,id',
+            'type'       => 'required|string',
+            'amount'     => 'required|integer|min:1',
+            'notes'      => 'nullable|string|max:255',
+        ]);
+
+        try {
+            DB::beginTransaction();
+
+            $product = ProductStore::byCompany(Auth::user()->company_id)
+                ->findOrFail($request->product_id);
+
+            // Ambil atau buat inventory record
+            $inventory = Inventory::firstOrCreate(
+                ['product_store_id' => $product->id],
+                [
+                    'quantity'       => 0,
+                    'unit'           => 'pcs',
+                    'company_id'     => Auth::user()->company_id,
+                    'user_create_id' => Auth::id(),
+                ]
+            );
+
+            $qty = (int) $request->amount;
+            $type = $request->type;
+            $notes = $request->notes ?? '-';
+
+            // Validasi Stok Keluar
+            if ($type === 'Keluar' && $qty > $inventory->quantity) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Stok tidak cukup. Stok saat ini: ' . $inventory->quantity . ' pcs.'
+                ], 422);
+            }
+
+            // Eksekusi perubahan menggunakan Helper/Method di Model Inventory
+            // Kita mapping label dari Flutter (Masuk, Keluar, Set) ke method model
+            if ($type === 'Masuk') {
+                $inventory->addStock($qty, $notes);
+            } elseif ($type === 'Keluar') {
+                $inventory->deductStock($qty, $notes);
+            } elseif ($type === 'Set') {
+                $inventory->adjustStock($qty, $notes);
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Stok berhasil diperbarui!',
+                'current_stock' => $inventory->fresh()->quantity
+            ], 200);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'success' => false,
+                'message' => 'Terjadi kesalahan: ' . $e->getMessage()
+            ], 500);
         }
     }
 }
