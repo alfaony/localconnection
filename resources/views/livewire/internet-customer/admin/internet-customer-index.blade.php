@@ -314,7 +314,7 @@
             <span class="font-weight-semibold text-white" style="font-size:.9rem;">
                 <i class="fas fa-users mr-2"></i>Daftar Pelanggan Internet
             </span>
-            <span class="ic-count-badge">
+            <span class="ic-count-badge ml-auto">
                 {{ $internetCustomers->total() }} pelanggan
             </span>
         </div>
@@ -1205,7 +1205,6 @@ input[type="radio"].d-none:checked + .ic-radio-btn {
 
 @push('js')
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
 <script>
 
     function copyShareLink() {
