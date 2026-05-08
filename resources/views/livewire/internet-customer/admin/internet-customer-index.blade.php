@@ -104,6 +104,11 @@
                             <i class="fas fa-file-invoice-dollar mr-1"></i>Tagihan
                         </label>
                         <input type="radio" class="d-none" wire:model="dateType"
+                               id="dt_suspended" value="suspended">
+                        <label class="btn ic-radio-btn" for="dt_suspended">
+                            <i class="fas fa-file-invoice-dollar mr-1"></i>Jatuh Tempo
+                        </label>
+                        <input type="radio" class="d-none" wire:model="dateType"
                                id="dt_installation" value="installation">
                         <label class="btn ic-radio-btn" for="dt_installation">
                             <i class="fas fa-tools mr-1"></i>Pemasangan
@@ -119,13 +124,13 @@
                 <div class="d-flex align-items-end" style="gap:.6rem;">
                     <div>
                         <label class="ic-label">Dari</label>
-                        <input wire:model="dateFrom" type="date"
+                        <input wire:model="dateFrom" id="ic-date-from" type="date"
                                class="form-control form-control-sm ic-date-input">
                     </div>
                     <span class="text-muted pb-1" style="line-height:2.1;">—</span>
                     <div>
                         <label class="ic-label">Sampai</label>
-                        <input wire:model="dateTo" type="date"
+                        <input wire:model="dateTo" id="ic-date-to" type="date"
                                class="form-control form-control-sm ic-date-input">
                     </div>
                     @if($dateFrom || $dateTo)
@@ -416,14 +421,43 @@
                                 </div>
                                 @endif
                                 @if($customer->userCustomer?->start_billing_date && $customer->userCustomer?->end_billing_date)
+                                @php
+                                    $startBill = \Carbon\Carbon::parse($customer->userCustomer->start_billing_date);
+                                    $endBill   = \Carbon\Carbon::parse($customer->userCustomer->end_billing_date);
+                                    $today     = \Carbon\Carbon::today();
+                                    $daysLeft  = $today->diffInDays($endBill, false);
+                                    if ($daysLeft < 0) {
+                                        $dueClass = 'ic-due-overdue';
+                                        $dueIcon  = 'fa-exclamation-circle';
+                                        $dueTxt   = 'Lewat '.abs((int)$daysLeft).'h';
+                                    } elseif ($daysLeft <= 7) {
+                                        $dueClass = 'ic-due-warning';
+                                        $dueIcon  = 'fa-exclamation-triangle';
+                                        $dueTxt   = (int)$daysLeft === 0 ? 'Hari ini' : (int)$daysLeft.'h lagi';
+                                    } else {
+                                        $dueClass = 'ic-due-ok';
+                                        $dueIcon  = 'fa-clock';
+                                        $dueTxt   = (int)$daysLeft.'h lagi';
+                                    }
+                                @endphp
+                                {{-- Periode billing --}}
                                 <div class="ic-billing-row mt-1">
                                     <i class="fas fa-calendar-check mr-1" style="color:#1a56db; opacity:.7;"></i>
                                     <span class="ic-billing-chip ic-chip-start">
-                                        {{ \Carbon\Carbon::parse($customer->userCustomer->start_billing_date)->format('d M Y') }}
+                                        {{ $startBill->format('d M Y') }}
                                     </span>
                                     <i class="fas fa-arrow-right mx-1 text-muted" style="font-size:.55rem;"></i>
                                     <span class="ic-billing-chip ic-chip-end">
-                                        {{ \Carbon\Carbon::parse($customer->userCustomer->end_billing_date)->format('d M Y') }}
+                                        {{ $endBill->format('d M Y') }}
+                                    </span>
+                                </div>
+                                {{-- Jatuh Tempo --}}
+                                <div class="ic-billing-row mt-1">
+                                    <span class="ic-due-badge {{ $dueClass }}">
+                                        <i class="fas {{ $dueIcon }} mr-1"></i>
+                                        <span class="ic-due-label">JT:</span>
+                                        <span class="ic-due-date">{{ $endBill->format('d M Y') }}</span>
+                                        <span class="ic-due-countdown">({{ $dueTxt }})</span>
                                     </span>
                                 </div>
                                 @endif
@@ -1039,6 +1073,46 @@ input[type="radio"].d-none:checked + .ic-radio-btn {
 .ic-chip-start { background: var(--ic-primary-light); color: #1e3a8a; }
 .ic-chip-end   { background: var(--ic-danger-light);  color: #9b1c1c; }
 
+/* ── Jatuh Tempo badge ──────────────────────────────── */
+.ic-due-badge {
+    display: inline-flex;
+    align-items: center;
+    font-size: .7rem;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 20px;
+    letter-spacing: .01em;
+    line-height: 1.5;
+}
+.ic-due-ok {
+    background: #ecfdf5;
+    color: #065f46;
+    border: 1px solid #a7f3d0;
+}
+.ic-due-warning {
+    background: #fffbeb;
+    color: #92400e;
+    border: 1px solid #fcd34d;
+}
+.ic-due-overdue {
+    background: var(--ic-danger-light);
+    color: #991b1b;
+    border: 1px solid #fca5a5;
+    animation: ic-pulse-danger 2s ease-in-out infinite;
+}
+@keyframes ic-pulse-danger {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(220,38,38,.3); }
+    50%       { box-shadow: 0 0 0 4px rgba(220,38,38,0); }
+}
+.ic-due-label    { opacity: .75; margin-right: 3px; font-weight: 600; }
+.ic-due-date     { font-weight: 700; }
+.ic-due-countdown {
+    font-size: .67rem;
+    font-weight: 600;
+    opacity: .8;
+    margin-left: 3px;
+}
+
 /* ── Empty state ────────────────────────────────────── */
 .ic-empty-state { padding: 20px; }
 .ic-empty-icon  { font-size: 2.2rem; color: #d1d5db; margin-bottom: .75rem; }
@@ -1142,6 +1216,33 @@ input[type="radio"].d-none:checked + .ic-radio-btn {
             console.error('Gagal menyalin link:', err);
         });
     }
+
+    // ── Auto-fill dateTo ke akhir bulan saat dateFrom diisi ──────────────────
+    document.addEventListener('DOMContentLoaded', function () {
+        const dateFromEl = document.getElementById('ic-date-from');
+        const dateToEl   = document.getElementById('ic-date-to');
+        if (!dateFromEl || !dateToEl) return;
+
+        dateFromEl.addEventListener('change', function () {
+            const val = this.value;
+            if (!val) return;
+
+            // Hanya auto-fill jika dateTo masih kosong
+            if (dateToEl.value) return;
+
+            const d = new Date(val);
+            // Akhir bulan yang sama
+            const endOfMonth = new Date(d.getFullYear(), d.getMonth() + 1, 0);
+            const yyyy = endOfMonth.getFullYear();
+            const mm   = String(endOfMonth.getMonth() + 1).padStart(2, '0');
+            const dd   = String(endOfMonth.getDate()).padStart(2, '0');
+            const autoVal = `${yyyy}-${mm}-${dd}`;
+
+            dateToEl.value = autoVal;
+            // Sync ke Livewire
+            @this.set('dateTo', autoVal);
+        });
+    });
 
     function confirmPayment(customerId) {
         Swal.fire({

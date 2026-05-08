@@ -992,6 +992,11 @@ class InternetCustomerIndex extends Component
                 });
             } elseif ($this->dateType === 'registration') {
                 $query->whereBetween('created_at', [$from . ' 00:00:00', $to . ' 23:59:59']);
+            } 
+            elseif ($this->dateType === 'suspended') {
+                $query->whereHas('userCustomer', function ($q) use ($from, $to) {
+                    $q->whereBetween('end_billing_date', [$from, $to]);
+                });
             } else {
                 // default: billing
                 $query->whereHas('userCustomer', function ($q) use ($from, $to) {
