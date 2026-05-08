@@ -14,9 +14,11 @@ class SaleIndex extends Component
 {
     use WithPagination;
 
+    public $activeTab = 'active';
+
     public $search = '';
     public $perPage = 10;
-    
+
     // Active filters (used for querying)
     public $filter_search = '';
     public $filter_start_date = '';
@@ -34,20 +36,29 @@ class SaleIndex extends Component
     public $temp_end_time = '';
     public $temp_user_id = '';
     public $temp_payment_method = '';
-    
+
+    // Filters for deleted tab
+    public $filter_deleted_search = '';
+    public $filter_deleted_start_date = '';
+    public $filter_deleted_end_date = '';
+    public $filter_deleted_user_id = '';
+
+    public $temp_deleted_search = '';
+    public $temp_deleted_start_date = '';
+    public $temp_deleted_end_date = '';
+    public $temp_deleted_user_id = '';
+
     protected $paginationTheme = 'bootstrap';
 
-    protected $listeners = ['refreshSales' => '$refresh', 'deleteSale'];
+    protected $listeners = ['refreshSales' => '$refresh', 'deleteSale', 'restoreSale'];
 
     public function mount()
     {
-        // Default filter ke user yang sedang login
         if (empty($this->filter_user_id)) {
             $this->filter_user_id = auth()->id();
             $this->temp_user_id   = auth()->id();
         }
 
-        // Default filter tanggal hari ini
         if (empty($this->filter_start_date)) {
             $today = now()->toDateString();
             $this->filter_start_date = $today;
@@ -63,6 +74,17 @@ class SaleIndex extends Component
         $this->temp_end_time       = $this->filter_end_time;
         $this->temp_payment_method = $this->filter_payment_method;
     }
+
+    public function switchTab($tab)
+    {
+        if ($tab === 'deleted' && !Access::can('index_withdeleted', 'sales')) {
+            return;
+        }
+        $this->activeTab = $tab;
+        $this->resetPage();
+    }
+
+    // ─── Filter tab aktif ─────────────────────────────────────────────────────
 
     public function applyFilters()
     {
@@ -94,34 +116,67 @@ class SaleIndex extends Component
 
     public function clearFilters()
     {
-        // Clear both temp and active filters
-        $this->temp_search = '';
-        $this->temp_start_date = '';
-        $this->temp_end_date = '';
-        $this->temp_start_time = '';
-        $this->temp_end_time = '';
-        $this->temp_user_id = '';
+        $this->temp_search         = '';
+        $this->temp_start_date     = '';
+        $this->temp_end_date       = '';
+        $this->temp_start_time     = '';
+        $this->temp_end_time       = '';
+        $this->temp_user_id        = '';
         $this->temp_payment_method = '';
 
-        $this->filter_search = '';
-        $this->filter_start_date = '';
-        $this->filter_end_date = '';
-        $this->filter_start_time = '';
-        $this->filter_end_time = '';
-        $this->filter_user_id = '';
+        $this->filter_search         = '';
+        $this->filter_start_date     = '';
+        $this->filter_end_date       = '';
+        $this->filter_start_time     = '';
+        $this->filter_end_time       = '';
+        $this->filter_user_id        = '';
         $this->filter_payment_method = '';
-        
+
         $this->resetPage();
-        
-        // Emit event to notify JavaScript that filters have been cleared
         $this->dispatchBrowserEvent('filters-cleared');
     }
 
-    /**
-     * Dispatch a browser event to confirm deletion of a sale
-     *
-     * @param int $saleId The ID of the sale to be deleted
-     */
+    // ─── Filter tab deleted ───────────────────────────────────────────────────
+
+    public function applyDeletedFilters()
+    {
+        $this->filter_deleted_search     = $this->temp_deleted_search;
+        $this->filter_deleted_start_date = $this->temp_deleted_start_date;
+        $this->filter_deleted_end_date   = $this->temp_deleted_end_date;
+        $this->filter_deleted_user_id    = $this->temp_deleted_user_id;
+
+        $this->resetPage();
+        $this->dispatchBrowserEvent('deleted-filters-applied');
+    }
+
+    public function applyDeletedFiltersFromInput($search, $startDate, $endDate, $userId)
+    {
+        $this->temp_deleted_search     = $search;
+        $this->temp_deleted_start_date = $startDate;
+        $this->temp_deleted_end_date   = $endDate;
+        $this->temp_deleted_user_id    = $userId;
+
+        $this->applyDeletedFilters();
+    }
+
+    public function clearDeletedFilters()
+    {
+        $this->temp_deleted_search     = '';
+        $this->temp_deleted_start_date = '';
+        $this->temp_deleted_end_date   = '';
+        $this->temp_deleted_user_id    = '';
+
+        $this->filter_deleted_search     = '';
+        $this->filter_deleted_start_date = '';
+        $this->filter_deleted_end_date   = '';
+        $this->filter_deleted_user_id    = '';
+
+        $this->resetPage();
+        $this->dispatchBrowserEvent('deleted-filters-cleared');
+    }
+
+    // ─── Aksi ─────────────────────────────────────────────────────────────────
+
     public function confirmDelete($saleId)
     {
         $this->dispatchBrowserEvent('confirm-delete', ['saleId' => $saleId]);
@@ -155,6 +210,41 @@ class SaleIndex extends Component
         }
     }
 
+    public function confirmRestore($saleId)
+    {
+        $this->dispatchBrowserEvent('confirm-restore', ['saleId' => $saleId]);
+    }
+
+    public function restoreSale($saleId)
+    {
+        if (!Access::can('index_withdeleted', 'sales')) {
+            $this->dispatchBrowserEvent('notify', [
+                'type' => 'error',
+                'message' => 'Anda tidak memiliki izin untuk memulihkan penjualan'
+            ]);
+            return;
+        }
+
+        try {
+            DB::transaction(function () use ($saleId) {
+                Sale::byCompany(auth()->user()->company_id)
+                    ->onlyTrashed()
+                    ->findOrFail($saleId)
+                    ->restore();
+            });
+
+            $this->dispatchBrowserEvent('notify', [
+                'type' => 'success',
+                'message' => 'Penjualan berhasil dipulihkan!'
+            ]);
+        } catch (\Exception $e) {
+            $this->dispatchBrowserEvent('notify', [
+                'type' => 'error',
+                'message' => 'Error memulihkan penjualan: ' . $e->getMessage()
+            ]);
+        }
+    }
+
     public function render()
     {
         $users = \App\Models\User::byCompany(auth()->user()->company_id)->get();
@@ -164,6 +254,7 @@ class SaleIndex extends Component
             ->get()
             ->pluck('field_value', 'field_title');
 
+        // Query tab aktif
         $baseQuery = Sale::byCompany(auth()->user()->company_id)
             ->when($this->filter_search, function ($query) {
                 $query->where(function ($q) {
@@ -216,7 +307,44 @@ class SaleIndex extends Component
             ->latest()
             ->paginate($this->perPage);
 
-        return view('livewire.sale.sale-index', compact('sales', 'users', 'totalFinalAmount', 'paymentBreakdown', 'settingCompany'))
-            ->extends('adminlte::page');
+        // Query tab deleted (hanya load jika punya permission)
+        $deletedSales   = null;
+        $deletedTotal   = 0;
+        $canSeeDeleted  = Access::can('index_withdeleted', 'sales');
+
+        if ($canSeeDeleted) {
+            $deletedQuery = Sale::byCompany(auth()->user()->company_id)
+                ->onlyTrashed()
+                ->when($this->filter_deleted_search, function ($query) {
+                    $query->where(function ($q) {
+                        $q->where('transaction_code', 'like', '%' . $this->filter_deleted_search . '%')
+                          ->orWhere('transaction_number', 'like', '%' . $this->filter_deleted_search . '%')
+                          ->orWhere('customer_email', 'like', '%' . $this->filter_deleted_search . '%')
+                          ->orWhere('status', 'like', '%' . $this->filter_deleted_search . '%')
+                          ->orWhereHas('user', function ($userQuery) {
+                              $userQuery->where('name', 'like', '%' . $this->filter_deleted_search . '%');
+                          });
+                    });
+                })
+                ->when($this->filter_deleted_start_date, function ($query) {
+                    $query->whereDate('deleted_at', '>=', $this->filter_deleted_start_date);
+                })
+                ->when($this->filter_deleted_end_date, function ($query) {
+                    $query->whereDate('deleted_at', '<=', $this->filter_deleted_end_date);
+                })
+                ->when($this->filter_deleted_user_id, function ($query) {
+                    $query->where('user_id', $this->filter_deleted_user_id);
+                });
+
+            $deletedTotal = (clone $deletedQuery)->count();
+            $deletedSales = $deletedQuery->with(['user', 'items.productStore'])
+                ->latest('deleted_at')
+                ->paginate($this->perPage, ['*'], 'deleted_page');
+        }
+
+        return view('livewire.sale.sale-index', compact(
+            'sales', 'users', 'totalFinalAmount', 'paymentBreakdown', 'settingCompany',
+            'deletedSales', 'deletedTotal', 'canSeeDeleted'
+        ))->extends('adminlte::page');
     }
 }

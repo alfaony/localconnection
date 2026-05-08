@@ -63,6 +63,7 @@ class InternetCustomerIndex extends Component
     public $customerTypeFilter = '';
     public $dateFrom = '';
     public $dateTo = '';
+    public $dateType = 'billing';
     public $selectedCustomer = null;
     public $selectedPaymentProof;
 
@@ -110,7 +111,8 @@ class InternetCustomerIndex extends Component
         'statusFilter',
         'customerTypeFilter' => ['except' => ''],
         'dateFrom',
-        'dateTo'
+        'dateTo',
+        'dateType' => ['except' => 'billing'],
     ];
 
     // Method untuk membuka modal
@@ -912,6 +914,7 @@ class InternetCustomerIndex extends Component
         $this->customerTypeFilter = '';
         $this->dateFrom = '';
         $this->dateTo = '';
+        $this->dateType = 'billing';
     }
 
     public function mount(): void
@@ -978,11 +981,28 @@ class InternetCustomerIndex extends Component
             $query->where('customer_type', $this->customerTypeFilter);
         }
 
-        // Filter tanggal (gabung jadi range)
+        // Filter tanggal berdasarkan tipe yang dipilih
         if ($this->dateFrom || $this->dateTo) {
             $from = $this->dateFrom ?: '1970-01-01';
             $to   = $this->dateTo   ?: now()->toDateString();
-            $query->whereBetween('created_at', [$from . ' 00:00:00', $to . ' 23:59:59']);
+
+            if ($this->dateType === 'installation') {
+                $query->whereHas('installation', function ($q) use ($from, $to) {
+                    $q->whereBetween('installed_at', [$from . ' 00:00:00', $to . ' 23:59:59']);
+                });
+            } elseif ($this->dateType === 'registration') {
+                $query->whereBetween('created_at', [$from . ' 00:00:00', $to . ' 23:59:59']);
+            } 
+            elseif ($this->dateType === 'suspended') {
+                $query->whereHas('userCustomer', function ($q) use ($from, $to) {
+                    $q->whereBetween('end_billing_date', [$from, $to]);
+                });
+            } else {
+                // default: billing
+                $query->whereHas('userCustomer', function ($q) use ($from, $to) {
+                    $q->whereBetween('start_billing_date', [$from, $to]);
+                });
+            }
         }
 
         // Filter region — hanya berlaku untuk user dengan permission as_finance/as_marketing/as_technician
