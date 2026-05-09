@@ -767,11 +767,11 @@ async function printSaleReceipt(saleId) {
                 : parseFloat(item.discount_percent) > 0;
             const discLabel = hasDisc
                 ? (item.discount_type === 'flat'
-                    ? `-${fmt(item.discount_amount)}`
+                    ? `-${fmt(item.discount_amount)} check`
                     : `-${item.discount_percent}%`)
                 : '';
             const priceInfo = hasDisc
-                ? `<del>${fmt(item.original_price)}</del> ${discLabel}`
+                ? `${fmt(item.original_price)}`
                 : fmt(item.unit_price);
             const discAmount = hasDisc
                 ? (item.discount_type === 'flat'
@@ -780,7 +780,7 @@ async function printSaleReceipt(saleId) {
                 : 0;
             const discLine = hasDisc
                 ? `<div class="item-row" style="color:#555;">
-                       <span>Diskon ${item.discount_type === 'flat' ? fmt(item.discount_amount) : item.discount_percent + '%'}</span>
+                       <span>Diskon ${item.discount_type === 'flat' ? '' : item.discount_percent + '%'}</span>
                        <span>-${fmt(discAmount)}</span>
                    </div>`
                 : '';
