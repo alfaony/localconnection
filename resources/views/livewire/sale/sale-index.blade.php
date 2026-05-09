@@ -780,7 +780,7 @@ async function printSaleReceipt(saleId) {
                 : 0;
             const discLine = hasDisc
                 ? `<div class="item-row" style="color:#555;">
-                       <span>${item.discount_type === 'flat' ? '' : 'Diskon '+item.discount_percent + '%'}</span>
+                       <span>Diskon ${item.discount_type === 'flat' ? '' : item.discount_percent + '%'}</span>
                        <span>-${fmt(discAmount)}</span>
                    </div>`
                 : '';

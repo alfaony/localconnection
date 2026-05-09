@@ -2151,7 +2151,7 @@ createApp({
                                         : 0;
                                     const discLine = hasDisc
                                         ? `<div class="item-row" style="color:#555;">
-                                               <span>${discType === 'flat' ? '' : 'Diskon '+ snap.discountPercent + '%'}</span>
+                                               <span>Diskon ${discType === 'flat' ? '' : snap.discountPercent + '%'}</span>
                                                <span>-${formatCurrency(discAmount)}</span>
                                            </div>`
                                         : '';
