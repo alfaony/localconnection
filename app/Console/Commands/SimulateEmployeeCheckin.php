@@ -30,7 +30,7 @@ class SimulateEmployeeCheckin extends Command
     protected $description = 'Simulasikan employee check-in via WebSocket untuk testing';
 
     // Konstanta jadwal --count
-    private const DELAY_MINUTES  = 2; // mulai berapa menit dari sekarang
+    private const DELAY_MINUTES  = 1; // mulai berapa menit dari sekarang
     private const WINDOW_MINUTES = 5; // durasi tiap window
     private const GAP_MINUTES    = 1; // jeda antar window
 

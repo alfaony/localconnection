@@ -159,13 +159,16 @@
         // Zero request ke server, murni client-side
         checkFromLocalStorage();
 
-        // ── LAPIS 3: WS reconnect — cek server HANYA jika LS kosong
+        // ── LAPIS 3: WS connected (sudah maupun baru connect) — cek server jika LS kosong
         // Menangani skenario: device baru login, atau offline saat event dikirim
-        echo.connector.pusher.connection.bind('connected', () => {
+        // Bug fix: bind('connected') tidak fire jika WS sudah connected sebelum handler dipasang
+        // (terjadi ketika window.Echo di-reuse dari komponen lain di halaman yang sama)
+        const pusherConn = echo.connector.pusher.connection;
+
+        const runLapis3 = () => {
             console.log('[Checkin L3] WS connected/reconnected');
 
-            const stored = lsRead();
-            if (stored) {
+            if (lsRead()) {
                 // localStorage ada → Lapis 2 sudah tangani, skip server request
                 console.log('[Checkin L3] localStorage ada, skip server request');
                 return;
@@ -175,7 +178,15 @@
             // Lakukan 1x request ke server
             console.log('[Checkin L3] localStorage kosong → cek server 1x');
             checkFromServer();
-        });
+        };
+
+        if (pusherConn.state === 'connected') {
+            // WS sudah connect sebelum handler dipasang → jalankan langsung
+            runLapis3();
+        } else {
+            // WS belum connect → tunggu event
+            pusherConn.bind('connected', runLapis3);
+        }
 
         // ── CROSS-TAB SYNC via storage event ──────────────────────
         // Misal Tab A submit → clear LS → Tab B deteksi → tutup popup
@@ -322,11 +333,38 @@
     // TUTUP POPUP
     // ═══════════════════════════════════════════════════════════════
 
+    // Hentikan semua track kamera + reset UI foto agar popup bisa dibuka ulang bersih
+    function stopCamera() {
+        const video = document.getElementById('videoFeed');
+        if (video && video.srcObject) {
+            video.srcObject.getTracks().forEach(t => t.stop());
+            video.srcObject = null;
+        }
+        // Reset UI foto ke kondisi awal
+        const photoInput   = document.getElementById('photo');
+        const photoPreview = document.getElementById('photo-preview');
+        const takeBtn      = document.getElementById('takePhotoButton');
+        if (photoInput)   photoInput.value       = '';
+        if (photoPreview) { photoPreview.src = '#'; photoPreview.style.display = 'none'; }
+        if (video)          video.style.display  = 'block';
+        if (takeBtn)        takeBtn.style.display = 'inline-block';
+    }
+
+    function stopAudio() {
+        const audio = document.getElementById('checkinAudio');
+        if (audio && !audio.paused) {
+            audio.pause();
+            audio.currentTime = 0;
+        }
+    }
+
     // Tutup karena countdown habis / user dismiss — beritahu server
     function closePopup() {
         const popup = document.getElementById('checkinPopup');
         popup.style.setProperty('display', 'none', 'important');
         if (intervalId) clearInterval(intervalId);
+        stopCamera();
+        stopAudio();
         updateStatus(); // beritahu server: is_active = false
     }
 
@@ -340,6 +378,8 @@
         if (overlay) overlay.style.display = 'none';
         if (intervalId) clearInterval(intervalId);
         if (clearLS) lsClear();
+        stopCamera();
+        stopAudio();
     }
 
     // ═══════════════════════════════════════════════════════════════
@@ -415,14 +455,15 @@
             headers    : { 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
             success: function () {
                 clearInterval(intervalId);
-                // Hapus localStorage → cross-tab sync akan tutup popup di tab lain
+                // Hapus localStorage → cross-tab sync tutup popup di tab lain (browser sama)
+                // Server broadcast EmployeeCheckinDeactivated → device lain tutup popup via WS
                 lsClear();
-                forceClosePopup(false); // LS sudah di-clear di atas
+                forceClosePopup(false);
                 Swal.fire({
                     icon: 'success', title: 'Check-in berhasil!',
                     text: 'Kehadiran Anda telah tercatat.',
                     timer: 3000, timerProgressBar: true, showConfirmButton: false,
-                }).then(() => location.reload());
+                });
             },
             error: function (xhr) {
                 clearInterval(intervalId);
@@ -432,7 +473,7 @@
                     icon: 'error', title: 'Gagal Check-in',
                     text: xhr.responseText,
                     timer: 3000, timerProgressBar: true, showConfirmButton: false,
-                }).then(() => location.reload());
+                });
             }
         });
     }
@@ -452,7 +493,7 @@
             contentType: false,
             processData: false,
             headers    : { 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
-            success: function () { location.reload(); }
+            success: function () { /* server sudah broadcast Deactivated → device lain tutup via WS */ }
         });
     }
 
