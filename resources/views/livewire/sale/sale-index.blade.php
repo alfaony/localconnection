@@ -240,6 +240,7 @@
                                     <table class="table table-hover table-sm mb-0">
                                         <thead class="thead-light">
                                             <tr>
+                                                <th class="text-center" style="width:40px;">No.</th>
                                                 <th><i class="fas fa-barcode"></i> Kode Transaksi</th>
                                                 <th><i class="fas fa-envelope"></i> Email Pelanggan</th>
                                                 <th><i class="fas fa-money-bill-wave"></i> Total</th>
@@ -254,6 +255,7 @@
                                         <tbody>
                                             @foreach($sales as $sale)
                                             <tr>
+                                                <td class="text-center small text-muted fw-bold">{{ $sales->firstItem() + $loop->index }}</td>
                                                 <td>
                                                     <div class="fw-bold text-primary small">{{ $sale->transaction_code ?? 'N/A' }}</div>
                                                     <small class="text-muted">#{{ $sale->transaction_number ?? 'N/A' }}</small>
@@ -426,6 +428,7 @@
                                     <table class="table table-hover table-sm mb-0">
                                         <thead style="background-color: #fff5f5;">
                                             <tr>
+                                                <th class="text-center" style="width:40px;">No.</th>
                                                 <th><i class="fas fa-barcode"></i> Kode Transaksi</th>
                                                 <th><i class="fas fa-envelope"></i> Email Pelanggan</th>
                                                 <th><i class="fas fa-money-bill-wave"></i> Total</th>
@@ -440,6 +443,7 @@
                                         <tbody>
                                             @foreach($deletedSales as $sale)
                                             <tr style="opacity: 0.85;">
+                                                <td class="text-center small text-muted fw-bold">{{ $deletedSales->firstItem() + $loop->index }}</td>
                                                 <td>
                                                     <div class="fw-bold text-danger small">{{ $sale->transaction_code ?? 'N/A' }}</div>
                                                     <small class="text-muted">#{{ $sale->transaction_number ?? 'N/A' }}</small>
@@ -757,14 +761,39 @@ async function printSaleReceipt(saleId) {
         const fmt  = val => 'Rp ' + (parseFloat(val) || 0).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
         const pmLabel = { cash: 'Tunai', qris: 'QRIS', debit_credit: 'Debit / Kredit' };
 
-        const itemsHtml = (sale.items || []).map(item => `
+        const itemsHtml = (sale.items || []).map(item => {
+            const hasDisc = item.discount_type === 'flat'
+                ? parseFloat(item.discount_amount) > 0
+                : parseFloat(item.discount_percent) > 0;
+            const discLabel = hasDisc
+                ? (item.discount_type === 'flat'
+                    ? `-${fmt(item.discount_amount)}`
+                    : `-${item.discount_percent}%`)
+                : '';
+            const priceInfo = hasDisc
+                ? `<del>${fmt(item.original_price)}</del> ${discLabel}`
+                : fmt(item.unit_price);
+            const discAmount = hasDisc
+                ? (item.discount_type === 'flat'
+                    ? parseFloat(item.discount_amount) * item.quantity
+                    : parseFloat(item.original_price) * parseFloat(item.discount_percent) / 100 * item.quantity)
+                : 0;
+            const discLine = hasDisc
+                ? `<div class="item-row" style="color:#555;">
+                       <span>Diskon ${item.discount_type === 'flat' ? fmt(item.discount_amount) : item.discount_percent + '%'}</span>
+                       <span>-${fmt(discAmount)}</span>
+                   </div>`
+                : '';
+            return `
             <div class="receipt-item">
                 <div class="item-name">${item.product_store ? item.product_store.name : '-'}</div>
                 <div class="item-row">
-                    <span>${item.quantity} x ${fmt(item.unit_price)}</span>
+                    <span>${item.quantity} x ${priceInfo}</span>
                     <span class="item-total">${fmt(item.subtotal)}</span>
                 </div>
-            </div>`).join('');
+                ${discLine}
+            </div>`;
+        }).join('');
 
         const cashChange = sale.payment_method === 'cash' ? `
             <div class="total-row" style="margin-top:4px;">

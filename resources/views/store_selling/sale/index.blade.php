@@ -1219,6 +1219,10 @@ createApp({
                     unit_price:       effectiveItemPrice(item),
                     original_price:   item.price,
                     discount_percent: item.discountType === 'flat' ? 0 : (item.discountPercent || 0),
+                    discount_type:    item.discountType || 'percent',
+                    discount_amount:  item.discountType === 'flat'
+                                        ? (item.discountPercent || 0)
+                                        : (item.price * (item.discountPercent || 0) / 100),
                 }));
 
                 if (paymentMethod.value === 'cash') {
@@ -1291,6 +1295,10 @@ createApp({
                     unit_price:       effectiveItemPrice(item),
                     original_price:   item.price,
                     discount_percent: item.discountType === 'flat' ? 0 : (item.discountPercent || 0),
+                    discount_type:    item.discountType || 'percent',
+                    discount_amount:  item.discountType === 'flat'
+                                        ? (item.discountPercent || 0)
+                                        : (item.price * (item.discountPercent || 0) / 100),
                 }));
 
                 const response = await axios.post('/store-selling/saveDraft', {
