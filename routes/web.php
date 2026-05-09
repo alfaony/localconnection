@@ -537,6 +537,7 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
   Route::get('employee-checking/checkExportStatus', [EmployeeCheckingController::class, 'checkExportStatus'])->name('employee-checking.checkExportStatus');
   Route::get('employee-checking/clearsession', [EmployeeCheckingController::class, 'clearsession'])->name('employee-checking.clearsession');
   Route::get('employee-checking/checkLastScheduledCheckin',[EmployeeCheckingController::class,'checkLastScheduledCheckin'])->name('employee-checking.checkLastScheduledCheckin');
+  Route::get('employee-checking/current-active',[EmployeeCheckingController::class,'currentActive'])->name('employee-checking.currentActive');
   Route::put('employee-checking/updatestatus/{employee_checking}',[EmployeeCheckingController::class,'updatestatus'])->name('employee-checking.updatestatus');
   Route::resource('employee-checking', EmployeeCheckingController::class)->only(['index','update']);
 
