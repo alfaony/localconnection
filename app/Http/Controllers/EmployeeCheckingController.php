@@ -109,9 +109,10 @@ class EmployeeCheckingController extends Controller
 
         $windowEnd  = Carbon::parse($checkin->scheduled_time)->addSeconds($duration);
         $timeLeftSec = max(0, $now->diffInSeconds($windowEnd, false));
+        $status = $user->manual_checkin == true ? false : true;
 
         return response()->json([
-            'active'            => true,
+            'active'            => $status,
             'local_id'          => $checkin->id,
             'scheduled_time'    => $checkin->scheduled_time,
             'requires_photo'    => (bool) $user->requires_photo,
