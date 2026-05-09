@@ -2144,7 +2144,7 @@ createApp({
                                         ? (discType === 'flat' ? `-${formatCurrency(snap.discountPercent)}` : `-${snap.discountPercent}%`)
                                         : '';
                                     const priceLabel = hasDisc
-                                        ? `<del>${formatCurrency(snap.originalPrice)}</del> ${discLabel}`
+                                        ? `${formatCurrency(snap.originalPrice)}`
                                         : formatCurrency(item.unit_price);
                                     const discAmount = hasDisc
                                         ? (discType === 'flat' ? snap.discountPercent * item.quantity : snap.originalPrice * snap.discountPercent / 100 * item.quantity)
