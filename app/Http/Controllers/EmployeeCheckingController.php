@@ -164,7 +164,10 @@ class EmployeeCheckingController extends Controller
                 $checkinWindowEnd   = $scheduledStartTime + config('services.checking_setting.duration');
 
                 if ($currentTime < $scheduledEndTime && ($currentTime < $scheduledStartTime || $currentTime > $checkinWindowEnd)) {
-                    return response()->json('Check-in time is outside the allowed window.', 422);
+                    return response()->json(
+                        "Waktu check-in {$currentTime->format('H:i')} di luar jam yang diizinkan ({$scheduledStartTime->format('H:i')} - {$checkinWindowEnd->format('H:i')}).",
+                        422
+                    );
                 }
             }
 
