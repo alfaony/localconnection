@@ -2144,14 +2144,14 @@ createApp({
                                         ? (discType === 'flat' ? `-${formatCurrency(snap.discountPercent)}` : `-${snap.discountPercent}%`)
                                         : '';
                                     const priceLabel = hasDisc
-                                        ? `<del>${formatCurrency(snap.originalPrice)}</del> ${discLabel}`
+                                        ? `${formatCurrency(snap.originalPrice)}`
                                         : formatCurrency(item.unit_price);
                                     const discAmount = hasDisc
                                         ? (discType === 'flat' ? snap.discountPercent * item.quantity : snap.originalPrice * snap.discountPercent / 100 * item.quantity)
                                         : 0;
                                     const discLine = hasDisc
                                         ? `<div class="item-row" style="color:#555;">
-                                               <span>Diskon ${discType === 'flat' ? formatCurrency(snap.discountPercent) : snap.discountPercent + '%'}</span>
+                                               <span>Diskon ${discType === 'flat' ? '' : snap.discountPercent + '%'}</span>
                                                <span>-${formatCurrency(discAmount)}</span>
                                            </div>`
                                         : '';
