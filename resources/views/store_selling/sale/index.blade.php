@@ -363,7 +363,11 @@
                                         <small class="text-muted">
                                             @{{ item.quantity }} x
                                             <del>@{{ formatCurrency(getSnapshotItem(item.product_store_id).originalPrice) }}</del>
-                                            <span class="text-success ml-1">-@{{ getSnapshotItem(item.product_store_id).discountPercent }}%</span>
+                                            <span class="text-success ml-1">
+                                                -@{{ getSnapshotItem(item.product_store_id).discountType === 'flat'
+                                                    ? formatCurrency(getSnapshotItem(item.product_store_id).discountPercent)
+                                                    : getSnapshotItem(item.product_store_id).discountPercent + '%' }}
+                                            </span>
                                             = @{{ formatCurrency(item.unit_price) }}
                                         </small>
                                     </template>
@@ -876,6 +880,9 @@ createApp({
 
         const effectiveItemPrice = (item) => {
             const disc = item.discountPercent || 0;
+            if (item.discountType === 'flat') {
+                return Math.max(0, item.price - disc);
+            }
             return item.price * (1 - disc / 100);
         };
 
@@ -1105,7 +1112,7 @@ createApp({
                 return;
             }
 
-            cartItems.value.push({
+            cartItems.value.unshift({
                 id:              product.id,
                 code:            product.code,
                 name:            product.name,
@@ -1116,6 +1123,7 @@ createApp({
                 unit:            unit,
                 image:           product.primary_media?.file_url ?? null,
                 discountPercent: 0,
+                discountType:    'percent',
             });
 
             return { stock, unit }; // digunakan oleh caller untuk toast
@@ -1147,8 +1155,14 @@ createApp({
         const updateDiscount = (index, val) => {
             let v = parseFloat(val) || 0;
             if (v < 0) v = 0;
-            if (v > 100) v = 100;
+            if (cartItems.value[index].discountType !== 'flat' && v > 100) v = 100;
             cartItems.value[index].discountPercent = v;
+        };
+
+        const toggleDiscountType = (index) => {
+            const item = cartItems.value[index];
+            item.discountType = item.discountType === 'flat' ? 'percent' : 'flat';
+            item.discountPercent = 0;
         };
 
         const getSnapshotItem = (productStoreId) => {
@@ -1195,6 +1209,7 @@ createApp({
                     product_store_id: item.id,
                     originalPrice:    item.price,
                     discountPercent:  item.discountPercent || 0,
+                    discountType:     item.discountType || 'percent',
                     effectivePrice:   effectiveItemPrice(item),
                 }));
 
@@ -1203,7 +1218,11 @@ createApp({
                     quantity:         item.quantity,
                     unit_price:       effectiveItemPrice(item),
                     original_price:   item.price,
-                    discount_percent: item.discountPercent || 0,
+                    discount_percent: item.discountType === 'flat' ? 0 : (item.discountPercent || 0),
+                    discount_type:    item.discountType || 'percent',
+                    discount_amount:  item.discountType === 'flat'
+                                        ? (item.discountPercent || 0)
+                                        : (item.price * (item.discountPercent || 0) / 100),
                 }));
 
                 if (paymentMethod.value === 'cash') {
@@ -1275,7 +1294,11 @@ createApp({
                     quantity:         item.quantity,
                     unit_price:       effectiveItemPrice(item),
                     original_price:   item.price,
-                    discount_percent: item.discountPercent || 0,
+                    discount_percent: item.discountType === 'flat' ? 0 : (item.discountPercent || 0),
+                    discount_type:    item.discountType || 'percent',
+                    discount_amount:  item.discountType === 'flat'
+                                        ? (item.discountPercent || 0)
+                                        : (item.price * (item.discountPercent || 0) / 100),
                 }));
 
                 const response = await axios.post('/store-selling/saveDraft', {
@@ -2116,13 +2139,20 @@ createApp({
                                 ${transactionResult.value.items.map(item => {
                                     const snap = cartSnapshot.value.find(s => s.product_store_id === item.product_store_id);
                                     const hasDisc = snap && snap.discountPercent > 0;
+                                    const discType = snap?.discountType || 'percent';
+                                    const discLabel = hasDisc
+                                        ? (discType === 'flat' ? `-${formatCurrency(snap.discountPercent)}` : `-${snap.discountPercent}%`)
+                                        : '';
                                     const priceLabel = hasDisc
-                                        ? `<del>${formatCurrency(snap.originalPrice)}</del> -${snap.discountPercent}%`
+                                        ? `<del>${formatCurrency(snap.originalPrice)}</del> ${discLabel}`
                                         : formatCurrency(item.unit_price);
+                                    const discAmount = hasDisc
+                                        ? (discType === 'flat' ? snap.discountPercent * item.quantity : snap.originalPrice * snap.discountPercent / 100 * item.quantity)
+                                        : 0;
                                     const discLine = hasDisc
                                         ? `<div class="item-row" style="color:#555;">
-                                               <span>Diskon ${snap.discountPercent}%</span>
-                                               <span>-${formatCurrency(snap.originalPrice * snap.discountPercent / 100 * item.quantity)}</span>
+                                               <span>Diskon ${discType === 'flat' ? formatCurrency(snap.discountPercent) : snap.discountPercent + '%'}</span>
+                                               <span>-${formatCurrency(discAmount)}</span>
                                            </div>`
                                         : '';
                                     return `
@@ -2415,6 +2445,7 @@ createApp({
             cartSnapshot,
             effectiveItemPrice,
             updateDiscount,
+            toggleDiscountType,
             getSnapshotItem,
             focusBarcodeInput,
             focusFirstPaymentField,

@@ -75,6 +75,8 @@ class SaleController extends Controller
                 'items.*.unit_price'        => 'required|numeric|min:0',
                 'items.*.original_price'    => 'nullable|numeric|min:0',
                 'items.*.discount_percent'  => 'nullable|numeric|min:0|max:100',
+                'items.*.discount_type'     => 'nullable|in:percent,flat',
+                'items.*.discount_amount'   => 'nullable|numeric|min:0',
                 'payment_method' => 'required|in:cash,debit_credit,qris',
                 'customer_email' => 'nullable|email',
                 'payment_details' => 'nullable|array',
@@ -175,6 +177,8 @@ class SaleController extends Controller
                     'unit_price'       => $item['unit_price'],
                     'original_price'   => $item['original_price'] ?? $item['unit_price'],
                     'discount_percent' => $item['discount_percent'] ?? 0,
+                    'discount_type'    => $item['discount_type'] ?? 'percent',
+                    'discount_amount'  => $item['discount_amount'] ?? 0,
                     'subtotal'         => $item['quantity'] * $item['unit_price'],
                 ]);
 
@@ -260,6 +264,8 @@ class SaleController extends Controller
                 'items.*.unit_price'        => 'required|numeric|min:0',
                 'items.*.original_price'    => 'nullable|numeric|min:0',
                 'items.*.discount_percent'  => 'nullable|numeric|min:0|max:100',
+                'items.*.discount_type'     => 'nullable|in:percent,flat',
+                'items.*.discount_amount'   => 'nullable|numeric|min:0',
                 'payment_method' => 'nullable|in:cash,debit_credit,qris',
                 'customer_email' => 'nullable|email',
                 'payment_details' => 'nullable|array',
@@ -323,6 +329,8 @@ class SaleController extends Controller
                     'unit_price'       => $item['unit_price'],
                     'original_price'   => $item['original_price'] ?? $item['unit_price'],
                     'discount_percent' => $item['discount_percent'] ?? 0,
+                    'discount_type'    => $item['discount_type'] ?? 'percent',
+                    'discount_amount'  => $item['discount_amount'] ?? 0,
                     'subtotal'         => $item['quantity'] * $item['unit_price'],
                 ]);
             }

@@ -54,7 +54,11 @@
                                             <td class="align-middle">{{ $item->productStore->variant ?? '-' }}</td>
                                             <td>{{ $item->quantity }}</td>
                                             <td>
-                                                @if($item->discount_percent > 0 && $item->original_price)
+                                                @php
+                                                    $hasDiscount = $item->discount_percent > 0
+                                                        || ($item->discount_type === 'flat' && $item->discount_amount > 0);
+                                                @endphp
+                                                @if($hasDiscount && $item->original_price)
                                                     <del class="text-muted small">Rp {{ number_format($item->original_price, 0, ',', '.') }}</del><br>
                                                     <span class="fw-bold text-success">Rp {{ number_format($item->unit_price, 0, ',', '.') }}</span>
                                                 @else
@@ -62,7 +66,9 @@
                                                 @endif
                                             </td>
                                             <td>
-                                                @if($item->discount_percent > 0)
+                                                @if($item->discount_type === 'flat' && $item->discount_amount > 0)
+                                                    <span class="badge bg-danger">-Rp {{ number_format($item->discount_amount, 0, ',', '.') }}</span>
+                                                @elseif($item->discount_percent > 0)
                                                     <span class="badge bg-danger">{{ number_format($item->discount_percent, 0) }}%</span>
                                                 @else
                                                     <span class="text-muted">-</span>

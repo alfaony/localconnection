@@ -790,6 +790,7 @@
 </div>
 
 @push('css')
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
 <style>
 /* ═══════════════════════════════════════════════════
    IC DESIGN SYSTEM — Bootstrap 4 Compatible
@@ -1205,6 +1206,7 @@ input[type="radio"].d-none:checked + .ic-radio-btn {
 
 @push('js')
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
 <script>
 
     function copyShareLink() {
