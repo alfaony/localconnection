@@ -109,23 +109,29 @@
                                         </small>
                                     </td>
                                     <td class="text-center" style="padding: 0.5rem 0.3rem;">
-                                        <div class="input-group input-group-sm" style="min-width: 80px;">
+                                        <div class="input-group input-group-sm" style="min-width: 90px;">
                                             <input type="number"
                                                    class="form-control text-center"
                                                    v-model.number="item.discountPercent"
                                                    @change="updateDiscount(index, item.discountPercent)"
                                                    min="0"
-                                                   max="100"
+                                                   :max="item.discountType === 'flat' ? item.price : 100"
                                                    step="1"
                                                    placeholder="0">
                                             <div class="input-group-append">
-                                                <span class="input-group-text">%</span>
+                                                <button type="button"
+                                                        class="btn btn-outline-secondary"
+                                                        @click="toggleDiscountType(index)"
+                                                        :title="item.discountType === 'flat' ? 'Klik untuk ganti ke persen (%)' : 'Klik untuk ganti ke nominal (Rp)'"
+                                                        style="padding: 0.25rem 0.45rem; font-size: 0.72rem; font-weight: 700; min-width: 30px;">
+                                                    @{{ item.discountType === 'flat' ? 'Rp' : '%' }}
+                                                </button>
                                             </div>
                                         </div>
                                         <small v-if="item.discountPercent > 0"
                                                class="text-danger d-block mt-1"
                                                style="font-size: 0.7rem;">
-                                            -@{{ formatCurrency(item.price * item.discountPercent / 100) }}
+                                            -@{{ formatCurrency(item.discountType === 'flat' ? item.discountPercent : item.price * item.discountPercent / 100) }}
                                         </small>
                                     </td>
                                     <td style="padding: 0.5rem 0.5rem;">
