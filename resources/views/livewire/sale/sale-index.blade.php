@@ -771,7 +771,7 @@ async function printSaleReceipt(saleId) {
                     : `-${item.discount_percent}%`)
                 : '';
             const priceInfo = hasDisc
-                ? `<del>${fmt(item.original_price)}</del> ${discLabel}`
+                ? `${fmt(item.original_price)}`
                 : fmt(item.unit_price);
             const discAmount = hasDisc
                 ? (item.discount_type === 'flat'
