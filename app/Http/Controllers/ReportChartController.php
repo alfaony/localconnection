@@ -31,20 +31,19 @@ class ReportChartController extends Controller
         $start = $request->start_date ? Carbon::parse($request->start_date) : now()->startOfMonth();
         $end = $request->end_date ? Carbon::parse($request->end_date) : now()->endOfMonth();
 
-        $periodStart = 
         $reports = WeeklyReport::where('division_id', $divisionId)
-            ->whereBetween('week', [$start->isoWeek(), $end->isoWeek()])
+            ->whereBetween('date', [$start->copy()->startOfDay(), $end->copy()->endOfDay()])
             ->get();
 
         $period = CarbonPeriod::create(Carbon::parse($start)->startOfWeek(), Carbon::parse($end)->endOfWeek());
 
-            $weeks = collect($period)->map(function ($date) {
-                return [
-                    'year' => $date->year,
-                    'week' => $date->isoWeek(),
-                    'label' => $date->year . '-W' . str_pad($date->isoWeek(), 2, '0', STR_PAD_LEFT)
-                ];
-            })->unique('label')->values();
+        $weeks = collect($period)->map(function ($date) {
+            return [
+                'year' => $date->isoWeekYear(),
+                'week' => $date->isoWeek(),
+                'label' => $date->isoWeekYear() . '-W' . str_pad($date->isoWeek(), 2, '0', STR_PAD_LEFT)
+            ];
+        })->unique('label')->values();
 
         $fields = [
             'number_of_customers',
@@ -64,7 +63,7 @@ class ReportChartController extends Controller
 
         foreach ($weeks as $week) {
             foreach ($fields as $field) {
-                $value = $reports->firstWhere('week', $week['week'])?->$field ?? 0;
+                $value = $reports->first(fn($r) => $r->week == $week['week'] && $r->year == $week['year'])?->$field ?? 0;
                 $datasets[$field][] = $value;
             }
         }
@@ -73,7 +72,7 @@ class ReportChartController extends Controller
             'labels' => $weeks->pluck('label'),
             'datasets' => $datasets,
             'details' => $weeks->map(function ($week) use ($reports) {
-                $report = $reports->firstWhere('week', $week['week']);
+                $report = $reports->first(fn($r) => $r->week == $week['week'] && $r->year == $week['year']);
                 return [
                     'week_label' => $week['label'],
                     'key_activities' => $report?->key_activities,
