@@ -54,8 +54,8 @@ class WeeklyReportController extends Controller
         ]);
 
         $date = Carbon::now();
-        $year = $date->year;
         $week = $date->isoWeek();
+        $year = $date->isoWeekYear();
 
         $exists = WeeklyReport::where('user_id', auth()->id())
             ->where('division_id', $request->division_id)
@@ -134,8 +134,8 @@ class WeeklyReportController extends Controller
         }
 
         $date = Carbon::parse($request->date);
-        $year = $date->year;
         $week = $date->isoWeek();
+        $year = $date->isoWeekYear();
 
         // optional: validasi prevent duplicate minggu update
         $exists = WeeklyReport::where('user_id', auth()->id())
