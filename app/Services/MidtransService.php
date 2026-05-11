@@ -196,7 +196,7 @@ class MidtransService
                 'customer_details' => $customerDetails,
                 'enabled_payments' => [
                     'credit_card', 'bca_va', 'bni_va', 'bri_va', 'mandiri_va',
-                    'permata_va', 'other_va', 'gopay', 'shopeepay', 'qris'
+                    'permata_va', 'other_va', 'gopay', 'shopeepay', 'qris','other_qris'
                 ],
                 'callbacks' => [
                     'finish' => route('internet-customer.customer.show', [

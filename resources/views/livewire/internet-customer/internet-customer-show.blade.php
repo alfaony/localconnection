@@ -1229,13 +1229,11 @@ document.addEventListener('livewire:load', function() {
         const manualSection = document.getElementById('manual-payment-section');
         const xenditSection = document.getElementById('xendit-payment-section');
         const midtransSection = document.getElementById('midtrans-payment-section');
-        const qrisGopaySection = document.getElementById('qris-gopay-payment-section');
 
         // Hide all sections first
         if (manualSection) manualSection.style.display = 'none';
         if (xenditSection) xenditSection.style.display = 'none';
         if (midtransSection) midtransSection.style.display = 'none';
-        if (qrisGopaySection) qrisGopaySection.style.display = 'none';
 
         // Apply active style to selected method
         if (method === 'manual' && manualCard) {
@@ -1259,7 +1257,6 @@ document.addEventListener('livewire:load', function() {
                 qrisGopayCard.classList.add('border-success', 'bg-light');
                 qrisGopayCard.style.borderWidth = '3px';
             }
-            if (qrisGopaySection) qrisGopaySection.style.display = 'block';
         }
     };
 
@@ -1335,11 +1332,11 @@ document.addEventListener('livewire:load', function() {
         }
 
         // Show/hide QRIS GoPay option
-        if (qrisGopayActive) {
-            document.getElementById('qris-gopay-method-wrapper').style.display = 'block';
-        } else {
-            document.getElementById('qris-gopay-method-wrapper').style.display = 'none';
-        }
+        // if (qrisGopayActive) {
+        //     document.getElementById('qris-gopay-method-wrapper').style.display = 'block';
+        // } else {
+        //     document.getElementById('qris-gopay-method-wrapper').style.display = 'none';
+        // }
 
         // Reset selections
         selectedMonths = 1;
