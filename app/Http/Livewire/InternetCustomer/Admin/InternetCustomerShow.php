@@ -92,6 +92,15 @@ class InternetCustomerShow extends Component
     public $new_package_id = null;
     public $availablePackages = [];
 
+    // Manual payment properties
+    public $admin_payment_proof;
+    public $admin_purchase_id;
+    public $admin_payment_months = 1;
+    public $admin_transfer_date;
+    public $admin_transfer_from_bank;
+    public $admin_transfer_from_account_name;
+    public $admin_transfer_notes;
+
     public function mount($customerId)
     {
         $this->customer = InternetCustomer::with([
@@ -1189,6 +1198,156 @@ class InternetCustomerShow extends Component
             $this->dispatchBrowserEvent('show-notification', [
                 'type' => 'error',
                 'message' => 'Gagal menandai pembayaran sebagai expired: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    public function showManualPaymentModal($purchaseId)
+    {
+        $this->admin_purchase_id    = $purchaseId;
+        $this->admin_payment_months = 1;
+        $this->admin_payment_proof  = null;
+        $this->dispatchBrowserEvent('show-admin-manual-payment-modal');
+    }
+
+    /**
+     * Semua field (kecuali file) dikirim sebagai parameter langsung dari JS
+     * agar tidak ada race-condition dengan @this.set().
+     * File (admin_payment_proof) sudah diset via @this.upload() sebelum method ini dipanggil.
+     */
+    public function submitManualPayment(
+        int     $months,
+        string  $transferDate,
+        ?string $bank        = null,
+        ?string $accountName = null,
+        ?string $notes       = null
+    ) {
+        $months = max(1, min(24, $months));
+
+        // Guard: file harus sudah terupload
+        if (!$this->admin_payment_proof) {
+            $this->dispatchBrowserEvent('admin-payment-error', [
+                'message' => 'Bukti pembayaran belum diupload. Silakan coba lagi.',
+            ]);
+            return;
+        }
+
+        // Validasi tanggal (field lain divalidasi client-side)
+        if (!$transferDate || !strtotime($transferDate)) {
+            $this->dispatchBrowserEvent('admin-payment-error', [
+                'message' => 'Tanggal transfer tidak valid.',
+            ]);
+            return;
+        }
+        if (strtotime($transferDate) > strtotime(today()->toDateString())) {
+            $this->dispatchBrowserEvent('admin-payment-error', [
+                'message' => 'Tanggal transfer tidak boleh lebih dari hari ini.',
+            ]);
+            return;
+        }
+
+        DB::beginTransaction();
+        try {
+            $purchase         = InternetCustomerPurchase::findOrFail($this->admin_purchase_id);
+            $internetCustomer = $purchase->customer;
+            $userCustomer     = $internetCustomer->userCustomer;
+
+            // ── Hitung periode ───────────────────────────────────────────────
+            $periodStart = $userCustomer->start_billing_date
+                ? Carbon::parse($userCustomer->start_billing_date)
+                : now()->startOfDay();
+            $periodEnd = $periodStart->copy()->addMonths($months)->subDay();
+
+            // ── Simpan file bukti ────────────────────────────────────────────
+            $path = $this->admin_payment_proof->store('payment_proofs');
+
+            $price    = $internetCustomer->internetPackage->price_nett ?? 0;
+            $subtotal = $price * $months;
+
+            // ── Update purchase + auto-konfirmasi sekaligus ──────────────────
+            $purchase->update([
+                'payment_proof'              => $path,
+                'payment_method'             => 'transfer',
+                'payment_months'             => $months,
+                'period_start'               => $periodStart,
+                'period_end'                 => $periodEnd,
+                'amount_paid'                => $subtotal,
+                'transfer_date'              => $transferDate,
+                'transfer_from_bank'         => $bank,
+                'transfer_from_account_name' => $accountName,
+                'transfer_notes'             => $notes,
+                // Auto-konfirmasi oleh admin finance
+                'confirmation_finance_at'    => now(),
+                'user_finance_id'            => Auth::id(),
+            ]);
+
+            // ── Smart billing date (sama persis dengan confirmPayment) ────────
+            $maxBillingDay    = config('services.internet_custom.max_billing_date', 20);
+            $startBillingDate = $periodStart->day > $maxBillingDay
+                ? $periodStart->copy()->addMonths($months)->firstOfMonth()
+                : $periodStart->copy()->addMonths($months);
+
+            $gracePeriod    = config('services.internet_custom.end_billing_of_days', 5);
+            $endBillingDate = $startBillingDate->copy()->addDays($gracePeriod);
+
+            $userCustomer->update([
+                'start_billing_date' => $startBillingDate->format('Y-m-d'),
+                'end_billing_date'   => $endBillingDate->format('Y-m-d'),
+            ]);
+
+            // ── Update status pelanggan ──────────────────────────────────────
+            $post = ['is_paid' => true];
+
+            if (!$internetCustomer->installation) {
+                $post['status'] = ParamSchema::PROCESS_INSTALLATION;
+
+                $userTechnical = optional($internetCustomer->subdistrict?->coverageService?->coverageServiceOds)
+                    ->pluck('ods.user_assign_id')
+                    ->unique()
+                    ->all();
+
+                if (!empty($userTechnical)) {
+                    $msg = "Pembayaran pelanggan {$internetCustomer->code} telah dikonfirmasi. Silakan segera lakukan pemasangan.";
+                    $url = route('internet-customer.show', $internetCustomer->id);
+                    foreach ($userTechnical as $tech) {
+                        $this->sentInbox($tech, $msg, $url);
+                    }
+                }
+            } else {
+                $post['status'] = ParamSchema::REACTIVATED;
+                dispatch(new ProvisionCustomerJob($userCustomer->id));
+                \App\Jobs\SyncInstalledCustomersJob::dispatch([$userCustomer->id]);
+            }
+
+            GenerateInternetPurchaseCouponJob::dispatch($internetCustomer->id, $purchase->id, $months);
+            $internetCustomer->update($post);
+
+            DB::commit();
+
+            Log::info('Admin confirmed manual payment', [
+                'purchase_id'  => $purchase->id,
+                'customer_id'  => $internetCustomer->id,
+                'confirmed_by' => Auth::id(),
+                'months'       => $months,
+                'status'       => $post['status'],
+            ]);
+
+            $this->reset(['admin_payment_proof']);
+            $this->dispatchBrowserEvent('hide-admin-manual-payment-modal');
+            $this->dispatchBrowserEvent('showSuccessAlert', [
+                'message' => 'Pembayaran berhasil dikonfirmasi. Status pelanggan diperbarui.',
+            ]);
+            $this->mount($this->customer->id);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Admin manual payment failed', [
+                'error'       => $e->getMessage(),
+                'purchase_id' => $this->admin_purchase_id,
+                'confirmed_by'=> Auth::id(),
+            ]);
+            $this->dispatchBrowserEvent('admin-payment-error', [
+                'message' => 'Terjadi kesalahan: ' . $e->getMessage(),
             ]);
         }
     }

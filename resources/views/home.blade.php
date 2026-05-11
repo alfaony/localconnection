@@ -950,7 +950,7 @@
             }
 
             for (const item of data) {
-                const userIsAttending = item.participants?.some(p => p.id === currentUserId && p.pivot.is_attended);
+                const userIsAttending = item.user_is_attended;
                                 
                 const locationOrAction = item.meeting_type !== 'offline' ? (userIsAttending ? `<span class="badge bg-success">Hadir</span>`: (item.google_meet_link ? (item.is_already ? `<button class="btn btn-sm btn-success" onclick="joinMeeting('${currentUserId}', '${item.id}')"><i class="fas fa-sign-in-alt"></i> Bergabung</button>` : `<span class="badge bg-warning text-dark mt-1">Segera Dimulai</span>` ) : '-')) : (item.meeting_location || '-');
 

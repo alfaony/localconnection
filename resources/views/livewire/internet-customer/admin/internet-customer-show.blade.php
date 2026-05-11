@@ -647,7 +647,7 @@
                                                     <th>Bukti Pembayaran</th>
                                                     <th>Invoice</th>
                                                     @canAccess('as_finance','internet_customers')
-                                                    <th>Konfirmasi Pembayaran</th>
+                                                    <th>Aksi</th>
                                                     @endcanAccess
                                                 </tr>
                                             </thead>
@@ -703,7 +703,13 @@
                                                                     <i class="fas fa-check mr-1"></i>Konfirmasi
                                                                 </button>
                                                                 @endif
-                                                                
+
+                                                                @if(!$purchase->payment_proof && $financeAccess)
+                                                                <button class="btn btn-warning btn-sm mb-1" wire:click="showManualPaymentModal({{ $purchase->id }})">
+                                                                    <i class="fas fa-upload mr-1"></i>Upload Bukti
+                                                                </button>
+                                                                @endif
+
                                                                 @if($financeAccess)
                                                                 <button class="btn btn-danger btn-sm" onclick="expirePayment('{{ $purchase->id }}')">
                                                                     <i class="fas fa-times-circle mr-1"></i>Tandai Expired
@@ -1137,6 +1143,100 @@
         </div>
     </div>
 
+    <!-- Modal Manual Payment (Admin Upload Bukti) -->
+    <div class="modal fade" id="adminManualPaymentModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-warning text-white">
+                    <h5 class="modal-title">
+                        <i class="fas fa-upload mr-2"></i>Upload Bukti Pembayaran Manual
+                    </h5>
+                    <button type="button" class="close text-white" data-dismiss="modal">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle mr-1"></i>
+                        Gunakan form ini untuk mengupload bukti pembayaran yang dilakukan pelanggan melalui platform lain (transfer manual, dll).
+                    </div>
+
+                    <div id="admin-payment-error" class="alert alert-danger" style="display:none;"></div>
+
+                    <!-- Jumlah Bulan -->
+                    <div class="form-group">
+                        <label class="font-weight-bold">Jumlah Bulan <span class="text-danger">*</span></label>
+                        <div class="input-group" style="max-width:250px">
+                            <button class="btn btn-outline-secondary" type="button" onclick="adminDecreaseMonths()">
+                                <i class="fas fa-minus"></i>
+                            </button>
+                            <input type="number" id="admin-months-input" class="form-control text-center font-weight-bold"
+                                   min="1" max="24" value="1">
+                            <button class="btn btn-outline-secondary" type="button" onclick="adminIncreaseMonths()">
+                                <i class="fas fa-plus"></i>
+                            </button>
+                            <div class="input-group-append">
+                                <span class="input-group-text">Bulan</span>
+                            </div>
+                        </div>
+                        <small class="text-muted">Minimal 1 bulan, maksimal 24 bulan</small>
+                    </div>
+
+                    <!-- Tanggal Transfer -->
+                    <div class="form-group">
+                        <label class="font-weight-bold">Tanggal Transfer <span class="text-danger">*</span></label>
+                        <input type="date" id="admin-transfer-date" class="form-control"
+                               max="{{ date('Y-m-d') }}">
+                    </div>
+
+                    <!-- Bank Pengirim -->
+                    <div class="form-group">
+                        <label class="font-weight-bold">Nama Bank Pengirim</label>
+                        <input type="text" id="admin-transfer-bank" class="form-control"
+                               placeholder="Contoh: BCA, Mandiri, BNI">
+                    </div>
+
+                    <!-- Nama Pengirim -->
+                    <div class="form-group">
+                        <label class="font-weight-bold">Nama Pemilik Rekening Pengirim</label>
+                        <input type="text" id="admin-transfer-account-name" class="form-control"
+                               placeholder="Nama sesuai rekening">
+                    </div>
+
+                    <!-- Catatan -->
+                    <div class="form-group">
+                        <label class="font-weight-bold">Catatan (Opsional)</label>
+                        <textarea id="admin-transfer-notes" class="form-control" rows="2"
+                                  placeholder="Catatan tambahan (jika ada)"></textarea>
+                    </div>
+
+                    <!-- Upload Bukti -->
+                    <div class="form-group">
+                        <label class="font-weight-bold">Bukti Pembayaran <span class="text-danger">*</span></label>
+                        <div id="admin-payment-drop-area"
+                             class="border border-2 border-dashed rounded p-4 text-center"
+                             style="cursor:pointer; border-color:#ddd;">
+                            <i class="fas fa-cloud-upload-alt fa-3x text-muted mb-2"></i>
+                            <p class="mb-1 font-weight-bold">Klik untuk upload atau drag & drop</p>
+                            <p class="text-muted small mb-0">PNG, JPG, GIF (Maksimal 2MB)</p>
+                            <input id="admin_payment_proof_input" type="file" class="d-none" accept="image/*">
+                        </div>
+                        <div id="admin-payment-preview" class="mt-3"></div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                        <i class="fas fa-times mr-1"></i>Batal
+                    </button>
+                    <button type="button" class="btn btn-warning" id="adminSubmitPaymentBtn"
+                            onclick="adminSubmitPayment()">
+                        <i class="fas fa-paper-plane mr-1"></i>Simpan Bukti Pembayaran
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     @push('js')
     <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
     <script>
@@ -1216,7 +1316,231 @@
             }, 1000);
         });
 
+        // ── Admin manual payment helpers ────────────────────────────────────
+        window.adminUpdateMonths = function(val) {
+            val = parseInt(val);
+            if (val < 1) val = 1;
+            if (val > 24) val = 24;
+            document.getElementById('admin-months-input').value = val;
+        };
+        window.adminIncreaseMonths = function() {
+            adminUpdateMonths(parseInt(document.getElementById('admin-months-input').value) + 1);
+        };
+        window.adminDecreaseMonths = function() {
+            adminUpdateMonths(parseInt(document.getElementById('admin-months-input').value) - 1);
+        };
+
+        function adminResetModal() {
+            document.getElementById('admin-months-input').value = 1;
+            document.getElementById('admin-transfer-date').value = '';
+            document.getElementById('admin-transfer-bank').value = '';
+            document.getElementById('admin-transfer-account-name').value = '';
+            document.getElementById('admin-transfer-notes').value = '';
+            document.getElementById('admin_payment_proof_input').value = '';
+            document.getElementById('admin-payment-preview').innerHTML = '';
+            document.getElementById('admin-payment-error').style.display = 'none';
+            document.getElementById('admin-payment-error').innerText = '';
+        }
+
+        function adminCloseModal() {
+            const modalEl = document.getElementById('adminManualPaymentModal');
+
+            if (!modalEl) {
+                console.warn('Modal element not found: adminManualPaymentModal');
+                return;
+            }
+
+            try {
+                // Bootstrap 5
+                if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+                    const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+                    modal.hide();
+
+                    setTimeout(() => {
+                        forceCleanupModal();
+                    }, 300);
+
+                    return;
+                }
+
+                // Bootstrap 4 fallback
+                if (typeof $ !== 'undefined' && typeof $(modalEl).modal === 'function') {
+                    $(modalEl).modal('hide');
+
+                    setTimeout(() => {
+                        forceCleanupModal();
+                    }, 300);
+
+                    return;
+                }
+
+                console.warn('Bootstrap modal handler not found');
+            } catch (e) {
+                console.error('Failed to close modal:', e);
+                forceCleanupModal();
+            }
+        }
+
+        function forceCleanupModal() {
+            document.body.classList.remove('modal-open');
+            document.body.style.removeProperty('overflow');
+            document.body.style.removeProperty('padding-right');
+
+            document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+
+            const modalEl = document.getElementById('adminManualPaymentModal');
+            if (modalEl) {
+                modalEl.classList.remove('show');
+                modalEl.style.display = 'none';
+                modalEl.setAttribute('aria-hidden', 'true');
+                modalEl.removeAttribute('aria-modal');
+                modalEl.removeAttribute('role');
+            }
+        }
+
+        function adminShowError(msg) {
+            const el = document.getElementById('admin-payment-error');
+            el.innerText = msg;
+            el.style.display = 'block';
+            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+
+        window.adminSubmitPayment = function() {
+            const file         = document.getElementById('admin_payment_proof_input').files[0];
+            const transferDate = document.getElementById('admin-transfer-date').value;
+            const bank         = document.getElementById('admin-transfer-bank').value.trim();
+            const accountName  = document.getElementById('admin-transfer-account-name').value.trim();
+            const notes        = document.getElementById('admin-transfer-notes').value.trim();
+            const months       = Math.max(1, Math.min(24, parseInt(document.getElementById('admin-months-input').value) || 1));
+
+            // Reset error
+            const errEl = document.getElementById('admin-payment-error');
+            errEl.style.display = 'none';
+            errEl.innerText = '';
+
+            // Client-side validation
+            if (!file) {
+                adminShowError('Silakan pilih file bukti pembayaran.');
+                return;
+            }
+            if (!transferDate) {
+                adminShowError('Tanggal transfer wajib diisi.');
+                return;
+            }
+
+            const btn = document.getElementById('adminSubmitPaymentBtn');
+
+            function setBtnState(text, disabled) {
+                btn.disabled = disabled;
+                btn.innerHTML = text;
+            }
+
+            setBtnState('<i class="fas fa-spinner fa-spin mr-1"></i>Mengupload...', true);
+
+            // Upload file, lalu kirim semua nilai sebagai parameter — tanpa @this.set()
+            @this.upload(
+                'admin_payment_proof',
+                file,
+                function() {
+                    // Upload sukses: panggil backend dengan semua nilai sebagai argumen
+                    setBtnState('<i class="fas fa-spinner fa-spin mr-1"></i>Menyimpan...', true);
+
+                    @this.call('submitManualPayment', months, transferDate, bank || null, accountName || null, notes || null)
+                        .then(function() {
+                            // Tutup modal SEBELUM Livewire re-render (mount) agar instance Bootstrap masih ada
+                            adminCloseModal();
+                            forceCleanupModal();
+                            setBtnState('<i class="fas fa-paper-plane mr-1"></i>Simpan Bukti Pembayaran', false);
+                        })
+                        .catch(function(err) {
+                            setBtnState('<i class="fas fa-paper-plane mr-1"></i>Simpan Bukti Pembayaran', false);
+                            adminShowError('Gagal menyimpan: ' + (err.message || 'Coba lagi.'));
+                        });
+                },
+                function(err) {
+                    setBtnState('<i class="fas fa-paper-plane mr-1"></i>Simpan Bukti Pembayaran', false);
+                    adminShowError('Gagal mengupload file. Pastikan ukuran ≤ 2MB dan format gambar.');
+                    console.error('Upload error:', err);
+                },
+                function(event) {
+                    const pct = Math.round((event.detail && event.detail.progress) || 0);
+                    setBtnState('<i class="fas fa-spinner fa-spin mr-1"></i>Uploading ' + pct + '%...', true);
+                }
+            );
+        };
+
         document.addEventListener('livewire:load', function () {
+
+            // Show / hide admin manual payment modal
+            window.addEventListener('show-admin-manual-payment-modal', function() {
+                adminResetModal();
+                new bootstrap.Modal(document.getElementById('adminManualPaymentModal')).show();
+            });
+
+            window.addEventListener('hide-admin-manual-payment-modal', function() {
+                adminCloseModal();
+                adminResetModal();
+            });
+
+            // Drop area
+            const adminDropArea = document.getElementById('admin-payment-drop-area');
+            if (adminDropArea) {
+                adminDropArea.addEventListener('click', function() {
+                    document.getElementById('admin_payment_proof_input').click();
+                });
+                ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(ev => {
+                    adminDropArea.addEventListener(ev, function(e) { e.preventDefault(); e.stopPropagation(); });
+                });
+                ['dragenter', 'dragover'].forEach(ev => {
+                    adminDropArea.addEventListener(ev, function() { this.classList.add('border-primary', 'bg-light'); });
+                });
+                ['dragleave', 'drop'].forEach(ev => {
+                    adminDropArea.addEventListener(ev, function() { this.classList.remove('border-primary', 'bg-light'); });
+                });
+                adminDropArea.addEventListener('drop', function(e) {
+                    const input = document.getElementById('admin_payment_proof_input');
+                    input.files = e.dataTransfer.files;
+                    input.dispatchEvent(new Event('change', { bubbles: true }));
+                });
+            }
+
+            // File preview
+            const adminProofInput = document.getElementById('admin_payment_proof_input');
+            if (adminProofInput) {
+                adminProofInput.addEventListener('change', function(e) {
+                    const file    = e.target.files[0];
+                    const preview = document.getElementById('admin-payment-preview');
+                    if (!file) { preview.innerHTML = ''; return; }
+                    if (!file.type.match('image.*')) {
+                        preview.innerHTML = '<div class="alert alert-warning"><i class="fas fa-exclamation-triangle mr-2"></i>File harus berupa gambar (JPG, PNG, GIF)</div>';
+                        this.value = ''; return;
+                    }
+                    if (file.size > 2 * 1024 * 1024) {
+                        preview.innerHTML = '<div class="alert alert-danger"><i class="fas fa-exclamation-triangle mr-2"></i>Ukuran file terlalu besar! Maksimal 2MB.</div>';
+                        this.value = ''; return;
+                    }
+                    const reader = new FileReader();
+                    reader.onload = function(ev) {
+                        preview.innerHTML = `<div class="card border-success"><div class="card-body text-center">
+                            <img src="${ev.target.result}" class="img-fluid rounded" style="max-height:250px">
+                            <div class="mt-2"><button type="button" class="btn btn-sm btn-danger"
+                                onclick="document.getElementById('admin_payment_proof_input').value='';document.getElementById('admin-payment-preview').innerHTML=''">
+                                <i class="fas fa-times mr-1"></i>Hapus</button></div>
+                        </div></div>`;
+                    };
+                    reader.readAsDataURL(file);
+                });
+            }
+
+            // Error dari backend manual payment (via dispatchBrowserEvent)
+            window.addEventListener('admin-payment-error', function(event) {
+                const btn = document.getElementById('adminSubmitPaymentBtn');
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fas fa-paper-plane mr-1"></i>Simpan Bukti Pembayaran';
+                }
+                adminShowError(event.detail.message || 'Terjadi kesalahan.');
+            });
 
             document.getElementById('btnSavePackage').addEventListener('click', function() {
                 const btn = this;
@@ -1833,6 +2157,12 @@
     @endpush
     @push('css')
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css">
+    <style>
+        .border-dashed { border-style: dashed !important; }
+        #admin-payment-drop-area { transition: all 0.3s ease; }
+        #admin-payment-drop-area:hover { border-color: #007bff !important; background-color: #f8f9fa !important; }
+        #admin-payment-drop-area.border-primary { border-color: #007bff !important; background-color: rgba(0,123,255,.05) !important; }
+    </style>
     <style>
         .img-signature
         {
