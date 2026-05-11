@@ -606,8 +606,7 @@ class HomeController extends Controller
         $user = Auth::user();
         $scope = $request->get('scope'); // 'today' or 'week'
 
-        $meetings = Meeting::with('participants')
-            ->where(function ($query) use ($user) {
+        $meetings = Meeting::where(function ($query) use ($user) {
                 $query->whereHas('participants', fn($q) => $q->where('user_id', $user->id))
                     ->orWhere('user_id', $user->id);
             });

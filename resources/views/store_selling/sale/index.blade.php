@@ -114,19 +114,19 @@
 
                         <div class="payment-details mb-3">
                             <div class="row">
-                                <div class="col-6"><strong>Metode Pembayaran:</strong></div>
+                                <div class="col-6"><p>Metode Pembayaran:</p></div>
                                 <div class="col-6 text-right">@{{ getPaymentMethodLabel(paymentMethod) }}</div>
                             </div>
                             <div v-if="paymentMethod === 'cash'" class="row mt-1">
-                                <div class="col-6"><strong>Dibayar:</strong></div>
+                                <div class="col-6"><p>Dibayar:</p></div>
                                 <div class="col-6 text-right">@{{ formatCurrency(cashAmount) }}</div>
                             </div>
                             <div v-if="paymentMethod === 'cash'" class="row mt-1">
-                                <div class="col-6"><strong>Kembalian:</strong></div>
+                                <div class="col-6"><p>Kembalian:</p></div>
                                 <div class="col-6 text-right text-success font-weight-bold">@{{ formatCurrency(cashAmount - cashRoundedTotal) }}</div>
                             </div>
                             <div v-if="customerEmail" class="row mt-1">
-                                <div class="col-6"><strong>Email Customer:</strong></div>
+                                <div class="col-6"><p>Email Customer:</p></div>
                                 <div class="col-6 text-right">@{{ customerEmail }}</div>
                             </div>
                         </div>
@@ -188,6 +188,7 @@
                     </template>
                 </div>
                 <div class="modal-footer">
+                    <small class="text-muted mr-auto"><kbd>Spasi</kbd> untuk Konfirmasi & Bayar</small>
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
                         <i class="fas fa-edit"></i> Perbaiki
                     </button>
@@ -226,31 +227,47 @@
                         <table class="table table-hover table-bordered">
                             <thead class="thead-light">
                                 <tr>
+                                    <th width="5%"></th>
                                     <th width="9%">Kode</th>
-                                    <th width="18%">Nama</th>
-                                    <th width="13%">Varian</th>
-                                    <th width="18%">Spesifikasi</th>
-                                    <th width="10%">Kategori</th>
-                                    <th width="10%">Merk</th>
-                                    <th width="11%" class="text-right">Harga</th>
-                                    <th width="11%" class="text-center">Stok</th>
+                                    <th width="16%">Nama</th>
+                                    <th width="12%">Varian</th>
+                                    <th width="16%">Spesifikasi</th>
+                                    <th width="9%">Kategori</th>
+                                    <th width="9%">Merk</th>
+                                    <th width="12%" class="text-right">Harga</th>
+                                    <th width="12%" class="text-center">Stok</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr v-for="product in productSelectionList" :key="product.id"
+                                <tr v-for="(product, index) in productSelectionList" :key="product.id"
                                     class="product-row"
-                                    :class="!product.inventory ? 'table-secondary' : (product.inventory.quantity <= 0 ? 'table-danger' : '')"
+                                    :class="[
+                                        !product.inventory ? 'table-secondary' : (product.inventory.quantity <= 0 ? 'table-danger' : ''),
+                                        index === selectedProductIndex ? 'selected-product-row' : ''
+                                    ]"
                                     @click="selectProduct(product)"
                                     style="cursor: pointer;"
                                     :title="!product.inventory ? 'Stok belum didata — tidak bisa dijual' : ''">
-                                    <td><code>@{{ product.code || '-' }}</code></td>
-                                    <td><strong>@{{ product.name }}</strong></td>
-                                    <td>@{{ product.variant || '-' }}</td>
-                                    <td><small>@{{ product.specification || '-' }}</small></td>
-                                    <td>@{{ product.category?.name || '-' }}</td>
-                                    <td>@{{ product.brand?.name || '-' }}</td>
-                                    <td class="text-right"><strong>@{{ formatCurrency(product.selling_price) }}</strong></td>
-                                    <td class="text-center">
+                                    <td class="text-center align-middle p-1">
+                                        <img v-if="product.primary_media"
+                                             :src="product.primary_media.file_url"
+                                             class="rounded"
+                                             style="width:40px;height:40px;object-fit:cover;"
+                                             alt="">
+                                        <div v-else
+                                             class="rounded bg-light d-flex align-items-center justify-content-center mx-auto"
+                                             style="width:40px;height:40px;font-size:1rem;color:#bbb;">
+                                            <i class="fas fa-box"></i>
+                                        </div>
+                                    </td>
+                                    <td class="align-middle"><code>@{{ product.code || '-' }}</code></td>
+                                    <td class="align-middle"><strong>@{{ product.name }}</strong></td>
+                                    <td class="align-middle">@{{ product.variant || '-' }}</td>
+                                    <td class="align-middle"><small>@{{ product.specification || '-' }}</small></td>
+                                    <td class="align-middle">@{{ product.category?.name || '-' }}</td>
+                                    <td class="align-middle">@{{ product.brand?.name || '-' }}</td>
+                                    <td class="text-right align-middle"><strong>@{{ formatCurrency(product.selling_price) }}</strong></td>
+                                    <td class="text-center align-middle">
                                         <span v-if="!product.inventory" class="badge badge-secondary">
                                             <i class="fas fa-question"></i> Belum didata
                                         </span>
@@ -305,7 +322,7 @@
                             </div>
                             @endif
                             
-                            <h5><strong>{{ $settingCompany['store_name'] ?? config('app.name') }}</strong></h5>
+                            <h5>{{ $settingCompany['store_name'] ?? config('app.name') }}</h5>
                             
                             @if(!empty($settingCompany['store_address']))
                             <div class="receipt-address">
@@ -314,8 +331,8 @@
                             @endif
                             
                             <div class="mt-3">
-                                <h6><strong>STRUK PENJUALAN</strong></h6>
-                                <p class="mb-1"><strong>@{{ transactionResult.transaction_code }}</strong></p>
+                                <h6><p>STRUK PENJUALAN</p></h6>
+                                <p class="mb-1">@{{ transactionResult.transaction_code }}</p>
                                 <small>@{{ new Date().toLocaleString('id-ID') }}</small>
                             </div>
                             <hr>
@@ -323,11 +340,11 @@
                         
                         <div class="receipt-operator mb-3">
                             <div class="row">
-                                <div class="col-6"><strong>Kasir:</strong></div>
+                                <div class="col-6"><p>Kasir:</p></div>
                                 <div class="col-6 text-right">{{ Auth::user()->name }}</div>
                             </div>
                             <div class="row">
-                                <div class="col-6"><strong>Metode Bayar:</strong></div>
+                                <div class="col-6"><p>Metode Bayar:</p></div>
                                 <div class="col-6 text-right">@{{ getPaymentMethodLabel(transactionResult.payment_method) }}</div>
                             </div>
                             <hr>
@@ -337,12 +354,26 @@
                             <div v-for="item in transactionResult.items" :key="item.id" class="receipt-item mb-2">
                                 <div class="d-flex justify-content-between">
                                     <div class="item-name">
-                                        <strong>@{{ item.product_store.name }}</strong>
+                                        <p>@{{ item.product_store.name }}</p>
                                     </div>
                                     <div class="item-total">@{{ formatCurrency(item.subtotal) }}</div>
                                 </div>
-                                <div class="d-flex justify-content-between">
-                                    <small class="text-muted">@{{ item.quantity }} x @{{ formatCurrency(item.unit_price) }}</small>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <template v-if="getSnapshotItem(item.product_store_id) && getSnapshotItem(item.product_store_id).discountPercent > 0">
+                                        <small class="text-muted">
+                                            @{{ item.quantity }} x
+                                            <del>@{{ formatCurrency(getSnapshotItem(item.product_store_id).originalPrice) }}</del>
+                                            <span class="text-success ml-1">
+                                                -@{{ getSnapshotItem(item.product_store_id).discountType === 'flat'
+                                                    ? formatCurrency(getSnapshotItem(item.product_store_id).discountPercent)
+                                                    : getSnapshotItem(item.product_store_id).discountPercent + '%' }}
+                                            </span>
+                                            = @{{ formatCurrency(item.unit_price) }}
+                                        </small>
+                                    </template>
+                                    <template v-else>
+                                        <small class="text-muted">@{{ item.quantity }} x @{{ formatCurrency(item.unit_price) }}</small>
+                                    </template>
                                 </div>
                             </div>
                         </div>
@@ -359,8 +390,8 @@
                                 <span>@{{ formatCurrency(transactionResult.tax_amount) }}</span>
                             </div>
                             <div class="d-flex justify-content-between total-line">
-                                <strong>TOTAL:</strong>
-                                <strong>@{{ formatCurrency(transactionResult.final_amount) }}</strong>
+                                <span>TOTAL:</span>
+                                <span>@{{ formatCurrency(transactionResult.final_amount) }}</span>
                             </div>
                             <div v-if="transactionResult.payment_method === 'cash'" class="d-flex justify-content-between mt-2">
                                 <span>Dibayar:</span>
@@ -385,6 +416,7 @@
                 </div>
                 <div class="modal-footer">
                     @canAccess('printReceipt','store_sellings')
+                    <small class="text-muted mr-auto"><kbd>Spasi</kbd> untuk Cetak Struk</small>
                     <button class="btn btn-primary" @click="printReceipt" :disabled="isLoading">
                         <i class="fas fa-print"></i> Cetak Struk
                     </button>
@@ -421,6 +453,11 @@
     .bg-danger-light {
         background-color: #fdecea;
         border-left: 3px solid #dc3545;
+    }
+
+    .selected-product-row {
+        background-color: #cfe2ff !important;
+        outline: 2px solid #0d6efd;
     }
 
     /* Loading Overlay */
@@ -652,7 +689,7 @@
     }
     
     .total-line {
-        border-top: 2px solid #000;
+        border-top: 1px solid #edededfc;
         padding-top: 8px;
         margin-top: 8px;
         font-size: 1.1em;
@@ -791,7 +828,7 @@
     .total-line {
         font-size: 1.2em;
         padding-top: 10px;
-        border-top: 2px solid #333;
+        border-top: 1px solid #edededfc;
         margin-top: 10px;
     }
 </style>
@@ -814,7 +851,8 @@ createApp({
         const paymentMethod = ref('cash');
         const cashAmount = ref(0);
         const customerEmail = ref('');
-        const taxValue = ref('{{ $settingCompany["default_tax"] ?? "" }}');
+        const defaultTaxValue = '{{ $settingCompany["default_tax"] ?? "" }}';
+        const taxValue = ref(defaultTaxValue);
         const paymentDetails = ref({
             cardNumber: '',
             bankName: '',
@@ -832,14 +870,26 @@ createApp({
         const stockCheckFailed   = ref(false);
         const stockCheckFailedMsg = ref('');
         const isCheckingStock    = ref(false);
+        const selectedProductIndex = ref(-1);
+        const cartSnapshot = ref([]);
 
         // Computed properties
         const totalItems = computed(() => {
             return cartItems.value.reduce((total, item) => total + item.quantity, 0);
         });
 
+        const effectiveItemPrice = (item) => {
+            const disc = item.discountPercent || 0;
+            if (item.discountType === 'flat') {
+                return Math.max(0, item.price - disc);
+            }
+            return item.price * (1 - disc / 100);
+        };
+
         const subtotal = computed(() => {
-            return cartItems.value.reduce((total, item) => total + (item.quantity * item.price), 0);
+            return cartItems.value.reduce((total, item) => {
+                return total + (item.quantity * effectiveItemPrice(item));
+            }, 0);
         });
 
         const tax = computed(() => {
@@ -1000,10 +1050,7 @@ createApp({
                         }
                     }
                     barcodeInput.value = '';
-                    setTimeout(() => {
-                        const barcodeInputEl = document.querySelector('input[v-model="barcodeInput"]');
-                        if (barcodeInputEl) barcodeInputEl.focus();
-                    }, 100);
+                    setTimeout(() => focusBarcodeInput(), 100);
                 } else {
                     setLoadingResult('Produk tidak ditemukan', response.data.message, false);
                 }
@@ -1065,16 +1112,18 @@ createApp({
                 return;
             }
 
-            cartItems.value.push({
-                id:            product.id,
-                code:          product.code,
-                name:          product.name,
-                price:         product.selling_price,
-                originalPrice: product.selling_price,
-                quantity:      1,
-                stock:         stock,
-                unit:          unit,
-                image:         product.primary_media?.file_url ?? null,
+            cartItems.value.unshift({
+                id:              product.id,
+                code:            product.code,
+                name:            product.name,
+                price:           product.selling_price,
+                originalPrice:   product.selling_price,
+                quantity:        1,
+                stock:           stock,
+                unit:            unit,
+                image:           product.primary_media?.file_url ?? null,
+                discountPercent: 0,
+                discountType:    'percent',
             });
 
             return { stock, unit }; // digunakan oleh caller untuk toast
@@ -1103,6 +1152,51 @@ createApp({
             cartItems.value.splice(index, 1);
         };
 
+        const updateDiscount = (index, val) => {
+            let v = parseFloat(val) || 0;
+            if (v < 0) v = 0;
+            if (cartItems.value[index].discountType !== 'flat' && v > 100) v = 100;
+            cartItems.value[index].discountPercent = v;
+        };
+
+        const toggleDiscountType = (index) => {
+            const item = cartItems.value[index];
+            item.discountType = item.discountType === 'flat' ? 'percent' : 'flat';
+            item.discountPercent = 0;
+        };
+
+        const getSnapshotItem = (productStoreId) => {
+            return cartSnapshot.value.find(s => s.product_store_id === productStoreId) || null;
+        };
+
+        const focusBarcodeInput = () => {
+            document.getElementById('barcodeSearchInput')?.focus();
+        };
+
+        const handleProductModalKeydown = (e) => {
+            const list = productSelectionList.value;
+            if (!list.length) return;
+
+            if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                selectedProductIndex.value = Math.min(selectedProductIndex.value + 1, list.length - 1);
+                const rows = document.querySelectorAll('#productSelectionModal .product-row');
+                if (rows[selectedProductIndex.value]) {
+                    rows[selectedProductIndex.value].scrollIntoView({ block: 'nearest' });
+                }
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                selectedProductIndex.value = Math.max(selectedProductIndex.value - 1, 0);
+                const rows = document.querySelectorAll('#productSelectionModal .product-row');
+                if (rows[selectedProductIndex.value]) {
+                    rows[selectedProductIndex.value].scrollIntoView({ block: 'nearest' });
+                }
+            } else if (e.key === 'Enter' && selectedProductIndex.value >= 0) {
+                e.preventDefault();
+                selectProduct(list[selectedProductIndex.value]);
+            }
+        };
+
         const confirmPayment = async () => {
             $('#paymentConfirmationModal').modal('hide');
             setLoading(true, 'Memproses pembayaran...');
@@ -1111,10 +1205,24 @@ createApp({
 
         const processPayment = async () => {
             try {
+                cartSnapshot.value = cartItems.value.map(item => ({
+                    product_store_id: item.id,
+                    originalPrice:    item.price,
+                    discountPercent:  item.discountPercent || 0,
+                    discountType:     item.discountType || 'percent',
+                    effectivePrice:   effectiveItemPrice(item),
+                }));
+
                 const items = cartItems.value.map(item => ({
                     product_store_id: item.id,
-                    quantity: item.quantity,
-                    unit_price: item.price
+                    quantity:         item.quantity,
+                    unit_price:       effectiveItemPrice(item),
+                    original_price:   item.price,
+                    discount_percent: item.discountType === 'flat' ? 0 : (item.discountPercent || 0),
+                    discount_type:    item.discountType || 'percent',
+                    discount_amount:  item.discountType === 'flat'
+                                        ? (item.discountPercent || 0)
+                                        : (item.price * (item.discountPercent || 0) / 100),
                 }));
 
                 if (paymentMethod.value === 'cash') {
@@ -1183,8 +1291,14 @@ createApp({
             try {
                 const items = cartItems.value.map(item => ({
                     product_store_id: item.id,
-                    quantity: item.quantity,
-                    unit_price: item.price
+                    quantity:         item.quantity,
+                    unit_price:       effectiveItemPrice(item),
+                    original_price:   item.price,
+                    discount_percent: item.discountType === 'flat' ? 0 : (item.discountPercent || 0),
+                    discount_type:    item.discountType || 'percent',
+                    discount_amount:  item.discountType === 'flat'
+                                        ? (item.discountPercent || 0)
+                                        : (item.price * (item.discountPercent || 0) / 100),
                 }));
 
                 const response = await axios.post('/store-selling/saveDraft', {
@@ -1302,19 +1416,14 @@ createApp({
             addToCart(product);
             $('#productSelectionModal').modal('hide');
             productSelectionList.value = [];
-            
-            // Focus back to barcode input after selection
-            setTimeout(() => {
-                const barcodeInputEl = document.querySelector('input[v-model="barcodeInput"]');
-                if (barcodeInputEl) barcodeInputEl.focus();
-            }, 300);
+            // Focus dikembalikan otomatis via hidden.bs.modal event
         };
 
         const resetTransaction = () => {
             cartItems.value = [];
             cashAmount.value = 0;
             customerEmail.value = '';
-            taxValue.value = 0;
+            taxValue.value = defaultTaxValue;
             paymentMethod.value = 'cash';
             paymentDetails.value = {
                 cardNumber: '',
@@ -1842,7 +1951,7 @@ createApp({
             
             try {
                 // Get settings from PHP (already loaded in blade template)
-                const headerImage = '{{ !empty($settingCompany["header_store_image"]) ? s3_asset(true, 10, $settingCompany["header_store_image"]) : "" }}';
+                const headerImage = '{{ !empty($settingCompany["header_store_image"]) ? s3_asset(true, 1440, $settingCompany["header_store_image"]) : "" }}';
                 const footerMessage = `{!! $settingCompany["footer_store_message"] ?? "Terima kasih atas kunjungan Anda" !!}`;
                 const companyName = '{{ $settingCompany["store_name"] ?? config("app.name") }}';
                 const companyAddress = '{{ $settingCompany["store_address"] ?? "" }}';
@@ -1867,10 +1976,10 @@ createApp({
                                 }
 
                                 body {
-                                    font-family: 'Courier New', monospace;
+                                    font-family: Arial;
                                     width: 46mm;
                                     margin: 0;
-                                    padding: 2mm 2mm;
+                                    padding: 2mm 2mm 8mm 2mm;
                                     font-size: 8px;
                                     line-height: 1.3;
                                     color: #000;
@@ -1911,13 +2020,11 @@ createApp({
 
                                 .receipt-title h6 {
                                     font-size: 9px;
-                                    font-weight: bold;
                                     margin-bottom: 2px;
                                 }
 
                                 .transaction-code {
                                     font-size: 8px;
-                                    font-weight: bold;
                                     margin-bottom: 1px;
                                 }
 
@@ -1958,7 +2065,6 @@ createApp({
 
                                 .item-name {
                                     font-size: 8px;
-                                    font-weight: bold;
                                     word-break: break-word;
                                     margin-bottom: 1px;
                                 }
@@ -1970,7 +2076,6 @@ createApp({
                                 }
 
                                 .item-total {
-                                    font-weight: bold;
                                     white-space: nowrap;
                                 }
 
@@ -1989,7 +2094,6 @@ createApp({
                                     border-top: 1px solid #000;
                                     padding-top: 3px;
                                     margin-top: 3px;
-                                    font-weight: bold;
                                     font-size: 9px;
                                 }
 
@@ -2032,15 +2136,36 @@ createApp({
                             <hr>
 
                             <div class="receipt-items">
-                                ${transactionResult.value.items.map(item => `
-                                    <div class="receipt-item">
-                                        <div class="item-name">${item.product_store.name}</div>
-                                        <div class="item-row">
-                                            <span>${item.quantity} x ${formatCurrency(item.unit_price)}</span>
-                                            <span class="item-total">${formatCurrency(item.subtotal)}</span>
+                                ${transactionResult.value.items.map(item => {
+                                    const snap = cartSnapshot.value.find(s => s.product_store_id === item.product_store_id);
+                                    const hasDisc = snap && snap.discountPercent > 0;
+                                    const discType = snap?.discountType || 'percent';
+                                    const discLabel = hasDisc
+                                        ? (discType === 'flat' ? `-${formatCurrency(snap.discountPercent)}` : `-${snap.discountPercent}%`)
+                                        : '';
+                                    const priceLabel = hasDisc
+                                        ? `${formatCurrency(snap.originalPrice)}`
+                                        : formatCurrency(item.unit_price);
+                                    const discAmount = hasDisc
+                                        ? (discType === 'flat' ? snap.discountPercent * item.quantity : snap.originalPrice * snap.discountPercent / 100 * item.quantity)
+                                        : 0;
+                                    const discLine = hasDisc
+                                        ? `<div class="item-row" style="color:#555;">
+                                               <span>Diskon ${discType === 'flat' ? '' : snap.discountPercent + '%'}</span>
+                                               <span>-${formatCurrency(discAmount)}</span>
+                                           </div>`
+                                        : '';
+                                    return `
+                                        <div class="receipt-item">
+                                            <div class="item-name">${item.product_store.name}</div>
+                                            <div class="item-row">
+                                                <span>${item.quantity} x ${priceLabel}</span>
+                                                <span class="item-total">${formatCurrency(item.subtotal)}</span>
+                                            </div>
+                                            ${discLine}
                                         </div>
-                                    </div>
-                                `).join('')}
+                                    `;
+                                }).join('')}
                             </div>
 
                             <hr>
@@ -2055,8 +2180,8 @@ createApp({
                                     <span>${formatCurrency(transactionResult.value.tax_amount)}</span>
                                 </div>
                                 <div class="total-row total-line">
-                                    <strong>TOTAL:</strong>
-                                    <strong>${formatCurrency(transactionResult.value.final_amount)}</strong>
+                                    <p>TOTAL:</p>
+                                    <p>${formatCurrency(transactionResult.value.final_amount)}</p>
                                 </div>
                                 ${transactionResult.value.payment_method === 'cash' ? `
                                     <div class="total-row" style="margin-top: 4px;">
@@ -2150,23 +2275,111 @@ createApp({
             }
         };
 
-        // Keyboard shortcut for space bar
-        const handleKeyPress = (event) => {
-            if (event.code === 'Space' && event.target.tagName !== 'INPUT' && event.target.tagName !== 'TEXTAREA') {
+        // Payment methods order for keyboard navigation
+        const paymentMethodsList = ['cash', 'debit_credit', 'qris'];
+
+        // Focus first input of the currently selected payment method
+        const focusFirstPaymentField = () => {
+            let id = null;
+            if (paymentMethod.value === 'cash') id = 'cashAmountInput';
+            else if (paymentMethod.value === 'debit_credit') id = 'cardNumberInput';
+            else if (paymentMethod.value === 'qris') id = 'qrisBankInput';
+            if (id) document.getElementById(id)?.focus();
+        };
+
+        // Clear the focused payment input and its Vue ref, then blur it
+        const clearPaymentField = (el) => {
+            const id = el?.id;
+            if (id === 'cashAmountInput') cashAmount.value = 0;
+            else if (id === 'cardNumberInput') paymentDetails.value.cardNumber = '';
+            else if (id === 'cardBankInput') paymentDetails.value.bankName = '';
+            else if (id === 'cardEdcInput') paymentDetails.value.cardEdcApprover = '';
+            else if (id === 'qrisBankInput') paymentDetails.value.bankName = '';
+            el?.blur();
+        };
+
+        // Unified keyboard handler
+        const handleKeyDown = (event) => {
+            const tag = event.target.tagName;
+            const isInInput = tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT';
+            const isProductModalOpen = document.getElementById('productSelectionModal')?.classList.contains('show');
+            const isConfirmModalOpen  = document.getElementById('paymentConfirmationModal')?.classList.contains('show');
+
+            // Product modal keyboard nav is handled by handleProductModalKeydown — skip here
+            if (isProductModalOpen) return;
+
+            // ── SPACE ──────────────────────────────────────────────────────────────
+            if (event.code === 'Space') {
+                if (isInInput) return; // let normal typing/behaviour happen
                 event.preventDefault();
-                nextStep();
+                const isSuccessModalOpen = document.getElementById('successModal')?.classList.contains('show');
+                // Block Space while payment is processing
+                if (isLoading.value) return;
+                if (isSuccessModalOpen) {
+                    printReceipt();
+                } else if (isConfirmModalOpen) {
+                    if (!isCheckingStock.value) confirmPayment();
+                } else {
+                    nextStep();
+                }
+                return;
+            }
+
+            // ── ESCAPE ─────────────────────────────────────────────────────────────
+            if (event.code === 'Escape') {
+                if (currentStep.value === 1 && isInInput) {
+                    event.target.blur(); // exit barcode input focus
+                } else if (currentStep.value === 2 && isInInput) {
+                    event.preventDefault();
+                    clearPaymentField(event.target); // clear & blur the focused payment field
+                }
+                return;
+            }
+
+            // ── ENTER — Step 2 ────────────────────────────────────────────────────
+            if (event.code === 'Enter' && currentStep.value === 2 && !isConfirmModalOpen) {
+                event.preventDefault();
+                if (isInInput) {
+                    // Keluar dari payment field → user bisa tekan Space untuk lanjut
+                    event.target.blur();
+                } else {
+                    // Belum di input → fokus ke field pertama metode yang dipilih
+                    focusFirstPaymentField();
+                }
+                return;
+            }
+
+            // ── ARROW KEYS — Step 2 payment method navigation ─────────────────────
+            if (currentStep.value === 2 && !isInInput && !isConfirmModalOpen) {
+                const currentIdx = paymentMethodsList.indexOf(paymentMethod.value);
+                if (event.code === 'ArrowDown') {
+                    event.preventDefault();
+                    paymentMethod.value = paymentMethodsList[Math.min(currentIdx + 1, paymentMethodsList.length - 1)];
+                } else if (event.code === 'ArrowUp') {
+                    event.preventDefault();
+                    paymentMethod.value = paymentMethodsList[Math.max(currentIdx - 1, 0)];
+                }
             }
         };
 
         onMounted(() => {
             // Auto-focus barcode input
-            const barcodeInputEl = document.querySelector('input[v-model="barcodeInput"]');
-            if (barcodeInputEl) {
-                barcodeInputEl.focus();
-            }
+            const barcodeInputEl = document.getElementById('barcodeSearchInput');
+            if (barcodeInputEl) barcodeInputEl.focus();
 
-            // Add keyboard event listener
-            document.addEventListener('keypress', handleKeyPress);
+            // Unified keyboard handler (replaces old keypress handler)
+            document.addEventListener('keydown', handleKeyDown);
+
+            // Product modal keyboard navigation
+            $('#productSelectionModal').on('shown.bs.modal', () => {
+                selectedProductIndex.value = 0;
+                document.addEventListener('keydown', handleProductModalKeydown);
+            });
+            $('#productSelectionModal').on('hidden.bs.modal', () => {
+                document.removeEventListener('keydown', handleProductModalKeydown);
+                selectedProductIndex.value = -1;
+                focusBarcodeInput();
+            });
 
             // Load drafts
             setLoading(true, 'Memuat data...');
@@ -2227,7 +2440,17 @@ createApp({
             startNewTransaction,
             resetTransaction,
             printReceipt,
-            sendReceiptByEmail
+            sendReceiptByEmail,
+            selectedProductIndex,
+            cartSnapshot,
+            effectiveItemPrice,
+            updateDiscount,
+            toggleDiscountType,
+            getSnapshotItem,
+            focusBarcodeInput,
+            focusFirstPaymentField,
+            clearPaymentField,
+            paymentMethodsList,
         };
     }
 }).mount('#app');

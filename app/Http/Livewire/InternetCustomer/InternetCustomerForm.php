@@ -650,7 +650,7 @@ class InternetCustomerForm extends Component
         $rules = [
             'name'         => 'required|min:3',
             'email'        => ['required', 'email'],
-            'phone_number' => 'required|string',
+            'phone_number' => ['required', 'string', 'regex:/^[0-9]+$/'],
             'address'      => 'required|min:10',
             'ktp_number'   => ['required', 'digits:16'],
             'ktp_photo'    => 'required|file|mimes:jpg,jpeg,png,pdf|max:2048',
@@ -665,6 +665,8 @@ class InternetCustomerForm extends Component
             'email.unique' => 'Email ini sudah terdaftar. Silakan gunakan email lain atau hubungi admin jika ini adalah akun Anda.',
             'email.required' => 'Email wajib diisi.',
             'email.email' => 'Format email tidak valid.',
+            'phone_number.required' => 'Nomor telepon wajib diisi.',
+            'phone_number.regex' => 'Nomor telepon hanya boleh berisi angka, tanpa simbol.',
             'ktp_number.digits' => 'Nomor KTP harus 16 digit.',
             'ktp_number.required' => 'Nomor KTP wajib diisi.',
             'ktp_photo.required' => 'Foto KTP wajib diupload.',

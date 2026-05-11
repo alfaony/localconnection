@@ -4,28 +4,14 @@ namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
 use App\Models\EmployeeChecking;
-use Kreait\Firebase\Factory;
-use Kreait\Firebase\Exception\FirebaseException;
+use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
+use App\Events\EmployeeCheckinDeactivated;
 
 class DeactivateCheckin extends Command
 {
     protected $signature = 'checkin:deactivateAndRemove';
-    protected $description = 'Deactivate check-ins and remove them from Firebase after the check-in timeout period';
-
-    protected $firebase;
-
-    public function __construct()
-    {
-        parent::__construct();
-
-        // Initialize Firebase
-        $firebase = (new Factory)
-        ->withServiceAccount(storage_path(config('services.firebase.service_account')))
-        ->withDatabaseUri(config('services.firebase.service_database_checkin_url'));
-
-        $this->firebase = $firebase->createDatabase();
-    }
+    protected $description = 'Deactivate check-ins and broadcast deactivation via WebSocket after the check-in timeout period';
 
     public function handle()
     {
@@ -42,30 +28,20 @@ class DeactivateCheckin extends Command
             $currentTime = Carbon::now()->tz('Asia/Jakarta')->format('H:i');
 
             // If the current time is greater than the timeout time, deactivate the check-in
-            if (isset($checkin->scheduled_timeout) &&  isset($timeoutTime) && $currentTime == $timeoutTime) {
-                // Update `is_active` to false in the local database
+            if (isset($checkin->scheduled_timeout) && isset($timeoutTime) && $currentTime == $timeoutTime) {
                 $checkin->is_active = false;
                 $checkin->save();
 
-                // Remove the record from Firebase
-                $this->removeFromFirebase($checkin);
+                try {
+                    broadcast(new EmployeeCheckinDeactivated($checkin->user_id, $checkin->id));
+                } catch (\Throwable $e) {
+                    Log::error('DeactivateCheckin broadcast gagal: ' . $e->getMessage());
+                }
 
-                $this->info("Check-in deactivated and removed from Firebase for user: {$checkin->user_id}");
+                $this->info("Check-in deactivated via WebSocket untuk user: {$checkin->user_id}");
             }
         }
 
-        $this->info('Check-in deactivations and removals processed successfully.');
-    }
-
-    private function removeFromFirebase($checkin)
-    {
-        // Try to remove from Firebase if available
-        if ($this->firebase) {
-            try {
-                $this->firebase->getReference('employee_checkins/' . $checkin->user_id . '/' . $checkin->id)->remove();
-            } catch (FirebaseException $e) {
-                $this->error("Failed to remove from Firebase for user {$checkin->user_id}: " . $e->getMessage());
-            }
-        }
+        $this->info('Check-in deactivations processed successfully.');
     }
 }

@@ -70,3 +70,8 @@ Broadcast::channel('ask-bos.{userId}', function ($user, $userId) {
 Broadcast::channel('bos.user.{userId}', function ($user, $userId) {
     return (int) $user->id === (int) $userId;
 });
+
+// Employee Check-in popup – hanya user ybs yang boleh listen
+Broadcast::channel('employee-checkin.{userId}', function ($user, $userId) {
+    return $user->id === $userId;
+});

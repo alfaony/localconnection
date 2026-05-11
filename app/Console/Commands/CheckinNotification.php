@@ -7,7 +7,9 @@ use App\Models\EmployeeChecking;
 use Kreait\Firebase\Factory;
 use Kreait\Firebase\Messaging\CloudMessage;
 use Kreait\Firebase\Exception\FirebaseException;
+use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
+use App\Events\EmployeeCheckinActivated;
 
 class CheckinNotification extends Command
 {
@@ -20,14 +22,12 @@ class CheckinNotification extends Command
     {
         parent::__construct();
 
-        // Menginisialisasi Firebase Messaging
+        // Firebase Messaging dipertahankan untuk FCM push notification ke device mobile
         $firebase = (new Factory)
             ->withServiceAccount(storage_path(config('services.firebase.service_account')))
-            ->withProjectId(config('services.firebase.project_id'))
-            ->withDatabaseUri(config('services.firebase.service_database_checkin_url')); // Add database URL
+            ->withProjectId(config('services.firebase.project_id'));
 
         $this->messaging = $firebase->createMessaging();
-        $this->firebase = $firebase->createDatabase();
     }
 
     public function handle()
@@ -64,21 +64,11 @@ class CheckinNotification extends Command
 
     private function scheduleCheckinForUser($checkin)
     {
-        // Coba simpan di Firebase jika tersedia
-        if ($this->firebase) 
-        {
-            try {
-                $this->firebase->getReference('employee_checkins/'.$checkin->user_id.'/'.$checkin->id)->set([
-                    'local_id' => $checkin->id,
-                    'scheduled_time' => $checkin->scheduled_time,
-                    'scheduled_timeout' => $checkin->scheduled_timeout,
-                    'is_active' => true,
-                    'requires_photo' => $checkin->division->requires_photo,
-                    'requires_location' => $checkin->division->requires_location,
-                ]);
-            } catch (FirebaseException $e) {
-                $this->error("Gagal menyimpan di Firebase untuk user {$checkin->user_id}. Data tetap tersimpan di lokal.");
-            }
+        try {
+            broadcast(new EmployeeCheckinActivated($checkin));
+        } catch (\Throwable $e) {
+            Log::error('CheckinNotification broadcast gagal: ' . $e->getMessage());
+            $this->error("Gagal broadcast WebSocket untuk user {$checkin->user_id}: {$e->getMessage()}");
         }
     }
 

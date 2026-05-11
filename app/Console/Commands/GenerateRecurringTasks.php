@@ -84,8 +84,11 @@ class GenerateRecurringTasks extends Command
                 // Create new task
                 $newTask = $template->replicate();
                 $newTask->slug = $this->createUniqueSlug(DailyTask::class, $template->name);
+                $durationDays = $template->start_date && $template->end_date
+                    ? Carbon::parse($template->start_date)->diffInDays(Carbon::parse($template->end_date))
+                    : 0;
                 $newTask->start_date = $today;
-                $newTask->end_date = $today;
+                $newTask->end_date = $today->copy()->addDays($durationDays);
                 $newTask->recurring_rule_id = $rule->id;
                 $newTask->task_status_id = $todo->id;
                 $newTask->report_note = NULL;

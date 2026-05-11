@@ -8,6 +8,8 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Str;
 use Ramsey\Uuid\Uuid;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Auth;
+use App\Schemas\RoleSchema;
 
 use App\Schemas\ParamSchema;
 
@@ -74,11 +76,12 @@ class ScheduleOb extends Model
 
     public function scopeByCompany($query,$companyId)
     {
-        if($companyId)
+        if($companyId && Auth::user()->role->name != RoleSchema::ROOT)
         {
             return $query->whereHas('user', function ($query) use ($companyId) 
             {
-                $query->where('company_id', $companyId);
+                $companyIds = auth()->user()->accessibleCompanies->pluck('id')->push($companyId)->unique();
+                $query->whereIn('company_id', $companyIds);
             });
         }
     }

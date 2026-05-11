@@ -23,17 +23,47 @@ class ScheduleObController extends Controller
      */
     public function index()
     {
-        $schedules = ScheduleOb::byCompany(Auth::user()->company_id)->with('user', 'shiftingOb')->get();
         $users = User::byCompany(Auth::user()->company_id)
             ->where(function ($query) {
-                $query->byRole(RoleSchema::OB)
+                $query
+                    ->byRole(RoleSchema::OB)
                     ->orWhere('is_shift_attendance', true);
             })
             ->get();
+
         $shifts = ShiftingOb::byCompany(Auth::user()->company_id)->get();
         $deleteAccess = Access::can('destroy', 'schedule_obs');
 
-        return view('schedule_ob.index', compact('schedules', 'users', 'shifts', 'deleteAccess'));
+        return view('schedule_ob.index', compact('users', 'shifts', 'deleteAccess'));
+    }
+
+    public function calendar(Request $request)
+    {
+        // if (!Access::can('calendar', 'schedule_obs')) {
+        //     return response()->json(['error' => 'Unauthorized'], 403);
+        // }
+
+        $query = ScheduleOb::byCompany(Auth::user()->company_id)
+            ->with('user', 'shiftingOb');
+
+        if ($request->filled('start') && $request->filled('end')) {
+            $query->whereBetween('date', [
+                Carbon::parse($request->start)->toDateString(),
+                Carbon::parse($request->end)->toDateString(),
+            ]);
+        }
+
+        return response()->json(
+            $query->get()->map(fn($s) => [
+                'id'    => $s->id,
+                'title' => $s->user->name . ' - ' . $s->shiftingOb->name,
+                'start' => $s->date,
+                'extendedProps' => [
+                    'user_id'        => $s->user_id,
+                    'shifting_ob_id' => $s->shifting_ob_id,
+                ],
+            ])
+        );
     }
 
     /**
@@ -52,34 +82,45 @@ class ScheduleObController extends Controller
         ]);
     
         DB::beginTransaction();
-    
+
         try {
             $startDate = Carbon::parse($request->start_date);
-            $endDate = Carbon::parse($request->end_date);
-    
-            // Check for conflicts in the date range
-            $conflict = ScheduleOb::where('user_id', $request->user_id)
-                // ->where('shifting_ob_id', $request->shifting_ob_id)
-                ->whereBetween('date', [$startDate, $endDate])
-                ->first();
-    
-            if ($conflict) 
-            {
-                DB::rollBack();
-                return redirect()->back()->with('error', "Pengguna sudah dijadwalkan untuk shift ini pada tanggal {$conflict->date}.");
-            }
-    
-            // Create schedules for each date in the range
-            for ($date = $startDate; $date->lte($endDate); $date->addDay()) {
+            $endDate   = Carbon::parse($request->end_date);
+
+            // Ambil semua tanggal yang sudah ada untuk user+shift ini dalam range
+            $existingDates = ScheduleOb::where('user_id', $request->user_id)
+                ->where('shifting_ob_id', $request->shifting_ob_id)
+                ->whereBetween('date', [$startDate->toDateString(), $endDate->toDateString()])
+                ->pluck('date')
+                ->map(fn($d) => Carbon::parse($d)->toDateString())
+                ->toArray();
+
+            $created = 0;
+            for ($date = $startDate->copy(); $date->lte($endDate); $date->addDay()) {
+                if (in_array($date->toDateString(), $existingDates)) {
+                    continue;
+                }
                 ScheduleOb::create([
-                    'user_id' => $request->user_id,
+                    'user_id'        => $request->user_id,
                     'shifting_ob_id' => $request->shifting_ob_id,
-                    'date' => $date->toDateString(),
+                    'date'           => $date->toDateString(),
                 ]);
+                $created++;
             }
-    
+
             DB::commit();
-            return redirect()->route('schedule-ob.index')->with('success', 'Penjadwalan berhasil dibuat.');
+
+            if ($created === 0) {
+                return redirect()->route('schedule-ob.index')->with('error', 'Semua tanggal dalam range ini sudah dijadwalkan untuk shift yang sama.');
+            }
+
+            $skipped = count($existingDates);
+            $message = "Penjadwalan berhasil dibuat ($created hari).";
+            if ($skipped > 0) {
+                $message .= " $skipped tanggal dilewati karena sudah ada.";
+            }
+
+            return redirect()->route('schedule-ob.index')->with('success', $message);
         } catch (\Exception $e) {
             DB::rollBack();
             return redirect()->back()->with('error', 'Terjadi kesalahan saat membuat penjadwalan.');
@@ -128,7 +169,7 @@ class ScheduleObController extends Controller
     private function checkScheduleConflict($userId, $shiftingObId, $date, $scheduleId = null)
     {
         $query = ScheduleOb::where('user_id', $userId)
-            // ->where('shifting_ob_id', $shiftingObId)
+            ->where('shifting_ob_id', $shiftingObId)
             ->where('date', $date);
 
         if ($scheduleId) {

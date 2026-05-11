@@ -31,7 +31,7 @@ class CheckWeeklyReportCompliance extends Command
             $now = Carbon::now();
             $lastWeek = $now->copy()->subWeek();
             $week = $lastWeek->isoWeek();
-            $year = $lastWeek->year;
+            $year = $lastWeek->isoWeekYear();
     
             $results = [];
     

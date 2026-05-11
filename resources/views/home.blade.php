@@ -581,7 +581,7 @@
         @canAccess('showScheduleOb','homes')
         <div class="card border-0 shadow-sm mb-4" style="border-radius: 14px;">
             <div class="card-header bg-white border-bottom pt-4 px-4">
-                <h5 class="fw-bold mb-0"><i class="far fa-calendar-alt text-primary me-2"></i> Jadwal OB</h5>
+                <h5 class="fw-bold mb-0"><i class="far fa-calendar-alt text-primary me-2"></i> Jadwal Shifting</h5>
             </div>
             <div class="card-body p-4">
                 <div id="calendar" class="rounded-3 border p-2 bg-light"></div>
@@ -1757,10 +1757,10 @@ document.addEventListener('DOMContentLoaded', function() {
         initialView: 'dayGridMonth',
         events: [
             @foreach($schedules as $schedule) {
-                title: '{{ $schedule->user->name }} - {{ $schedule->shiftingOb->name }}',
+                title: '{{ $schedule?->user?->name }} - {{ $schedule?->shiftingOb?->name }}',
                 start: '{{ $schedule->date }}',
                 description: `
-                            <b>User:</b> {{ $schedule->user->name }}<br>
+                            <b>User:</b> {{ $schedule->user?->name }}<br>
                             <b>Shift:</b> {{ $schedule->shiftingOb->name }}<br>
                             <b>Clock In:</b> {{ $schedule->shiftingOb->clock_in }}<br>
                             <b>Clock Out:</b> {{ $schedule->shiftingOb->clock_out }}<br>
@@ -1791,85 +1791,85 @@ document.addEventListener('DOMContentLoaded', function() {
 
 @canAccess('softwareSharing','homes')
 <script>
-$(document).ready(function() { loadDashboardData(); });
+    $(document).ready(function() { loadDashboardData(); });
 
-async function loadDashboardData() {
-    try {
-        const response = await $.ajax({
-            url: '{{ route('home.softwareSharing') }}',
-            type: 'GET'
+    async function loadDashboardData() {
+        try {
+            const response = await $.ajax({
+                url: '{{ route('home.softwareSharing') }}',
+                type: 'GET'
+            });
+
+            if (response.success) {
+                updateStatistics(response.data.statistics);
+                renderSubscriptions(response.data.subscriptions);
+                renderExpired(response.data.recent_expired);
+            }
+        } catch (error) {
+            console.error('Failed to load software sharing data');
+        }
+    }
+
+    function updateStatistics(stats) {
+        $('#stat-active').text(stats.active_subscriptions);
+        $('#stat-expiring').text(stats.expiring_soon);
+        $('#stat-expired').text(stats.expired_subscriptions);
+        $('#stat-softwares').text(stats.total_softwares);
+
+        if (stats.expiring_soon > 0) {
+            $('#expiring-count').text(stats.expiring_soon);
+            $('#expiring-alert').show();
+        }
+    }
+
+    function renderSubscriptions(subscriptions) {
+        const container = $('#active-subscriptions-container');
+        if (subscriptions.length === 0) {
+            container.html(`<div class="text-center py-5"><p class="text-muted">No active subscriptions yet.</p></div>`);
+            return;
+        }
+
+        let html = `<div class="table-responsive"><table class="table mb-0"><thead><tr><th>Software</th><th>Package</th><th>Expires</th><th class="text-center">Status</th><th class="text-center">Actions</th></tr></thead><tbody>`;
+
+        subscriptions.forEach(sub => {
+            const statusBadge = sub.status === 'active' ? '<span class="badge bg-success">Active</span>' : '<span class="badge bg-danger">Expired</span>';
+            const expiringBadge = sub.is_expiring_soon ? `<br><span class="badge bg-warning text-dark"><i class="fas fa-exclamation-triangle"></i> ${sub.days_until_expiry} days</span>` : '';
+            const renewButton = sub.is_expiring_soon ? `<a href="${sub.renew_url}" class="btn btn-sm btn-warning"><i class="fas fa-sync"></i></a>` : '';
+
+            html += `
+                <tr>
+                    <td class="fw-bold">${sub.software.nama}</td>
+                    <td><span class="badge bg-info">${sub.package.nama}</span></td>
+                    <td>${sub.tanggal_expired}${expiringBadge}</td>
+                    <td class="text-center">${statusBadge}</td>
+                    <td class="text-center">
+                        <div class="btn-group btn-group-sm">
+                            <a href="${sub.detail_url}" class="btn btn-info text-white"><i class="fas fa-eye"></i></a>
+                            ${renewButton}
+                        </div>
+                    </td>
+                </tr>`;
         });
 
-        if (response.success) {
-            updateStatistics(response.data.statistics);
-            renderSubscriptions(response.data.subscriptions);
-            renderExpired(response.data.recent_expired);
-        }
-    } catch (error) {
-        console.error('Failed to load software sharing data');
-    }
-}
-
-function updateStatistics(stats) {
-    $('#stat-active').text(stats.active_subscriptions);
-    $('#stat-expiring').text(stats.expiring_soon);
-    $('#stat-expired').text(stats.expired_subscriptions);
-    $('#stat-softwares').text(stats.total_softwares);
-
-    if (stats.expiring_soon > 0) {
-        $('#expiring-count').text(stats.expiring_soon);
-        $('#expiring-alert').show();
-    }
-}
-
-function renderSubscriptions(subscriptions) {
-    const container = $('#active-subscriptions-container');
-    if (subscriptions.length === 0) {
-        container.html(`<div class="text-center py-5"><p class="text-muted">No active subscriptions yet.</p></div>`);
-        return;
+        html += `</tbody></table></div>`;
+        container.html(html);
     }
 
-    let html = `<div class="table-responsive"><table class="table mb-0"><thead><tr><th>Software</th><th>Package</th><th>Expires</th><th class="text-center">Status</th><th class="text-center">Actions</th></tr></thead><tbody>`;
+    function renderExpired(expired) {
+        if (expired.length === 0) return;
+        $('#expired-card').show();
+        const container = $('#expired-subscriptions-container');
 
-    subscriptions.forEach(sub => {
-        const statusBadge = sub.status === 'active' ? '<span class="badge bg-success">Active</span>' : '<span class="badge bg-danger">Expired</span>';
-        const expiringBadge = sub.is_expiring_soon ? `<br><span class="badge bg-warning text-dark"><i class="fas fa-exclamation-triangle"></i> ${sub.days_until_expiry} days</span>` : '';
-        const renewButton = sub.is_expiring_soon ? `<a href="${sub.renew_url}" class="btn btn-sm btn-warning"><i class="fas fa-sync"></i></a>` : '';
-
-        html += `
-            <tr>
-                <td class="fw-bold">${sub.software.nama}</td>
-                <td><span class="badge bg-info">${sub.package.nama}</span></td>
-                <td>${sub.tanggal_expired}${expiringBadge}</td>
-                <td class="text-center">${statusBadge}</td>
-                <td class="text-center">
-                    <div class="btn-group btn-group-sm">
-                        <a href="${sub.detail_url}" class="btn btn-info text-white"><i class="fas fa-eye"></i></a>
-                        ${renewButton}
-                    </div>
-                </td>
-            </tr>`;
-    });
-
-    html += `</tbody></table></div>`;
-    container.html(html);
-}
-
-function renderExpired(expired) {
-    if (expired.length === 0) return;
-    $('#expired-card').show();
-    const container = $('#expired-subscriptions-container');
-
-    let html = `<div class="table-responsive"><table class="table table-sm mb-0"><thead><tr><th>Software</th><th>Package</th><th>Expired</th><th class="text-center">Action</th></tr></thead><tbody>`;
-    
-    expired.forEach(sub => {
-        html += `<tr><td>${sub.software.nama}</td><td>${sub.package.nama}</td><td>${sub.tanggal_expired}</td>
-                 <td class="text-center"><a href="${sub.software_url}" class="btn btn-sm btn-outline-success"><i class="fas fa-redo"></i> Renew</a></td></tr>`;
-    });
-    
-    html += `</tbody></table></div>`;
-    container.html(html);
-}
+        let html = `<div class="table-responsive"><table class="table table-sm mb-0"><thead><tr><th>Software</th><th>Package</th><th>Expired</th><th class="text-center">Action</th></tr></thead><tbody>`;
+        
+        expired.forEach(sub => {
+            html += `<tr><td>${sub.software.nama}</td><td>${sub.package.nama}</td><td>${sub.tanggal_expired}</td>
+                    <td class="text-center"><a href="${sub.software_url}" class="btn btn-sm btn-outline-success"><i class="fas fa-redo"></i> Renew</a></td></tr>`;
+        });
+        
+        html += `</tbody></table></div>`;
+        container.html(html);
+    }
 </script>
 @endcanAccess
 @stop
