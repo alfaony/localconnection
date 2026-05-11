@@ -489,6 +489,46 @@ class MidtransService
         }
     }
 
+    public function testConnectionCheck()
+    {
+        if (!$this->isActive()) {
+            return [
+                'success' => false,
+                'message' => 'Midtrans credentials not configured'
+            ];
+        }
+
+        try {
+            // Test with minimal transaction
+            $params = array(
+            'transaction_details' => array(
+                'order_id' => rand(),
+                'gross_amount' => 10000,
+            ),
+            'customer_details' => array(
+                'first_name' => 'budi',
+                'last_name' => 'pratama',
+                'email' => 'budi.pra@example.com',
+                'phone' => '08111222333',
+            ),
+        );
+
+        $response = Http::withHeaders([
+                'Accept' => 'application/json',
+                'Content-Type' => 'application/json',
+                'Authorization' => 'Basic ' . base64_encode($this->serverKey . ':'),
+            ])->post($this->getApiUrl(), $params);
+
+            return $response->status() == 201 ? ['success' => true ] : ['success' => false ];
+
+        } catch (\Exception $e) {
+            return [
+                'success' => false,
+                'message' => $e->getMessage()
+            ];
+        }
+    }
+
     /**
      * Clear settings cache
      */

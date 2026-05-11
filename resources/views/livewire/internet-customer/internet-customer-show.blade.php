@@ -661,9 +661,18 @@
                                 <div class="col-md-4 mb-2" id="midtrans-method-wrapper" style="display: none;">
                                     <div class="card payment-method-card" onclick="selectPaymentMethod('midtrans')" id="midtrans-card">
                                         <div class="card-body text-center py-4">
-                                            <i class="fas fa-credit-card fa-3x text-warning mb-2"></i>
-                                            <h6 class="mb-1">Midtrans Payment</h6>
-                                            <small class="text-muted">Berbagai metode pembayaran</small>
+                                            <i class="fas fa-wallet fa-3x text-info mb-2"></i>
+                                            <h6 class="mb-1">Midtrans SNAP</h6>
+                                            <small class="text-muted">VA, E-Wallet, Credit Card, QRIS</small>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4 mb-2" id="qris-gopay-method-wrapper" style="display: none;">
+                                    <div class="card payment-method-card" onclick="selectPaymentMethod('qris')" id="qris-gopay-card">
+                                        <div class="card-body text-center py-4">
+                                            <i class="fas fa-qrcode fa-3x text-success mb-2"></i>
+                                            <h6 class="mb-1">QRIS GoPay</h6>
+                                            <small class="text-muted">Scan QR via GoPay / QRIS</small>
                                         </div>
                                     </div>
                                 </div>
@@ -874,38 +883,38 @@
                         <!-- Midtrans Payment Section -->
                         <div id="midtrans-payment-section" style="display: none;">
                             <div class="text-center p-4">
-                                <i class="fas fa-credit-card fa-4x text-warning mb-3"></i>
-                                <h5 class="mb-3">Pembayaran via Midtrans</h5>
+                                <i class="fas fa-wallet fa-4x text-info mb-3"></i>
+                                <h5 class="mb-3">Pembayaran Digital via Midtrans SNAP</h5>
                                 <p class="text-muted mb-4">
                                     Anda akan diarahkan ke halaman pembayaran Midtrans untuk menyelesaikan transaksi
                                 </p>
                                 <div class="mb-4">
                                     <small class="text-muted d-block mb-2">Metode pembayaran yang tersedia:</small>
                                     <div class="d-flex justify-content-center flex-wrap">
-                                        <span class="badge badge-warning m-1 p-2">
+                                        <span class="badge badge-info m-1 p-2">
                                             <i class="fas fa-university mr-1"></i>Virtual Account
                                         </span>
-                                        <span class="badge badge-warning m-1 p-2">
-                                            <i class="fas fa-wallet mr-1"></i>E-Wallet
+                                        <span class="badge badge-info m-1 p-2">
+                                            <i class="fas fa-wallet mr-1"></i>E-Wallet (GoPay, OVO, Dana)
                                         </span>
-                                        <span class="badge badge-warning m-1 p-2">
+                                        <span class="badge badge-info m-1 p-2">
                                             <i class="fas fa-credit-card mr-1"></i>Credit Card
                                         </span>
-                                        <span class="badge badge-warning m-1 p-2">
+                                        <span class="badge badge-info m-1 p-2">
                                             <i class="fas fa-qrcode mr-1"></i>QRIS
                                         </span>
                                     </div>
                                 </div>
-                                
-                                <button type="button" 
-                                        class="btn btn-warning btn-lg px-5" 
+
+                                <button type="button"
+                                        class="btn btn-info btn-lg px-5"
                                         onclick="initiateMidtransPayment()"
                                         id="midtrans-pay-button">
                                     <i class="fas fa-arrow-right mr-2"></i>Lanjutkan ke Pembayaran
                                 </button>
-                                
+
                                 <div id="midtrans-loading" class="mt-3" style="display: none;">
-                                    <i class="fas fa-spinner fa-spin fa-2x text-warning"></i>
+                                    <i class="fas fa-spinner fa-spin fa-2x text-info"></i>
                                     <p class="mt-2 text-muted">Membuat transaksi pembayaran...</p>
                                 </div>
 
@@ -913,6 +922,47 @@
                                     <small class="text-muted">
                                         <i class="fas fa-shield-alt mr-1"></i>
                                         Pembayaran dilindungi dan diproses oleh Midtrans
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- QRIS GoPay Payment Section -->
+                        <div id="qris-gopay-payment-section" style="display: none;">
+                            <div class="text-center p-4">
+                                <i class="fas fa-qrcode fa-4x text-success mb-3"></i>
+                                <h5 class="mb-3">Pembayaran QRIS GoPay</h5>
+                                <p class="text-muted mb-4">
+                                    Anda akan diarahkan ke halaman pembayaran QRIS GoPay untuk menyelesaikan transaksi
+                                </p>
+                                <div class="mb-4">
+                                    <small class="text-muted d-block mb-2">Metode pembayaran yang tersedia:</small>
+                                    <div class="d-flex justify-content-center flex-wrap">
+                                        <span class="badge badge-success m-1 p-2">
+                                            <i class="fas fa-qrcode mr-1"></i>QRIS
+                                        </span>
+                                        <span class="badge badge-success m-1 p-2">
+                                            <i class="fas fa-wallet mr-1"></i>GoPay
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <button type="button"
+                                        class="btn btn-success btn-lg px-5"
+                                        onclick="initiateQrisGopayPayment()"
+                                        id="qris-gopay-pay-button">
+                                    <i class="fas fa-qrcode mr-2"></i>Bayar dengan QRIS GoPay
+                                </button>
+
+                                <div id="qris-gopay-loading" class="mt-3" style="display: none;">
+                                    <i class="fas fa-spinner fa-spin fa-2x text-success"></i>
+                                    <p class="mt-2 text-muted">Membuat kode QRIS...</p>
+                                </div>
+
+                                <div class="mt-4">
+                                    <small class="text-muted">
+                                        <i class="fas fa-shield-alt mr-1"></i>
+                                        Pembayaran dilindungi dan diproses oleh Midtrans via GoPay QRIS
                                     </small>
                                 </div>
                             </div>
@@ -988,6 +1038,7 @@ document.addEventListener('livewire:load', function() {
     let selectedMonths = 1;
     let xenditActive = false;
     let midtransActive = false;
+    let qrisGopayActive = false;
     let monthlyPrice = 0;
     let packageName = '';
     let discountEnabled = false;
@@ -1138,24 +1189,24 @@ document.addEventListener('livewire:load', function() {
         const manualCard = document.getElementById('manual-card');
         if (method === 'manual' && !manualCard) {
             console.warn('Manual payment is disabled, selecting alternative method');
-            // Try to select xendit or midtrans instead
-            const xenditSection = document.getElementById('xendit-payment-section');
-            const midtransSection = document.getElementById('midtrans-payment-section');
-            if (xenditSection) {
+            if (xenditActive) {
                 method = 'xendit';
-            } else if (midtransSection) {
+            } else if (midtransActive) {
                 method = 'midtrans';
+            } else if (qrisGopayActive) {
+                method = 'qris';
             } else {
                 console.error('No payment method available');
                 return;
             }
         }
-        
+
         currentPaymentMethod = method;
-        
+
         const xenditCard = document.getElementById('xendit-card');
         const midtransCard = document.getElementById('midtrans-card');
-        
+        const qrisGopayCard = document.getElementById('qris-gopay-card');
+
         // Reset all cards (only if they exist)
         if (manualCard) {
             manualCard.classList.remove('border-primary', 'bg-light');
@@ -1166,38 +1217,49 @@ document.addEventListener('livewire:load', function() {
             xenditCard.style.borderWidth = '1px';
         }
         if (midtransCard) {
-            midtransCard.classList.remove('border-warning', 'bg-light');
+            midtransCard.classList.remove('border-info', 'bg-light');
             midtransCard.style.borderWidth = '1px';
         }
-        
+        if (qrisGopayCard) {
+            qrisGopayCard.classList.remove('border-success', 'bg-light');
+            qrisGopayCard.style.borderWidth = '1px';
+        }
+
         // Get payment section elements (might not exist if disabled)
         const manualSection = document.getElementById('manual-payment-section');
         const xenditSection = document.getElementById('xendit-payment-section');
         const midtransSection = document.getElementById('midtrans-payment-section');
-        
+        const qrisGopaySection = document.getElementById('qris-gopay-payment-section');
+
+        // Hide all sections first
+        if (manualSection) manualSection.style.display = 'none';
+        if (xenditSection) xenditSection.style.display = 'none';
+        if (midtransSection) midtransSection.style.display = 'none';
+        if (qrisGopaySection) qrisGopaySection.style.display = 'none';
+
         // Apply active style to selected method
         if (method === 'manual' && manualCard) {
             manualCard.classList.add('border-primary', 'bg-light');
             manualCard.style.borderWidth = '3px';
             if (manualSection) manualSection.style.display = 'block';
-            if (xenditSection) xenditSection.style.display = 'none';
-            if (midtransSection) midtransSection.style.display = 'none';
         } else if (method === 'xendit') {
             if (xenditCard) {
                 xenditCard.classList.add('border-success', 'bg-light');
                 xenditCard.style.borderWidth = '3px';
             }
-            if (manualSection) manualSection.style.display = 'none';
             if (xenditSection) xenditSection.style.display = 'block';
-            if (midtransSection) midtransSection.style.display = 'none';
         } else if (method === 'midtrans') {
             if (midtransCard) {
-                midtransCard.classList.add('border-warning', 'bg-light');
+                midtransCard.classList.add('border-info', 'bg-light');
                 midtransCard.style.borderWidth = '3px';
             }
-            if (manualSection) manualSection.style.display = 'none';
-            if (xenditSection) xenditSection.style.display = 'none';
             if (midtransSection) midtransSection.style.display = 'block';
+        } else if (method === 'qris') {
+            if (qrisGopayCard) {
+                qrisGopayCard.classList.add('border-success', 'bg-light');
+                qrisGopayCard.style.borderWidth = '3px';
+            }
+            if (qrisGopaySection) qrisGopaySection.style.display = 'block';
         }
     };
 
@@ -1206,6 +1268,7 @@ document.addEventListener('livewire:load', function() {
         currentPurchaseId = event.detail.purchaseId || null;
         xenditActive = event.detail.xenditActive || false;
         midtransActive = event.detail.midtransActive || false;
+        qrisGopayActive = event.detail.qrisGopayActive || false;
         monthlyPrice = event.detail.monthlyPrice || 0;
         packageName = event.detail.packageName || '-';
         discountEnabled = event.detail.discountEnabled || false;
@@ -1265,35 +1328,33 @@ document.addEventListener('livewire:load', function() {
         
         
         // Show/hide Midtrans option
-        console.log('Midtrans Status Check:', {
-            midtransActive: midtransActive,
-            wrapperElement: document.getElementById('midtrans-method-wrapper'),
-            xenditActive: xenditActive
-        });
-        
         if (midtransActive) {
             document.getElementById('midtrans-method-wrapper').style.display = 'block';
-            console.log('✅ Midtrans wrapper shown');
         } else {
             document.getElementById('midtrans-method-wrapper').style.display = 'none';
-            console.log('❌ Midtrans wrapper hidden');
         }
-        
+
+        // Show/hide QRIS GoPay option
+        if (qrisGopayActive) {
+            document.getElementById('qris-gopay-method-wrapper').style.display = 'block';
+        } else {
+            document.getElementById('qris-gopay-method-wrapper').style.display = 'none';
+        }
+
         // Reset selections
         selectedMonths = 1;
         updateCustomMonths(1);
-        
+
         // Smart default payment method selection
         const manualCard = document.getElementById('manual-card');
         if (manualCard) {
-            // Manual payment is enabled, select it
             selectPaymentMethod('manual');
         } else if (xenditActive) {
-            // Manual disabled, but xendit active
             selectPaymentMethod('xendit');
         } else if (midtransActive) {
-            // Manual disabled, xendit disabled, but midtrans active
             selectPaymentMethod('midtrans');
+        } else if (qrisGopayActive) {
+            selectPaymentMethod('qris');
         } else {
             console.error('No payment method available!');
         }
@@ -1358,11 +1419,11 @@ document.addEventListener('livewire:load', function() {
     window.initiateMidtransPayment = function() {
         const button = document.getElementById('midtrans-pay-button');
         const loadingDiv = document.getElementById('midtrans-loading');
-        
+
         button.disabled = true;
         button.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Memproses...';
         loadingDiv.style.display = 'block';
-        
+
         @this.call('payWithMidtrans')
             .then(() => {
                 console.log('Redirecting to Midtrans...');
@@ -1371,6 +1432,28 @@ document.addEventListener('livewire:load', function() {
                 console.error('Error:', error);
                 button.disabled = false;
                 button.innerHTML = '<i class="fas fa-arrow-right mr-2"></i>Lanjutkan ke Pembayaran';
+                loadingDiv.style.display = 'none';
+                alert('Terjadi kesalahan. Silakan coba lagi.');
+            });
+    };
+
+    // Initiate QRIS GoPay payment
+    window.initiateQrisGopayPayment = function() {
+        const button = document.getElementById('qris-gopay-pay-button');
+        const loadingDiv = document.getElementById('qris-gopay-loading');
+
+        button.disabled = true;
+        button.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Memproses...';
+        loadingDiv.style.display = 'block';
+
+        @this.call('payWithQrisGopay')
+            .then(() => {
+                console.log('Redirecting to QRIS GoPay...');
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                button.disabled = false;
+                button.innerHTML = '<i class="fas fa-qrcode mr-2"></i>Bayar dengan QRIS GoPay';
                 loadingDiv.style.display = 'none';
                 alert('Terjadi kesalahan. Silakan coba lagi.');
             });
@@ -1780,6 +1863,11 @@ document.addEventListener('livewire:load', function() {
     .payment-method-card.border-success {
         border-color: #28a745 !important;
         background: linear-gradient(135deg, #f1f8f4 0%, #d4edda 100%);
+    }
+
+    .payment-method-card.border-info {
+        border-color: #17a2b8 !important;
+        background: linear-gradient(135deg, #f0fafc 0%, #d1ecf1 100%);
     }
 
     /* Bank Info */

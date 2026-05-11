@@ -545,11 +545,13 @@ class MeetingController extends Controller
                 ], 403);
             }
     
-            // ✅ Tandai hadir dan simpan waktu bergabung
-            $meeting->participants()->updateExistingPivot($authUser->id, [
-                'is_attended' => true,
-                'join_time' => now(),
-            ]);
+            // ✅ Tandai hadir dan simpan waktu bergabung (hanya untuk peserta di pivot, bukan host)
+            if ($isParticipant) {
+                $meeting->participants()->updateExistingPivot($authUser->id, [
+                    'is_attended' => true,
+                    'join_time' => now(),
+                ]);
+            }
     
             // ✅ Jika semua sudah hadir, tandai rapat selesai
             $meeting->status = 'completed';
