@@ -323,10 +323,12 @@
                         <div v-if="paymentMethod === 'cash'" class="form-group">
                             <label class="font-weight-bold">Jumlah Bayar</label>
                             <input id="cashAmountInput"
-                                   type="number" class="form-control form-control-lg"
+                                   type="number" class="form-control form-control-lg no-spinner"
                                    v-model="cashAmount"
                                    placeholder="Masukkan jumlah bayar"
-                                   :min="cashRoundedTotal">
+                                   :min="cashRoundedTotal"
+                                   @keydown.up.prevent
+                                   @keydown.down.prevent>
                             <div v-if="cashAmount > 0" class="mt-3 p-3 bg-light rounded">
                                 <div class="d-flex justify-content-between">
                                     <span>Kembalian:</span>

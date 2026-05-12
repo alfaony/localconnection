@@ -450,6 +450,16 @@
         display: none !important;
     }
 
+    /* Hide native number spinner buttons on cash input */
+    input[type=number].no-spinner::-webkit-inner-spin-button,
+    input[type=number].no-spinner::-webkit-outer-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
+    input[type=number].no-spinner {
+        -moz-appearance: textfield;
+    }
+
     .bg-danger-light {
         background-color: #fdecea;
         border-left: 3px solid #dc3545;
