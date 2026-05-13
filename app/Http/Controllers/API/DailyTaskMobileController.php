@@ -1292,9 +1292,9 @@ class DailyTaskMobileController extends BaseController
             $divisionIds = $user->divisions->pluck('id');
 
             $data = Objective::byCompany($user->company_id)
-                ->whereHas('division', function ($q) use ($divisionIds) {
-                    $q->whereIn('id', $divisionIds);
-                })
+                // ->whereHas('division', function ($q) use ($divisionIds) {
+                //     $q->whereIn('id', $divisionIds);
+                // })
                 ->get(['id', 'name']);
 
             return $this->sendResponse($data->toArray(), 'Daftar objektif berhasil diambil.');

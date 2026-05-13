@@ -77,8 +77,7 @@
                                         </div>
                                         <div class="form-group">
                                             <label for="assignment_user_id">Ditugaskan</label>
-                                            <select name="assignment_user_id[]" class="form-control select2" required>
-                                                <option value="" selected disabled>Pilih Ditugaskan</option>
+                                            <select name="assignment_user_id[0][]" class="form-control select2" multiple="multiple" required>
                                                 @foreach($users as $user)
                                                     <option value="{{ $user->id }}">{{ $user->name }}</option>
                                                 @endforeach
@@ -258,7 +257,8 @@
         // initializeSelect2();
         $('.select2').select2({
             placeholder: 'Pilih',
-            allowClear: true
+            allowClear: true,
+            width: '100%'
         });
         $('.category-select2').select2();
 
@@ -378,8 +378,7 @@
                                 </div>
                                 <div class="form-group">
                                     <label for="assignment_user_id">Ditugaskan</label>
-                                    <select name="assignment_user_id[]" class="form-control select3" required>
-                                        <option value="" selected disabled>Pilih Ditugaskan</option>
+                                    <select name="assignment_user_id[${newIndex}][]" class="form-control select3" multiple="multiple" required>
                                         @foreach($users as $user)
                                             <option value="{{ $user->id }}">{{ $user->name }}</option>
                                         @endforeach
@@ -454,7 +453,9 @@
         function initializeSelect2() 
         {
             $('.select3').select2({
-                placeholder: 'Pilih',
+                placeholder: 'Pilih User',
+                allowClear: true,
+                width: '100%'
             });
             $('.category-select3').select2();
 

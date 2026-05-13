@@ -39,8 +39,10 @@ class LoginController extends BaseController
     {
         if(Auth::attempt(['email' => $request->email, 'password' => $request->password])){ 
             $user = Auth::user(); 
+            $success['id'] =  $user->id;
             $success['token'] = $user->createToken('flutter-app-token')->accessToken;
             $success['name'] =  $user->name;
+            
 
             // $division = $user->divisions()->first();
             // if ($division) {
