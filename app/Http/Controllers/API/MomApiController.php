@@ -196,6 +196,104 @@ class MomApiController extends Controller
         }
     }
 
+
+    public function storeCustomMoM(Request $request)
+    {
+        $request->validate([
+            'user_id' => 'required|uuid|exists:users,id',
+            'name' => 'required|string',
+            'meeting_id' => 'nullable|exists:meetings,id',
+            'project_id' => 'nullable|uuid|exists:projects,id',
+            'mom_date' => 'required|date',
+            'notes' => 'nullable|string',
+            'agendas' => 'required|array',
+            'agendas.*.title' => 'required|string',
+            'agendas.*.discussion_notes' => 'nullable|string',
+            'agendas.*.tasks' => 'nullable|array',
+            'agendas.*.tasks.*.title' => 'required|string',
+            'agendas.*.tasks.*.start_date' => 'nullable|date',
+            'agendas.*.tasks.*.end_date' => 'nullable|date',
+            'agendas.*.tasks.*.user_id' => 'nullable|uuid|exists:users,id',
+            'agendas.*.tasks.*.objective_id' => 'nullable|uuid|exists:objectives,id',
+            'agendas.*.tasks.*.key_result_ids' => 'nullable|array',
+            'agendas.*.tasks.*.external_email' => 'nullable|email',
+        ]);
+
+        $targetUser = User::findOrFail($request->user_id);
+
+        DB::beginTransaction();
+        try {
+            $mom = Mom::create([
+                'name' => $request->name,
+                'company_id' => $targetUser->company_id,
+                'user_id' => $targetUser->id,
+                'meeting_id' => $request->meeting_id,
+                'project_id' => $request->project_id,
+                'mom_date' => $request->mom_date,
+                'notes' => $request->notes,
+            ]);
+
+            foreach ($request->agendas as $agendaData) {
+                $agenda = $mom->agendas()->create([
+                    'title' => $agendaData['title'],
+                    'discussion_notes' => $agendaData['discussion_notes'] ?? null,
+                ]);
+
+                foreach ($agendaData['tasks'] ?? [] as $taskData) {
+                    $dailyTask = null;
+                    if(isset($taskData['user_id']) && $taskData['user_id']) 
+                    {
+                        $requestDaily = new Request([
+                            'user_id' => $targetUserId,
+                            'assignment_user_id' => $taskData['user_id'],
+                            'start_date' => $taskData['start_date'] ?? Carbon::now(),
+                            'end_date' => $taskData['end_date'] ?? Carbon::now(),
+                            'project_id' => $request->project_id,
+                            'name' => $taskData['title'],
+                            'description' => $agendaData['discussion_notes'],
+                            'objective_id' => $taskData['objective_id'] ?? null,
+                            'key_results' => $taskData['key_result_ids'] ?? [],
+                        ]);
+
+                        $dailyTask = $this->storeDailytask($requestDaily);
+                    }
+
+                    $agenda->tasks()->create([
+                        'task_status_id' => TaskStatus::where('name', ParamSchema::TODO)->firstOrFail()->id,
+                        'title' => $taskData['title'],
+                        'description' => $agendaData['discussion_notes'],
+                        'start_date' => $taskData['start_date'] ?? null,
+                        'end_date' => $taskData['end_date'] ?? null,
+                        'external_email' => $taskData['external_email'] ?? null,
+                        'token' => isset($taskData['user_id']) && $taskData['user_id'] ? null : Str::uuid(),
+                        'daily_task_id' => $dailyTask ? $dailyTask->id : null
+                    ]);
+                }
+            }
+
+            \App\Helpers\ChallengeProgressHelper::userCheckAndGiveReward($targetUser->id);
+
+            DB::commit();
+            
+            $mom->load(['agendas.tasks', 'meeting', 'project']);
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'MoM berhasil disimpan!',
+                'data' => $mom
+            ], 201);
+        } catch (\Exception $e) {
+            // dd($e);
+            Log::error($e);
+            DB::rollBack();
+            return response()->json([
+                'success' => false,
+                'message' => 'Terjadi kesalahan saat menyimpan MoM',
+                'error' => $e->getMessage()
+            ], 422);
+        }
+    }
+
     /**
      * Display the specified resource.
      *
