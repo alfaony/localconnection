@@ -9,6 +9,20 @@
         style="display:none;">
     </div>
 
+    @if(Session::get('storeWithMessage'))
+    <div class="alert alert-info alert-dismissible mt-2">
+        <button type="button" class="close" data-dismiss="alert">&times;</button>
+        <i class="fas fa-inbox mr-1"></i>
+        {{ Session::get('storeWithMessage') }}
+    </div>
+    @endif
+    @if(Session::get('error'))
+    <div class="alert alert-danger alert-dismissible mt-2">
+        <button type="button" class="close" data-dismiss="alert">&times;</button>
+        {{ Session::get('error') }}
+    </div>
+    @endif
+
     <div class="row">
         <div class="col-md-12 mt-2">
 
@@ -55,8 +69,27 @@
                 @if($activeTab === 'active')
                 <div class="p-3">
 
-                    <!-- Filter Toggle -->
-                    <div class="d-flex justify-content-end mb-3">
+                    <!-- Filter Toggle + Export Buttons -->
+                    <div class="d-flex justify-content-end mb-3 gap-2">
+                        @canAccess('export', 'sales')
+                        @php
+                            $exportParams = http_build_query(array_filter([
+                                'search'         => $filter_search,
+                                'start_date'     => $filter_start_date,
+                                'end_date'       => $filter_end_date,
+                                'start_time'     => $filter_start_time,
+                                'end_time'       => $filter_end_time,
+                                'user_id'        => $filter_user_id,
+                                'payment_method' => $filter_payment_method,
+                            ]));
+                        @endphp
+                        <a href="{{ route('sales.export') }}?{{ $exportParams }}"
+                           class="btn btn-success btn-sm"
+                           title="Export Excel — hasil dikirim ke Inbox">
+                            <i class="fas fa-file-excel"></i> Export Excel
+                        </a>
+                        @endcanAccess
+
                         <button class="btn btn-outline-primary btn-sm" type="button" id="searchToggleBtn">
                             <i class="fas fa-filter"></i> Filter
                         </button>
@@ -879,4 +912,5 @@ hr{border:none;border-top:1px dashed #000;margin:4px 0}
     }
 }
 </script>
+
 @endpush

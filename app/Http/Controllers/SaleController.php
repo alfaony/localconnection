@@ -11,9 +11,11 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use App\Helpers\EmailNotifHelper;
-use App\Models\SettingCompany; // Assuming you have this model for SMTP configuration
+use App\Models\SettingCompany;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\URL;
+use Illuminate\Support\Facades\Log;
+use App\Jobs\ExportSaleJob;
 
 class SaleController extends Controller
 {
@@ -537,6 +539,34 @@ class SaleController extends Controller
                 'success' => false,
                 'message' => 'Terjadi kesalahan: ' . $e->getMessage()
             ], 500);
+        }
+    }
+
+    public function export(Request $request)
+    {
+        try {
+            $filters = $request->only([
+                'search', 'start_date', 'end_date',
+                'start_time', 'end_time', 'user_id', 'payment_method',
+            ]);
+
+            $companyIds = Auth::user()->accessibleCompanies
+                ->pluck('id')
+                ->push(Auth::user()->company_id)
+                ->unique()
+                ->values();
+
+            ExportSaleJob::dispatch($filters, Auth::user(), $companyIds);
+
+            return redirect()->back()->with('storeWithMessage', 'Export Sales sedang diproses. Anda akan menerima notifikasi inbox setelah selesai.');
+
+        } catch (\Exception $e) {
+            Log::error('Failed to dispatch sale export job', [
+                'error'   => $e->getMessage(),
+                'user_id' => Auth::id(),
+            ]);
+
+            return redirect()->back()->with('error', 'Gagal memulai export Sales.');
         }
     }
 }
