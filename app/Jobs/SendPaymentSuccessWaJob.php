@@ -93,9 +93,10 @@ class SendPaymentSuccessWaJob implements ShouldQueue
                 . "Durasi          : {$paymentMonths} bulan\n"
                 . "Total Dibayar  : {$amountPaid}\n\n"
                 . "📅 Langganan aktif hingga: *{$endBilling}*\n\n"
-                . "Terima kasih telah menggunakan layanan kami. 🙏\n\n"
-                . "*{$companyName}*";
-
+                . "Terima kasih atas perhatian dan kerjasama nya 🙏.\n\n"
+                . "*Hormat kami,*\n"
+                . "*Hikarinet by KAILI Global*";
+            
             $send = new Message($client);
             $send->single_text($userCustomer->phone_number, $message);
 
