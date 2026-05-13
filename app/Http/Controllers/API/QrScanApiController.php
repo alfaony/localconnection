@@ -373,13 +373,13 @@ class QrScanApiController extends Controller
 }
 
 
-    /**
-     * Get Detail Produk Toko by Barcode
-     */
     public function getProductStoreDetail($code)
     {
         try {
-            $product = ProductStore::where('barcode', $code)
+            $query = ProductStore::where(function ($q) use ($code) {
+                    $q->where('barcode', $code)
+                    ->orWhere('id', $code);
+                })
                 ->byCompany(Auth::user()->company_id)
                 ->with([
                     'category',
@@ -388,33 +388,59 @@ class QrScanApiController extends Controller
                     'rack.zone.warehouse',
                     'media' => fn($q) => $q->orderBy('order', 'asc'),
                     'creator'
-                ])
-                ->firstOrFail();
+                ]);
 
-            $data = [
-                ...$product->toArray(),
+            $products = $query->get();
 
-                'medias' => $product->media->map(fn($m) => [
-                    'file_path' => $m->file_path,
-                    'caption'   => $m->caption,
-                    'order'     => $m->order,
-                ]),
+            if ($products->isEmpty()) {
+                return response()->json(['success' => false, 'message' => 'Produk tidak ditemukan'], 404);
+            }
 
-                'user_name' => optional($product->creator)->name,
-            ];
+            $count = $products->count();
+
+            if ($count > 1) {
+                $dataList = $products->map(function ($product) {
+                    return $this->formatProductData($product);
+                });
+
+                return response()->json([
+                    'success' => true, 
+                    'count'   => $count, 
+                    'data'    => $dataList
+                ], 200);
+            }
+
+            $singleProduct = $products->first();
+            $data = $this->formatProductData($singleProduct);
 
             return response()->json(['success' => true, 'data' => $data], 200);
 
         } catch (\Exception $e) {
-            return response()->json(['success' => false, 'message' => 'Produk tidak ditemukan'], 404);
+            return response()->json(['success' => false, 'message' => 'Terjadi kesalahan server'], 500);
         }
+    }
+
+    private function formatProductData($product)
+    {
+        return [
+            ...$product->toArray(),
+            'medias' => $product->media->map(fn($m) => [
+                'file_path' => $m->file_path,
+                'caption'   => $m->caption,
+                'order'     => $m->order,
+            ]),
+            'user_name' => optional($product->creator)->name,
+        ];
     }
 
     public function updateProductStore(Request $request, $code)
     {
-        $product = ProductStore::where('barcode', $code)
-            ->byCompany(Auth::user()->company_id)
-            ->first();
+        $product = ProductStore::where(function ($q) use ($code) {
+            $q->where('barcode', $code)
+              ->orWhere('id', $code);
+        })
+        ->byCompany(Auth::user()->company_id)
+        ->first();
 
         if (!$product) {
             return response()->json(['success' => false, 'message' => 'Produk tidak ditemukan'], 404);
