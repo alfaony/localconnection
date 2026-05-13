@@ -83,17 +83,21 @@ class SendPaymentSuccessWaJob implements ShouldQueue
                 ? Carbon::parse($userCustomer->end_billing_date)->locale('id')->isoFormat('D MMMM Y')
                 : '-';
 
-            $message = "*Pembayaran Berhasil ✅*\n\n"
-                . "Yth. Bapak/Ibu *{$userCustomer->name}*,\n"
-                . "Pembayaran langganan internet Anda telah berhasil dikonfirmasi. 🎉\n\n"
-                . "📋 *Detail Pembayaran:*\n"
-                . "ID Pelanggan : {$internetCustomer->code}\n"
-                . "Paket           : {$packageName}\n"
-                . "Periode         : {$periodStart} - {$periodEnd}\n"
-                . "Durasi          : {$paymentMonths} bulan\n"
-                . "Total Dibayar  : {$amountPaid}\n\n"
-                . "📅 Langganan aktif hingga: *{$endBilling}*\n\n"
-                . "Terima kasih atas perhatian dan kerjasama nya 🙏.\n\n"
+           $message = "*Pembayaran Berhasil Diterima ✅*\n\n"
+                . "Yth. Bapak/Ibu *{$userCustomer->name}*,\n\n"
+                . "Terima kasih atas pembayaran Anda. Konfirmasi pembayaran langganan internet telah berhasil kami proses. 🎉\n\n"
+                . "📋 *Rincian Pembayaran:*\n"
+                . "━━━━━━━━━━━━━━━━━━━\n"
+                . "ID Pelanggan : *{$internetCustomer->code}*\n"
+                . "Paket        : {$packageName}\n"
+                . "Periode      : {$periodStart} - {$periodEnd}\n"
+                . "Durasi       : {$paymentMonths} bulan\n"
+                . "Total Bayar  : *{$amountPaid}*\n"
+                . "━━━━━━━━━━━━━━━━━━━\n\n"
+                . "📅 *Masa Aktif Hingga: {$endBilling}*\n\n"
+                . "Layanan internet Anda akan segera aktif kembali secara otomatis. Apabila terdapat kendala atau pertanyaan lebih lanjut, silakan hubungi pusat bantuan kami di:\n"
+                . "🌐 https://support.hikari.net.id\n\n"
+                . "Terima kasih telah memercayakan kebutuhan koneksi internet Anda kepada kami. 🙏\n\n"
                 . "*Hormat kami,*\n"
                 . "*Hikarinet by KAILI Global*";
             
