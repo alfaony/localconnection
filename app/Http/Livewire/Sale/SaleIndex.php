@@ -327,6 +327,8 @@ class SaleIndex extends Component
 
     private function saleSubQuery($q, $companyId)
     {
+        $companyIds = auth()->user()->accessibleCompanies->pluck('id')->push($companyId)->unique();
+
         $q->where('status', 'completed')
           ->whereNull('deleted_at')
           ->when($this->ring_start_date,     fn ($q) => $q->whereDate('created_at', '>=', $this->ring_start_date))
@@ -335,7 +337,7 @@ class SaleIndex extends Component
           ->when($this->ring_end_time,       fn ($q) => $q->whereTime('created_at', '<=', $this->ring_end_time))
           ->when($this->ring_payment_method, fn ($q) => $q->where('payment_method', $this->ring_payment_method))
           ->when($this->ring_user_id,        fn ($q) => $q->where('user_id', $this->ring_user_id))
-          ->whereHas('user', fn ($q) => $q->where('company_id', $companyId));
+          ->whereHas('user', fn ($q) => $q->whereIn('company_id', $companyIds));
     }
 
     private function productStoreSubQuery($q)
