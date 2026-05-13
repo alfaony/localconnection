@@ -376,7 +376,7 @@ class InternetCustomerForm extends Component
 
     public function mount($companyId)
     {
-        $company = Company::where('slug', $companyId)->first();
+        $company = Company::resolveBySlug($companyId);
 
         if(!$company) {
             return redirect()->route('public.error', ['code' => 403])->with([
@@ -388,7 +388,7 @@ class InternetCustomerForm extends Component
 
         $this->company_id = $company->id;
         $this->company_name = $company->name;
-        $this->company_slug = $company->slug;
+        $this->company_slug = $company->public_slug;
         // provinces & internetPackages diload di render() agar selalu fresh dan tidak konflik dengan Livewire state
 
         // Check Xendit status

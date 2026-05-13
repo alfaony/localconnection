@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\CompanyRequest;
+use App\Models\CompanyCustomSlug;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -23,7 +24,7 @@ class CompanyController extends Controller
      */
     public function index()
     {
-        $company = Company::paginate(10);
+        $company = Company::with('customSlugs')->paginate(10);
         $agreementTemplate = config('custom.agreementTemplate');
         return view('company.index',compact('company', 'agreementTemplate'));
     }
@@ -327,6 +328,39 @@ class CompanyController extends Controller
         $company->save();
 
         return redirect()->to(route('company.index'))->with('update',true);
+    }
+
+    public function storeCustomSlug(Request $request, Company $company)
+    {
+        $request->validate([
+            'slug' => [
+                'required',
+                'string',
+                'max:100',
+                'regex:/^[a-z0-9]+(?:-[a-z0-9]+)*$/',
+                // Tidak boleh sama dengan slug default company manapun
+                \Illuminate\Validation\Rule::unique('companies', 'slug'),
+                // Tidak boleh sama dengan custom slug company manapun
+                \Illuminate\Validation\Rule::unique('company_custom_slugs', 'slug'),
+            ],
+        ], [
+            'slug.required' => 'Slug wajib diisi.',
+            'slug.regex'    => 'Slug hanya boleh huruf kecil, angka, dan tanda hubung (contoh: hikari-net).',
+            'slug.unique'   => 'Slug ini sudah dipakai oleh company lain.',
+        ]);
+
+        $company->customSlugs()->create(['slug' => $request->slug]);
+
+        return redirect()->to(route('company.index'))->with('update', true);
+    }
+
+    public function destroyCustomSlug(Company $company, CompanyCustomSlug $customSlug)
+    {
+        abort_if($customSlug->company_id !== $company->id, 403);
+
+        $customSlug->delete();
+
+        return redirect()->to(route('company.index'))->with('update', true);
     }
 
     /**

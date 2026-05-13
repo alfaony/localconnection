@@ -10,7 +10,7 @@
                 <i class="fas fa-sliders-h mr-2"></i>Filter Pelanggan
             </span>
             <div class="d-flex align-items-center flex-wrap ml-auto" style="gap:.5rem;">
-                <a href="{{ route('internet-customer.create', Auth::user()->company->slug) }}"
+                <a href="{{ route('internet-customer.create', Auth::user()->company->public_slug) }}"
                    target="_blank" id="share-link"
                    class="btn btn-sm btn-primary ic-btn ic-btn-primary">
                     <i class="fas fa-user-plus mr-1"></i> Pendaftaran Baru
