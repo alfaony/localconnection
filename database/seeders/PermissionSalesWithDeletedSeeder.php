@@ -21,26 +21,31 @@ class PermissionSalesWithDeletedSeeder extends Seeder
         ])->get();
 
         DB::beginTransaction();
-        try {
-            $permission = Permission::firstOrCreate(
-                ['name' => 'Index WithDeleted Sales (Penjualan Terhapus)'],
-                [
-                    'method'     => 'index_withdeleted',
-                    'table'      => 'sales',
-                    'model'      => 'Sale',
-                    'guard_name' => 'web',
-                ]
-            );
 
-            foreach ($roles as $role) {
-                PermissionRole::firstOrCreate([
-                    'role_id'       => $role->id,
-                    'permission_id' => $permission->id,
-                ]);
+        try {
+            $metodes = ['index_withdeleted','index_product_summary'];
+            foreach ($metodes as $key => $method) {
+                $permission = Permission::firstOrCreate(
+                    ['name' => ucwords($method).' Sales (Penjualan Terhapus)'],
+                    [
+                        'method'     =>  $method,
+                        'table'      => 'sales',
+                        'model'      => 'Sale',
+                        'guard_name' => 'web',
+                    ]
+                );
+    
+                foreach ($roles as $role) {
+                    PermissionRole::firstOrCreate([
+                        'role_id'       => $role->id,
+                        'permission_id' => $permission->id,
+                    ]);
+                }
             }
 
             DB::commit();
         } catch (\Throwable $th) {
+            dd($th);
             DB::rollBack();
             Log::error($th->getMessage());
         }

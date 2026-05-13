@@ -6,6 +6,10 @@ use Livewire\Component;
 use Livewire\WithPagination;
 use Illuminate\Support\Facades\DB;
 use App\Models\Sale;
+use App\Models\SaleItem;
+use App\Models\ProductStore;
+use App\Models\CategoryProductStore;
+use App\Models\BrandProductStore;
 use App\Models\SettingCompany;
 use Illuminate\Support\Facades\Auth;
 use App\Helpers\Access;
@@ -48,17 +52,37 @@ class SaleIndex extends Component
     public $temp_deleted_end_date = '';
     public $temp_deleted_user_id = '';
 
+    // ── Ringkasan Produk tab ─────────────────────────────────────────────────
+    public $ring_search         = '';
+    public $ring_start_date     = '';
+    public $ring_end_date       = '';
+    public $ring_start_time     = '';
+    public $ring_end_time       = '';
+    public $ring_user_id        = '';
+    public $ring_payment_method = '';
+    public $ring_category_id    = '';
+    public $ring_brand_id       = '';
+    public $ring_sort           = 'desc'; // 'desc' = terbanyak, 'asc' = tersedikit
+    public $ring_type           = 'sold'; // 'sold' = terjual, 'unsold' = tidak terjual
+
+    public $temp_ring_search         = '';
+    public $temp_ring_start_date     = '';
+    public $temp_ring_end_date       = '';
+    public $temp_ring_start_time     = '';
+    public $temp_ring_end_time       = '';
+    public $temp_ring_user_id        = '';
+    public $temp_ring_payment_method = '';
+    public $temp_ring_category_id    = '';
+    public $temp_ring_brand_id       = '';
+
+    public $ringkasanLoaded = true;
+
     protected $paginationTheme = 'bootstrap';
 
     protected $listeners = ['refreshSales' => '$refresh', 'deleteSale', 'restoreSale'];
 
     public function mount()
     {
-        if (empty($this->filter_user_id)) {
-            $this->filter_user_id = auth()->id();
-            $this->temp_user_id   = auth()->id();
-        }
-
         if (empty($this->filter_start_date)) {
             $today = now()->toDateString();
             $this->filter_start_date = $today;
@@ -72,6 +96,7 @@ class SaleIndex extends Component
         $this->temp_end_date       = $this->filter_end_date;
         $this->temp_start_time     = $this->filter_start_time;
         $this->temp_end_time       = $this->filter_end_time;
+        $this->temp_user_id        = $this->filter_user_id;
         $this->temp_payment_method = $this->filter_payment_method;
     }
 
@@ -245,6 +270,152 @@ class SaleIndex extends Component
         }
     }
 
+    // ── Ringkasan Produk methods ─────────────────────────────────────────────
+
+    public function applyRingkasanFilters(
+        $search = '', $startDate = '', $endDate = '', $startTime = '', $endTime = '',
+        $userId = '', $paymentMethod = '', $categoryId = '', $brandId = ''
+    ) {
+        $this->temp_ring_search         = $search;
+        $this->temp_ring_start_date     = $startDate;
+        $this->temp_ring_end_date       = $endDate;
+        $this->temp_ring_start_time     = $startTime;
+        $this->temp_ring_end_time       = $endTime;
+        $this->temp_ring_user_id        = $userId;
+        $this->temp_ring_payment_method = $paymentMethod;
+        $this->temp_ring_category_id    = $categoryId;
+        $this->temp_ring_brand_id       = $brandId;
+
+        $this->ring_search         = $search;
+        $this->ring_start_date     = $startDate;
+        $this->ring_end_date       = $endDate;
+        $this->ring_start_time     = $startTime;
+        $this->ring_end_time       = $endTime;
+        $this->ring_user_id        = $userId;
+        $this->ring_payment_method = $paymentMethod;
+        $this->ring_category_id    = $categoryId;
+        $this->ring_brand_id       = $brandId;
+        $this->ringkasanLoaded     = true;
+    }
+
+    public function clearRingkasanFilters()
+    {
+        $this->ring_search = $this->temp_ring_search = '';
+        $this->ring_start_date = $this->temp_ring_start_date = '';
+        $this->ring_end_date = $this->temp_ring_end_date = '';
+        $this->ring_start_time = $this->temp_ring_start_time = '';
+        $this->ring_end_time = $this->temp_ring_end_time = '';
+        $this->ring_user_id = $this->temp_ring_user_id = '';
+        $this->ring_payment_method = $this->temp_ring_payment_method = '';
+        $this->ring_category_id = $this->temp_ring_category_id = '';
+        $this->ring_brand_id = $this->temp_ring_brand_id = '';
+        $this->ring_type = 'sold';
+        $this->ringkasanLoaded = true;
+        $this->dispatchBrowserEvent('ringkasan-filters-cleared');
+    }
+
+    public function toggleRingkasanSort()
+    {
+        $this->ring_sort = $this->ring_sort === 'desc' ? 'asc' : 'desc';
+    }
+
+    public function setRingType($type)
+    {
+        $this->ring_type = $type;
+        $this->ringkasanLoaded = true;
+    }
+
+    private function saleSubQuery($q, $companyId)
+    {
+        $q->where('status', 'completed')
+          ->whereNull('deleted_at')
+          ->when($this->ring_start_date,     fn ($q) => $q->whereDate('created_at', '>=', $this->ring_start_date))
+          ->when($this->ring_end_date,       fn ($q) => $q->whereDate('created_at', '<=', $this->ring_end_date))
+          ->when($this->ring_start_time,     fn ($q) => $q->whereTime('created_at', '>=', $this->ring_start_time))
+          ->when($this->ring_end_time,       fn ($q) => $q->whereTime('created_at', '<=', $this->ring_end_time))
+          ->when($this->ring_payment_method, fn ($q) => $q->where('payment_method', $this->ring_payment_method))
+          ->when($this->ring_user_id,        fn ($q) => $q->where('user_id', $this->ring_user_id))
+          ->whereHas('user', fn ($q) => $q->where('company_id', $companyId));
+    }
+
+    private function productStoreSubQuery($q)
+    {
+        $q->when($this->ring_search, function ($q) {
+              $s = $this->ring_search;
+              $q->where(fn ($i) => $i
+                  ->where('name', 'like', "%{$s}%")
+                  ->orWhere('variant', 'like', "%{$s}%")
+                  ->orWhere('barcode', 'like', "%{$s}%")
+                  ->orWhere('code', 'like', "%{$s}%")
+              );
+          })
+          ->when($this->ring_category_id, fn ($q) => $q->where('category_product_store_id', $this->ring_category_id))
+          ->when($this->ring_brand_id,    fn ($q) => $q->where('brand_product_store_id', $this->ring_brand_id));
+    }
+
+    private function computeProductRingkasan()
+    {
+        $companyId = auth()->user()->company_id;
+
+        return SaleItem::selectRaw('product_store_id, SUM(quantity) as total_qty, SUM(subtotal) as total_revenue')
+            ->whereHas('sale', fn ($q) => $this->saleSubQuery($q, $companyId))
+            ->when($this->ring_search || $this->ring_category_id || $this->ring_brand_id, function ($q) {
+                $q->whereHas('productStore', fn ($ps) => $this->productStoreSubQuery($ps));
+            })
+            ->with(['productStore.category', 'productStore.brand'])
+            ->groupBy('product_store_id')
+            ->orderBy('total_qty', $this->ring_sort)
+            ->paginate($this->perPage, ['*'], 'ring_page');
+    }
+
+    private function computeRingkasanByCategory()
+    {
+        $companyId = auth()->user()->company_id;
+
+        return SaleItem::selectRaw('
+                category_product_stores.name as category_name,
+                SUM(sale_items.quantity) as total_qty
+            ')
+            ->join('product_stores', 'sale_items.product_store_id', '=', 'product_stores.id')
+            ->leftJoin('category_product_stores', 'product_stores.category_product_store_id', '=', 'category_product_stores.id')
+            ->whereHas('sale', fn ($q) => $this->saleSubQuery($q, $companyId))
+            ->when($this->ring_search || $this->ring_category_id || $this->ring_brand_id, function ($q) {
+                $q->where(function ($inner) {
+                    $inner->when($this->ring_search, function ($q) {
+                        $s = $this->ring_search;
+                        $q->where(fn ($i) => $i
+                            ->where('product_stores.name', 'like', "%{$s}%")
+                            ->orWhere('product_stores.variant', 'like', "%{$s}%")
+                            ->orWhere('product_stores.barcode', 'like', "%{$s}%")
+                            ->orWhere('product_stores.code', 'like', "%{$s}%")
+                        );
+                    })
+                    ->when($this->ring_category_id, fn ($q) => $q->where('product_stores.category_product_store_id', $this->ring_category_id))
+                    ->when($this->ring_brand_id,    fn ($q) => $q->where('product_stores.brand_product_store_id', $this->ring_brand_id));
+                });
+            })
+            ->groupBy('category_product_stores.id', 'category_product_stores.name')
+            ->orderByDesc('total_qty')
+            ->get();
+    }
+
+    private function computeProductTidakTerjual()
+    {
+        $companyId = auth()->user()->company_id;
+
+        $soldIds = SaleItem::whereHas('sale', fn ($q) => $this->saleSubQuery($q, $companyId))
+            ->pluck('product_store_id')
+            ->unique();
+
+        return ProductStore::byCompany($companyId)
+            ->whereNotIn('id', $soldIds)
+            ->when($this->ring_search || $this->ring_category_id || $this->ring_brand_id,
+                fn ($q) => $this->productStoreSubQuery($q))
+            ->with(['category', 'brand'])
+            ->orderBy('name')
+            ->paginate($this->perPage, ['*'], 'ring_page');
+    }
+
     public function render()
     {
         $users = \App\Models\User::byCompany(auth()->user()->company_id)->get();
@@ -288,6 +459,8 @@ class SaleIndex extends Component
             });
 
         $totalFinalAmount = (clone $baseQuery)->sum('final_amount');
+        $totalSubAmount   = (clone $baseQuery)->sum('total_amount');
+        $totalTaxAmount   = (clone $baseQuery)->sum('tax_amount');
 
         $paymentBreakdown = null;
         if (!$this->filter_payment_method) {
@@ -311,6 +484,7 @@ class SaleIndex extends Component
         $deletedSales   = null;
         $deletedTotal   = 0;
         $canSeeDeleted  = Access::can('index_withdeleted', 'sales');
+        $canSeeProductSummary  = Access::can('index_product_summary', 'sales');
 
         if ($canSeeDeleted) {
             $deletedQuery = Sale::byCompany(auth()->user()->company_id)
@@ -342,9 +516,22 @@ class SaleIndex extends Component
                 ->paginate($this->perPage, ['*'], 'deleted_page');
         }
 
+        $categories = CategoryProductStore::byCompany(auth()->user()->company_id)->orderBy('name')->get();
+        $brands     = BrandProductStore::byCompany(auth()->user()->company_id)->orderBy('name')->get();
+
+        $productRingkasan = $this->ringkasanLoaded
+            ? ($this->ring_type === 'unsold' ? $this->computeProductTidakTerjual() : $this->computeProductRingkasan())
+            : collect();
+
+        $ringkasanByCategory = ($this->ringkasanLoaded && $this->ring_type === 'sold')
+            ? $this->computeRingkasanByCategory()
+            : collect();
+
         return view('livewire.sale.sale-index', compact(
-            'sales', 'users', 'totalFinalAmount', 'paymentBreakdown', 'settingCompany',
-            'deletedSales', 'deletedTotal', 'canSeeDeleted'
+            'sales', 'users', 'totalFinalAmount', 'totalSubAmount', 'totalTaxAmount',
+            'paymentBreakdown', 'settingCompany',
+            'deletedSales', 'deletedTotal', 'canSeeDeleted',
+            'categories', 'brands', 'productRingkasan', 'ringkasanByCategory','canSeeProductSummary'
         ))->extends('adminlte::page');
     }
 }

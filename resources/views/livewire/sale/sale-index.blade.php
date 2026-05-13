@@ -45,6 +45,15 @@
                         </span>
                     </button>
                 </li>
+                @if($canSeeProductSummary)
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link {{ $activeTab === 'ringkasan' ? 'active' : '' }} tab-btn"
+                            wire:click="switchTab('ringkasan')"
+                            type="button">
+                        <i class="fas fa-chart-bar text-success"></i> Ringkasan Produk
+                    </button>
+                </li>
+                @endif
                 @if($canSeeDeleted)
                 <li class="nav-item" role="presentation">
                     <button class="nav-link {{ $activeTab === 'deleted' ? 'active' : '' }} tab-btn"
@@ -84,7 +93,7 @@
                             ]));
                         @endphp
                         <a href="{{ route('sales.export') }}?{{ $exportParams }}"
-                           class="btn btn-success btn-sm"
+                           class="btn btn-success btn-sm mr-1"
                            title="Export Excel — hasil dikirim ke Inbox">
                             <i class="fas fa-file-excel"></i> Export Excel
                         </a>
@@ -207,7 +216,7 @@
                             @endif
                             @if($filter_payment_method)
                                 @php $pmLabels = ['cash'=>'Cash','qris'=>'QRIS','debit_credit'=>'Debit/Credit']; @endphp
-                                <span class="badge bg-info d-flex align-items-center gap-1 mr-1">
+                                <span class="badge bg-info d-flex align-items-center mr-2 mb-1">
                                     Metode: {{ $pmLabels[$filter_payment_method] ?? $filter_payment_method }}
                                     <i class="fas fa-times-circle badge-remove" data-filter="payment_method" style="cursor:pointer;"></i>
                                 </span>
@@ -218,7 +227,7 @@
 
                     <!-- Summary Card -->
                     <div class="row mb-3">
-                        <div class="col-md-4 col-sm-6 mb-2">
+                        <div class="col-md-3 col-sm-6 mb-2">
                             <div class="info-box mb-0 shadow-sm">
                                 <span class="info-box-icon bg-primary"><i class="fas fa-receipt"></i></span>
                                 <div class="info-box-content">
@@ -227,7 +236,29 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="col-md-4 col-sm-6 mb-2">
+                        <div class="col-md-3 col-sm-6 mb-2">
+                            <div class="info-box mb-0 shadow-sm">
+                                <span class="info-box-icon bg-info"><i class="fas fa-money-bill-wave"></i></span>
+                                <div class="info-box-content">
+                                    <span class="info-box-text">Subtotal</span>
+                                    <span class="info-box-number" style="font-size:1rem;">
+                                        Rp {{ number_format($totalSubAmount, 0, ',', '.') }}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 col-sm-6 mb-2">
+                            <div class="info-box mb-0 shadow-sm">
+                                <span class="info-box-icon bg-warning"><i class="fas fa-percent"></i></span>
+                                <div class="info-box-content">
+                                    <span class="info-box-text">Total PPN</span>
+                                    <span class="info-box-number" style="font-size:1rem;">
+                                        Rp {{ number_format($totalTaxAmount, 0, ',', '.') }}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 col-sm-6 mb-2">
                             <div class="info-box mb-0 shadow-sm">
                                 <span class="info-box-icon bg-success"><i class="fas fa-calculator"></i></span>
                                 <div class="info-box-content">
@@ -239,14 +270,14 @@
                             </div>
                         </div>
                         @if($paymentBreakdown !== null)
-                        <div class="col-md-4 mb-2">
-                            <div class="card shadow-sm border-0 h-100">
+                        <div class="col-12 mb-2">
+                            <div class="card shadow-sm border-0">
                                 <div class="card-body py-2 px-3">
                                     <p class="mb-1 small fw-bold text-muted">Rincian Pembayaran</p>
                                     <div class="d-flex flex-wrap gap-2" style="font-size:0.8rem;">
-                                        <span><i class="fas fa-money-bill-wave text-success"></i> Cash: <strong>Rp {{ number_format($paymentBreakdown['cash'], 0, ',', '.') }}</strong></span>
-                                        <span><i class="fas fa-qrcode text-info"></i> QRIS: <strong>Rp {{ number_format($paymentBreakdown['qris'], 0, ',', '.') }}</strong></span>
-                                        <span><i class="fas fa-credit-card text-primary"></i> Debit: <strong>Rp {{ number_format($paymentBreakdown['debit_credit'], 0, ',', '.') }}</strong></span>
+                                        <span class="mr-1 mb-1"><i class="fas fa-money-bill-wave text-success"></i> Cash: <strong>Rp {{ number_format($paymentBreakdown['cash'], 0, ',', '.') }}</strong></span>
+                                        <span class="mr-1 mb-1"><i class="fas fa-qrcode text-info"></i> QRIS: <strong>Rp {{ number_format($paymentBreakdown['qris'], 0, ',', '.') }}</strong></span>
+                                        <span class="mr-1 mb-1"><i class="fas fa-credit-card text-primary"></i> Debit: <strong>Rp {{ number_format($paymentBreakdown['debit_credit'], 0, ',', '.') }}</strong></span>
                                     </div>
                                 </div>
                             </div>
@@ -356,6 +387,227 @@
                                         <option value="50">50 per halaman</option>
                                     </select>
                                     <div>{{ $sales->links() }}</div>
+                                </div>
+                            @endif
+                        </div>
+                    </div>
+
+                </div>
+                @endif
+
+                {{-- ══════════════ TAB: RINGKASAN PRODUK ══════════════ --}}
+                @if($activeTab === 'ringkasan' && $canSeeProductSummary)
+                <div class="p-3">
+
+                    <!-- Type Toggle + Filter Button -->
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div class="btn-group btn-group-sm" role="group">
+                            <button wire:click="setRingType('sold')"
+                                    type="button"
+                                    class="btn mb-1 mr-1 {{ $ring_type === 'sold' ? 'btn-success' : 'btn-outline-success' }}">
+                                <i class="fas fa-check-circle"></i> Produk Terjual
+                            </button>
+                            <button wire:click="setRingType('unsold')"
+                                    type="button"
+                                    class="btn mb-1 mr-1 {{ $ring_type === 'unsold' ? 'btn-danger' : 'btn-outline-danger' }}">
+                                <i class="fas fa-times-circle"></i> Produk Tidak Terjual
+                            </button>
+                        </div>
+                        <button class="btn btn-outline-primary btn-sm" type="button" id="ringFilterToggleBtn">
+                            <i class="fas fa-filter"></i> Filter
+                        </button>
+                    </div>
+
+                    <div class="collapse mb-3" id="ringFilterPanel">
+                        <div class="card shadow-sm border-0">
+                            <div class="card-header bg-success text-white py-2">
+                                <h6 class="mb-0"><i class="fas fa-search"></i> Filter Ringkasan Produk</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-bold small"><i class="fas fa-search"></i> Cari Produk</label>
+                                        <input type="text" id="ringSearch" class="form-control form-control-sm"
+                                               placeholder="Nama, variant, barcode, kode..."
+                                               value="{{ $temp_ring_search }}">
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label fw-bold small"><i class="fas fa-tag"></i> Kategori</label>
+                                        <select id="ringCategorySelect" class="form-select form-select-sm" style="width:100%;">
+                                            <option value="">Semua Kategori</option>
+                                            @foreach($categories as $cat)
+                                                <option value="{{ $cat->id }}" {{ $temp_ring_category_id == $cat->id ? 'selected' : '' }}>
+                                                    {{ $cat->name }}
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label fw-bold small"><i class="fas fa-trademark"></i> Brand</label>
+                                        <select id="ringBrandSelect" class="form-select form-select-sm" style="width:100%;">
+                                            <option value="">Semua Brand</option>
+                                            @foreach($brands as $brand)
+                                                <option value="{{ $brand->id }}" {{ $temp_ring_brand_id == $brand->id ? 'selected' : '' }}>
+                                                    {{ $brand->name }}
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label fw-bold small"><i class="fas fa-user"></i> Kasir</label>
+                                        <select id="ringUserSelect" class="form-select form-select-sm" style="width:100%;">
+                                            <option value="">Semua Kasir</option>
+                                            @foreach($users as $user)
+                                                <option value="{{ $user->id }}" {{ $temp_ring_user_id == $user->id ? 'selected' : '' }}>
+                                                    {{ $user->name }}
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label fw-bold small"><i class="fas fa-credit-card"></i> Metode Bayar</label>
+                                        <select id="ringPaymentSelect" class="form-select form-select-sm">
+                                            <option value="">Semua Metode</option>
+                                            <option value="cash" {{ $temp_ring_payment_method === 'cash' ? 'selected' : '' }}>Cash</option>
+                                            <option value="qris" {{ $temp_ring_payment_method === 'qris' ? 'selected' : '' }}>QRIS</option>
+                                            <option value="debit_credit" {{ $temp_ring_payment_method === 'debit_credit' ? 'selected' : '' }}>Debit / Credit</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label fw-bold small"><i class="fas fa-calendar-alt"></i> Tanggal Mulai</label>
+                                        <input type="date" id="ringStartDate" class="form-control form-control-sm" value="{{ $temp_ring_start_date }}">
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label fw-bold small"><i class="fas fa-calendar-check"></i> Tanggal Akhir</label>
+                                        <input type="date" id="ringEndDate" class="form-control form-control-sm" value="{{ $temp_ring_end_date }}">
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label fw-bold small"><i class="fas fa-clock"></i> Waktu Mulai</label>
+                                        <input type="time" id="ringStartTime" class="form-control form-control-sm" value="{{ $temp_ring_start_time }}">
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label fw-bold small"><i class="fas fa-clock"></i> Waktu Akhir</label>
+                                        <input type="time" id="ringEndTime" class="form-control form-control-sm" value="{{ $temp_ring_end_time }}">
+                                    </div>
+                                </div>
+                                <div class="mt-3 d-flex justify-content-between">
+                                    <button id="clearRingFiltersBtn" class="btn btn-outline-danger btn-sm">
+                                        <i class="fas fa-times-circle"></i> Reset
+                                    </button>
+                                    <button id="muatRingkasanBtn" class="btn btn-success btn-sm">
+                                        <i class="fas fa-database"></i> Muat Data
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Sort Toggle + Info -->
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <span class="text-muted small">
+                            <i class="fas fa-boxes"></i>
+                            {{ method_exists($productRingkasan, 'total') ? $productRingkasan->total() : $productRingkasan->count() }}
+                            produk ditemukan
+                        </span>
+                        @if($ring_type === 'sold')
+                        <button wire:click="toggleRingkasanSort" class="btn btn-outline-secondary btn-sm">
+                            @if($ring_sort === 'desc')
+                                <i class="fas fa-sort-amount-down text-success"></i> Terbanyak ↓
+                            @else
+                                <i class="fas fa-sort-amount-up text-danger"></i> Tersedikit ↑
+                            @endif
+                        </button>
+                        @endif
+                    </div>
+
+                    <!-- Breakdown Per Kategori (hanya Produk Terjual) -->
+                    @if($ring_type === 'sold' && $ringkasanByCategory->isNotEmpty())
+                    <div class="mb-3 p-2 bg-light rounded border d-flex flex-wrap align-items-center" style="gap:0.4rem;">
+                        <span class="small fw-bold text-muted mr-2"><i class="fas fa-tags"></i> Per Kategori:</span>
+                        @foreach($ringkasanByCategory as $cat)
+                        <span class="badge badge-pill"
+                              style="background-color:#e0f2fe; color:#0369a1; font-size:0.78rem; padding:0.35em 0.75em;">
+                            {{ $cat->category_name ?? 'Tanpa Kategori' }}
+                            <strong class="ml-1">({{ number_format($cat->total_qty, 0, ',', '.') }})</strong>
+                        </span>
+                        @endforeach
+                    </div>
+                    @endif
+
+                    <!-- Tabel Produk -->
+                    <div class="card shadow-sm border-0">
+                        <div class="card-body p-0">
+                            <div wire:loading class="text-center py-4">
+                                <div class="spinner-border text-success" role="status"></div>
+                                <p class="mt-2 text-muted small">Memuat data produk...</p>
+                            </div>
+                            @if($productRingkasan->isEmpty())
+                                <div class="text-center py-5" wire:loading.remove>
+                                    <i class="fas fa-box-open fa-3x text-muted mb-3"></i>
+                                    <h6 class="text-muted">Tidak ada data produk ditemukan</h6>
+                                    <p class="text-muted small">Coba ubah filter atau rentang tanggal</p>
+                                </div>
+                            @else
+                                <div class="table-responsive" wire:loading.remove>
+                                    <table class="table table-hover table-sm mb-0">
+                                        <thead class="thead-light">
+                                            <tr>
+                                                <th class="text-center" style="width:40px;">No.</th>
+                                                <th><i class="fas fa-box"></i> Produk</th>
+                                                <th><i class="fas fa-layer-group"></i> Variant</th>
+                                                <th><i class="fas fa-barcode"></i> Barcode/Kode</th>
+                                                <th><i class="fas fa-tag"></i> Kategori</th>
+                                                <th><i class="fas fa-trademark"></i> Brand</th>
+                                                @if($ring_type === 'sold')
+                                                <th class="text-center"><i class="fas fa-sort-numeric-down"></i> Terjual</th>
+                                                <th class="text-right"><i class="fas fa-dollar-sign"></i> Total Revenue</th>
+                                                @else
+                                                <th class="text-center"><i class="fas fa-ban text-danger"></i> Status</th>
+                                                @endif
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach($productRingkasan as $i => $ps)
+                                            @php
+                                                $no  = ($productRingkasan->currentPage() - 1) * $productRingkasan->perPage() + $i + 1;
+                                                $prod = $ring_type === 'sold' ? $ps->productStore : $ps;
+                                            @endphp
+                                            <tr>
+                                                <td class="text-center small text-muted fw-bold">{{ $no }}</td>
+                                                <td class="small fw-bold">{{ $prod->name ?? '-' }}</td>
+                                                <td class="small text-muted">{{ $prod->variant ?? '-' }}</td>
+                                                <td class="small">
+                                                    <code class="small">{{ $prod->barcode ?? $prod->code ?? '-' }}</code>
+                                                </td>
+                                                <td class="small">{{ $prod->category->name ?? '-' }}</td>
+                                                <td class="small">{{ $prod->brand->name ?? '-' }}</td>
+                                                @if($ring_type === 'sold')
+                                                <td class="text-center">
+                                                    <span class="badge badge-success px-2">
+                                                        {{ number_format($ps->total_qty, 0, ',', '.') }}
+                                                    </span>
+                                                </td>
+                                                <td class="text-right small fw-bold text-success">
+                                                    Rp {{ number_format($ps->total_revenue, 0, ',', '.') }}
+                                                </td>
+                                                @else
+                                                <td class="text-center">
+                                                    <span class="badge badge-secondary px-2">Belum Terjual</span>
+                                                </td>
+                                                @endif
+                                            </tr>
+                                            @endforeach
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <!-- Pagination -->
+                                <div class="d-flex justify-content-between align-items-center px-3 py-2" wire:loading.remove>
+                                    <select wire:model.live="perPage" class="form-control form-control-sm" style="width:auto;">
+                                        <option value="10">10 per halaman</option>
+                                        <option value="25">25 per halaman</option>
+                                        <option value="50">50 per halaman</option>
+                                    </select>
+                                    <div>{{ $productRingkasan->links() }}</div>
                                 </div>
                             @endif
                         </div>
@@ -595,25 +847,24 @@
 <script>
 // ─── Select2 ─────────────────────────────────────────────────────────────────
 function initializeSelect2() {
-    ['#userSelect', '#deletedUserSelect'].forEach(function(sel) {
+    ['#userSelect', '#deletedUserSelect', '#ringUserSelect'].forEach(function(sel) {
         if (!$(sel).length) return;
         if ($(sel).hasClass('select2-hidden-accessible')) $(sel).select2('destroy');
         $(sel).select2({ theme: 'bootstrap-5', placeholder: 'Pilih User', allowClear: true, width: '100%' });
     });
-    if ($('#paymentMethodSelect').length) {
-        if ($('#paymentMethodSelect').hasClass('select2-hidden-accessible')) $('#paymentMethodSelect').select2('destroy');
-        $('#paymentMethodSelect').select2({ theme: 'bootstrap-5', allowClear: true, width: '100%' });
+    ['#paymentMethodSelect', '#ringPaymentSelect'].forEach(function(sel) {
+        if (!$(sel).length) return;
+        if ($(sel).hasClass('select2-hidden-accessible')) $(sel).select2('destroy');
+        $(sel).select2({ theme: 'bootstrap-5', allowClear: true, width: '100%' });
+    });
+    if ($('#ringCategorySelect').length) {
+        if ($('#ringCategorySelect').hasClass('select2-hidden-accessible')) $('#ringCategorySelect').select2('destroy');
+        $('#ringCategorySelect').select2({ theme: 'bootstrap-5', placeholder: 'Semua Kategori', allowClear: true, width: '100%' });
     }
-
-    $('#userSelect').off('change.sales').on('change.sales', function() {
-        if ($(this).data('clearing')) return;
-        triggerApplyFilters();
-    });
-    $('#paymentMethodSelect').off('change.sales').on('change.sales', function() { triggerApplyFilters(); });
-    $('#deletedUserSelect').off('change.deleted').on('change.deleted', function() {
-        if ($(this).data('clearing')) return;
-        triggerApplyDeletedFilters();
-    });
+    if ($('#ringBrandSelect').length) {
+        if ($('#ringBrandSelect').hasClass('select2-hidden-accessible')) $('#ringBrandSelect').select2('destroy');
+        $('#ringBrandSelect').select2({ theme: 'bootstrap-5', placeholder: 'Semua Brand', allowClear: true, width: '100%' });
+    }
 }
 
 // ─── Tab aktif: apply filter ──────────────────────────────────────────────────
@@ -668,6 +919,15 @@ function syncInputsFromLivewire() {
     if ($('#paymentMethodSelect').length) $('#paymentMethodSelect').val(@this.temp_payment_method || '').trigger('change.select2');
     if ($('#deletedTempSearch').length)   $('#deletedTempSearch').val(@this.temp_deleted_search);
     if ($('#deletedUserSelect').length)   $('#deletedUserSelect').val(@this.temp_deleted_user_id || '').trigger('change.select2');
+    if ($('#ringSearch').length)          $('#ringSearch').val(@this.temp_ring_search);
+    if ($('#ringStartDate').length)       $('#ringStartDate').val(@this.temp_ring_start_date);
+    if ($('#ringEndDate').length)         $('#ringEndDate').val(@this.temp_ring_end_date);
+    if ($('#ringStartTime').length)       $('#ringStartTime').val(@this.temp_ring_start_time);
+    if ($('#ringEndTime').length)         $('#ringEndTime').val(@this.temp_ring_end_time);
+    if ($('#ringUserSelect').length)      $('#ringUserSelect').val(@this.temp_ring_user_id || '').trigger('change.select2');
+    if ($('#ringPaymentSelect').length)   $('#ringPaymentSelect').val(@this.temp_ring_payment_method || '').trigger('change.select2');
+    if ($('#ringCategorySelect').length)  $('#ringCategorySelect').val(@this.temp_ring_category_id || '').trigger('change.select2');
+    if ($('#ringBrandSelect').length)     $('#ringBrandSelect').val(@this.temp_ring_brand_id || '').trigger('change.select2');
 }
 
 // ─── DOMContentLoaded ─────────────────────────────────────────────────────────
@@ -678,6 +938,8 @@ document.addEventListener('DOMContentLoaded', function() {
     $(document).on('click', '#searchToggleBtn', function() { $('#filterPanel').collapse('toggle'); });
     // Toggle filter panel - tab deleted
     $(document).on('click', '#deletedFilterToggleBtn', function() { $('#deletedFilterPanel').collapse('toggle'); });
+    // Toggle filter panel - tab ringkasan
+    $(document).on('click', '#ringFilterToggleBtn', function() { $('#ringFilterPanel').collapse('toggle'); });
 
     @if($filter_search || $filter_start_date || $filter_end_date || $filter_start_time || $filter_end_time || $filter_user_id || $filter_payment_method)
         $('#filterPanel').collapse('show');
@@ -692,6 +954,24 @@ document.addEventListener('DOMContentLoaded', function() {
     $(document).on('click', '#applyDeletedFiltersBtn', function(e) { e.preventDefault(); triggerApplyDeletedFilters(); });
     $(document).on('click', '#clearDeletedFiltersBtn', function(e) { e.preventDefault(); @this.call('clearDeletedFilters'); });
     $(document).on('keypress', '#deletedTempSearch', function(e) { if (e.which === 13) { e.preventDefault(); triggerApplyDeletedFilters(); } });
+
+    // Tombol muat data & reset tab ringkasan
+    $(document).on('click', '#muatRingkasanBtn', function(e) {
+        e.preventDefault();
+        @this.call('applyRingkasanFilters',
+            $('#ringSearch').val(),
+            $('#ringStartDate').val(),
+            $('#ringEndDate').val(),
+            $('#ringStartTime').val(),
+            $('#ringEndTime').val(),
+            $('#ringUserSelect').val() || '',
+            $('#ringPaymentSelect').val() || '',
+            $('#ringCategorySelect').val() || '',
+            $('#ringBrandSelect').val() || ''
+        );
+    });
+    $(document).on('click', '#clearRingFiltersBtn', function(e) { e.preventDefault(); @this.call('clearRingkasanFilters'); });
+    $(document).on('keypress', '#ringSearch', function(e) { if (e.which === 13) { e.preventDefault(); $('#muatRingkasanBtn').trigger('click'); } });
 
     // Hapus badge individual
     $(document).on('click', '.badge-remove', function() { removeIndividualFilter($(this).data('filter')); });
@@ -727,6 +1007,12 @@ document.addEventListener('livewire:load', function() {
     window.addEventListener('deleted-filters-cleared', function() {
         ['#deletedTempSearch','#deletedTempStartDate','#deletedTempEndDate'].forEach(s => $(s).val(''));
         if ($('#deletedUserSelect').length) $('#deletedUserSelect').val(null).trigger('change.select2');
+    });
+    window.addEventListener('ringkasan-filters-cleared', function() {
+        ['#ringSearch','#ringStartDate','#ringEndDate','#ringStartTime','#ringEndTime'].forEach(s => $(s).val(''));
+        ['#ringUserSelect','#ringPaymentSelect','#ringCategorySelect','#ringBrandSelect'].forEach(function(sel) {
+            if ($(sel).length) $(sel).val(null).trigger('change.select2');
+        });
     });
 
     // Konfirmasi hapus
