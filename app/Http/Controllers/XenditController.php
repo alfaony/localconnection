@@ -18,6 +18,7 @@ use App\Models\SubscriptionPayment;
 use App\Helpers\InboxHelper;
 
 use App\Jobs\GenerateInternetPurchaseCouponJob;
+use App\Jobs\SendPaymentSuccessWaJob;
 use App\Schemas\RoleSchema;
 
 use Carbon\Carbon;
@@ -123,6 +124,8 @@ class XenditController extends Controller
                     // }
 
                     $this->afterPayment($purchase, $internetCustomer);
+
+                    SendPaymentSuccessWaJob::dispatch($purchase->id);
 
                     Log::info('Payment confirmed for purchase', [
                         'company_id' => $internetCustomer->company_id,
@@ -281,9 +284,11 @@ class XenditController extends Controller
                 Log::info('Payment confirmed for Internet purchase', [
                     'company_id' => $internetCustomer->company_id,
                     'purchase_id' => $purchase->id
-                ]); 
+                ]);
 
                 $this->afterPayment($purchase, $internetCustomer);
+
+                SendPaymentSuccessWaJob::dispatch($purchase->id);
 
                 $urlResutl = route('internet-customer.customer.show', [
                     'code' => $internetCustomer->code,

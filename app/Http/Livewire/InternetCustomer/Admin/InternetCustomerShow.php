@@ -10,6 +10,7 @@ use App\Jobs\ProvisionCustomerJob;
 use App\Jobs\GenerateInternetPurchaseCouponJob;
 use App\Jobs\ProcessRouterMoveJob;
 use App\Jobs\GenerateIsolirJob;
+use App\Jobs\SendPaymentSuccessWaJob;
 
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -972,8 +973,11 @@ class InternetCustomerShow extends Component
             
             GenerateInternetPurchaseCouponJob::dispatch($internetPurchase->customer->id, $internetPurchase->id, $internetPurchase->payment_months);
             $internetPurchase->customer->update($post);
-            
+
             DB::commit();
+
+            SendPaymentSuccessWaJob::dispatch($internetPurchase->id);
+
             $this->dispatchBrowserEvent('showSuccessAlert', ['message' => 'Pembayaran berhasil dikonfirmasi']);
         } catch (\Throwable $th) {
             Log::error($th);
@@ -1323,6 +1327,8 @@ class InternetCustomerShow extends Component
             $internetCustomer->update($post);
 
             DB::commit();
+
+            SendPaymentSuccessWaJob::dispatch($purchase->id);
 
             Log::info('Admin confirmed manual payment', [
                 'purchase_id'  => $purchase->id,
