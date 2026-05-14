@@ -51,7 +51,7 @@ class CheckActiveCustomersJob implements ShouldQueue
 
         if ($this->customerId) {
             // Check specific customer
-            $customer = InternetCustomer::with('router')->find($this->customerId);
+            $customer = InternetCustomer::with(['router', 'userCustomer'])->find($this->customerId);
             
             if ($customer) {
                 $this->checkCustomerStatus($ros, $customer);
@@ -69,7 +69,7 @@ class CheckActiveCustomersJob implements ShouldQueue
      */
     protected function checkAllActiveCustomers(RouterOSService $ros): void
     {
-        $customers = InternetCustomer::with('router')
+        $customers = InternetCustomer::with(['router', 'userCustomer'])
             ->where('status', ParamSchema::ACTIVE)
             ->whereNotNull('router_id')
             ->whereNotNull('username')
@@ -162,10 +162,74 @@ class CheckActiveCustomersJob implements ShouldQueue
                 'uptime' => $session['uptime'] ?? null,
             ]);
 
+            // Check billing payment status after updating active info
+            $this->checkBillingPaymentStatus($customer);
+
         } catch (\Exception $e) {
             Log::error('Failed to update active customer', [
                 'customer_id' => $customer->id,
                 'error' => $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
+     * Check if customer is within billing window and has unpaid subscription
+     */
+    protected function checkBillingPaymentStatus(InternetCustomer $customer): void
+    {
+        $userCustomer = $customer->userCustomer;
+
+        if (!$userCustomer || !$userCustomer->start_billing_date || !$userCustomer->end_billing_date) {
+            return;
+        }
+
+        $today = Carbon::today();
+        $startDay = Carbon::parse($userCustomer->start_billing_date)->day;
+        $endDay = Carbon::parse($userCustomer->end_billing_date)->day;
+
+        // Build billing window for current month
+        $billingStart = $today->copy()->day($startDay);
+        $billingEnd   = $today->copy()->day($endDay);
+
+        // If end day < start day, billing window crosses month boundary
+        // e.g. start=25, end=5 → end is in next month
+        if ($endDay < $startDay) {
+            if ($today->day >= $startDay) {
+                $billingEnd = $today->copy()->addMonth()->day($endDay);
+            } else {
+                $billingStart = $today->copy()->subMonth()->day($startDay);
+            }
+        }
+
+        $isWithinBillingWindow = $today->between($billingStart, $billingEnd);
+        $isBillingWindowBeyondNow = $today->greaterThan($billingEnd);
+
+        if (!$isWithinBillingWindow && !$isBillingWindowBeyondNow) {
+            return;
+        }
+        
+        // Check if there's a confirmed/paid purchase covering today's date
+        $hasPaidPurchase = $customer->purchases()
+            ->where('period_start', '<=', $today)
+            ->where('period_end', '>=', $today)
+            ->where(function ($q) {
+                $q->where(function ($q) {
+                    // Manual transfer confirmed by finance
+                    $q->whereNotNull('user_finance_id')
+                      ->whereNotNull('confirmation_finance_at');
+                })->orWhereNotNull('xendit_paid_at')
+                  ->orWhereNotNull('midtrans_paid_at');
+            })
+            ->exists();
+
+        if (!$hasPaidPurchase) {
+            $customer->update(['status' => ParamSchema::WAITING_PAYMENT_SUBSCRIPTION]);
+
+            Log::warning('Customer set to WAITING_PAYMENT_SUBSCRIPTION - unpaid billing in window', [
+                'customer'       => $customer->code,
+                'billing_window' => $billingStart->format('Y-m-d') . ' to ' . $billingEnd->format('Y-m-d'),
+                'today'          => $today->format('Y-m-d'),
             ]);
         }
     }
@@ -177,8 +241,7 @@ class CheckActiveCustomersJob implements ShouldQueue
     {
         Log::warning('Customer is INACTIVE', [
             'customer' => $customer->code,
-            'username' => $customer->username,
-            'last_updated' => $customer->last_updated_router?->diffForHumans(),
+            'username' => $customer->username
         ]);
 
         try {
