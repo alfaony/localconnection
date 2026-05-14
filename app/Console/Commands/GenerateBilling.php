@@ -63,7 +63,12 @@ class GenerateBilling extends Command
 
             $isolirCustomers = UserCustomer::whereDate('end_billing_date','<=',$today)
                 ->whereHas('internetCustomer', function ($query) {
-                    $query->where('status', ParamSchema::WAITING_PAYMENT_SUBSCRIPTION);
+                    $query->whereIn('status', [
+                        ParamSchema::ACTIVE,
+                        ParamSchema::WAITING_PAYMENT_SUBSCRIPTION,
+                        ParamSchema::REACTIVATED,
+                        ParamSchema::DISCONNECTED,
+                    ]);
                 })
                 ->get();
             $delayStep = 0;
