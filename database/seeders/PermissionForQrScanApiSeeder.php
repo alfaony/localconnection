@@ -46,6 +46,8 @@ class PermissionForQrScanApiSeeder extends Seeder
             ['table' => 'product_stores', 'method' => 'getProductStoreList', 'name' => 'Get All List Product Store (Mobile)'],
             ['table' => 'product_stores', 'method' => 'handleBarcode', 'name' => 'Handle Barcode Product Store (Mobile)'],
             ['table' => 'product_stores', 'method' => 'deleteProductStore', 'name' => 'Delete Product Store (Mobile)'],
+            ['table' => 'product_stores', 'method' => 'getInventoryHistory', 'name' => 'Get History Inventory Product Store (Mobile)'],
+            ['table' => 'product_stores', 'method' => 'saveStock', 'name' => 'Save/Update Stock Product Store (Mobile)'],
             
             // Internet Customer
             ['table' => 'internet_customers', 'method' => 'getInternetCustomerDetail', 'name' => 'Get Detail Internet Customer (Mobile)'],

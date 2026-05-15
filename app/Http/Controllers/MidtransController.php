@@ -17,6 +17,7 @@ use App\Models\CustomerSubscription;
 use App\Models\SubscriptionPayment;
 use App\Helpers\InboxHelper;
 use App\Jobs\GenerateInternetPurchaseCouponJob;
+use App\Jobs\SendPaymentSuccessWaJob;
 use App\Schemas\RoleSchema;
 use Carbon\Carbon;
 
@@ -340,6 +341,8 @@ class MidtransController extends Controller
         GenerateInternetPurchaseCouponJob::dispatch($internetCustomer->id, $purchase->id, $purchase->payment_months);
 
         $this->afterPayment($purchase, $internetCustomer);
+
+        SendPaymentSuccessWaJob::dispatch($purchase->id);
 
         Log::info('Payment confirmed for purchase', [
             'company_id' => $internetCustomer->company_id,

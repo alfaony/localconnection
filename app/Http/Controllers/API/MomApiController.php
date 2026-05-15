@@ -173,6 +173,8 @@ class MomApiController extends Controller
                 }
             }
 
+            \App\Helpers\ChallengeProgressHelper::userCheckAndGiveReward(auth()->id());
+
             DB::commit();
             
             $mom->load(['agendas.tasks', 'meeting', 'project']);

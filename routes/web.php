@@ -751,6 +751,7 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
   Route::get('punishment-user', PunishmentUserTable::class)->name('punishment-user.index');
   
   Route::get('sales', \App\Http\Livewire\Sale\SaleIndex::class)->name('sales.index');
+  Route::get('sales/export', [SaleController::class, 'export'])->name('sales.export');
   Route::get('sales/print-receipt/{sale}', [SaleController::class, 'printReceiptManagement'])->name('sales.printReceipt');
   Route::get('sales/{id}', \App\Http\Livewire\Sale\SaleShow::class)->name('sales.show');
   
