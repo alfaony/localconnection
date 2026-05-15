@@ -163,7 +163,7 @@ class CheckActiveCustomersJob implements ShouldQueue
             ]);
 
             // Check billing payment status after updating active info
-            $this->checkBillingPaymentStatus($customer);
+            // $this->checkBillingPaymentStatus($customer);
 
         } catch (\Exception $e) {
             Log::error('Failed to update active customer', [
@@ -187,6 +187,8 @@ class CheckActiveCustomersJob implements ShouldQueue
         $today = Carbon::today();
         $startDay = Carbon::parse($userCustomer->start_billing_date)->day;
         $endDay = Carbon::parse($userCustomer->end_billing_date)->day;
+        $start_billing_date = Carbon::parse($userCustomer->start_billing_date);
+        $end_billing_date = Carbon::parse($userCustomer->end_billing_date);
 
         // Build billing window for current month
         $billingStart = $today->copy()->day($startDay);
@@ -202,27 +204,29 @@ class CheckActiveCustomersJob implements ShouldQueue
             }
         }
 
+        
         $isWithinBillingWindow = $today->between($billingStart, $billingEnd);
         $isBillingWindowBeyondNow = $today->greaterThan($billingEnd);
-
-        if (!$isWithinBillingWindow && !$isBillingWindowBeyondNow) {
+        $isBillingWindowBeforeNow = $today->between($start_billing_date, $end_billing_date);
+        
+        if (!$isWithinBillingWindow && !$isBillingWindowBeyondNow && !$isBillingWindowBeforeNow) {
             return;
         }
-        
+
         // Check if there's a confirmed/paid purchase covering today's date
         $hasPaidPurchase = $customer->purchases()
             ->where('period_start', '<=', $today)
             ->where('period_end', '>=', $today)
-            ->where(function ($q) {
-                $q->where(function ($q) {
-                    // Manual transfer confirmed by finance
-                    $q->whereNotNull('user_finance_id')
-                      ->whereNotNull('confirmation_finance_at');
-                })->orWhereNotNull('xendit_paid_at')
-                  ->orWhereNotNull('midtrans_paid_at');
-            })
+            ->whereNotNull('payment_method')
+            // ->where(function ($q) {
+            //     $q->where(function ($q) {
+            //         // Manual transfer confirmed by finance
+            //         $q->whereNotNull('user_finance_id')
+            //           ->whereNotNull('confirmation_finance_at');
+            //     })->orWhereNotNull('xendit_paid_at')
+            //       ->orWhereNotNull('midtrans_paid_at');
+            // })
             ->exists();
-
         if (!$hasPaidPurchase) {
             $customer->update(['status' => ParamSchema::WAITING_PAYMENT_SUBSCRIPTION]);
 
