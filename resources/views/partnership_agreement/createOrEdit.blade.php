@@ -1800,6 +1800,109 @@
                 </div>
             </div>
             `,
+            nda_jasa_pembukuan : `
+                <div class="card card-secondary mt-3">
+                    <div class="card-header">Identitas Pihak Pertama (Penyedia Layanan)</div>
+                    <div class="card-body">
+                        <div class="form-group">
+                            <label for="nama_perwakilan_pertama">Nama Perwakilan <span class="text-danger">*</span></label>
+                            <input type="text" id="nama_perwakilan_pertama" name="fields[nama_perwakilan_pertama]" class="form-control" value="${partnershipAgreement['nama_perwakilan_pertama'] || company['director'] || 'Eddy Yansen'}" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="jabatan_perwakilan_pertama_id">Jabatan Perwakilan (Bahasa) <span class="text-danger">*</span></label>
+                            <input type="text" id="jabatan_perwakilan_pertama_id" name="fields[jabatan_perwakilan_pertama_id]" class="form-control" placeholder="Contoh: Direktur" value="${partnershipAgreement['jabatan_perwakilan_pertama_id'] || 'Direktur'}" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="jabatan_perwakilan_pertama_en">Jabatan Perwakilan (English) <span class="text-danger">*</span></label>
+                            <input type="text" id="jabatan_perwakilan_pertama_en" name="fields[jabatan_perwakilan_pertama_en]" class="form-control" placeholder="Example: Director" value="${partnershipAgreement['jabatan_perwakilan_pertama_en'] || 'Director'}" required>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card card-secondary mt-3">
+                    <div class="card-header">Identitas Pihak Kedua (Client)</div>
+                    <div class="card-body">
+                        <div class="form-group">
+                            <label for="nama_perusahaan_kedua">Nama Perusahaan Client <span class="text-danger">*</span></label>
+                            <input type="text" id="nama_perusahaan_kedua" name="fields[nama_perusahaan_kedua]" class="form-control" value="${partnershipAgreement['nama_perusahaan_kedua'] || ''}" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="alamat_perusahaan_kedua">Alamat Perusahaan Client <span class="text-danger">*</span></label>
+                            <input type="text" id="alamat_perusahaan_kedua" name="fields[alamat_perusahaan_kedua]" class="form-control" value="${partnershipAgreement['alamat_perusahaan_kedua'] || ''}" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="nama_perwakilan_kedua">Nama Perwakilan Client <span class="text-danger">*</span></label>
+                            <input type="text" id="nama_perwakilan_kedua" name="fields[nama_perwakilan_kedua]" class="form-control" value="${partnershipAgreement['nama_perwakilan_kedua'] || ''}" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="jabatan_perwakilan_kedua_id">Jabatan Perwakilan Client (Bahasa) <span class="text-danger">*</span></label>
+                            <input type="text" id="jabatan_perwakilan_kedua_id" name="fields[jabatan_perwakilan_kedua_id]" class="form-control" placeholder="Contoh: Direktur" value="${partnershipAgreement['jabatan_perwakilan_kedua_id'] || ''}" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="jabatan_perwakilan_kedua_en">Jabatan Perwakilan Client (English) <span class="text-danger">*</span></label>
+                            <input type="text" id="jabatan_perwakilan_kedua_en" name="fields[jabatan_perwakilan_kedua_en]" class="form-control" placeholder="Example: Director" value="${partnershipAgreement['jabatan_perwakilan_kedua_en'] || ''}" required>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card card-info mt-3">
+                    <div class="card-header">Detail Layanan & Biaya</div>
+                    <div class="card-body">
+                        <div class="form-group">
+                            <label for="jumlah_transaksi_maksimal">Jumlah Transaksi Maksimal per Bulan <span class="text-danger">*</span></label>
+                            <input type="number" id="jumlah_transaksi_maksimal" name="fields[jumlah_transaksi_maksimal]" class="form-control" placeholder="Contoh: 100" value="${partnershipAgreement['jumlah_transaksi_maksimal'] || ''}" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="jumlah_transaksi_terbilang_id">Terbilang Jumlah Transaksi (Bahasa) <span class="text-danger">*</span></label>
+                            <input type="text" id="jumlah_transaksi_terbilang_id" name="fields[jumlah_transaksi_terbilang_id]" class="form-control" placeholder="Contoh: Seratus" value="${partnershipAgreement['jumlah_transaksi_terbilang_id'] || ''}" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="jumlah_transaksi_terbilang_en">Terbilang Jumlah Transaksi (English) <span class="text-danger">*</span></label>
+                            <input type="text" id="jumlah_transaksi_terbilang_en" name="fields[jumlah_transaksi_terbilang_en]" class="form-control" placeholder="Example: One Hundred" value="${partnershipAgreement['jumlah_transaksi_terbilang_en'] || ''}" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="biaya_paket_basic_show">Biaya Paket Basic (12 Bulan) <span class="text-danger">*</span></label>
+                            <input type="text" id="biaya_paket_basic_show" class="form-control thriveMoneyShow" data-hidden="biaya_paket_basic" placeholder="Rp 5.000.000" required>
+                            <input type="hidden" id="biaya_paket_basic" class="thriveMoney" name="fields[biaya_paket_basic]" value="${partnershipAgreement['biaya_paket_basic'] || ''}" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="biaya_paket_basic_terbilang_id">Terbilang Biaya Paket Basic (Bahasa) <span class="text-danger">*</span></label>
+                            <input type="text" id="biaya_paket_basic_terbilang_id" name="fields[biaya_paket_basic_terbilang_id]" class="form-control" placeholder="Contoh: Lima Juta Rupiah" value="${partnershipAgreement['biaya_paket_basic_terbilang_id'] || ''}" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="biaya_paket_basic_terbilang_en">Terbilang Biaya Paket Basic (English) <span class="text-danger">*</span></label>
+                            <input type="text" id="biaya_paket_basic_terbilang_en" name="fields[biaya_paket_basic_terbilang_en]" class="form-control" placeholder="Example: Five Million Rupiah" value="${partnershipAgreement['biaya_paket_basic_terbilang_en'] || ''}" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="jumlah_transaksi_bulanan">Jumlah Transaksi dalam Paket Bulanan <span class="text-danger">*</span></label>
+                            <input type="number" id="jumlah_transaksi_bulanan" name="fields[jumlah_transaksi_bulanan]" class="form-control" placeholder="Contoh: 100" value="${partnershipAgreement['jumlah_transaksi_bulanan'] || ''}" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="nama_entitas_pajak">Nama Entitas untuk Pelaporan Pajak <span class="text-danger">*</span></label>
+                            <input type="text" id="nama_entitas_pajak" name="fields[nama_entitas_pajak]" class="form-control" placeholder="Contoh: PT ABC" value="${partnershipAgreement['nama_entitas_pajak'] || ''}" required>
+                            <small class="text-muted">Nama perusahaan/entitas yang dilaporkan pajaknya</small>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card card-warning mt-3">
+                    <div class="card-header">Kontak Client (untuk Korespondensi)</div>
+                    <div class="card-body">
+                        <div class="form-group">
+                            <label for="atensi_client">Atensi / Attention <span class="text-danger">*</span></label>
+                            <input type="text" id="atensi_client" name="fields[atensi_client]" class="form-control" placeholder="Nama person yang dituju" value="${partnershipAgreement['atensi_client'] || ''}" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="telp_client">Telepon <span class="text-danger">*</span></label>
+                            <input type="text" id="telp_client" name="fields[telp_client]" class="form-control" placeholder="Contoh: 62 812 3456 7890" value="${partnershipAgreement['telp_client'] || ''}" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="email_client">Email <span class="text-danger">*</span></label>
+                            <input type="email" id="email_client" name="fields[email_client]" class="form-control" placeholder="email@perusahaan.com" value="${partnershipAgreement['email_client'] || ''}" required>
+                        </div>
+                    </div>
+                </div>
+            `,
             // Add more document types here if needed
         };
 
