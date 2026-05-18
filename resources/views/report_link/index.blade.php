@@ -15,6 +15,7 @@
 @stop
 
 @section('css')
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 <style>
 .report-link-card {
     border-radius: 10px;
@@ -87,8 +88,73 @@
 @section('content')
 @include('components.alert')
 
+{{-- ── Filter Bar ── --}}
+<div class="card shadow-sm mb-4">
+    <div class="card-body py-3">
+        <form method="GET" action="{{ route('report-link.index') }}" id="filterForm">
+            <div class="row align-items-end">
+                {{-- Search nama --}}
+                <div class="col-12 col-md-4 mb-2 mb-md-0">
+                    <label class="font-weight-bold small mb-1">Cari Nama Laporan</label>
+                    <div class="input-group input-group-sm">
+                        <div class="input-group-prepend">
+                            <span class="input-group-text"><i class="fas fa-search"></i></span>
+                        </div>
+                        <input type="text" name="search" class="form-control"
+                               placeholder="Nama laporan..."
+                               value="{{ request('search') }}">
+                    </div>
+                </div>
+
+                {{-- Date From --}}
+                <div class="col-6 col-md-3 mb-2 mb-md-0">
+                    <label class="font-weight-bold small mb-1">Dari Tanggal</label>
+                    <div class="input-group input-group-sm">
+                        <div class="input-group-prepend">
+                            <span class="input-group-text"><i class="fas fa-calendar-alt"></i></span>
+                        </div>
+                        <input type="text" name="date_from" id="dateFrom" class="form-control flatpickr"
+                               placeholder="dd/mm/yyyy" autocomplete="off"
+                               value="{{ request('date_from') }}">
+                    </div>
+                </div>
+
+                {{-- Date To --}}
+                <div class="col-6 col-md-3 mb-2 mb-md-0">
+                    <label class="font-weight-bold small mb-1">Sampai Tanggal</label>
+                    <div class="input-group input-group-sm">
+                        <div class="input-group-prepend">
+                            <span class="input-group-text"><i class="fas fa-calendar-alt"></i></span>
+                        </div>
+                        <input type="text" name="date_to" id="dateTo" class="form-control flatpickr"
+                               placeholder="dd/mm/yyyy" autocomplete="off"
+                               value="{{ request('date_to') }}">
+                    </div>
+                </div>
+
+                {{-- Actions --}}
+                <div class="col-12 col-md-2 d-flex gap-1">
+                    <button type="submit" class="btn btn-primary btn-sm">
+                        <i class="fas fa-filter mr-1"></i>Filter
+                    </button>
+                    @if(request()->hasAny(['search','date_from','date_to']))
+                    <a href="{{ route('report-link.index') }}" class="btn btn-secondary btn-sm ml-1" title="Reset">
+                        <i class="fas fa-times"></i>
+                    </a>
+                    @endif
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
 <div class="mb-3 d-flex justify-content-between align-items-center">
-    <small class="text-muted">Daftar laporan beserta link terkait</small>
+    <small class="text-muted">
+        Daftar laporan beserta link terkait
+        @if(request()->hasAny(['search','date_from','date_to']))
+            &mdash; <span class="text-primary">Filter aktif</span>
+        @endif
+    </small>
     @canAccess('store', 'report_links')
     <a href="{{ route('report-link.create') }}" class="btn btn-primary btn-sm">
         <i class="fas fa-plus-circle mr-1"></i>Tambah Report Link
@@ -178,4 +244,32 @@
         </div>
     @endif
 @endif
+@stop
+
+@section('js')
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/id.js"></script>
+<script>
+const fpConfig = {
+    locale: 'id',
+    dateFormat: 'Y-m-d',        // nilai yang dikirim ke server (value pada input[name])
+    altInput: true,
+    altFormat: 'd/m/Y',         // tampilan user-friendly
+    allowInput: true,
+};
+
+const fpFrom = flatpickr('#dateFrom', {
+    ...fpConfig,
+    onChange: function(dates) {
+        if (dates[0]) fpTo.set('minDate', dates[0]);
+    }
+});
+
+const fpTo = flatpickr('#dateTo', {
+    ...fpConfig,
+    onChange: function(dates) {
+        if (dates[0]) fpFrom.set('maxDate', dates[0]);
+    }
+});
+</script>
 @stop

@@ -9,11 +9,24 @@ use Illuminate\Support\Facades\Storage;
 
 class ReportLinkController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $reportLinks = ReportLink::with(['user', 'images'])
-            ->orderByDesc('date')
-            ->paginate(12);
+        $query = ReportLink::with(['user', 'images'])
+            ->orderByDesc('date');
+
+        if ($request->filled('search')) {
+            $query->where('name', 'like', '%' . $request->search . '%');
+        }
+
+        if ($request->filled('date_from')) {
+            $query->whereDate('date', '>=', $request->date_from);
+        }
+
+        if ($request->filled('date_to')) {
+            $query->whereDate('date', '<=', $request->date_to);
+        }
+
+        $reportLinks = $query->paginate(12)->withQueryString();
 
         return view('report_link.index', compact('reportLinks'));
     }
