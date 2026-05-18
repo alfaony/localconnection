@@ -637,120 +637,92 @@
                         <input type="text" class="form-control ic-input" wire:model="serialNumber" id="modalSerialNumber" required>
                     </div>
 
-                    <div class="mb-3">
-                        <label class="form-label">ODP (Optical Distribution Point) <span class="text-danger">*</span></label>
-                        <select class="form-control" wire:model="optical_distribution_id" id="odpSelect">
-                            <option value="">— Pilih ODP —</option>
-                            @foreach($availableOdps as $odp)
-                                <option value="{{ $odp['id'] }}">{{ $odp['label'] }}</option>
+                    <div wire:ignore>
+                        <div class="form-group">
+                            <label class="ic-label">ODP (Optical Distribution Point) <span class="text-danger">*</span></label>
+                            <select class="form-control ic-input" id="odpSelect">
+                                <option value="">— Pilih ODP —</option>
+                            </select>
+                            <small class="form-text text-muted">Pilih ODP sesuai lokasi pemasangan pelanggan.</small>
+                        </div>
+                    </div>
+
+                    <div wire:ignore>
+                        <div class="form-group">
+                            <label class="ic-label">Group <span class="text-danger">*</span></label>
+                            <select class="form-control ic-input" id="groupSelect">
+                                <option value="">— Pilih ODP dulu —</option>
+                            </select>
+                            <small class="form-text text-muted" id="groupSelectHint">Group difilter otomatis dari ODP yang dipilih.</small>
+                        </div>
+
+                        <div class="form-group" id="groupingPreviewBox" style="display:none;">
+                            <label class="ic-label">Grouping ID <small class="text-muted font-weight-normal">(bisa diubah jika perlu)</small></label>
+                            <div class="input-group input-group-sm">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text"><i class="fas fa-tag"></i></span>
+                                </div>
+                                <input type="text" class="form-control ic-input font-weight-bold" id="groupingIdPreview" placeholder="e.g. HN110001">
+                                <div class="input-group-append">
+                                    <button type="button" class="btn btn-outline-secondary btn-sm" id="useAsUsernameBtn" title="Gunakan sebagai username">
+                                        <i class="fas fa-arrow-right"></i> Pakai sbg Username
+                                    </button>
+                                </div>
+                            </div>
+                            <small class="form-text text-muted">Saran otomatis — bisa diubah jika nomor sudah terpakai.</small>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="ic-label">Router</label>
+                        <select id="routerSelect" class="form-control ic-input"></select>
+                        <input type="hidden" id="routerSelectMirror" wire:model="router_id">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="ic-label">Pilih IP Pool <span class="text-muted">(opsional)</span></label>
+                        <select class="form-control ic-input" wire:model="override_pool_id"
+                                wire:key="pool-select-{{ $router_id }}-{{ count($availablePools) }}" id="selectPool">
+                            <option value="">— Ikuti mapping otomatis —</option>
+                            @foreach($availablePools as $pool)
+                                <option value="{{ $pool['id'] }}">{{ $pool['label'] }}</option>
                             @endforeach
                         </select>
-                        <div class="form-text">Pilih ODP sesuai lokasi pemasangan pelanggan.</div>
+                        <small class="form-text text-muted">Kosongkan jika ingin pakai pool default/PPPoE server router.</small>
                     </div>
 
-                    <div class="mb-3">
-                        <label class="form-label">Grouping/Cluster</label>
-                        <input type="text" class="form-control" wire:model="grouping_id" id="groupingInput"
-                               placeholder="Contoh: Cluster A, Zona 1, RT 05, dll">
-                    </div>
-
-                    {{-- PPPoE fields --}}
-                    <div id="pppoeFields">
-                        <div class="mb-3">
-                            <label class="form-label">Router</label>
-                            <select id="routerSelect" class="form-control"></select>
-                            <input type="hidden" id="routerSelectMirror" wire:model="router_id">
-                        </div>
-
-                        <div class="mb-3">
-                            <label class="form-label">Pilih IP Pool (opsional)</label>
-                            <select class="form-control" wire:model="override_pool_id"
-                                    wire:key="pool-select-{{ $router_id }}-{{ count($availablePools) }}" id="selectPool">
-                                <option value="">— Ikuti mapping otomatis —</option>
-                                @foreach($availablePools as $pool)
-                                    <option value="{{ $pool['id'] }}">{{ $pool['label'] }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-
-                        <div class="mb-3">
-                            <label class="form-label">Local Address</label>
-                            <input type="text" class="form-control" id="local_address" placeholder="192.168.1.1">
-                        </div>
-                    </div>
-
-                    {{-- Hotspot fields --}}
-                    <div id="hotspotFields" style="display:none;">
-                        <div class="alert alert-info py-2 px-3 mb-3">
-                            <i class="fas fa-broadcast-tower me-1"></i> <strong>Hotspot Member</strong> — user akan diregistrasi ke hotspot server yang dipilih.
-                        </div>
-
-                        <div class="mb-3">
-                            <label class="form-label">Hotspot Server <span class="text-danger">*</span></label>
-                            <select id="hotspotServerSelect" class="form-control">
-                                <option value="">— Pilih Hotspot Server —</option>
-                            </select>
-                            <input type="hidden" id="hotspotServerMirror" wire:model="hotspot_server_id">
-                        </div>
-
-                        <div class="mb-3">
-                            <label class="form-label">IP Binding (opsional)</label>
-                            <select id="ipBindingTypeSelect" class="form-control">
-                                <option value="">— Tidak ada binding —</option>
-                                <option value="direct">Direct (MikroTik ip-binding)</option>
-                                <option value="radius" {{ $radiusEnable ? '' : 'disabled' }}>Radius (Framed-IP-Address)</option>
-                            </select>
-                        </div>
-
-                        <div id="ipBindingDetails" style="display:none;">
-                            <div class="row">
-                                <div class="col-md-6 mb-3">
-                                    <label class="form-label">Binding Mode</label>
-                                    <select id="ipBindingModeSelect" class="form-control">
-                                        <option value="regular">Regular (IP fixed, login tetap)</option>
-                                        <option value="bypassed">Bypassed (bypass login via MAC)</option>
-                                    </select>
-                                </div>
-                                <div class="col-md-6 mb-3">
-                                    <label class="form-label">IP Address</label>
-                                    <input type="text" class="form-control" id="hotspotIpAddress" placeholder="192.168.x.x">
-                                </div>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">MAC Address</label>
-                                <input type="text" class="form-control" id="hotspotMacAddress" placeholder="AA:BB:CC:DD:EE:FF">
-                            </div>{{-- mb-3 MAC address --}}
-                        </div>{{-- ipBindingDetails --}}
-                    </div>{{-- hotspotFields --}}
-
-                    {{-- Auth fields — disembunyikan untuk mode bypassed --}}
-                    <div id="authFields">
-                        <div class="mb-3">
-                            <label class="form-label">Username <span class="text-danger auth-required-star">*</span></label>
-                            <div class="input-group">
-                                <input type="text" class="form-control" id="modalUsername" placeholder="username_pppoe">
-                                <div class="input-group-append">
-                                    <span class="input-group-text">
-                                        <div wire:loading wire:target="username">
-                                            <i class="fas fa-spinner fa-spin"></i>
-                                        </div>
-                                        <div wire:loading.remove wire:target="username">
-                                            {{-- Icon akan diisi oleh JavaScript --}}
-                                        </div>
-                                    </span>
-                                </div>
+                    <div class="form-group">
+                        <label class="ic-label">Local Address</label>
+                        <div class="input-group">
+                            <input type="text" class="form-control ic-input" id="local_address" placeholder="192.168.1.1">
+                            <div class="input-group-append">
+                                <span class="input-group-text">
+                                    <div wire:loading wire:target="local_address">
+                                        <i class="fas fa-spinner fa-spin"></i>
+                                    </div>
+                                </span>
                             </div>
                         </div>
-                        <div class="mb-3">
-                            <label class="form-label">Password <span class="text-danger auth-required-star">*</span></label>
-                            <input type="password" class="form-control" wire:model="password" id="modalPassword">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="ic-label">Username <span class="text-danger">*</span></label>
+                        <div class="input-group">
+                            <input type="text" class="form-control ic-input" id="modalUsername" placeholder="username_pppoe">
+                            <div class="input-group-append">
+                                <span class="input-group-text">
+                                    <div wire:loading wire:target="username">
+                                        <i class="fas fa-spinner fa-spin"></i>
+                                    </div>
+                                    <div wire:loading.remove wire:target="username"></div>
+                                </span>
+                            </div>
                         </div>
                     </div>
 
-                    {{-- Info bypassed (ditampilkan saat mode bypassed dipilih) --}}
-                    <div id="bypassedInfo" class="alert alert-warning py-2 px-3 mb-3" style="display:none;">
-                        <i class="fas fa-shield-alt me-1"></i>
-                        <strong>Mode Bypassed</strong> — user tidak perlu login. Akses internet diberikan langsung berdasarkan MAC/IP address yang terdaftar.
+                    <div class="form-group">
+                        <label class="ic-label">Password</label>
+                        <input type="password" class="form-control ic-input" wire:model="password" id="modalPassword" required>
                     </div>
 
                     <div class="form-group">
@@ -1538,56 +1510,25 @@ input[type="radio"].d-none:checked + .ic-radio-btn {
 
         // Event listener untuk populate modal
         window.addEventListener('open-installation-modal', (e) => {
-            const { customerName, customerCode, serialNumber, accessType, routers, hotspotServers, odps } = e.detail;
-            currentAccessType = accessType || 'pppoe';
-            currentBypassMode = false;
+            const { customerName, customerCode, serialNumber, routers, odps } = e.detail;
 
             document.getElementById('modalCustomerName').textContent = customerName;
             document.getElementById('modalCustomerCode').textContent = customerCode;
             document.getElementById('modalSerialNumber').value = serialNumber;
 
-            // Show/hide access-type specific fields
-            const isHotspot = (accessType === 'hotspot');
-            document.getElementById('pppoeFields').style.display   = isHotspot ? 'none' : 'block';
-            document.getElementById('hotspotFields').style.display  = isHotspot ? 'block' : 'none';
-            // Reset auth fields (selalu tampil saat modal dibuka)
-            toggleBypassedMode(false);
-            document.getElementById('authFields').style.display   = 'block';
-            document.getElementById('bypassedInfo').style.display = 'none';
-
-            // Populate hotspot servers
-            if (isHotspot) {
-                const hsSelect = document.getElementById('hotspotServerSelect');
-                hsSelect.innerHTML = '<option value="">— Pilih Hotspot Server —</option>';
-                (hotspotServers || []).forEach(hs => {
-                    const opt = document.createElement('option');
-                    opt.value = hs.id;
-                    opt.dataset.routerId = hs.router_id;
-                    opt.textContent = hs.name;
-                    hsSelect.appendChild(opt);
-                });
-                hsSelect.value = '';
-                document.getElementById('hotspotServerMirror').value = '';
-                document.getElementById('ipBindingTypeSelect').value = '';
-                document.getElementById('ipBindingDetails').style.display = 'none';
-                @this.set('hotspot_server_id', '');
-                @this.set('router_id', '');
-            }
-
-            // POPULATE ODP DROPDOWN
+            // Populate ODP dropdown
             const odpSelect = document.getElementById('odpSelect');
             if (odpSelect) {
                 odpSelect.innerHTML = '<option value="">— Pilih ODP —</option>';
-                if (odps && odps.length > 0) {
-                    odps.forEach(odp => {
-                        const option = document.createElement('option');
-                        option.value = odp.id; option.textContent = odp.label;
-                        odpSelect.appendChild(option);
-                    });
-                }
+                (odps || []).forEach(odp => {
+                    const option = document.createElement('option');
+                    option.value = odp.id; option.textContent = odp.label;
+                    odpSelect.appendChild(option);
+                });
                 odpSelect.value = '';
             }
 
+            // Reset group & grouping preview
             const groupSelect = document.getElementById('groupSelect');
             if (groupSelect) groupSelect.innerHTML = '<option value="">— Pilih ODP dulu —</option>';
             const previewBox = document.getElementById('groupingPreviewBox');
@@ -1597,10 +1538,13 @@ input[type="radio"].d-none:checked + .ic-radio-btn {
             resetGroupingIdState();
 
             @this.set('optical_distribution_id', null);
-            odpSelect.onchange = function() {
-                @this.set('optical_distribution_id', odpSelect.value || null);
-            };
+            if (odpSelect) {
+                odpSelect.onchange = function() {
+                    @this.set('optical_distribution_id', odpSelect.value || null);
+                };
+            }
 
+            // Populate router dropdown
             const routerSelect = document.getElementById('routerSelect');
             routerSelect.innerHTML = '';
             const defaultOption = document.createElement('option');
@@ -1615,19 +1559,6 @@ input[type="radio"].d-none:checked + .ic-radio-btn {
             document.getElementById('routerSelectMirror').value = '';
             @this.set('router_id', '');
             @this.set('override_pool_id', '');
-            // Reset hotspot fields
-            @this.set('hotspot_server_id', '');
-            @this.set('ip_binding_type', '');
-            @this.set('ip_binding_mode', '');
-            @this.set('ip_address', '');
-            @this.set('mac_address', '');
-
-            document.getElementById('modalUsername').value = '';
-            document.getElementById('local_address').value = '';
-            @this.set('username', '');
-            @this.set('local_address', '');
-            @this.set('newUsernameChecked', false);
-            @this.set('newUsernameAvailable', false);
 
             routerSelect.onchange = function(e) {
                 const val = e.target.value || '';
@@ -1637,11 +1568,18 @@ input[type="radio"].d-none:checked + .ic-radio-btn {
                 @this.call('loadPoolsForRouter', val);
             };
 
+            // Reset form fields
+            document.getElementById('modalUsername').value = '';
+            document.getElementById('local_address').value = '';
             document.getElementById('modalPassword').value = '';
             document.getElementById('modalNotes').value = '';
             document.getElementById('photoPreview').innerHTML = '';
             document.getElementById('modalPhotos').value = '';
             uploadedFiles = [];
+            @this.set('username', '');
+            @this.set('local_address', '');
+            @this.set('newUsernameChecked', false);
+            @this.set('newUsernameAvailable', false);
 
             $('#installationModal').modal('show');
         });
@@ -1674,34 +1612,18 @@ input[type="radio"].d-none:checked + .ic-radio-btn {
             const files            = document.getElementById('modalPhotos').files;
             const routerId         = document.getElementById('routerSelectMirror').value;
             const odpId            = document.getElementById('odpSelect').value;
-            const groupingId       = (document.getElementById('groupingInput')?.value || '').trim() || null;
+            const groupingId       = (document.getElementById('groupingIdPreview')?.value || '').trim() || null;
             const username         = @this.username;
             const password         = document.getElementById('modalPassword').value;
             const override_pool_id = @this.override_pool_id;
             const local_address    = @this.local_address;
-            const hotspotServerId  = document.getElementById('hotspotServerMirror').value || null;
-            const ipBindingType    = document.getElementById('ipBindingTypeSelect').value || null;
-            const ipBindingMode    = document.getElementById('ipBindingModeSelect').value || null;
-            const ipAddress        = document.getElementById('hotspotIpAddress').value || null;
-            const macAddress       = document.getElementById('hotspotMacAddress').value || null;
 
             if (!odpId)         return Swal.fire({ icon: 'warning', title: 'Perhatian', text: 'ODP harus dipilih' });
             if (!serialNumber)  return Swal.fire({ icon: 'warning', title: 'Perhatian', text: 'Serial number harus diisi' });
             if (files.length === 0) return Swal.fire({ icon: 'warning', title: 'Perhatian', text: 'Minimal upload 1 foto instalasi' });
-
-            if (currentAccessType === 'hotspot') {
-                if (!hotspotServerId) return Swal.fire({ icon: 'warning', title: 'Perhatian', text: 'Hotspot Server harus dipilih' });
-                if (ipBindingType === 'direct' && !ipAddress && !macAddress) {
-                    return Swal.fire({ icon: 'warning', title: 'Perhatian', text: 'Direct binding membutuhkan minimal IP Address atau MAC Address' });
-                }
-            } else {
-                if (!routerId) return Swal.fire({ icon: 'warning', title: 'Perhatian', text: 'Router harus dipilih' });
-            }
-
-            if (!currentBypassMode) {
-                if (!username) return Swal.fire({ icon: 'warning', title: 'Perhatian', text: 'Username harus diisi' });
-                if (!password) return Swal.fire({ icon: 'warning', title: 'Perhatian', text: 'Password harus diisi' });
-            }
+            if (!routerId)      return Swal.fire({ icon: 'warning', title: 'Perhatian', text: 'Router harus dipilih' });
+            if (!username)      return Swal.fire({ icon: 'warning', title: 'Perhatian', text: 'Username harus diisi' });
+            if (!password)      return Swal.fire({ icon: 'warning', title: 'Perhatian', text: 'Password harus diisi' });
             
             // Konfirmasi
             const result = await Swal.fire({
@@ -1729,8 +1651,7 @@ input[type="radio"].d-none:checked + .ic-radio-btn {
                 await new Promise(resolve => setTimeout(resolve, 500));
                 const success = await @this.call('completeInstallation',
                     serialNumber, notes, routerId, username, password,
-                    override_pool_id, local_address, odpId, groupingId,
-                    hotspotServerId, ipBindingType, ipBindingMode, ipAddress, macAddress
+                    override_pool_id, local_address, odpId, groupingId
                 );
                 if (success !== false) {
                     $('#installationModal').modal('hide');
