@@ -148,7 +148,7 @@ class AppServiceProvider extends ServiceProvider
                 'punishment_users',
                 'employee_xps',
                 'events',
-                'meetings','moms','dashboard_weekly_reports','weekly_reports','flowcharts',
+                'meetings','moms','dashboard_weekly_reports','weekly_reports','report_links','flowcharts',
                 'ask_bos','decisions','partnership_agreements','national_holidays',
                 'letter_submissions','companies'
             ];
@@ -879,6 +879,12 @@ class AppServiceProvider extends ServiceProvider
                     'text' => 'Internet User Regions',
                     'route' => 'internet-customer-user-region.index',
                     'icon' => 'fa fa-users',
+                ],
+                'report_links' => 
+                [
+                    'text' => 'Report Links',
+                    'route' => 'report-link.index',
+                    'icon' => 'fa fa-link',
                 ],
             ];
 

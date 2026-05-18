@@ -628,6 +628,8 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
   
   Route::get('weekly-report/reminderDashboard', [WeeklyReportController::class, 'reminderDashboard'])->name('weekly-report.reminderDashboard');
   Route::resource('weekly-report', WeeklyReportController::class);
+
+  Route::resource('report-link', \App\Http\Controllers\ReportLinkController::class);
   
   Route::get('vehicle/infoPic', [VehicleController::class, 'infoPic'])->name('reminder.vehicle.pic');
   Route::get('vehicle/infoManager', [VehicleController::class, 'infoManager'])->name('reminder.vehicle.manager');
