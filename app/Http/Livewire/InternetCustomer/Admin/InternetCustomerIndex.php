@@ -331,7 +331,7 @@ class InternetCustomerIndex extends Component
             'photos_count'           => count($this->photos),
             'currentInstallationId'  => $this->currentInstallationId,
             'optical_distribution_id'=> $optical_distribution_id,
-            'group_id'               => $group_id,
+            'grouping_id'            => $grouping_id,
         ]);
         
         // Cek apakah photos sudah ada
@@ -431,7 +431,6 @@ class InternetCustomerIndex extends Component
         try {
             Log::info('Customer found', ['id' => $customer->id, 'code' => $customer->code, 'access_type' => $customer->access_type]);
 
-            // Base update data
             $updateData = [
                 'grouping_id'            => $grouping_id,
                 'status'                 => ParamSchema::INSTALLED,
@@ -453,163 +452,73 @@ class InternetCustomerIndex extends Component
             }
 
             $customer->update($updateData);
-        $validated = $this->validate([
-            'currentInstallationId'  => 'required|exists:internet_customers,id',
-            'deviceSerialNumber'     => 'required|string|max:255',
-            'router_id'              => 'required|exists:routers,id',
-            'username'               => 'required|unique:internet_customers,username',
-            'password'               => 'required',
-            'local_address'          => 'nullable|ip|unique:internet_customers,local_address',
-            'optical_distribution_id'=> 'required|exists:optical_distributions,id',
-            'group_id'               => 'required|exists:internet_customer_groups,id',
-        ], [
-            'deviceSerialNumber.required'      => 'Serial Number wajib diisi',
-            'currentInstallationId.required'   => 'Customer ID tidak valid',
-            'currentInstallationId.exists'     => 'Customer tidak ditemukan',
-            'username.unique'                  => 'Username PPPoE sudah digunakan',
-            'local_address.unique'             => 'Alamat IP lokal sudah terdaftar',
-            'optical_distribution_id.required' => 'ODP wajib dipilih',
-            'optical_distribution_id.exists'   => 'ODP tidak valid',
-            'group_id.required'                => 'Group wajib dipilih',
-            'group_id.exists'                  => 'Group tidak valid',
-        ]);
 
-        DB::beginTransaction();
-        try {
-            // 1. Ambil customer
-            $customer = InternetCustomer::findOrFail($this->currentInstallationId);
-            
-            Log::info('Customer found', ['id' => $customer->id, 'code' => $customer->code]);
-            
-            $customer->update([
-                'group_id'               => $group_id ?: null,
-                'status'                 => ParamSchema::INSTALLED,
-                'local_address'          => $local_address,
-                'router_id'              => $routerId,
-                'username'               => $username,
-                'pass_hash'              => $password,
-                'override_pool_id'       => $override_pool_id ?: null,
-                'optical_distribution_id'=> $optical_distribution_id,
-            ]);
-
-            // Assign grouping_id
-            if ($group_id) {
-                $manualGroupingId = trim($manual_grouping_id ?? '');
-
-                if ($manualGroupingId !== '') {
-                    // User provided a specific grouping_id — validate uniqueness then use directly
-                    if (InternetCustomer::where('grouping_id', $manualGroupingId)->exists()) {
-                        throw new \Exception("Grouping ID {$manualGroupingId} sudah digunakan. Silakan ganti.");
-                    }
-                    $customer->update(['grouping_id' => $manualGroupingId]);
-
-                    // Keep last_number in sync if it looks like a valid sequence for this group
-                    $grp = InternetCustomerGroup::find($group_id);
-                    if ($grp && str_starts_with($manualGroupingId, $grp->grouping_prefix)) {
-                        $parsedSeq = InternetCustomerGroup::parseSequence(substr($manualGroupingId, strlen($grp->grouping_prefix)));
-                        if ($parsedSeq > $grp->last_number) {
-                            $grp->update(['last_number' => $parsedSeq]);
-                        }
-                    }
-                } else {
-                    // Auto-generate with lock to prevent duplicates
-                    $grp = InternetCustomerGroup::lockForUpdate()->find($group_id);
-                    if ($grp) {
-                        $grpPrefix = $grp->grouping_prefix;
-                        $lastNum   = (int) $grp->last_number;
-                        if ($lastNum == 0) {
-                            $lastNum = (int) InternetCustomer::where('group_id', $grp->id)
-                                ->whereNotNull('grouping_id')
-                                ->get('grouping_id')
-                                ->pluck('grouping_id')
-                                ->map(fn($g) => InternetCustomerGroup::parseSequence(substr($g, strlen($grpPrefix))))
-                                ->max() ?? 0;
-                        }
-                        $nextNum       = $lastNum + 1;
-                        $newGroupingId = $grpPrefix . InternetCustomerGroup::formatSequence($nextNum);
-
-                        if (InternetCustomer::where('grouping_id', $newGroupingId)->exists()) {
-                            throw new \Exception("Grouping ID {$newGroupingId} sudah digunakan. Silakan pilih ulang atau isi manual.");
-                        }
-
-                        $grp->update(['last_number' => $nextNum]);
-                        $customer->update(['grouping_id' => $newGroupingId]);
-                    }
-                }
-            }
-            
             dispatch(new \App\Jobs\ProvisionCustomerJob($customer->id));
 
-            // 3. UPDATED: Buat record installation dengan field baru
             $customerInstallation = InternetCustomerInstallation::create([
                 'internet_customer_id' => $customer->id,
                 'device_serial_number' => $serialNumber,
-                'notes' => $notes,
-                'installed_at' => now(),
-                'technical_user_id' => Auth::id(),
+                'notes'                => $notes,
+                'installed_at'         => now(),
+                'technical_user_id'    => Auth::id(),
             ]);
 
             $this->activate($customer->id, $password);
-            
+
             Log::info('Installation record created', [
-                'id' => $customerInstallation->id,
+                'id'     => $customerInstallation->id,
                 'odp_id' => $optical_distribution_id,
             ]);
 
-            // 4. Upload foto (sama seperti sebelumnya)
             $photoCount = 0;
-            
+
             foreach ($validPhotos as $index => $photo) {
                 try {
                     if (is_string($photo)) {
                         $tmpPath = storage_path('app/livewire-tmp/' . $photo);
-                        
+
                         if (!file_exists($tmpPath)) {
                             Log::error('Temporary file not found', ['path' => $tmpPath]);
                             continue;
                         }
-                        
+
                         $fileContent = file_get_contents($tmpPath);
-                        $extension = pathinfo($photo, PATHINFO_EXTENSION);
-                        if (empty($extension)) {
-                            $extension = 'png';
-                        }
-                        
-                        $filename = uniqid() . '_' . time() . '_' . $index . '.' . $extension;
-                        $s3Path = 'installation-photos/' . $customer->code . '/' . $filename;
-                        
+                        $extension   = pathinfo($photo, PATHINFO_EXTENSION) ?: 'png';
+                        $filename    = uniqid() . '_' . time() . '_' . $index . '.' . $extension;
+                        $s3Path      = 'installation-photos/' . $customer->code . '/' . $filename;
+
                         Storage::disk('s3')->put($s3Path, $fileContent, 'public');
-                        
-                        $photoRecord = InternetInstallationPhoto::create([
+
+                        InternetInstallationPhoto::create([
                             'internet_installation_id' => $customerInstallation->id,
-                            'photo' => $s3Path,
+                            'photo'   => $s3Path,
                             'caption' => 'Installation Photo ' . ($photoCount + 1),
                         ]);
-                        
+
                         @unlink($tmpPath);
                         $photoCount++;
-                        
+
                     } elseif ($photo instanceof \Illuminate\Http\UploadedFile) {
                         $extension = $photo->getClientOriginalExtension();
-                        $filename = uniqid() . '_' . time() . '_' . $index . '.' . $extension;
-                        
+                        $filename  = uniqid() . '_' . time() . '_' . $index . '.' . $extension;
+
                         $path = $photo->storeAs(
                             'installation-photos/' . $customer->code,
                             $filename,
                             's3'
                         );
-                        
+
                         Storage::disk('s3')->setVisibility($path, 'public');
-                        
+
                         InternetInstallationPhoto::create([
                             'internet_installation_id' => $customerInstallation->id,
-                            'photo' => $path,
+                            'photo'   => $path,
                             'caption' => 'Installation Photo ' . ($photoCount + 1),
                         ]);
-                        
+
                         $photoCount++;
                     }
-                    
+
                     \App\Jobs\SyncInstalledCustomersJob::dispatch([$customer->id]);
                 } catch (\Exception $photoError) {
                     Log::error('Failed to process photo', [
@@ -631,7 +540,7 @@ class InternetCustomerIndex extends Component
                 'customer_id'    => $customer->id,
                 'photos_uploaded'=> $photoCount,
                 'odp_id'         => $optical_distribution_id,
-                'group_id'       => $group_id,
+                'grouping_id'    => $grouping_id,
             ]);
 
             $this->reset([
@@ -648,30 +557,30 @@ class InternetCustomerIndex extends Component
             ]);
 
             $this->dispatchBrowserEvent('show-notification', [
-                'type' => 'success',
-                'message' => "Instalasi berhasil disimpan dengan {$photoCount} foto"
+                'type'    => 'success',
+                'message' => "Instalasi berhasil disimpan dengan {$photoCount} foto",
             ]);
 
             return true;
 
         } catch (\Exception $e) {
             DB::rollBack();
-            
+
             Log::error('Installation failed', [
                 'customer_id' => $this->currentInstallationId,
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'error'       => $e->getMessage(),
+                'trace'       => $e->getTraceAsString(),
             ]);
 
             $this->dispatchBrowserEvent('show-notification', [
-                'type' => 'error',
-                'message' => 'Gagal menyimpan instalasi: ' . $e->getMessage()
+                'type'    => 'error',
+                'message' => 'Gagal menyimpan instalasi: ' . $e->getMessage(),
             ]);
-            
+
             return false;
         }
     }
-        
+
 
     // ── Import Methods ─────────────────────────────────────────────────────
 
@@ -1172,10 +1081,6 @@ class InternetCustomerIndex extends Component
             ->orderBy($this->sortField, $this->sortDirection)
             ->paginate($this->perPage)
             ->withQueryString();
-
-        // Sorting
-        $internetCustomers = $query->orderBy($this->sortField, $this->sortDirection)
-        ->paginate($this->perPage);
         
         // Get filter options
         $packages = InternetPackage::byCompany($user->company_id)->orderBy('name')->get();
@@ -1560,7 +1465,7 @@ class InternetCustomerIndex extends Component
                 $message = "Pembayaran Langganan Internet Untuk Kode ".$customer->code." Telah di Setujui. Silahkan segera lakukan Pemasangan";
                 $directUrl = route('internet-customer.show',$customer->id);
                 foreach($userTechnical as $tech) {
-                    $this->sentInbox($tech,$from->id, $message, $directUrl);
+                    $this->sentInbox($tech, $message, $directUrl);
                 }
             }
         } catch (\Throwable $th) {
