@@ -18,6 +18,7 @@ class PartnershipAgreementTypeSeeder extends Seeder
             ['name' => 'Perjanjian Table Ads (Pengiklan)', 'name_format' => 'perjanjian_table_ads_pengiklan', 'count_signature' => 2],
             ['name' => 'Perjanjian untuk KOL', 'name_format' => 'perjanjian_untuk_kol', 'count_signature' => 2],
             ['name' => 'Perjanjian Kerjasama HikariBiz', 'name_format' => 'perjanjian_kerjasama_hikari_biz', 'count_signature' => 2],
+            ['name' => 'NDA - Jasa Pembukuan', 'name_format' => 'nda_jasa_pembukuan', 'count_signature' => 2],
         ];
 
         foreach ($agreementTypes as $type) {

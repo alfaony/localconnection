@@ -1208,8 +1208,9 @@ createApp({
         };
 
         const confirmPayment = async () => {
-            $('#paymentConfirmationModal').modal('hide');
+            if (isLoading.value || isCheckingStock.value) return;
             setLoading(true, 'Memproses pembayaran...');
+            $('#paymentConfirmationModal').modal('hide');
             await processPayment();
         };
 
