@@ -121,6 +121,8 @@ class InternetCustomer extends Model
         'hotspot_server_id',
         'ip_binding_type',
         'ip_binding_mode',
+        'npwp_number',
+        'npwp_photo',
     ];
 
     // ✅ RELATIONS

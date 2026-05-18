@@ -80,7 +80,7 @@
                             <td>{{ $attendance->clock_out }}</td>
                             <td>{{ $attendance->point }}</td>
                             <td>
-                                <button class="btn btn-info btn-sm show-attendance" data-attendance="{{ json_encode($attendance) }}" data-shift="{{ json_encode($attendance->schedule ? $attendance->schedule->shiftingOb : '') }}" >
+                                <button class="btn btn-info btn-sm show-attendance" data-picin="{{ s3_asset(true,10,'attendance/'. $attendance->pic_in) }}" data-picout="{{ s3_asset(true,10,'attendance/'. $attendance->pic_out) }}" data-attendance="{{ json_encode($attendance) }}" data-shift="{{ json_encode($attendance->schedule ? $attendance->schedule->shiftingOb : '') }}" >
                                     <i class="fa fa-eye"></i> Show
                                 </button>
                             </td>
@@ -146,9 +146,9 @@ $(document).ready(function() {
         var shift = $(this).data('shift');
 
         // Construct the URL for the pic_in image
-        let urlpicin = "{{ ('attendance/') }}" + attendance.pic_in;
+        let urlpicin = $(this).data('picin');
         // Construct the URL for the pic_out image
-        let urlpicout = "{{ s3_asset(true,10,'attendance/') }}" + attendance.pic_out;
+        let urlpicout = $(this).data('picout');
 
         $('#showUser').text(attendance.user.name);
         $('#showDate').text(new Date(attendance.date).toLocaleDateString('id-ID'));

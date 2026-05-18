@@ -18,6 +18,8 @@ class ProductStoreMedia extends Model
         'caption'
     ];
 
+    protected $appends = ['file_url'];
+
     protected $casts = [
         'order' => 'integer',
         'product_store_id' => 'string'

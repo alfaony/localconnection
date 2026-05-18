@@ -159,6 +159,7 @@ use App\Http\Livewire\InternetCustomer\Admin\InternetCustomerIndex;
 use App\Http\Livewire\InternetCustomer\Admin\InternetCustomerShow;
 use App\Http\Livewire\InternetCustomer\InternetCustomerShow as CustomerShow;
 use App\Http\Livewire\InternetCustomer\CustomerCodeInput;
+use App\Http\Livewire\InternetCustomer\InternetCustomerUserRegionIndex;
 use App\Http\Livewire\Promo\PromoIndex;
 use App\Http\Livewire\Promo\PromoForm;
 use App\Http\Livewire\Router\RouterForm;
@@ -280,6 +281,7 @@ Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name
 Route::get('employee-checking/report', [EmployeeCheckingController::class, 'report'])->name('employee-checking.report');
 
 Route::get('partnership-agreement/sharePdf/{id}',[PartnershipAgreementController::class,'sharePdf'])->name('partnership-agreement.sharePdf');
+Route::post('partnership-agreement/verifySharePassword/{id}',[PartnershipAgreementController::class,'verifySharePassword'])->name('partnership-agreement.verifySharePassword');
 Route::put('partnership-agreement/signatureShare/{id}',[PartnershipAgreementController::class,'signatureShare'])->name('partnership-agreement.signatureShare');
 
 Route::get('used-laptop/showQr/{slug}', [UsedLaptopController::class,'showQr'])->name('used-laptop.show-qr');
@@ -516,6 +518,7 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
   Route::resource('daily-task-category', DailyTaskCategoryController::class);
 
   Route::resource('shifting-ob', ShiftingObController::class)->only(['index','store','update','destroy']);
+  Route::get('schedule-ob/calendar', [App\Http\Controllers\ScheduleObController::class, 'calendar'])->name('schedule-ob.calendar');
   Route::resource('schedule-ob', ScheduleObController::class)->except(['edit','create','show']);
 
   Route::post('division-budget/approve/{divisionBudget}', [DivisionBudgetController::class, 'approve'])->name('division-budget.approve');
@@ -538,6 +541,7 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
   Route::get('employee-checking/checkExportStatus', [EmployeeCheckingController::class, 'checkExportStatus'])->name('employee-checking.checkExportStatus');
   Route::get('employee-checking/clearsession', [EmployeeCheckingController::class, 'clearsession'])->name('employee-checking.clearsession');
   Route::get('employee-checking/checkLastScheduledCheckin',[EmployeeCheckingController::class,'checkLastScheduledCheckin'])->name('employee-checking.checkLastScheduledCheckin');
+  Route::get('employee-checking/current-active',[EmployeeCheckingController::class,'currentActive'])->name('employee-checking.currentActive');
   Route::put('employee-checking/updatestatus/{employee_checking}',[EmployeeCheckingController::class,'updatestatus'])->name('employee-checking.updatestatus');
   Route::resource('employee-checking', EmployeeCheckingController::class)->only(['index','update']);
 
@@ -655,6 +659,7 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
   Route::resource('item-purchase', ItemPurchaseController::class)->only(['store','update']);  
 
   Route::post('meeting/join', [MeetingController::class, 'join'])->name('meeting.join');
+  Route::get('meeting/export', [MeetingController::class, 'export'])->name('meeting.export');
   Route::resource('meeting', MeetingController::class);
 
   Route::put('mom/storeAgenda/{id}', [MomController::class,'storeAgenda'])->name('mom.storeAgenda');
@@ -700,6 +705,7 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
   Route::get('internet-package/edit/{id}', InternetPackageForm::class)->name('internet-package.edit');
 
   Route::get('internet-customer-group', InternetCustomerGroupIndex::class)->name('internet-customer-group.index');
+  Route::get('internet-customer-user-region', InternetCustomerUserRegionIndex::class)->name('internet-customer-user-region.index');
 
   Route::get('internet-customer', InternetCustomerIndex::class)->name('internet-customer.index');
   Route::put('internet-customer/update/{id}', InternetCustomerIndex::class)->name('internet-customer.update');
@@ -747,6 +753,8 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
   Route::get('punishment-user', PunishmentUserTable::class)->name('punishment-user.index');
   
   Route::get('sales', \App\Http\Livewire\Sale\SaleIndex::class)->name('sales.index');
+  Route::get('sales/export', [SaleController::class, 'export'])->name('sales.export');
+  Route::get('sales/print-receipt/{sale}', [SaleController::class, 'printReceiptManagement'])->name('sales.printReceipt');
   Route::get('sales/{id}', \App\Http\Livewire\Sale\SaleShow::class)->name('sales.show');
   
   Route::get('store-selling', [SaleController::class, 'index'])->name('store-selling.index');

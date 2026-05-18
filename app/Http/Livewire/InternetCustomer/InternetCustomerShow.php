@@ -44,6 +44,7 @@ class InternetCustomerShow extends Component
     public $transfer_notes;
     public $xenditActive = false;
     public $midtransActive = false;
+    public $qrisGopayActive = false;
     public $xenditPayWithPpn = false;
     public $midtransPayWithPpn = false;
     public $manualPaymentEnabled = false; // Default disabled, loaded from settings
@@ -161,7 +162,9 @@ class InternetCustomerShow extends Component
         $companySettings = SettingCompany::byCompany($this->customer->company_id)->get()->pluck('field_value', 'field_title');
         $midtransService = new MidtransService($this->customer->company_id);
         
-        $this->midtransActive = $midtransService->testConnection();
+        $this->midtransActive = $midtransService->testConnectionCheck()['success'] ? true : false;
+
+        $this->qrisGopayActive = $this->midtransActive;
         $this->xenditActive = isset($companySettings['secret_key']) && isset($companySettings['webhook_token']) ? true : false;
 
         $this->xenditPayWithPpn = isset($companySettings['xendit_pay_with_ppn']) && $companySettings['xendit_pay_with_ppn'] == '1';
@@ -194,7 +197,8 @@ class InternetCustomerShow extends Component
             
             $midtransService = new MidtransService($this->customer->company_id);
             $this->midtransActive = $midtransService->testConnection();
-            
+            $this->qrisGopayActive = $this->midtransActive;
+
             Log::info('InternetCustomerShow - Midtrans Status Result', [
                 'company_id' => $this->customer->company_id,
                 'midtransActive' => $this->midtransActive,
@@ -203,6 +207,7 @@ class InternetCustomerShow extends Component
 
         } catch (\Exception $e) {
             $this->midtransActive = false;
+            $this->qrisGopayActive = false;
             Log::warning('Midtrans not configured', [
                 'company_id' => $this->customer->company_id,
                 'error' => $e->getMessage(),
@@ -289,6 +294,7 @@ class InternetCustomerShow extends Component
             'accountName' => $companySettings['atas_nama'] ?? 'Nama Pemilik Tidak Diketahui',
             'xenditActive' => $this->xenditActive,
             'midtransActive' => $this->midtransActive,
+            'qrisGopayActive' => $this->qrisGopayActive,
             'nextPeriodStart' => $previewPeriod['start']->format('d M Y'),
             'currentBillingEnd' => $this->customer->userCustomer->end_billing_date 
                 ? Carbon::parse($this->customer->userCustomer->end_billing_date)->format('d M Y')
@@ -510,6 +516,101 @@ class InternetCustomerShow extends Component
                 'trace' => $e->getTraceAsString()
             ]);
             
+            session()->flash('error', 'Terjadi kesalahan: ' . $e->getMessage());
+            $this->dispatchBrowserEvent('hide-payment-modal');
+            return redirect()->back();
+        }
+    }
+
+    public function payWithQrisGopay()
+    {
+        try {
+            if (!$this->purchase_id) {
+                session()->flash('error', 'Data pembayaran tidak ditemukan.');
+                return redirect()->back();
+            }
+
+            $purchase = InternetCustomerPurchase::findOrFail($this->purchase_id);
+            $internetCustomer = $purchase->customer;
+
+            $midtransService = new MidtransService($internetCustomer->company_id);
+
+            if (!$midtransService->isActive()) {
+                session()->flash('error', 'Pembayaran QRIS GoPay tidak tersedia untuk saat ini.');
+                $this->dispatchBrowserEvent('hide-payment-modal');
+                return redirect()->back();
+            }
+
+            // Calculate period
+            $periodStart = $internetCustomer->userCustomer->start_billing_date
+                ? Carbon::parse($internetCustomer->userCustomer->start_billing_date)
+                : now();
+
+            $periodEnd = $periodStart->copy()->addMonths($this->payment_months)->subDay();
+
+            // Update purchase with period info
+            $purchase->update([
+                'payment_months' => $this->payment_months,
+                'period_start' => $periodStart,
+                'period_end' => $periodEnd,
+                'total_before_discount' => $this->subtotal,
+                'discount_amount' => $this->discountAmount,
+                'amount_before_tax' => $this->amountBeforeTax,
+                'tax_rate' => $this->taxRate,
+                'tax_amount' => $this->taxAmount,
+                'amount_paid' => $this->totalAmount,
+            ]);
+
+            Log::info('Creating QRIS GoPay transaction', [
+                'purchase_id' => $purchase->id,
+                'customer_id' => $internetCustomer->id,
+                'company_id' => $internetCustomer->company_id,
+                'payment_months' => $this->payment_months,
+                'total_amount' => $this->totalAmount
+            ]);
+
+            $result = $midtransService->createTransaction($purchase, $internetCustomer, [
+                'payment_months' => $this->payment_months,
+                'total_amount' => $this->totalAmount,
+                'discount_amount' => $this->discountAmount,
+                'period_start' => $periodStart,
+                'period_end' => $periodEnd,
+                'midtrans_pay_with_ppn' => $this->midtransPayWithPpn
+            ]);
+
+            if ($result['success'])
+            {
+                $purchase->update([
+                    'midtrans_snap_token' => $result['snap_token'],
+                    'midtrans_transaction_id' => $result['order_id'],
+                    'payment_method' => 'midtrans',
+                    'midtrans_raw_response' => $result['raw_response'],
+                ]);
+
+                Log::info('QRIS GoPay transaction created successfully', [
+                    'order_id' => $result['order_id'],
+                    'snap_token' => $result['snap_token']
+                ]);
+
+                $this->dispatchBrowserEvent('hide-payment-modal');
+                return redirect()->away($result['redirect_url'] . '#/gopay-qris');
+
+            } else {
+                Log::error('Failed to create QRIS GoPay transaction', [
+                    'message' => $result['message']
+                ]);
+
+                session()->flash('error', 'Gagal membuat transaksi pembayaran: ' . $result['message']);
+                $this->dispatchBrowserEvent('hide-payment-modal');
+                return redirect()->back();
+            }
+
+        } catch (\Exception $e) {
+            Log::error('Error in payWithQrisGopay', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
             session()->flash('error', 'Terjadi kesalahan: ' . $e->getMessage());
             $this->dispatchBrowserEvent('hide-payment-modal');
             return redirect()->back();

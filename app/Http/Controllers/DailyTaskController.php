@@ -258,8 +258,14 @@ class DailyTaskController extends Controller
             
             for ($i = 0; $i < count($names); $i++)
             {
-                
-                if($startDates[$i] && $endDates[$i] && $assignmentUserIds[$i])
+                $selectedUsers = $assignmentUserIds[$i] ?? [];
+                if (empty($selectedUsers)) {
+                    $selectedUsers = [null]; 
+                }
+
+                foreach ($selectedUsers as $userId) 
+                {
+                if($startDates[$i] && $endDates[$i] && $userId)
                 {
                     $status = TaskStatus::where('name',ParamSchema::TODO)->firstOrFail();
                 }else
@@ -273,7 +279,7 @@ class DailyTaskController extends Controller
                 $dailyTask->task_status_id = $status->id;
                 $dailyTask->start_date = $startDates[$i] ?? NULL; 
                 $dailyTask->end_date = $endDates[$i] ?? NULL;
-                $dailyTask->assignment_user_id = $assignmentUserIds[$i] ?? NULL;
+                $dailyTask->assignment_user_id = $userId ?? NULL;
                 $dailyTask->daily_task_category_id = $categoryIds[$i];
                 $dailyTask->daily_task_type_id = $typeIds[$i];
                 $dailyTask->project_id = $dataProjects[$i] ?? NULL;
@@ -361,16 +367,17 @@ class DailyTaskController extends Controller
                 $this->message($dailyTask->id,'create',' Membuat Tugas '.$dailyTask->name);
                 $this->statusrecord($dailyTask, $status);
 
-                $directUrl = route('dailytask.show', ['dailytask' => $dailyTask->slug]);
-        
-                // Call InboxHelper to send the notification
-                $inboxHelper = new InboxHelper();
-                $inboxHelper->sent(
-                    $dailyTask->assignment_user_id, 
-                    Auth::user()->id, 
-                    Auth::user()->name.' Menugaskan ' . $dailyTask->name, 
-                    $directUrl
-                );
+                if ($dailyTask->assignment_user_id) {
+                    $directUrl = route('dailytask.show', ['dailytask' => $dailyTask->slug]);
+                    $inboxHelper = new InboxHelper();
+                    $inboxHelper->sent(
+                        $dailyTask->assignment_user_id,
+                        Auth::user()->id,
+                        Auth::user()->name . ' Menugaskan ' . $dailyTask->name,
+                        $directUrl
+                    );
+                }
+                }
 
             }
 
@@ -1262,6 +1269,12 @@ class DailyTaskController extends Controller
     {
         $dailyTaskHead = DailyTask::byCompany(Auth::user()->company_id)->where('slug',$slug)->firstOrFail();
 
+        $selectedUsers = $request->user_id; 
+
+        if (empty($selectedUsers)) {
+            $selectedUsers = [null];
+        }
+
         if($request->start_date && $request->end_date && $request->user_id)
         {
             $status = TaskStatus::where('name',ParamSchema::TODO)->firstOrFail();
@@ -1274,6 +1287,7 @@ class DailyTaskController extends Controller
 
         DB::beginTransaction();
         try {
+            foreach ($selectedUsers as $userId) {
 
             $dailyTask = new DailyTask();
             $dailyTask->objective_division_id = $dailyTaskHead->objective_division_id ?? NULL;
@@ -1283,7 +1297,7 @@ class DailyTaskController extends Controller
             $dailyTask->recurring_days = NULL;
             $dailyTask->start_date = $request->start_date;
             $dailyTask->end_date = $request->end_date;
-            $dailyTask->assignment_user_id = $request->user_id;
+            $dailyTask->assignment_user_id = $userId;
             $dailyTask->daily_task_category_id = $dailyTaskHead->daily_task_category_id;
             $dailyTask->daily_task_type_id = $dailyId->id;
             $dailyTask->daily_task_project_id = $dailyTaskHead->daily_task_project_id;
@@ -1340,10 +1354,11 @@ class DailyTaskController extends Controller
 
             $this->message($dailyTask->id,'create','Membuat Tugas '.$dailyTask->name);
             $this->statusrecord($dailyTask, $status);
-
+            }
             
             DB::commit();
             return redirect()->route('dailytask.show', $dailyTaskHead->slug)->with('Subtask', true);
+            
         } catch (\Throwable $th) 
         {
             //throw $th;
@@ -1353,6 +1368,7 @@ class DailyTaskController extends Controller
             
             return redirect()->route('dailytask.show', $dailyTaskHead->slug)->with('Subtask', false);
         }
+
 
     }
 

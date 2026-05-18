@@ -1292,9 +1292,9 @@ class DailyTaskMobileController extends BaseController
             $divisionIds = $user->divisions->pluck('id');
 
             $data = Objective::byCompany($user->company_id)
-                ->whereHas('division', function ($q) use ($divisionIds) {
-                    $q->whereIn('id', $divisionIds);
-                })
+                // ->whereHas('division', function ($q) use ($divisionIds) {
+                //     $q->whereIn('id', $divisionIds);
+                // })
                 ->get(['id', 'name']);
 
             return $this->sendResponse($data->toArray(), 'Daftar objektif berhasil diambil.');
@@ -1410,6 +1410,9 @@ class DailyTaskMobileController extends BaseController
                 $dailytask->division_quota_lock_id = $check->original['quota_lock_id'];
             }
 
+            \App\Helpers\XpHelper::award($dailytask->assign, $dailytask, "Approval Dailytask");
+            \App\Helpers\ChallengeProgressHelper::userCheckAndGiveReward($dailytask->assign->id);
+
             $dailytask->point = $request->point ?? 0;
             $dailytask->task_status_id = $taskStatuss->id;
             $dailytask->approved = $taskStatuss->name == ParamSchema::COMPLATE ? true : false;
@@ -1417,10 +1420,6 @@ class DailyTaskMobileController extends BaseController
             // record message
             $messageType = ($taskStatuss->name == ParamSchema::COMPLATE) 
                 ? 'approvement' : 'reject';
-
-            // $this->message($dailytask->id, $messageType,
-            //     ucfirst($messageType).' '.$dailytask->name
-            // );
 
             if (method_exists($this, 'statusrecord')) {
                 $this->statusrecord($dailytask, $taskStatuss);
@@ -1431,24 +1430,6 @@ class DailyTaskMobileController extends BaseController
                 $dailytask->submit = null;
                 $dailytask->status_submit = null;
             }
-
-            // Send Inbox Notification
-            // if (Route::has('dailytask.show')) {
-            //     $directUrl = route('dailytask.show', ['dailytask'=>$dailytask->slug]);
-            //     $userTo = Auth::user()->id == $dailytask->assignment_user_id
-            //         ? $dailytask->user_id : $dailytask->assignment_user_id;
-
-            //     $this->sentInbox(
-            //         $userTo,
-            //         "Tugas ".$dailytask->name." telah di ".$taskStatuss->name,
-            //         $directUrl
-            //     );
-
-            //     if ($dailytask->head) {
-            //         $this->sentInbox($dailytask->head->user_id, $dailytask->name." telah di ".$taskStatuss->name, $directUrl);
-            //         $this->sentInbox($dailytask->head->assignment_user_id, $dailytask->name." telah di ".$taskStatuss->name, $directUrl);
-            //     }
-            // }
 
             $dailytask->save();
             DB::commit();

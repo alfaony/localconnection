@@ -21,6 +21,8 @@ use App\Models\HotspotServer;
 use App\Jobs\ProvisionCustomerJob;
 use App\Jobs\GenerateInternetPurchaseCouponJob;
 use App\Jobs\ImportInternetCustomerJob;
+use App\Jobs\GenerateGroupingIdJob;
+use App\Models\InternetCustomerGroup;
 
 use App\Models\ImportProgress;
 use App\Models\InternetInstallationPhoto;
@@ -47,10 +49,10 @@ class InternetCustomerIndex extends Component
     public ?string $override_pool_id = null;
     public array $availablePools = [];
     
-    // BARU: Properties untuk ODP dan Grouping
     public ?string $optical_distribution_id = null;
-    public ?string $grouping_id = null;
+    public ?string $group_id = null;
     public array $availableOdps = [];
+    public array $availableGroups = [];
 
     public $search = '';
     public $perPage = 10;
@@ -59,8 +61,10 @@ class InternetCustomerIndex extends Component
     public $selectedCompany = '';
     public $selectedPackage = '';
     public $statusFilter = ParamSchema::PENDING;
+    public $customerTypeFilter = '';
     public $dateFrom = '';
     public $dateTo = '';
+    public $dateType = 'billing';
     public $selectedCustomer = null;
     public $selectedPaymentProof;
 
@@ -113,8 +117,10 @@ class InternetCustomerIndex extends Component
         'selectedCompany',
         'selectedPackage',
         'statusFilter',
+        'customerTypeFilter' => ['except' => ''],
         'dateFrom',
-        'dateTo'
+        'dateTo',
+        'dateType' => ['except' => 'billing'],
     ];
 
     // Method untuk membuka modal
@@ -222,6 +228,61 @@ class InternetCustomerIndex extends Component
             ->toArray();
     }
 
+    // When ODP value changes via @this.set() from JS
+    public function updatedOpticalDistributionId($value)
+    {
+        $this->group_id        = null;
+        $this->availableGroups = [];
+
+        $groups = [];
+        if ($value) {
+            $groups = InternetCustomerGroup::byCompany(Auth::user()->company_id)
+                ->whereHas('odps', fn($q) => $q->where('optical_distributions.id', $value))
+                ->orderBy('name')
+                ->get(['id', 'name', 'description'])
+                ->map(fn($g) => [
+                    'id'          => $g->id,
+                    'name'        => $g->name,
+                    'description' => $g->description,
+                ])
+                ->values()
+                ->toArray();
+            $this->availableGroups = $groups;
+        }
+
+        $this->dispatchBrowserEvent('groups-loaded', ['groups' => $groups]);
+        $this->dispatchBrowserEvent('grouping-id-preview', ['preview' => null]);
+    }
+
+    // Called by JS when user picks a group — compute next grouping_id as preview
+    public function previewGroupingId(?string $groupId): void
+    {
+        if (!$groupId) {
+            $this->dispatchBrowserEvent('grouping-id-preview', ['preview' => null]);
+            return;
+        }
+
+        $group = InternetCustomerGroup::find($groupId);
+        if (!$group) {
+            $this->dispatchBrowserEvent('grouping-id-preview', ['preview' => null]);
+            return;
+        }
+
+        $prefix     = $group->grouping_prefix;
+        $lastNumber = (int) $group->last_number;
+        if ($lastNumber == 0) {
+            $lastNumber = (int) InternetCustomer::where('group_id', $group->id)
+                ->whereNotNull('grouping_id')
+                ->get('grouping_id')
+                ->pluck('grouping_id')
+                ->map(fn($gid) => InternetCustomerGroup::parseSequence(substr($gid, strlen($prefix))))
+                ->max();
+        }
+
+        $preview = $prefix . InternetCustomerGroup::formatSequence($lastNumber + 1);
+        $this->dispatchBrowserEvent('grouping-id-preview', ['preview' => $preview]);
+    }
+
     // Method untuk validasi dan submit
     public function updatedUsername($value)
     {
@@ -265,12 +326,12 @@ class InternetCustomerIndex extends Component
         $this->mac_address              = $mac_address;
         
         Log::info('completeInstallation called', [
-            'serialNumber' => $serialNumber,
-            'notes' => $notes,
-            'photos_count' => count($this->photos),
-            'currentInstallationId' => $this->currentInstallationId,
-            'optical_distribution_id' => $optical_distribution_id,  // BARU
-            'grouping_id' => $grouping_id,                          // BARU
+            'serialNumber'           => $serialNumber,
+            'notes'                  => $notes,
+            'photos_count'           => count($this->photos),
+            'currentInstallationId'  => $this->currentInstallationId,
+            'optical_distribution_id'=> $optical_distribution_id,
+            'group_id'               => $group_id,
         ]);
         
         // Cek apakah photos sudah ada
@@ -392,6 +453,92 @@ class InternetCustomerIndex extends Component
             }
 
             $customer->update($updateData);
+        $validated = $this->validate([
+            'currentInstallationId'  => 'required|exists:internet_customers,id',
+            'deviceSerialNumber'     => 'required|string|max:255',
+            'router_id'              => 'required|exists:routers,id',
+            'username'               => 'required|unique:internet_customers,username',
+            'password'               => 'required',
+            'local_address'          => 'nullable|ip|unique:internet_customers,local_address',
+            'optical_distribution_id'=> 'required|exists:optical_distributions,id',
+            'group_id'               => 'required|exists:internet_customer_groups,id',
+        ], [
+            'deviceSerialNumber.required'      => 'Serial Number wajib diisi',
+            'currentInstallationId.required'   => 'Customer ID tidak valid',
+            'currentInstallationId.exists'     => 'Customer tidak ditemukan',
+            'username.unique'                  => 'Username PPPoE sudah digunakan',
+            'local_address.unique'             => 'Alamat IP lokal sudah terdaftar',
+            'optical_distribution_id.required' => 'ODP wajib dipilih',
+            'optical_distribution_id.exists'   => 'ODP tidak valid',
+            'group_id.required'                => 'Group wajib dipilih',
+            'group_id.exists'                  => 'Group tidak valid',
+        ]);
+
+        DB::beginTransaction();
+        try {
+            // 1. Ambil customer
+            $customer = InternetCustomer::findOrFail($this->currentInstallationId);
+            
+            Log::info('Customer found', ['id' => $customer->id, 'code' => $customer->code]);
+            
+            $customer->update([
+                'group_id'               => $group_id ?: null,
+                'status'                 => ParamSchema::INSTALLED,
+                'local_address'          => $local_address,
+                'router_id'              => $routerId,
+                'username'               => $username,
+                'pass_hash'              => $password,
+                'override_pool_id'       => $override_pool_id ?: null,
+                'optical_distribution_id'=> $optical_distribution_id,
+            ]);
+
+            // Assign grouping_id
+            if ($group_id) {
+                $manualGroupingId = trim($manual_grouping_id ?? '');
+
+                if ($manualGroupingId !== '') {
+                    // User provided a specific grouping_id — validate uniqueness then use directly
+                    if (InternetCustomer::where('grouping_id', $manualGroupingId)->exists()) {
+                        throw new \Exception("Grouping ID {$manualGroupingId} sudah digunakan. Silakan ganti.");
+                    }
+                    $customer->update(['grouping_id' => $manualGroupingId]);
+
+                    // Keep last_number in sync if it looks like a valid sequence for this group
+                    $grp = InternetCustomerGroup::find($group_id);
+                    if ($grp && str_starts_with($manualGroupingId, $grp->grouping_prefix)) {
+                        $parsedSeq = InternetCustomerGroup::parseSequence(substr($manualGroupingId, strlen($grp->grouping_prefix)));
+                        if ($parsedSeq > $grp->last_number) {
+                            $grp->update(['last_number' => $parsedSeq]);
+                        }
+                    }
+                } else {
+                    // Auto-generate with lock to prevent duplicates
+                    $grp = InternetCustomerGroup::lockForUpdate()->find($group_id);
+                    if ($grp) {
+                        $grpPrefix = $grp->grouping_prefix;
+                        $lastNum   = (int) $grp->last_number;
+                        if ($lastNum == 0) {
+                            $lastNum = (int) InternetCustomer::where('group_id', $grp->id)
+                                ->whereNotNull('grouping_id')
+                                ->get('grouping_id')
+                                ->pluck('grouping_id')
+                                ->map(fn($g) => InternetCustomerGroup::parseSequence(substr($g, strlen($grpPrefix))))
+                                ->max() ?? 0;
+                        }
+                        $nextNum       = $lastNum + 1;
+                        $newGroupingId = $grpPrefix . InternetCustomerGroup::formatSequence($nextNum);
+
+                        if (InternetCustomer::where('grouping_id', $newGroupingId)->exists()) {
+                            throw new \Exception("Grouping ID {$newGroupingId} sudah digunakan. Silakan pilih ulang atau isi manual.");
+                        }
+
+                        $grp->update(['last_number' => $nextNum]);
+                        $customer->update(['grouping_id' => $newGroupingId]);
+                    }
+                }
+            }
+            
+            dispatch(new \App\Jobs\ProvisionCustomerJob($customer->id));
 
             // 3. UPDATED: Buat record installation dengan field baru
             $customerInstallation = InternetCustomerInstallation::create([
@@ -407,7 +554,6 @@ class InternetCustomerIndex extends Component
             Log::info('Installation record created', [
                 'id' => $customerInstallation->id,
                 'odp_id' => $optical_distribution_id,
-                'grouping' => $grouping_id
             ]);
 
             // 4. Upload foto (sama seperti sebelumnya)
@@ -480,15 +626,14 @@ class InternetCustomerIndex extends Component
 
             DB::commit();
             \App\Helpers\XpHelper::award(Auth::user(), $customerInstallation, "Internet Instalattion");
-            
+
             Log::info('Installation completed successfully', [
-                'customer_id' => $customer->id,
-                'photos_uploaded' => $photoCount,
-                'odp_id' => $optical_distribution_id,
-                'grouping' => $grouping_id
+                'customer_id'    => $customer->id,
+                'photos_uploaded'=> $photoCount,
+                'odp_id'         => $optical_distribution_id,
+                'group_id'       => $group_id,
             ]);
 
-            // Reset form
             $this->reset([
                 'installationModal',
                 'currentInstallationId',
@@ -497,8 +642,9 @@ class InternetCustomerIndex extends Component
                 'deviceSerialNumber',
                 'installationNotes',
                 'photos',
-                'optical_distribution_id',  // BARU
-                'grouping_id',              // BARU
+                'optical_distribution_id',
+                'group_id',
+                'availableGroups',
             ]);
 
             $this->dispatchBrowserEvent('show-notification', [
@@ -898,8 +1044,10 @@ class InternetCustomerIndex extends Component
         $this->selectedCompany = '';
         $this->selectedPackage = '';
         $this->statusFilter = '';
+        $this->customerTypeFilter = '';
         $this->dateFrom = '';
         $this->dateTo = '';
+        $this->dateType = 'billing';
     }
 
     public function mount(): void
@@ -914,7 +1062,7 @@ class InternetCustomerIndex extends Component
         $columns = [
             'id', 'name', 'code', 'status','address',
             'internet_package_id', 'user_customer_id', 'company_id',
-            'ktp_number', 'created_at','grouping_id'
+            'ktp_number', 'created_at','grouping_id','customer_type'
         ];
         $query = InternetCustomer::query()
             ->byCompany($user->company_id) // batasi dataset sesuai akses
@@ -960,11 +1108,62 @@ class InternetCustomerIndex extends Component
             $query->where('status', $this->statusFilter);
         }
 
-        // Filter tanggal (gabung jadi range)
+        // Filter tipe pelanggan
+        if ($this->customerTypeFilter) {
+            // dd($this->customerTypeFilter);
+            $query->where('customer_type', $this->customerTypeFilter);
+        }
+
+        // Filter tanggal berdasarkan tipe yang dipilih
         if ($this->dateFrom || $this->dateTo) {
             $from = $this->dateFrom ?: '1970-01-01';
             $to   = $this->dateTo   ?: now()->toDateString();
-            $query->whereBetween('created_at', [$from . ' 00:00:00', $to . ' 23:59:59']);
+
+            if ($this->dateType === 'installation') {
+                $query->whereHas('installation', function ($q) use ($from, $to) {
+                    $q->whereBetween('installed_at', [$from . ' 00:00:00', $to . ' 23:59:59']);
+                });
+            } elseif ($this->dateType === 'registration') {
+                $query->whereBetween('created_at', [$from . ' 00:00:00', $to . ' 23:59:59']);
+            } 
+            elseif ($this->dateType === 'suspended') {
+                $query->whereHas('userCustomer', function ($q) use ($from, $to) {
+                    $q->whereBetween('end_billing_date', [$from, $to]);
+                });
+            } else {
+                // default: billing
+                $query->whereHas('userCustomer', function ($q) use ($from, $to) {
+                    $q->whereBetween('start_billing_date', [$from, $to]);
+                });
+            }
+        }
+
+        // Filter region — hanya berlaku untuk user dengan permission as_finance/as_marketing/as_technician
+        $hasRegionPermission = Access::can('as_finance', 'internet_customers')
+            || Access::can('as_marketing', 'internet_customers')
+            || Access::can('as_technician', 'internet_customers')
+            || Access::can('as_manager', 'internet_customers')
+            ;
+
+        if ($hasRegionPermission) {
+            $userRegions = $user->internetCustomerRegions()->get();
+            if ($userRegions->isNotEmpty()) {
+                $query->where(function ($q) use ($userRegions) {
+                    foreach ($userRegions as $region) {
+                        $q->orWhere(function ($q2) use ($region) {
+                            if ($region->subdistrict_id) {
+                                $q2->where('subdistrict_id', $region->subdistrict_id);
+                            } elseif ($region->district_id) {
+                                $q2->where('district_id', $region->district_id);
+                            } elseif ($region->city_id) {
+                                $q2->where('city_id', $region->city_id);
+                            } elseif ($region->province_id) {
+                                $q2->where('province_id', $region->province_id);
+                            }
+                        });
+                    }
+                });
+            }
         }
 
         // Sorting + paginate
@@ -1261,6 +1460,29 @@ class InternetCustomerIndex extends Component
             $this->dispatchBrowserEvent('usernameCheckComplete', [
                 'available' => true
             ]);
+        }
+    }
+
+    public function checkGroupingIdAvailability(?string $value): void
+    {
+        $value = trim($value ?? '');
+
+        if (strlen($value) < 2) {
+            $this->dispatchBrowserEvent('groupingIdCheckComplete', ['available' => true]);
+            return;
+        }
+
+        $existing = InternetCustomer::where('grouping_id', $value)
+            ->when($this->currentInstallationId, fn($q) => $q->where('id', '!=', $this->currentInstallationId))
+            ->first(['id', 'code', 'name']);
+
+        if ($existing) {
+            $this->dispatchBrowserEvent('groupingIdCheckComplete', [
+                'available' => false,
+                'existing'  => ['code' => $existing->code, 'name' => $existing->name],
+            ]);
+        } else {
+            $this->dispatchBrowserEvent('groupingIdCheckComplete', ['available' => true]);
         }
     }
 

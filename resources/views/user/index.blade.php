@@ -141,6 +141,7 @@ $totalUser = $totalUser + 1; // Get the total number of projects
                         <option value="wfo" {{ old('is_checkin', @$userEdit->is_checkin ?? '') == 'wfo' ? 'selected' : '' }}>WFO Check-In</option>
                         <option value="wfh" {{ old('is_checkin', @$userEdit->is_checkin ?? '') == 'wfh' ? 'selected' : '' }}>WFH Check-In</option>
                         <option value="shift" {{ old('is_checkin', @$userEdit->is_checkin ?? '') == 'shift' ? 'selected' : '' }}>Shift Kehadiran</option>
+                        <option value="wfo_shift" {{ old('is_checkin', @$userEdit->is_checkin ?? '') == 'wfo_shift' ? 'selected' : '' }}>WFO Shifting</option>
                     </select>
                 </div>
 
@@ -437,9 +438,10 @@ $totalUser = $totalUser + 1; // Get the total number of projects
                 <div class="form-group">
                     <select name="is_checkin" id="is_checkin" class="form-control">
                         <option value="">-- Pilih Metode Check-In --</option>
-                        <option value="wfo" {{ @$userEdit->wfo_check_in ? 'selected' : '' }}>WFO Check-In</option>
+                        <option value="wfo" {{ @$userEdit->wfo_check_in && !@$userEdit->is_shift_attendance ? 'selected' : '' }}>WFO Check-In</option>
                         <option value="wfh" {{ @$userEdit->is_checkin ? 'selected' : '' }}>WFH / Hybrid Check-In</option>
-                        <option value="shift" {{ @$userEdit->is_shift_attendance ? 'selected' : '' }}>Shift Kehadiran</option>
+                        <option value="shift" {{ @$userEdit->is_shift_attendance && !@$userEdit->wfo_check_in ? 'selected' : '' }}>Shift Kehadiran</option>
+                        <option value="wfo_shift" {{ @$userEdit->wfo_check_in && @$userEdit->is_shift_attendance ? 'selected' : '' }}>WFO Shifting</option>
                     </select>
                 </div>
 
@@ -843,7 +845,7 @@ $totalUser = $totalUser + 1; // Get the total number of projects
 });
  </script>
 <script>
-    function toggleAdditionalSettings() 
+    function toggleAdditionalSettings()
     {
         const isCheckinValue = document.getElementById('is_checkin').value;
         const showSettings = isCheckinValue === 'wfh';
@@ -918,12 +920,12 @@ $totalUser = $totalUser + 1; // Get the total number of projects
 </script>
 
 <script>
-    function toggleAdditionalSettings() 
+    function toggleAdditionalSettings()
     {
         const isCheckinValue = document.getElementById('is_checkin').value;
         const showWfhSettings = isCheckinValue === 'wfh';
         const showWfoSettings = isCheckinValue === 'wfo';
-        
+
         document.getElementById('additionalSettings').style.display = showWfhSettings ? 'block' : 'none';
         document.getElementById('wfoSettings').style.display = showWfoSettings ? 'block' : 'none';
 
@@ -932,7 +934,7 @@ $totalUser = $totalUser + 1; // Get the total number of projects
         document.getElementById('end_time').required = showWfhSettings;
         document.getElementById('rest_time').required = showWfhSettings;
     }
-    
+
     // Show/hide additional settings based on "Metode Check-In" select
     document.getElementById('is_checkin').addEventListener('change', toggleAdditionalSettings);
 

@@ -74,11 +74,46 @@ Route::group(['middleware' => ['auth:api','role.permission.api']], function()
 
         //QR Api
     Route::get('used-laptops/detail/{slug}', [QrScanApiController::class, 'getUsedLaptopDetail']);
+    Route::post('used-laptops/update/{slug}', [QrScanApiController::class, 'updateUsedLaptop']);
+    //new
+    Route::post('used-laptops/mark-sold/{slug}', [QrScanApiController::class, 'markLaptopAsSold']);
+    Route::get('used-laptops/status', [QrScanApiController::class, 'getLaptopStatusList']);
+    Route::delete('used-laptops/media/{id}', [QrScanApiController::class, 'destroyLaptopMedia']);
+    Route::get('used-laptops/checklist/{slug}', [QrScanApiController::class, 'getLaptopChecklist']);
+
     Route::get('used-items/detail/{slug}', [QrScanApiController::class, 'getUsedItemDetail']);
+    Route::post('used-items/update/{slug}', [QrScanApiController::class, 'updateUsedItem']);
+    //new
+    Route::post('used-items/mark-sold/{slug}', [QrScanApiController::class, 'markItemAsSold']);
+    Route::delete('used-items/media/{id}', [QrScanApiController::class, 'destroyItemMedia']);
+    Route::get('used-items/checklist/{slug}', [QrScanApiController::class, 'getItemChecklist']);
+
     Route::get('product-stores/detail/{code}', [QrScanApiController::class, 'getProductStoreDetail']);
+    Route::post('product-stores/update/{code}', [QrScanApiController::class, 'updateProductStore']);
+    //new
+    Route::get('product-stores/categories', [QrScanApiController::class, 'getCategories']);
+    Route::get('product-stores/brands', [QrScanApiController::class, 'getBrands']);
+    Route::get('product-stores/warehouses', [QrScanApiController::class, 'getWarehouses']);
+    Route::get('product-stores/zones', [QrScanApiController::class, 'getZones']);
+    Route::get('product-stores/racks', [QrScanApiController::class, 'getRacks']);
+    Route::get('product-store/inventory-history', [QrScanApiController::class, 'getInventoryHistory']);
+    Route::post('product-store/save-stock', [QrScanApiController::class, 'saveStock']);
+    Route::get('product-store/barcode-handler', [QrScanApiController::class, 'handleBarcode']);
+    Route::delete('product-store/{id}', [QrScanApiController::class, 'deleteProductStore']);
+    Route::get('product-store', [QrScanApiController::class, 'getProductStoreList']);
+
+
+
+
+
     Route::get('internet-customers/detail/{code}', [QrScanApiController::class, 'getInternetCustomerDetail']);
     Route::get('quotes/detail-pdf/{quote_number}', [QrScanApiController::class, 'getQuotationPdf'])
     ->where('quote_number', '.*');
+
+    Route::prefix('mom')->group(function() {
+        Route::post('/store', [MomApiController::class, 'store']);
+        Route::post('/store-custom', [MomApiController::class, 'storeCustomMoM']);
+    });
 
     Route::prefix('tasks')->group(function() {
         Route::get('today', [DailyTaskMobileController::class, 'indexToday']);
@@ -234,6 +269,7 @@ Route::group(['middleware' => ['auth:api']], function()
         Route::post('/{id}/tasks', [MomApiController::class, 'storeTask']); // POST - Create task
         Route::put('/tasks/{id}', [MomApiController::class, 'updateTask']); // PUT - Update task
         Route::delete('/tasks/{id}', [MomApiController::class, 'deleteTask']); // DELETE - Delete task
+        Route::post('/{id}/tasks', [MomApiController::class, 'storeTask']);
 
         // MOM Agenda Routes
         Route::post('/{id}/agendas', [MomApiController::class, 'storeAgenda']); // POST - Create agenda

@@ -231,7 +231,7 @@ class ReportPointProductivityController extends Controller
             // Direct Points received (approved only) - filter by approved_at (excluding Challenges)
             $directPointsReceived = \App\Models\DirectPoint::where('to_user_id', $user->id)
                 ->where('status', \App\Models\DirectPoint::STATUS_APPROVED)
-                ->where('reason', 'not like', 'Challenge reward:%')
+                ->where('metode', ParamSchema::DIRECT_POINT)
                 ->whereBetween('approved_at', [$startDate, $endDate])
                 ->get()
                 ->sum(function($dp) {
@@ -241,7 +241,7 @@ class ReportPointProductivityController extends Controller
             // Challenge points
             $challengePoints = \App\Models\DirectPoint::where('to_user_id', $user->id)
                 ->where('status', \App\Models\DirectPoint::STATUS_APPROVED)
-                ->where('reason', 'like', 'Challenge reward:%')
+                ->where('metode', ParamSchema::CHALLENGE)
                 ->whereBetween('approved_at', [$startDate, $endDate])
                 ->get()
                 ->sum(function($dp) {
@@ -386,7 +386,7 @@ class ReportPointProductivityController extends Controller
         // Get Direct Points details (excluding Challenges)
         $directPoints = \App\Models\DirectPoint::where('to_user_id', $userId)
             ->where('status', \App\Models\DirectPoint::STATUS_APPROVED)
-            ->where('reason', 'not like', 'Challenge reward:%')
+            ->where('metode', ParamSchema::DIRECT_POINT)
             ->whereBetween('approved_at', [$startDate, $endDate])
             ->with(['fromUser', 'division'])
             ->get()
@@ -401,7 +401,7 @@ class ReportPointProductivityController extends Controller
         // Get Challenge Points details
         $challengePoints = \App\Models\DirectPoint::where('to_user_id', $userId)
             ->where('status', \App\Models\DirectPoint::STATUS_APPROVED)
-            ->where('reason', 'like', 'Challenge reward:%')
+            ->where('metode', ParamSchema::CHALLENGE)
             ->whereBetween('approved_at', [$startDate, $endDate])
             ->with(['fromUser', 'division'])
             ->get()

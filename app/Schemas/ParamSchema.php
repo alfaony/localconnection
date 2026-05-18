@@ -141,6 +141,7 @@ class ParamSchema
     const CANCELLED = "cancelled";
     const SUSPENDED = "suspended";
     const REACTIVATED = "reactivated";
+    const DISCONNECTED = "disconnected";
     const CUSTOMER_EXISTING = "customer_existing";
     const INACTIVE = "inactive";
     const CHALLENGE = "challenge";
@@ -152,6 +153,7 @@ class ParamSchema
     const WFO = "wfo";
     const WFH = "wfh";
     const SHIFT = "shift";
+    const WFO_SHIFT = "wfo_shift";
 
     // Platform
     const APK = "apk";

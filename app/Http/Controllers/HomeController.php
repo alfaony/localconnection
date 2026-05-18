@@ -606,8 +606,7 @@ class HomeController extends Controller
         $user = Auth::user();
         $scope = $request->get('scope'); // 'today' or 'week'
 
-        $meetings = Meeting::with('participants')
-            ->where(function ($query) use ($user) {
+        $meetings = Meeting::where(function ($query) use ($user) {
                 $query->whereHas('participants', fn($q) => $q->where('user_id', $user->id))
                     ->orWhere('user_id', $user->id);
             });
@@ -620,6 +619,15 @@ class HomeController extends Controller
         }
 
         $meetings = $meetings->orderBy('start_date')->orderBy('start_time')->get();
+
+        $userId = $user->id;
+        $meetings->each(function ($meeting) use ($userId) {
+            $pivot = \DB::table('meeting_user')
+                ->where('meeting_id', $meeting->id)
+                ->where('user_id', $userId)
+                ->first(['is_attended']);
+            $meeting->user_is_attended = $pivot ? (bool) $pivot->is_attended : false;
+        });
 
         return response()->json($meetings);
     }

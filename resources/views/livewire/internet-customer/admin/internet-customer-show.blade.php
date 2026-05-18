@@ -73,21 +73,148 @@
                                         <tr>
                                             <th>Nomor KTP</th>
                                             <td>
-                                                {{ $customer->ktp_number }}
-                                                @if($ktpPhotoUrl)
-                                                    <button wire:click="viewKtpPhoto" class="btn btn-sm btn-info ml-2">
-                                                        <i class="fas fa-eye mr-1"></i>Lihat KTP
+                                                <span class="font-weight-bold">{{ $customer->ktp_number ?: '-' }}</span>
+                                                <div class="mt-1">
+                                                    @if($ktpPhotoUrl)
+                                                        <button wire:click="viewKtpPhoto" class="btn btn-sm btn-info mr-1">
+                                                            <i class="fas fa-eye mr-1"></i>Lihat KTP
+                                                        </button>
+                                                        <button wire:click="downloadKtpPhoto" class="btn btn-sm btn-secondary mr-1">
+                                                            <i class="fas fa-download mr-1"></i>Download
+                                                        </button>
+                                                    @endif
+                                                    @canAccess('edit', 'internet_customers')
+                                                    <button wire:click="toggleKtpUpload" class="btn btn-sm {{ $showKtpUpload ? 'btn-danger' : 'btn-outline-warning' }}">
+                                                        <i class="fas {{ $showKtpUpload ? 'fa-times' : 'fa-upload' }} mr-1"></i>
+                                                        {{ $showKtpUpload ? 'Tutup' : ($ktpPhotoUrl ? 'Ganti Foto KTP' : 'Upload Foto KTP') }}
                                                     </button>
-                                                    <button wire:click="downloadKtpPhoto" class="btn btn-sm btn-success">
-                                                        <i class="fas fa-download mr-1"></i>Download
-                                                    </button>
-                                                @endif
+                                                    @endcanAccess
+                                                </div>
                                             </td>
                                         </tr>
+                                        @if($showKtpUpload)
+                                        <tr>
+                                            <td colspan="2" class="p-0">
+                                                <div class="bg-light border-left border-warning p-3" style="border-left-width:4px!important">
+                                                    <label class="font-weight-bold text-warning mb-2">
+                                                        <i class="fas fa-id-card mr-1"></i>
+                                                        {{ $ktpPhotoUrl ? 'Ganti Foto KTP' : 'Upload Foto KTP' }}
+                                                    </label>
+                                                    <input type="file"
+                                                        wire:model="ktp_photo_upload"
+                                                        class="form-control form-control-sm"
+                                                        accept="image/*,application/pdf"
+                                                        @if($ktp_photo_pending_path) disabled @endif>
+                                                    <div wire:loading wire:target="ktp_photo_upload" class="mt-2">
+                                                        <small class="text-warning">
+                                                            <i class="fas fa-spinner fa-spin mr-1"></i> Mengunggah ke server...
+                                                        </small>
+                                                    </div>
+                                                    <div wire:loading.remove wire:target="ktp_photo_upload" class="mt-1">
+                                                        @if($ktp_photo_pending_path)
+                                                            <div class="d-flex align-items-center mt-2">
+                                                                <small class="text-success mr-3">
+                                                                    <i class="fas fa-check-circle mr-1"></i> Foto siap disimpan.
+                                                                </small>
+                                                                <button wire:click="saveKtpPhoto"
+                                                                    wire:loading.attr="disabled"
+                                                                    wire:target="saveKtpPhoto"
+                                                                    class="btn btn-sm btn-success">
+                                                                    <span wire:loading.remove wire:target="saveKtpPhoto">
+                                                                        <i class="fas fa-save mr-1"></i>Simpan Foto KTP
+                                                                    </span>
+                                                                    <span wire:loading wire:target="saveKtpPhoto">
+                                                                        <i class="fas fa-spinner fa-spin mr-1"></i>Menyimpan...
+                                                                    </span>
+                                                                </button>
+                                                            </div>
+                                                        @else
+                                                            <small class="text-muted">Format: JPG, PNG, PDF (maks. 2MB)</small>
+                                                        @endif
+                                                    </div>
+                                                    @error('ktp_photo_upload') <small class="text-danger d-block mt-1">{{ $message }}</small> @enderror
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        @endif
                                         <tr>
                                             <th>Alamat Lengkap</th>
                                             <td>{{ $customer->address }}</td>
                                         </tr>
+                                        @if($customer->customer_type === 'bisnis')
+                                        <tr>
+                                            <th>Nomor NPWP</th>
+                                            <td>{{ $customer->npwp_number ?: '-' }}</td>
+                                        </tr>
+                                        <tr>
+                                            <th>Foto NPWP</th>
+                                            <td>
+                                                <div>
+                                                    @if($npwp_photo_url)
+                                                        <button wire:click="viewNpwpPhoto" class="btn btn-sm btn-info mr-1">
+                                                            <i class="fas fa-eye mr-1"></i>Lihat NPWP
+                                                        </button>
+                                                        <button wire:click="downloadNpwpPhoto" class="btn btn-sm btn-secondary mr-1">
+                                                            <i class="fas fa-download mr-1"></i>Download
+                                                        </button>
+                                                    @else
+                                                        <span class="text-muted mr-2">-</span>
+                                                    @endif
+                                                    @canAccess('edit', 'internet_customers')
+                                                    <button wire:click="toggleNpwpUpload" class="btn btn-sm {{ $showNpwpUpload ? 'btn-danger' : 'btn-outline-warning' }}">
+                                                        <i class="fas {{ $showNpwpUpload ? 'fa-times' : 'fa-upload' }} mr-1"></i>
+                                                        {{ $showNpwpUpload ? 'Tutup' : ($npwp_photo_url ? 'Ganti Foto NPWP' : 'Upload Foto NPWP') }}
+                                                    </button>
+                                                    @endcanAccess
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        @if($showNpwpUpload)
+                                        <tr>
+                                            <td colspan="2" class="p-0">
+                                                <div class="bg-light border-left border-warning p-3" style="border-left-width:4px!important">
+                                                    <label class="font-weight-bold text-warning mb-2">
+                                                        <i class="fas fa-file-invoice mr-1"></i>
+                                                        {{ $npwp_photo_url ? 'Ganti Foto NPWP' : 'Upload Foto NPWP' }}
+                                                    </label>
+                                                    <input type="file"
+                                                        wire:model="npwp_photo_upload"
+                                                        class="form-control form-control-sm"
+                                                        accept="image/*,application/pdf"
+                                                        @if($npwp_photo_pending_path) disabled @endif>
+                                                    <div wire:loading wire:target="npwp_photo_upload" class="mt-2">
+                                                        <small class="text-warning">
+                                                            <i class="fas fa-spinner fa-spin mr-1"></i> Mengunggah ke server...
+                                                        </small>
+                                                    </div>
+                                                    <div wire:loading.remove wire:target="npwp_photo_upload" class="mt-1">
+                                                        @if($npwp_photo_pending_path)
+                                                            <div class="d-flex align-items-center mt-2">
+                                                                <small class="text-success mr-3">
+                                                                    <i class="fas fa-check-circle mr-1"></i> Foto siap disimpan.
+                                                                </small>
+                                                                <button wire:click="saveNpwpPhoto"
+                                                                    wire:loading.attr="disabled"
+                                                                    wire:target="saveNpwpPhoto"
+                                                                    class="btn btn-sm btn-success">
+                                                                    <span wire:loading.remove wire:target="saveNpwpPhoto">
+                                                                        <i class="fas fa-save mr-1"></i>Simpan Foto NPWP
+                                                                    </span>
+                                                                    <span wire:loading wire:target="saveNpwpPhoto">
+                                                                        <i class="fas fa-spinner fa-spin mr-1"></i>Menyimpan...
+                                                                    </span>
+                                                                </button>
+                                                            </div>
+                                                        @else
+                                                            <small class="text-muted">Format: JPG, PNG, PDF (maks. 2MB)</small>
+                                                        @endif
+                                                    </div>
+                                                    @error('npwp_photo_upload') <small class="text-danger d-block mt-1">{{ $message }}</small> @enderror
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        @endif
+                                        @endif
                                         <tr>
                                             <th>Lokasi</th>
                                             <td>
@@ -520,7 +647,7 @@
                                                     <th>Bukti Pembayaran</th>
                                                     <th>Invoice</th>
                                                     @canAccess('as_finance','internet_customers')
-                                                    <th>Konfirmasi Pembayaran</th>
+                                                    <th>Aksi</th>
                                                     @endcanAccess
                                                 </tr>
                                             </thead>
@@ -576,7 +703,13 @@
                                                                     <i class="fas fa-check mr-1"></i>Konfirmasi
                                                                 </button>
                                                                 @endif
-                                                                
+
+                                                                @if(!$purchase->payment_proof && $financeAccess)
+                                                                <button class="btn btn-warning btn-sm mb-1" wire:click="showManualPaymentModal({{ $purchase->id }})">
+                                                                    <i class="fas fa-upload mr-1"></i>Upload Bukti
+                                                                </button>
+                                                                @endif
+
                                                                 @if($financeAccess)
                                                                 <button class="btn btn-danger btn-sm" onclick="expirePayment('{{ $purchase->id }}')">
                                                                     <i class="fas fa-times-circle mr-1"></i>Tandai Expired
@@ -726,17 +859,41 @@
                             <div class="col-md-6">
                                 <div class="form-group">
                                     <label for="phone_number">Nomor Telepon</label>
-                                    <input type="text" class="form-control" id="phone_number" wire:model="phone_number">
+                                    <input type="text" class="form-control" id="phone_number" wire:model="phone_number" inputmode="numeric" pattern="[0-9]*" oninput="this.value=this.value.replace(/[^0-9]/g,'')">
                                     @error('phone_number') <span class="text-danger">{{ $message }}</span> @enderror
                                 </div>
                             </div>
 
                             <div class="col-md-6">
-                                <div class="form-group">
-                                    <label for="grouping_id">Grouping</label>
-                                    <input type="text" class="form-control" id="grouping_id" wire:model="grouping_id">
-                                    @error('grouping_id') <span class="text-danger">{{ $message }}</span> @enderror
-                                </div>
+                                @if(!$customer->group_id)
+                                    {{-- Belum punya group: tampilkan select group --}}
+                                    <div class="form-group">
+                                        <label>Assign Group</label>
+                                        <select class="form-control" id="editGroupSelect">
+                                            <option value="">— Pilih Group —</option>
+                                        </select>
+                                        <small class="text-muted">Grouping ID akan di-generate otomatis setelah disimpan.</small>
+                                    </div>
+                                @else
+                                    {{-- Sudah punya group: tampilkan edit grouping_id --}}
+                                    <div class="form-group">
+                                        <label for="grouping_id">
+                                            Grouping ID
+                                            <small class="text-muted">— prefix: <strong>{{ $customer->group->grouping_prefix ?? '' }}</strong></small>
+                                        </label>
+                                        <input type="text"
+                                               class="form-control @error('grouping_id') is-invalid @enderror"
+                                               id="grouping_id"
+                                               autocomplete="off"
+                                               placeholder="{{ ($customer->group->grouping_prefix ?? '') . 'XXXX' }}">
+                                        @error('grouping_id')
+                                            <span class="invalid-feedback">{{ $message }}</span>
+                                        @enderror
+                                        @if(!$customer->grouping_id)
+                                            <small class="text-warning"><i class="fas fa-clock mr-1"></i>Grouping ID sedang di-generate.</small>
+                                        @endif
+                                    </div>
+                                @endif
                             </div>
 
                         </div>
@@ -816,6 +973,29 @@
                             <textarea class="form-control" id="address_edit" wire:model="address" rows="3" placeholder="Masukkan alamat lengkap"></textarea>
                             @error('address') <span class="text-danger">{{ $message }}</span> @enderror
                         </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="ktp_number_input">Nomor KTP / NIK</label>
+                                    <input type="text" id="ktp_number_input" class="form-control" wire:model.defer="ktp_number" placeholder="16 digit NIK">
+                                    @error('ktp_number') <span class="text-danger">{{ $message }}</span> @enderror
+                                </div>
+                            </div>
+                            @if($customer->customer_type === 'bisnis')
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="npwp_number_input">Nomor NPWP</label>
+                                    <input type="text" id="npwp_number_input" class="form-control" wire:model.defer="npwp_number" placeholder="00.000.000.0-000.000">
+                                    @error('npwp_number') <span class="text-danger">{{ $message }}</span> @enderror
+                                </div>
+                            </div>
+                            @endif
+                        </div>
+                        <small class="text-muted d-block mb-3">
+                            <i class="fas fa-info-circle mr-1"></i>
+                            Untuk mengganti foto KTP / NPWP, gunakan tombol <strong>Upload</strong> di tabel Data Pribadi.
+                        </small>
 
                         <div class="form-group">
                             <label for="status_active">Status Aktif</label>
@@ -1017,6 +1197,100 @@
         </div>
     </div>
 
+    <!-- Modal Manual Payment (Admin Upload Bukti) -->
+    <div class="modal fade" id="adminManualPaymentModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-warning text-white">
+                    <h5 class="modal-title">
+                        <i class="fas fa-upload mr-2"></i>Upload Bukti Pembayaran Manual
+                    </h5>
+                    <button type="button" class="close text-white" data-dismiss="modal">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle mr-1"></i>
+                        Gunakan form ini untuk mengupload bukti pembayaran yang dilakukan pelanggan melalui platform lain (transfer manual, dll).
+                    </div>
+
+                    <div id="admin-payment-error" class="alert alert-danger" style="display:none;"></div>
+
+                    <!-- Jumlah Bulan -->
+                    <div class="form-group">
+                        <label class="font-weight-bold">Jumlah Bulan <span class="text-danger">*</span></label>
+                        <div class="input-group" style="max-width:250px">
+                            <button class="btn btn-outline-secondary" type="button" onclick="adminDecreaseMonths()">
+                                <i class="fas fa-minus"></i>
+                            </button>
+                            <input type="number" id="admin-months-input" class="form-control text-center font-weight-bold"
+                                   min="1" max="24" value="1">
+                            <button class="btn btn-outline-secondary" type="button" onclick="adminIncreaseMonths()">
+                                <i class="fas fa-plus"></i>
+                            </button>
+                            <div class="input-group-append">
+                                <span class="input-group-text">Bulan</span>
+                            </div>
+                        </div>
+                        <small class="text-muted">Minimal 1 bulan, maksimal 24 bulan</small>
+                    </div>
+
+                    <!-- Tanggal Transfer -->
+                    <div class="form-group">
+                        <label class="font-weight-bold">Tanggal Transfer <span class="text-danger">*</span></label>
+                        <input type="date" id="admin-transfer-date" class="form-control"
+                               max="{{ date('Y-m-d') }}">
+                    </div>
+
+                    <!-- Bank Pengirim -->
+                    <div class="form-group">
+                        <label class="font-weight-bold">Nama Bank Pengirim</label>
+                        <input type="text" id="admin-transfer-bank" class="form-control"
+                               placeholder="Contoh: BCA, Mandiri, BNI">
+                    </div>
+
+                    <!-- Nama Pengirim -->
+                    <div class="form-group">
+                        <label class="font-weight-bold">Nama Pemilik Rekening Pengirim</label>
+                        <input type="text" id="admin-transfer-account-name" class="form-control"
+                               placeholder="Nama sesuai rekening">
+                    </div>
+
+                    <!-- Catatan -->
+                    <div class="form-group">
+                        <label class="font-weight-bold">Catatan (Opsional)</label>
+                        <textarea id="admin-transfer-notes" class="form-control" rows="2"
+                                  placeholder="Catatan tambahan (jika ada)"></textarea>
+                    </div>
+
+                    <!-- Upload Bukti -->
+                    <div class="form-group">
+                        <label class="font-weight-bold">Bukti Pembayaran <span class="text-danger">*</span></label>
+                        <div id="admin-payment-drop-area"
+                             class="border border-2 border-dashed rounded p-4 text-center"
+                             style="cursor:pointer; border-color:#ddd;">
+                            <i class="fas fa-cloud-upload-alt fa-3x text-muted mb-2"></i>
+                            <p class="mb-1 font-weight-bold">Klik untuk upload atau drag & drop</p>
+                            <p class="text-muted small mb-0">PNG, JPG, GIF (Maksimal 2MB)</p>
+                            <input id="admin_payment_proof_input" type="file" class="d-none" accept="image/*">
+                        </div>
+                        <div id="admin-payment-preview" class="mt-3"></div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                        <i class="fas fa-times mr-1"></i>Batal
+                    </button>
+                    <button type="button" class="btn btn-warning" id="adminSubmitPaymentBtn"
+                            onclick="adminSubmitPayment()">
+                        <i class="fas fa-paper-plane mr-1"></i>Simpan Bukti Pembayaran
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     @push('js')
     <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
     <script>
@@ -1096,7 +1370,231 @@
             }, 1000);
         });
 
+        // ── Admin manual payment helpers ────────────────────────────────────
+        window.adminUpdateMonths = function(val) {
+            val = parseInt(val);
+            if (val < 1) val = 1;
+            if (val > 24) val = 24;
+            document.getElementById('admin-months-input').value = val;
+        };
+        window.adminIncreaseMonths = function() {
+            adminUpdateMonths(parseInt(document.getElementById('admin-months-input').value) + 1);
+        };
+        window.adminDecreaseMonths = function() {
+            adminUpdateMonths(parseInt(document.getElementById('admin-months-input').value) - 1);
+        };
+
+        function adminResetModal() {
+            document.getElementById('admin-months-input').value = 1;
+            document.getElementById('admin-transfer-date').value = '';
+            document.getElementById('admin-transfer-bank').value = '';
+            document.getElementById('admin-transfer-account-name').value = '';
+            document.getElementById('admin-transfer-notes').value = '';
+            document.getElementById('admin_payment_proof_input').value = '';
+            document.getElementById('admin-payment-preview').innerHTML = '';
+            document.getElementById('admin-payment-error').style.display = 'none';
+            document.getElementById('admin-payment-error').innerText = '';
+        }
+
+        function adminCloseModal() {
+            const modalEl = document.getElementById('adminManualPaymentModal');
+
+            if (!modalEl) {
+                console.warn('Modal element not found: adminManualPaymentModal');
+                return;
+            }
+
+            try {
+                // Bootstrap 5
+                if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+                    const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+                    modal.hide();
+
+                    setTimeout(() => {
+                        forceCleanupModal();
+                    }, 300);
+
+                    return;
+                }
+
+                // Bootstrap 4 fallback
+                if (typeof $ !== 'undefined' && typeof $(modalEl).modal === 'function') {
+                    $(modalEl).modal('hide');
+
+                    setTimeout(() => {
+                        forceCleanupModal();
+                    }, 300);
+
+                    return;
+                }
+
+                console.warn('Bootstrap modal handler not found');
+            } catch (e) {
+                console.error('Failed to close modal:', e);
+                forceCleanupModal();
+            }
+        }
+
+        function forceCleanupModal() {
+            document.body.classList.remove('modal-open');
+            document.body.style.removeProperty('overflow');
+            document.body.style.removeProperty('padding-right');
+
+            document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+
+            const modalEl = document.getElementById('adminManualPaymentModal');
+            if (modalEl) {
+                modalEl.classList.remove('show');
+                modalEl.style.display = 'none';
+                modalEl.setAttribute('aria-hidden', 'true');
+                modalEl.removeAttribute('aria-modal');
+                modalEl.removeAttribute('role');
+            }
+        }
+
+        function adminShowError(msg) {
+            const el = document.getElementById('admin-payment-error');
+            el.innerText = msg;
+            el.style.display = 'block';
+            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+
+        window.adminSubmitPayment = function() {
+            const file         = document.getElementById('admin_payment_proof_input').files[0];
+            const transferDate = document.getElementById('admin-transfer-date').value;
+            const bank         = document.getElementById('admin-transfer-bank').value.trim();
+            const accountName  = document.getElementById('admin-transfer-account-name').value.trim();
+            const notes        = document.getElementById('admin-transfer-notes').value.trim();
+            const months       = Math.max(1, Math.min(24, parseInt(document.getElementById('admin-months-input').value) || 1));
+
+            // Reset error
+            const errEl = document.getElementById('admin-payment-error');
+            errEl.style.display = 'none';
+            errEl.innerText = '';
+
+            // Client-side validation
+            if (!file) {
+                adminShowError('Silakan pilih file bukti pembayaran.');
+                return;
+            }
+            if (!transferDate) {
+                adminShowError('Tanggal transfer wajib diisi.');
+                return;
+            }
+
+            const btn = document.getElementById('adminSubmitPaymentBtn');
+
+            function setBtnState(text, disabled) {
+                btn.disabled = disabled;
+                btn.innerHTML = text;
+            }
+
+            setBtnState('<i class="fas fa-spinner fa-spin mr-1"></i>Mengupload...', true);
+
+            // Upload file, lalu kirim semua nilai sebagai parameter — tanpa @this.set()
+            @this.upload(
+                'admin_payment_proof',
+                file,
+                function() {
+                    // Upload sukses: panggil backend dengan semua nilai sebagai argumen
+                    setBtnState('<i class="fas fa-spinner fa-spin mr-1"></i>Menyimpan...', true);
+
+                    @this.call('submitManualPayment', months, transferDate, bank || null, accountName || null, notes || null)
+                        .then(function() {
+                            // Tutup modal SEBELUM Livewire re-render (mount) agar instance Bootstrap masih ada
+                            adminCloseModal();
+                            forceCleanupModal();
+                            setBtnState('<i class="fas fa-paper-plane mr-1"></i>Simpan Bukti Pembayaran', false);
+                        })
+                        .catch(function(err) {
+                            setBtnState('<i class="fas fa-paper-plane mr-1"></i>Simpan Bukti Pembayaran', false);
+                            adminShowError('Gagal menyimpan: ' + (err.message || 'Coba lagi.'));
+                        });
+                },
+                function(err) {
+                    setBtnState('<i class="fas fa-paper-plane mr-1"></i>Simpan Bukti Pembayaran', false);
+                    adminShowError('Gagal mengupload file. Pastikan ukuran ≤ 2MB dan format gambar.');
+                    console.error('Upload error:', err);
+                },
+                function(event) {
+                    const pct = Math.round((event.detail && event.detail.progress) || 0);
+                    setBtnState('<i class="fas fa-spinner fa-spin mr-1"></i>Uploading ' + pct + '%...', true);
+                }
+            );
+        };
+
         document.addEventListener('livewire:load', function () {
+
+            // Show / hide admin manual payment modal
+            window.addEventListener('show-admin-manual-payment-modal', function() {
+                adminResetModal();
+                new bootstrap.Modal(document.getElementById('adminManualPaymentModal')).show();
+            });
+
+            window.addEventListener('hide-admin-manual-payment-modal', function() {
+                adminCloseModal();
+                adminResetModal();
+            });
+
+            // Drop area
+            const adminDropArea = document.getElementById('admin-payment-drop-area');
+            if (adminDropArea) {
+                adminDropArea.addEventListener('click', function() {
+                    document.getElementById('admin_payment_proof_input').click();
+                });
+                ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(ev => {
+                    adminDropArea.addEventListener(ev, function(e) { e.preventDefault(); e.stopPropagation(); });
+                });
+                ['dragenter', 'dragover'].forEach(ev => {
+                    adminDropArea.addEventListener(ev, function() { this.classList.add('border-primary', 'bg-light'); });
+                });
+                ['dragleave', 'drop'].forEach(ev => {
+                    adminDropArea.addEventListener(ev, function() { this.classList.remove('border-primary', 'bg-light'); });
+                });
+                adminDropArea.addEventListener('drop', function(e) {
+                    const input = document.getElementById('admin_payment_proof_input');
+                    input.files = e.dataTransfer.files;
+                    input.dispatchEvent(new Event('change', { bubbles: true }));
+                });
+            }
+
+            // File preview
+            const adminProofInput = document.getElementById('admin_payment_proof_input');
+            if (adminProofInput) {
+                adminProofInput.addEventListener('change', function(e) {
+                    const file    = e.target.files[0];
+                    const preview = document.getElementById('admin-payment-preview');
+                    if (!file) { preview.innerHTML = ''; return; }
+                    if (!file.type.match('image.*')) {
+                        preview.innerHTML = '<div class="alert alert-warning"><i class="fas fa-exclamation-triangle mr-2"></i>File harus berupa gambar (JPG, PNG, GIF)</div>';
+                        this.value = ''; return;
+                    }
+                    if (file.size > 2 * 1024 * 1024) {
+                        preview.innerHTML = '<div class="alert alert-danger"><i class="fas fa-exclamation-triangle mr-2"></i>Ukuran file terlalu besar! Maksimal 2MB.</div>';
+                        this.value = ''; return;
+                    }
+                    const reader = new FileReader();
+                    reader.onload = function(ev) {
+                        preview.innerHTML = `<div class="card border-success"><div class="card-body text-center">
+                            <img src="${ev.target.result}" class="img-fluid rounded" style="max-height:250px">
+                            <div class="mt-2"><button type="button" class="btn btn-sm btn-danger"
+                                onclick="document.getElementById('admin_payment_proof_input').value='';document.getElementById('admin-payment-preview').innerHTML=''">
+                                <i class="fas fa-times mr-1"></i>Hapus</button></div>
+                        </div></div>`;
+                    };
+                    reader.readAsDataURL(file);
+                });
+            }
+
+            // Error dari backend manual payment (via dispatchBrowserEvent)
+            window.addEventListener('admin-payment-error', function(event) {
+                const btn = document.getElementById('adminSubmitPaymentBtn');
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fas fa-paper-plane mr-1"></i>Simpan Bukti Pembayaran';
+                }
+                adminShowError(event.detail.message || 'Terjadi kesalahan.');
+            });
 
             document.getElementById('btnSavePackage').addEventListener('click', function() {
                 const btn = this;
@@ -1227,15 +1725,93 @@
                 });
             }
 
+            // ── Grouping ID duplicate check (show page) ──────────────────────
+            function resetGroupingIdStateShow() {
+                var input = document.getElementById('grouping_id');
+                if (!input) return;
+                input.classList.remove('is-valid', 'is-invalid');
+                var err = input.parentElement?.querySelector('.grouping-id-error-msg');
+                if (err) err.remove();
+                window._showGroupingIdAvailable = true;
+            }
+
+            // Debounced check — fired when user stops typing in #grouping_id (edit pribadi)
+            var _showGroupingTimer = null;
+            document.addEventListener('input', function(e) {
+                if (!e.target || e.target.id !== 'grouping_id') return;
+                clearTimeout(_showGroupingTimer);
+                var val = e.target.value.trim();
+                if (!val || val.length < 2) { resetGroupingIdStateShow(); return; }
+                _showGroupingTimer = setTimeout(function() {
+                    @this.call('checkGroupingIdAvailabilityShow', val);
+                }, 400);
+            });
+
+            window.addEventListener('groupingIdCheckComplete', function(event) {
+                var data  = event.detail;
+                var input = document.getElementById('grouping_id');
+                if (!input) return; // tidak semua customer punya input ini
+
+                var wrap = input.parentElement;
+                var errorDiv = wrap?.querySelector('.grouping-id-error-msg');
+
+                if (data.available) {
+                    input.classList.remove('is-invalid');
+                    input.classList.add('is-valid');
+                    if (errorDiv) errorDiv.remove();
+                    window._showGroupingIdAvailable = true;
+                } else {
+                    input.classList.remove('is-valid');
+                    input.classList.add('is-invalid');
+                    if (!errorDiv) {
+                        errorDiv = document.createElement('div');
+                        errorDiv.className = 'invalid-feedback d-block grouping-id-error-msg';
+                        wrap.appendChild(errorDiv);
+                    }
+                    errorDiv.innerHTML = 'Grouping ID sudah digunakan oleh: <strong>' + data.existing.code + ' - ' + data.existing.name + '</strong>';
+                    window._showGroupingIdAvailable = false;
+                }
+            });
+
             window.addEventListener('showEditPribadiModal', function(e) {
                 document.getElementById('name').value               = e.detail.name || '';
                 document.getElementById('email').value              = e.detail.email || '';
                 document.getElementById('phone_number').value       = e.detail.phone_number || '';
                 document.getElementById('start_billing_date').value = e.detail.start_billing_date || '';
                 document.getElementById('end_billing_date').value   = e.detail.end_billing_date || '';
-                document.getElementById('grouping_id').value        = e.detail.grouping_id || '';
                 document.getElementById('status_active').checked    = !!e.detail.status_active;
                 document.getElementById('address_edit').value       = e.detail.address || '';
+                var ktpEl = document.getElementById('ktp_number_input');
+                if (ktpEl) ktpEl.value = e.detail.ktp_number || '';
+                var npwpEl = document.getElementById('npwp_number_input');
+                if (npwpEl) npwpEl.value = e.detail.npwp_number || '';
+                if(e.detail.npwp_number) {
+                    document.getElementById('npwp_number_input').value  = e.detail.npwp_number || '';
+                }
+
+                // grouping_id input (may not exist if customer has no group yet)
+                var gidEl = document.getElementById('grouping_id');
+                if (gidEl) {
+                    gidEl.value = e.detail.grouping_id || '';
+                    resetGroupingIdStateShow();
+                }
+
+                // Group select (shown only when customer has no group_id)
+                var groupSel = document.getElementById('editGroupSelect');
+                if (groupSel && !e.detail.has_group) {
+                    groupSel.innerHTML = '<option value="">— Pilih Group —</option>';
+                    var groups = e.detail.groups_for_edit || [];
+                    groups.forEach(function(g) {
+                        var opt = document.createElement('option');
+                        opt.value = g.id;
+                        opt.textContent = g.description ? g.name + ' — ' + g.description : g.name;
+                        groupSel.appendChild(opt);
+                    });
+                    groupSel.value = e.detail.edit_group_id || '';
+                    groupSel.onchange = function() {
+                        @this.set('edit_group_id', groupSel.value || null);
+                    };
+                }
 
                 var startIn = document.getElementById('start_billing_date');
                 var endIn   = document.getElementById('end_billing_date');
@@ -1275,8 +1851,11 @@
                         district_id:    @this.district_id,
                         subdistrict_id: @this.subdistrict_id,
                     });
-                    var addr = @this.address;
-                    if (addr) document.getElementById('address_edit').value = addr;
+                    var addr = document.getElementById('address_edit')?.value;
+                    if (!addr) {
+                        var _lwAddr = @this.get('address');
+                        if (_lwAddr) document.getElementById('address_edit').value = _lwAddr;
+                    }
                 }, 100);
             });
 
@@ -1409,28 +1988,45 @@
                     cancelButtonText: 'Batal'
                 }).then((result) => {
                     if (result.isConfirmed) {
-                        // Kumpulkan data dari form
-                        $("#editPribadiModalClick").click();
+                        // Kumpulkan semua nilai dari DOM sekaligus sebelum ada request Livewire apapun.
+                        // JANGAN tutup modal dulu — penutupan prematur men-trigger hidden.bs.modal
+                        // yang mengirim @this.set() reset secara bersamaan dan meng-null-kan
+                        // npwp_number & npwp_photo_upload (race condition Livewire v2).
+                        // Modal akan ditutup otomatis oleh PHP via event hideEditPribadiModal.
+                        var _name            = document.getElementById('name').value;
+                        var _email           = document.getElementById('email').value;
+                        var _phone           = document.getElementById('phone_number').value;
+                        var _ktpNumber       = document.getElementById('ktp_number_input')?.value || null;
+                        var _npwpNumber      = document.getElementById('npwp_number_input')?.value || null;
+                        var _startBilling    = document.getElementById('start_billing_date').value;
+                        var _endBilling      = document.getElementById('end_billing_date').value;
+                        var _statusActive    = document.getElementById('status_active').checked;
+                        var _groupingId      = document.getElementById('grouping_id')?.value || null;
+                        var _address         = document.getElementById('address_edit').value;
 
-                        // Set semua nilai ke Livewire sebelum save
-                        @this.set('name',               document.getElementById('name').value);
-                        @this.set('email',              document.getElementById('email').value);
-                        @this.set('phone_number',       document.getElementById('phone_number').value);
-                        @this.set('start_billing_date', document.getElementById('start_billing_date').value);
-                        @this.set('end_billing_date',   document.getElementById('end_billing_date').value);
-                        @this.set('status_active',      document.getElementById('status_active').checked);
-                        @this.set('grouping_id',        document.getElementById('grouping_id').value);
-                        @this.set('address',            document.getElementById('address_edit').value);
+                        if (_groupingId && window._showGroupingIdAvailable === false) {
+                            Swal.fire({ icon: 'error', title: 'Grouping ID Duplikat', text: 'Grouping ID sudah digunakan pelanggan lain. Silakan ganti terlebih dahulu.' });
+                            return;
+                        }
+                        var _provVal         = $('#editPribadiModal #province_id').val() || null;
+                        var _cityVal         = $('#editPribadiModal #city_id').val() || null;
+                        var _distVal         = $('#editPribadiModal #district_id').val() || null;
+                        var _subdVal         = $('#editPribadiModal #subdistrict_id').val() || null;
+                        
+                        // Set semua nilai ke Livewire — satu batch berurutan, lalu save
+                        @this.set('name',               _name);
+                        @this.set('email',              _email);
+                        @this.set('phone_number',       _phone);
+                        @this.set('ktp_number',         _ktpNumber);
+                        @this.set('npwp_number',        _npwpNumber);
+                        @this.set('start_billing_date', _startBilling);
+                        @this.set('end_billing_date',   _endBilling);
+                        @this.set('status_active',      _statusActive);
+                        @this.set('grouping_id',        _groupingId);
+                        @this.set('address',            _address);
 
-                        // Sync dropdown Select2 values ke Livewire sebelum save
-                        var provVal = $('#editPribadiModal #province_id').val() || null;
-                        var cityVal = $('#editPribadiModal #city_id').val() || null;
-                        var distVal = $('#editPribadiModal #district_id').val() || null;
-                        var subdVal = $('#editPribadiModal #subdistrict_id').val() || null;
-
-                        // Use initLocationFields to set all 4 at once tanpa cascade
-                        @this.call('initLocationFields', provVal, cityVal, distVal, subdVal).then(function() {
-                            // Panggil method save di Livewire
+                        // Location fields sekaligus (tanpa cascade), lalu save
+                        @this.call('initLocationFields', _provVal, _cityVal, _distVal, _subdVal).then(function() {
                             @this.call('savePribadi');
                         });
                     }
@@ -1667,6 +2263,12 @@
     @endpush
     @push('css')
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css">
+    <style>
+        .border-dashed { border-style: dashed !important; }
+        #admin-payment-drop-area { transition: all 0.3s ease; }
+        #admin-payment-drop-area:hover { border-color: #007bff !important; background-color: #f8f9fa !important; }
+        #admin-payment-drop-area.border-primary { border-color: #007bff !important; background-color: rgba(0,123,255,.05) !important; }
+    </style>
     <style>
         .img-signature
         {

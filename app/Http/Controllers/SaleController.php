@@ -11,9 +11,11 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use App\Helpers\EmailNotifHelper;
-use App\Models\SettingCompany; // Assuming you have this model for SMTP configuration
+use App\Models\SettingCompany;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\URL;
+use Illuminate\Support\Facades\Log;
+use App\Jobs\ExportSaleJob;
 
 class SaleController extends Controller
 {
@@ -36,7 +38,7 @@ class SaleController extends Controller
         
         $products = ProductStore::byCompany(Auth::user()->company_id)
             ->where('barcode', $barcode)
-            ->with(['category', 'brand', 'inventory'])
+            ->with(['category', 'brand', 'inventory', 'primaryMedia'])
             ->get();
 
         if ($products->isEmpty()) {
@@ -70,14 +72,18 @@ class SaleController extends Controller
         try {
             $saleData = $request->validate([
                 'items' => 'required|array',
-                'items.*.product_store_id' => 'required|exists:product_stores,id',
-                'items.*.quantity' => 'required|integer|min:1',
-                'items.*.unit_price' => 'required|numeric|min:0',
+                'items.*.product_store_id'  => 'required|exists:product_stores,id',
+                'items.*.quantity'          => 'required|integer|min:1',
+                'items.*.unit_price'        => 'required|numeric|min:0',
+                'items.*.original_price'    => 'nullable|numeric|min:0',
+                'items.*.discount_percent'  => 'nullable|numeric|min:0|max:100',
+                'items.*.discount_type'     => 'nullable|in:percent,flat',
+                'items.*.discount_amount'   => 'nullable|numeric|min:0',
                 'payment_method' => 'required|in:cash,debit_credit,qris',
                 'customer_email' => 'nullable|email',
                 'payment_details' => 'nullable|array',
                 'tax_value' => 'required|numeric|min:0|max:100',
-                'draft_id' => 'nullable|exists:sales,id' // Tambahkan validasi untuk draft_id
+                'draft_id' => 'nullable|exists:sales,id'
             ]);
 
             // Calculate totals
@@ -167,11 +173,15 @@ class SaleController extends Controller
             // Create sale items
             foreach ($saleData['items'] as $item) {
                 SaleItem::create([
-                    'sale_id' => $sale->id,
+                    'sale_id'          => $sale->id,
                     'product_store_id' => $item['product_store_id'],
-                    'quantity' => $item['quantity'],
-                    'unit_price' => $item['unit_price'],
-                    'subtotal' => $item['quantity'] * $item['unit_price'],
+                    'quantity'         => $item['quantity'],
+                    'unit_price'       => $item['unit_price'],
+                    'original_price'   => $item['original_price'] ?? $item['unit_price'],
+                    'discount_percent' => $item['discount_percent'] ?? 0,
+                    'discount_type'    => $item['discount_type'] ?? 'percent',
+                    'discount_amount'  => $item['discount_amount'] ?? 0,
+                    'subtotal'         => $item['quantity'] * $item['unit_price'],
                 ]);
 
                 // Deduct stok
@@ -251,14 +261,18 @@ class SaleController extends Controller
         try {
             $saleData = $request->validate([
                 'items' => 'required|array',
-                'items.*.product_store_id' => 'required|exists:product_stores,id',
-                'items.*.quantity' => 'required|integer|min:1',
-                'items.*.unit_price' => 'required|numeric|min:0',
+                'items.*.product_store_id'  => 'required|exists:product_stores,id',
+                'items.*.quantity'          => 'required|integer|min:1',
+                'items.*.unit_price'        => 'required|numeric|min:0',
+                'items.*.original_price'    => 'nullable|numeric|min:0',
+                'items.*.discount_percent'  => 'nullable|numeric|min:0|max:100',
+                'items.*.discount_type'     => 'nullable|in:percent,flat',
+                'items.*.discount_amount'   => 'nullable|numeric|min:0',
                 'payment_method' => 'nullable|in:cash,debit_credit,qris',
                 'customer_email' => 'nullable|email',
                 'payment_details' => 'nullable|array',
                 'tax_value' => 'required|numeric|min:0|max:100',
-                'draft_id' => 'nullable|exists:sales,id' // Tambahkan validasi untuk draft_id
+                'draft_id' => 'nullable|exists:sales,id'
             ]);
 
             // Calculate totals
@@ -311,11 +325,15 @@ class SaleController extends Controller
             // Create sale items
             foreach ($saleData['items'] as $item) {
                 SaleItem::create([
-                    'sale_id' => $sale->id,
+                    'sale_id'          => $sale->id,
                     'product_store_id' => $item['product_store_id'],
-                    'quantity' => $item['quantity'],
-                    'unit_price' => $item['unit_price'],
-                    'subtotal' => $item['quantity'] * $item['unit_price'],
+                    'quantity'         => $item['quantity'],
+                    'unit_price'       => $item['unit_price'],
+                    'original_price'   => $item['original_price'] ?? $item['unit_price'],
+                    'discount_percent' => $item['discount_percent'] ?? 0,
+                    'discount_type'    => $item['discount_type'] ?? 'percent',
+                    'discount_amount'  => $item['discount_amount'] ?? 0,
+                    'subtotal'         => $item['quantity'] * $item['unit_price'],
                 ]);
             }
 
@@ -371,10 +389,35 @@ class SaleController extends Controller
             ->where('id', $saleId)
             ->where('user_id', Auth::id())
             ->firstOrFail();
-        
+
         return response()->json([
             'success' => true,
             'sale' => $sale
+        ]);
+    }
+
+    public function printReceiptManagement($saleId)
+    {
+        $sale = Sale::byCompany(Auth::user()->company_id)
+            ->with(['items.productStore', 'user'])
+            ->findOrFail($saleId);
+
+        $settingCompany = SettingCompany::byCompany(Auth::user()->company_id)
+            ->where('menu', 'store')
+            ->get()
+            ->pluck('field_value', 'field_title');
+
+        return response()->json([
+            'success' => true,
+            'sale' => $sale,
+            'settings' => [
+                'header_store_image' => !empty($settingCompany['header_store_image'])
+                    ? s3_asset(true, 10, $settingCompany['header_store_image'])
+                    : '',
+                'store_name'         => $settingCompany['store_name'] ?? config('app.name'),
+                'store_address'      => $settingCompany['store_address'] ?? '',
+                'footer_store_message' => $settingCompany['footer_store_message'] ?? 'Terima kasih atas kunjungan Anda',
+            ],
         ]);
     }
 
@@ -496,6 +539,34 @@ class SaleController extends Controller
                 'success' => false,
                 'message' => 'Terjadi kesalahan: ' . $e->getMessage()
             ], 500);
+        }
+    }
+
+    public function export(Request $request)
+    {
+        try {
+            $filters = $request->only([
+                'search', 'start_date', 'end_date',
+                'start_time', 'end_time', 'user_id', 'payment_method',
+            ]);
+
+            $companyIds = Auth::user()->accessibleCompanies
+                ->pluck('id')
+                ->push(Auth::user()->company_id)
+                ->unique()
+                ->values();
+
+            ExportSaleJob::dispatch($filters, Auth::user(), $companyIds);
+
+            return redirect()->back()->with('storeWithMessage', 'Export Sales sedang diproses. Anda akan menerima notifikasi inbox setelah selesai.');
+
+        } catch (\Exception $e) {
+            Log::error('Failed to dispatch sale export job', [
+                'error'   => $e->getMessage(),
+                'user_id' => Auth::id(),
+            ]);
+
+            return redirect()->back()->with('error', 'Gagal memulai export Sales.');
         }
     }
 }

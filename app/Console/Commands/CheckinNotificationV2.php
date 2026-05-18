@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
 use App\Models\PassChecking;
 use App\Models\CheckinLog;
+use App\Events\EmployeeCheckinActivated;
 
 class CheckinNotificationV2 extends Command
 {
@@ -23,14 +24,12 @@ class CheckinNotificationV2 extends Command
     {
         parent::__construct();
 
-        // Menginisialisasi Firebase Messaging
+        // Firebase Messaging dipertahankan untuk FCM push notification ke device mobile
         $firebase = (new Factory)
             ->withServiceAccount(storage_path(config('services.firebase.service_account')))
-            ->withProjectId(config('services.firebase.project_id'))
-            ->withDatabaseUri(config('services.firebase.service_database_checkin_url')); // Add database URL
+            ->withProjectId(config('services.firebase.project_id'));
 
         $this->messaging = $firebase->createMessaging();
-        $this->firebase = $firebase->createDatabase();
     }
 
     public function handle()
@@ -94,32 +93,19 @@ class CheckinNotificationV2 extends Command
 
     private function scheduleCheckinForUser($checkin)
     {
-        // Coba simpan di Firebase jika tersedia
-        if ($this->firebase) 
-        {
-            try {
-                $data =
-                [
-                    'local_id' => $checkin->id,
-                    'scheduled_time' => $checkin->scheduled_time,
-                    'scheduled_timeout' => $checkin->scheduled_timeout,
-                    'is_active' => true,
-                    'requires_photo' => $checkin->user->requires_photo,
-                    'requires_location' => $checkin->user->requires_location,
-                    'time_server' => Carbon::now()->tz('Asia/Jakarta')->format('H:i:s'),
-                ];
-                $firebase = $this->firebase->getReference('employee_checkins/'.$checkin->user_id.'/'.$checkin->id)->set($data);
+        try {
+            broadcast(new EmployeeCheckinActivated($checkin));
 
-                $data['status'] = "Success";
-                $this->checkinLog($checkin, null, json_encode($data));
+            $this->checkinLog($checkin, null, json_encode([
+                'local_id'       => $checkin->id,
+                'scheduled_time' => $checkin->scheduled_time,
+                'is_active'      => true,
+                'status'         => 'Broadcast sent via WebSocket',
+            ]));
 
-            } catch (FirebaseException $e) {
-                $data['status'] = "Failed";
-                $data['message'] = $e->getMessage();
-
-                $this->checkinLog($checkin, null, json_encode($data));
-                $this->error("Gagal menyimpan di Firebase untuk user {$checkin->user_id}. Data tetap tersimpan di lokal.");
-            }
+        } catch (\Throwable $e) {
+            Log::error('CheckinNotificationV2 broadcast gagal: ' . $e->getMessage());
+            $this->error("Gagal broadcast WebSocket untuk user {$checkin->user_id}: {$e->getMessage()}");
         }
     }
 

@@ -196,7 +196,7 @@ class MidtransService
                 'customer_details' => $customerDetails,
                 'enabled_payments' => [
                     'credit_card', 'bca_va', 'bni_va', 'bri_va', 'mandiri_va',
-                    'permata_va', 'other_va', 'gopay', 'shopeepay', 'qris'
+                    'permata_va', 'other_va', 'gopay', 'shopeepay', 'qris','other_qris'
                 ],
                 'callbacks' => [
                     'finish' => route('internet-customer.customer.show', [
@@ -231,7 +231,7 @@ class MidtransService
                 'Accept' => 'application/json',
                 'Content-Type' => 'application/json',
                 'Authorization' => 'Basic ' . base64_encode($this->serverKey . ':'),
-            ])->post($this->getApiUrl(), $payload);
+            ])->timeout(30)->post($this->getApiUrl(), $payload);
 
 
             if ($response->failed()) {
@@ -374,7 +374,7 @@ class MidtransService
                 'Accept' => 'application/json',
                 'Content-Type' => 'application/json',
                 'Authorization' => 'Basic ' . base64_encode($this->serverKey . ':'),
-            ])->post($this->getApiUrl(), $payload);
+            ])->timeout(30)->post($this->getApiUrl(), $payload);
 
 
             if ($response->failed()) {
@@ -480,6 +480,46 @@ class MidtransService
             ])->post($this->getApiUrl(), $params);
 
             return $response->status() == 201 ? true : false;
+
+        } catch (\Exception $e) {
+            return [
+                'success' => false,
+                'message' => $e->getMessage()
+            ];
+        }
+    }
+
+    public function testConnectionCheck()
+    {
+        if (!$this->isActive()) {
+            return [
+                'success' => false,
+                'message' => 'Midtrans credentials not configured'
+            ];
+        }
+
+        try {
+            // Test with minimal transaction
+            $params = array(
+            'transaction_details' => array(
+                'order_id' => rand(),
+                'gross_amount' => 10000,
+            ),
+            'customer_details' => array(
+                'first_name' => 'budi',
+                'last_name' => 'pratama',
+                'email' => 'budi.pra@example.com',
+                'phone' => '08111222333',
+            ),
+        );
+
+        $response = Http::withHeaders([
+                'Accept' => 'application/json',
+                'Content-Type' => 'application/json',
+                'Authorization' => 'Basic ' . base64_encode($this->serverKey . ':'),
+            ])->post($this->getApiUrl(), $params);
+
+            return $response->status() == 201 ? ['success' => true ] : ['success' => false ];
 
         } catch (\Exception $e) {
             return [
