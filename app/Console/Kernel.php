@@ -97,8 +97,8 @@ class Kernel extends ConsoleKernel
 
         $schedule->command('customers:check-disconnected')
             ->timezone('Asia/Jakarta')
-            ->everyThreeHours()
-            ->withoutOverlapping(10)
+            ->everyTwoMinutes()
+            ->withoutOverlapping(5)
             ->runInBackground()
             ->onOneServer()
             ->appendOutputTo(storage_path('logs/disconnected-check.log'));
@@ -109,7 +109,7 @@ class Kernel extends ConsoleKernel
             $this->scheduleRouterHealthChecks();
         })
             ->name('dispatch-router-health-checks')
-            ->everyTwoMinutes()
+            ->hourly()
             ->withoutOverlapping(5); // 5 min expiry
 
         // =============== ROUTER SYNC JOBS ===============
