@@ -348,8 +348,8 @@
                                     <i class="fas fa-sort ml-1 ic-sort-icon"></i>
                                 @endif
                             </th>
-                            <th class="ic-th" style="width:16%;">Alamat</th>
-                            <th class="ic-th" style="width:26%;">Paket &amp; Billing</th>
+                            <th class="ic-th" style="width:8%;">Alamat</th>
+                            <th class="ic-th" style="width:35%;">Paket &amp; Billing</th>
                             <th class="ic-th text-center" style="width:10%;">Status</th>
                             <th class="ic-th text-center" style="width:11%;">Aksi</th>
                             <th class="ic-th ic-th-sortable" wire:click="sortBy('created_at')" style="width:9%;">
@@ -1059,7 +1059,7 @@ input[type="radio"].d-none:checked + .ic-radio-btn {
     transition: color .12s;
 }
 .ic-name-link:hover { color: var(--ic-primary) !important; text-decoration: underline !important; }
-.ic-address { font-size: .77rem; color: var(--ic-text-mid); line-height: 1.45; }
+.ic-address { font-size: .6rem; color: var(--ic-text-mid); line-height: 1.45; }
 .ic-more-link { font-size: .73rem; color: var(--ic-primary); margin-top: 2px; }
 .ic-package-name { font-size: .82rem; font-weight: 600; color: var(--ic-text-dark); }
 .ic-serial { font-family: 'SFMono-Regular', monospace; font-size: .73rem; color: var(--ic-text-muted); }
