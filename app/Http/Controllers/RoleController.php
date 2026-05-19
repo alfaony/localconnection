@@ -399,7 +399,7 @@ class RoleController extends Controller
 
             // r
             'racks', 'report_points', 'report_productivities', 'report_projects', 'reports',
-            'roles', 'routers',
+            'roles', 'routers','report_links',
 
             // s
             'sales', 'sales_achievements', 'schedule_obs', 'security_checks', 'sensors',
