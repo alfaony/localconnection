@@ -104,7 +104,6 @@ class InternetCustomerExport implements FromQuery, WithMapping, WithHeadings, Wi
             'Paket Internet',
             'Username PPPoE',
             'Grouping ID',
-            'Status',
             'Tgl. Daftar',
             'Tgl. Mulai Billing',
             'Tgl. Selesai Billing',
@@ -147,7 +146,6 @@ class InternetCustomerExport implements FromQuery, WithMapping, WithHeadings, Wi
             $customer->internetPackage?->name,
             $customer->username,
             $customer->grouping_id,
-            $customer->status,
             $customer->created_at?->format('d/m/Y'),
             $customer->userCustomer?->start_billing_date
                 ? Carbon::parse($customer->userCustomer->start_billing_date)->format('d/m/Y')
