@@ -964,15 +964,16 @@ class InternetCustomerShow extends Component
                     foreach($userTechnical as $tech) {
                         $this->sentInbox($tech,$message, $directUrl);
                     }
+                    $internetPurchase->customer->update($post);
                 }
             } else {
                 $post['status'] = ParamSchema::REACTIVATED;
+                $internetPurchase->customer->update($post);
                 dispatch(new ProvisionCustomerJob($internetCustomers->id));
                 \App\Jobs\SyncInstalledCustomersJob::dispatch([$internetCustomers->id]);
             }
             
             GenerateInternetPurchaseCouponJob::dispatch($internetPurchase->customer->id, $internetPurchase->id, $internetPurchase->payment_months);
-            $internetPurchase->customer->update($post);
 
             DB::commit();
 
@@ -1319,14 +1320,18 @@ class InternetCustomerShow extends Component
                 }
             } else {
                 $post['status'] = ParamSchema::REACTIVATED;
-                dispatch(new ProvisionCustomerJob($userCustomer->id));
-                \App\Jobs\SyncInstalledCustomersJob::dispatch([$userCustomer->id]);
             }
 
             GenerateInternetPurchaseCouponJob::dispatch($internetCustomer->id, $purchase->id, $months);
             $internetCustomer->update($post);
 
             DB::commit();
+
+            if ($internetCustomer->status == ParamSchema::REACTIVATED && $internetCustomer->installation) 
+            {
+                dispatch(new ProvisionCustomerJob($internetCustomer->id));
+                \App\Jobs\SyncInstalledCustomersJob::dispatch([$internetCustomer->id]);
+            }
 
             SendPaymentSuccessWaJob::dispatch($purchase->id);
 

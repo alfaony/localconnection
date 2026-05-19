@@ -708,6 +708,7 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
   Route::get('internet-customer', InternetCustomerIndex::class)->name('internet-customer.index');
   Route::put('internet-customer/update/{id}', InternetCustomerIndex::class)->name('internet-customer.update');
   Route::get('internet-customer/edit/{id}', InternetCustomerForm::class)->name('internet-customer.edit');
+  Route::get('internet-customer/export/{format}', [InternetCustomerController::class, 'export'])->name('internet-customer.export');
   Route::get('internet-customer/{customerId}', InternetCustomerShow::class)->name('internet-customer.show');
   
   Route::get('promo', PromoIndex::class)->name('promo.index');

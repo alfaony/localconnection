@@ -2,9 +2,8 @@
 
 namespace App\Jobs;
 
-use App\Exports\SaleExport;
+use App\Exports\InternetCustomerExport;
 use App\Helpers\InboxHelper;
-use App\Models\Sale;
 use App\Models\User;
 use App\Schemas\RoleSchema;
 use Illuminate\Bus\Queueable;
@@ -16,57 +15,60 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Maatwebsite\Excel\Facades\Excel;
 
-class ExportSaleJob implements ShouldQueue
+class ExportInternetCustomerJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     public int $timeout = 600;
     public int $tries   = 1;
 
-    protected $filters;
+    protected array $filters;
     protected $requestUser;
-    protected $companyIds;
-    protected $fileName;
+    protected $company_id;
+    protected string $format;
+    protected string $fileName;
 
-    public function __construct($filters, $requestUser, $companyIds)
+    public function __construct(array $filters, $requestUser, $company_id, string $format = 'xlsx')
     {
         $this->filters     = $filters;
         $this->requestUser = $requestUser;
-        $this->companyIds  = $companyIds;
+        $this->company_id  = $company_id;
+        $this->format      = $format;
 
         $timestamp      = now()->format('Ymd_His');
-        $this->fileName = "sales_export_{$timestamp}.xlsx";
+        $ext            = $format === 'csv' ? 'csv' : 'xlsx';
+        $this->fileName = "internet_customers_export_{$timestamp}.{$ext}";
     }
 
     public function handle()
     {
         try {
-            Log::info('Starting export Sales', [
+            Log::info('Starting export Internet Customer', [
                 'user_id'   => $this->requestUser->id,
                 'file_name' => $this->fileName,
                 'filters'   => $this->filters,
             ]);
 
-            $filePath = 'exports/' . $this->fileName;
+            $filePath     = 'exports/' . $this->fileName;
+            $exportFormat = $this->format === 'csv'
+                ? \Maatwebsite\Excel\Excel::CSV
+                : \Maatwebsite\Excel\Excel::XLSX;
+
             Excel::store(
-                new SaleExport($this->filters, $this->companyIds),
+                new InternetCustomerExport($this->filters, $this->company_id),
                 $filePath,
-                's3'
+                's3',
+                $exportFormat
             );
 
-            $downloadUrl = Storage::disk('s3')->temporaryUrl($filePath, now()->addMinutes(10));
+            $downloadUrl = Storage::disk('s3')->temporaryUrl($filePath, now()->addMinutes(30));
 
-            $totalRecords = $this->getTotalRecords();
+            Log::info('Internet customer export completed', ['file_path' => $filePath]);
 
-            Log::info('Sale export completed', [
-                'file_path'    => $filePath,
-                'total_records' => $totalRecords,
-            ]);
-
-            $this->sendInboxNotification($downloadUrl, $totalRecords);
+            $this->sendInboxNotification($downloadUrl);
 
         } catch (\Exception $e) {
-            Log::error('Sale export failed', [
+            Log::error('Internet customer export failed', [
                 'error'   => $e->getMessage(),
                 'trace'   => $e->getTraceAsString(),
                 'user_id' => $this->requestUser->id,
@@ -76,43 +78,7 @@ class ExportSaleJob implements ShouldQueue
         }
     }
 
-    protected function getTotalRecords(): int
-    {
-        $companyIds = $this->companyIds;
-
-        $query = Sale::whereHas('user', function ($q) use ($companyIds) {
-            $q->whereIn('company_id', $companyIds);
-        })->where('status', 'completed');
-
-        if (!empty($this->filters['search'])) {
-            $search = $this->filters['search'];
-            $query->where(function ($q) use ($search) {
-                $q->where('transaction_code', 'like', "%{$search}%")
-                    ->orWhere('customer_email', 'like', "%{$search}%")
-                    ->orWhere('payment_method', 'like', "%{$search}%");
-            });
-        }
-
-        if (!empty($this->filters['payment_method'])) {
-            $query->where('payment_method', $this->filters['payment_method']);
-        }
-
-        if (!empty($this->filters['start_date'])) {
-            $query->whereDate('created_at', '>=', $this->filters['start_date']);
-        }
-
-        if (!empty($this->filters['end_date'])) {
-            $query->whereDate('created_at', '<=', $this->filters['end_date']);
-        }
-
-        if (!empty($this->filters['user_id'])) {
-            $query->where('user_id', $this->filters['user_id']);
-        }
-
-        return $query->count();
-    }
-
-    protected function sendInboxNotification(string $downloadUrl, int $totalRecords): void
+    protected function sendInboxNotification(string $downloadUrl): void
     {
         try {
             $inboxHelper = new InboxHelper();
@@ -128,7 +94,7 @@ class ExportSaleJob implements ShouldQueue
             })->first();
 
             $filterInfo = $this->buildFilterInfo();
-            $message    = "✅ Export Sales selesai! {$filterInfo}Total: {$totalRecords} transaksi | File: {$this->fileName}";
+            $message    = "✅ Export Internet Customer selesai! {$filterInfo}File: {$this->fileName}";
 
             $inboxHelper->sent(
                 $this->requestUser->id,
@@ -140,13 +106,13 @@ class ExportSaleJob implements ShouldQueue
                 $downloadUrl
             );
 
-            Log::info('Sale export inbox sent', [
+            Log::info('Internet customer export inbox sent', [
                 'user_id'      => $this->requestUser->id,
                 'download_url' => $downloadUrl,
             ]);
 
         } catch (\Throwable $e) {
-            Log::error('Failed to send sale export inbox notification', ['error' => $e->getMessage()]);
+            Log::error('Failed to send internet customer export inbox', ['error' => $e->getMessage()]);
             throw $e;
         }
     }
@@ -166,7 +132,7 @@ class ExportSaleJob implements ShouldQueue
                 ]);
             })->first();
 
-            $message = "❌ Export Sales gagal! Error: {$errorMessage}";
+            $message = "❌ Export Internet Customer gagal! Error: {$errorMessage}";
 
             $inboxHelper->sent(
                 $this->requestUser->id,
@@ -179,7 +145,7 @@ class ExportSaleJob implements ShouldQueue
             );
 
         } catch (\Throwable $e) {
-            Log::error('Failed to send sale export error notification', ['error' => $e->getMessage()]);
+            Log::error('Failed to send internet customer export error notification', ['error' => $e->getMessage()]);
             throw $e;
         }
     }
@@ -192,17 +158,20 @@ class ExportSaleJob implements ShouldQueue
             $parts[] = "Search: {$this->filters['search']}";
         }
 
-        $pmLabels = ['cash' => 'Cash', 'qris' => 'QRIS', 'debit_credit' => 'Debit/Kredit'];
-        if (!empty($this->filters['payment_method'])) {
-            $parts[] = 'Metode: ' . ($pmLabels[$this->filters['payment_method']] ?? $this->filters['payment_method']);
+        if (!empty($this->filters['statusFilter'])) {
+            $parts[] = "Status: {$this->filters['statusFilter']}";
         }
 
-        if (!empty($this->filters['start_date'])) {
-            $parts[] = "Dari: {$this->filters['start_date']}";
+        if (!empty($this->filters['customerTypeFilter'])) {
+            $parts[] = "Tipe: {$this->filters['customerTypeFilter']}";
         }
 
-        if (!empty($this->filters['end_date'])) {
-            $parts[] = "Sampai: {$this->filters['end_date']}";
+        if (!empty($this->filters['dateFrom'])) {
+            $parts[] = "Dari: {$this->filters['dateFrom']}";
+        }
+
+        if (!empty($this->filters['dateTo'])) {
+            $parts[] = "Sampai: {$this->filters['dateTo']}";
         }
 
         return !empty($parts) ? implode(' | ', $parts) . ' | ' : '';
