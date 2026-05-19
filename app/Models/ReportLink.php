@@ -9,7 +9,7 @@ class ReportLink extends Model
 {
     use SoftDeletes;
 
-    protected $fillable = ['user_id', 'name', 'date', 'link', 'description'];
+    protected $fillable = ['user_id', 'company_id', 'name', 'date', 'link', 'description'];
 
     protected $casts = [
         'date' => 'date',
@@ -20,8 +20,21 @@ class ReportLink extends Model
         return $this->belongsTo(User::class, 'user_id');
     }
 
+    public function company()
+    {
+        return $this->belongsTo(Company::class, 'company_id');
+    }
+
     public function images()
     {
         return $this->hasMany(ReportLinkImage::class)->orderBy('order');
+    }
+
+    public function scopeByCompany($query, $companyId)
+    {
+        if ($companyId) {
+            $companyIds = auth()->user()->accessibleCompanies->pluck('id')->push($companyId)->unique();
+            return $query->whereIn('company_id', $companyIds);
+        }
     }
 }
