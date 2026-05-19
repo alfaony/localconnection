@@ -348,8 +348,8 @@
                                     <i class="fas fa-sort ml-1 ic-sort-icon"></i>
                                 @endif
                             </th>
-                            <th class="ic-th" style="width:8%;">Alamat</th>
-                            <th class="ic-th" style="width:35%;">Paket &amp; Billing</th>
+                            <th class="ic-th" style="width:12%;">Alamat</th>
+                            <th class="ic-th" style="width:30%;">Paket &amp; Billing</th>
                             <th class="ic-th text-center" style="width:10%;">Status</th>
                             <th class="ic-th text-center" style="width:11%;">Aksi</th>
                             <th class="ic-th ic-th-sortable" wire:click="sortBy('created_at')" style="width:9%;">
