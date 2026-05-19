@@ -8,9 +8,9 @@ use Maatwebsite\Excel\Concerns\FromQuery;
 use Maatwebsite\Excel\Concerns\Exportable;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
-use Maatwebsite\Excel\Concerns\WithChunkReading;
+use Maatwebsite\Excel\Concerns\WithCustomChunkSize;
 
-class InternetCustomerExport implements FromQuery, WithMapping, WithHeadings, WithChunkReading
+class InternetCustomerExport implements FromQuery, WithMapping, WithHeadings, WithCustomChunkSize
 {
     use Exportable;
 
@@ -28,10 +28,30 @@ class InternetCustomerExport implements FromQuery, WithMapping, WithHeadings, Wi
     {
         $query = InternetCustomer::query()
             ->byCompanyJob($this->company_id)
+            ->select([
+                'id', 'code', 'name', 'ktp_number', 'npwp_number',
+                'address', 'customer_type', 'username', 'grouping_id',
+                'status', 'created_at', 'internet_package_id',
+                'user_customer_id', 'company_id',
+            ])
             ->with([
                 'userCustomer:id,name,email,phone_number,start_billing_date,end_billing_date',
                 'internetPackage:id,name',
-                'latestPurchase',
+                'latestPurchase' => fn ($q) => $q->select([
+                    'internet_customer_purchases.id',
+                    'internet_customer_purchases.internet_customer_id',
+                    'internet_customer_purchases.payment_method',
+                    'internet_customer_purchases.transfer_date',
+                    'internet_customer_purchases.transfer_from_bank',
+                    'internet_customer_purchases.transfer_from_account_name',
+                    'internet_customer_purchases.transfer_notes',
+                    'internet_customer_purchases.amount_paid',
+                    'internet_customer_purchases.payment_months',
+                    'internet_customer_purchases.period_start',
+                    'internet_customer_purchases.period_end',
+                    'internet_customer_purchases.confirmation_finance_at',
+                    'internet_customer_purchases.user_finance_id',
+                ]),
                 'latestPurchase.userFinance:id,name',
             ])
             ->orderBy('created_at', 'desc');
@@ -161,7 +181,7 @@ class InternetCustomerExport implements FromQuery, WithMapping, WithHeadings, Wi
             $lp?->transfer_from_account_name,
             $lp?->transfer_notes,
             $lp?->amount_paid !== null
-                ? number_format($lp->amount_paid, 0, ',', '.')
+                ? 'Rp. ' . number_format($lp->amount_paid, 0, ',', '.')
                 : null,
             $lp?->payment_months,
             $period,
@@ -174,6 +194,6 @@ class InternetCustomerExport implements FromQuery, WithMapping, WithHeadings, Wi
 
     public function chunkSize(): int
     {
-        return 500;
+        return 200;
     }
 }

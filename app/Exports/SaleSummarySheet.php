@@ -103,6 +103,8 @@ class SaleSummarySheet implements WithTitle, WithEvents
                 $query = $this->buildQuery();
 
                 // Aggregate data
+                $totalSubtotal    = (clone $query)->sum('total_amount');
+                $totalPpn         = (clone $query)->sum('tax_amount');
                 $totalFinalAmount = (clone $query)->sum('final_amount');
                 $totalTransaksi   = (clone $query)->count();
                 $paymentBreakdown = (clone $query)
@@ -143,7 +145,7 @@ class SaleSummarySheet implements WithTitle, WithEvents
                     $row++;
                 }
 
-                $pmLabels = ['cash' => 'Cash', 'qris' => 'QRIS', 'debit_credit' => 'Debit/Kredit'];
+                $pmLabels = ['cash' => 'Cash', 'qris' => 'QRIS', 'debit_credit' => 'Debit Card/Credit Card'];
                 if (!empty($this->filters['payment_method'])) {
                     $sheet->setCellValue("A{$row}", 'Filter Metode');
                     $sheet->setCellValue("B{$row}", $pmLabels[$this->filters['payment_method']] ?? $this->filters['payment_method']);
@@ -160,6 +162,8 @@ class SaleSummarySheet implements WithTitle, WithEvents
 
                 foreach ([
                     ['Total Transaksi', $totalTransaksi, null],
+                    ['Subtotal (Rp)', (float) $totalSubtotal, '#,##0'],
+                    ['Total PPN (Rp)', (float) $totalPpn, '#,##0'],
                     ['Total Akhir (Rp)', (float) $totalFinalAmount, '#,##0'],
                 ] as [$label, $value, $fmt]) {
                     $sheet->setCellValue("A{$row}", $label);
@@ -214,7 +218,10 @@ class SaleSummarySheet implements WithTitle, WithEvents
                     $sheet->setCellValue("A{$row}", $no++);
                     $sheet->setCellValue("B{$row}", $ps->productStore->name ?? '-');
                     $sheet->setCellValue("C{$row}", $ps->productStore->variant ?? '-');
-                    $sheet->setCellValue("D{$row}", $ps->productStore->barcode ?? '-');
+                    $sheet->getCell("D{$row}")->setValueExplicit(
+                        (string) ($ps->productStore->barcode ?? '-'),
+                        \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING
+                    );
                     $sheet->setCellValue("E{$row}", (int) $ps->total_qty);
                     $sheet->setCellValue("F{$row}", (float) $ps->total_revenue);
                     $sheet->getStyle("F{$row}")->getNumberFormat()->setFormatCode('#,##0');
