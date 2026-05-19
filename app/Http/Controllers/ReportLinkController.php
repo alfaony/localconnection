@@ -12,6 +12,7 @@ class ReportLinkController extends Controller
     public function index(Request $request)
     {
         $query = ReportLink::with(['user', 'images'])
+            ->byCompany(auth()->user()->company_id)
             ->orderByDesc('date');
 
         if ($request->filled('search')) {
@@ -54,6 +55,7 @@ class ReportLinkController extends Controller
 
         $reportLink = ReportLink::create([
             'user_id'     => auth()->id(),
+            'company_id'  => auth()->user()->company_id,
             'name'        => $request->name,
             'date'        => $request->date,
             'link'        => $request->link,
