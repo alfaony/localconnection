@@ -769,8 +769,6 @@ class DailyTaskMobileController extends BaseController
                 'task_status_id' => 'nullable|exists:task_statuses,id',
                 'attachments' => 'nullable|array',
                 'attachments.*' => 'file|mimes:jpg,jpeg,png,pdf|max:5120',
-
-                // Input tambahan untuk kebutuhan logika approval
                 'point' => 'nullable|integer',
                 'division_id' => 'nullable|exists:divisions,id',
 
@@ -855,7 +853,6 @@ class DailyTaskMobileController extends BaseController
                 $task->keyResults()->sync($keyResults);
             }
 
-            // --- SEGMEN LOGIKA PROSES STATUS SEPERTI APPROVAL ---
             if (isset($input['task_status_id'])) {
                 $oldStatus = $task->task_status_id;
                 $task->task_status_id = $input['task_status_id'];
@@ -866,15 +863,12 @@ class DailyTaskMobileController extends BaseController
                     $taskStatus = TaskStatus::find($input['task_status_id']);
                     
                     if ($taskStatus) {
-                        // JIKA STATUS BERUBAH MENJADI COMPLETE ATAU NOT COMPLETE
                         if ($taskStatus->name == ParamSchema::COMPLATE || $taskStatus->name == ParamSchema::NOTCOMPLATE) {
                             
-                            // 1. Jika statusnya COMPLETE dan ada poin yang diberikan
                             if ($taskStatus->name == ParamSchema::COMPLATE) {
                                 $point = $request->point ?? 0;
                                 
                                 if ($point > 0) {
-                                    // Validasi tambahan khusus jika point diisi
                                     $approvalValidator = Validator::make($input, [
                                         'division_id' => 'required|exists:divisions,id',
                                     ]);
@@ -899,7 +893,6 @@ class DailyTaskMobileController extends BaseController
                                     $task->division_quota_lock_id = $check->original['quota_lock_id'];
                                 }
 
-                                // Memberikan reward XP dan check progress challenge
                                 if ($task->assign) {
                                     \App\Helpers\XpHelper::award($task->assign, $task, "Approval Dailytask via Update");
                                     \App\Helpers\ChallengeProgressHelper::userCheckAndGiveReward($task->assign->id);
@@ -909,7 +902,6 @@ class DailyTaskMobileController extends BaseController
                                 $task->approved = true;
                             } 
                             
-                            // 2. Jika statusnya NOT COMPLETE
                             if ($taskStatus->name == ParamSchema::NOTCOMPLATE) {
                                 $task->approved = false;
                                 $task->report_note = null;
@@ -918,7 +910,6 @@ class DailyTaskMobileController extends BaseController
                                 $task->point = 0;
                             }
 
-                            // Jalankan pencatatan riwayat status jika fungsinya tersedia
                             if (method_exists($this, 'statusrecord')) {
                                 $this->statusrecord($task, $taskStatus);
                             }
@@ -926,7 +917,6 @@ class DailyTaskMobileController extends BaseController
                     }
                 }
             }
-            // --- END SEGMEN LOGIKA APPROVAL ---
 
             if ($request->hasFile('attachments')) {
                 foreach ($request->file('attachments') as $file) {
