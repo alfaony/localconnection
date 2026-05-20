@@ -39,7 +39,8 @@ class GenerateIsolirJob implements ShouldQueue
                 'status' => ParamSchema::SUSPENDED
             ]);
 
-            
+            DB::commit();
+
             dispatch(new ProvisionCustomerJob($internetCustomer->id));
 
             $settingCompany = SettingCompany::byCompany($internetCustomer->company_id)->where('menu','wablas')->get()->pluck('field_value','field_title');
@@ -47,8 +48,6 @@ class GenerateIsolirJob implements ShouldQueue
             {
                 $this->sentWa($settingCompany, $this->customer);
             }
-
-            DB::commit();
         } catch (\Throwable $th) 
         {
             // dd($th);
@@ -82,7 +81,16 @@ class GenerateIsolirJob implements ShouldQueue
                             . "Terima kasih atas perhatian dan kerjasama nya 🙏.\n\n"
                             . "*Hormat kami,*\n"
                             . "*Hikarinet by KAILI Global*";
-                $this->sendMessage($client, $customer->phone_number, $message);
+                $response = $this->sendMessage($client, $customer->phone_number, $message);
+
+                \App\Models\WablasLog::record(
+                        source: 'internet_customer',
+                        sourceId: $customer->internetCustomer->id,
+                        phone: $customer->phone_number,
+                        message: $message,
+                        response: $response ?? [],
+                        type: 'text'
+                    );
             }
         } catch (\Throwable $th) 
         {
@@ -95,6 +103,8 @@ class GenerateIsolirJob implements ShouldQueue
     {
         $send = new Message($client);
         $send_text = $send->single_text($phone,$message);
+
+        return $send_text;
     }
 }
 
