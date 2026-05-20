@@ -751,9 +751,9 @@ class DailyTaskMobileController extends BaseController
                 return $this->sendError('Tugas sudah dihapus.', ['error' => 'Deleted Task'], 404);
             }
 
-            if ($task->user_id !== $userId) {
-                return $this->sendError('Tidak diizinkan memperbarui tugas ini.', ['error' => 'Forbidden'], 403);
-            }
+            // if ($task->user_id !== $userId) {
+            //     return $this->sendError('Tidak diizinkan memperbarui tugas ini.', ['error' => 'Forbidden'], 403);
+            // }
 
             $validator = Validator::make($input, [
                 'name' => 'required|string|max:255',
