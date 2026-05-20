@@ -854,16 +854,26 @@ class DailyTaskMobileController extends BaseController
             }
 
             if (isset($input['task_status_id'])) {
-                $oldStatus = $task->task_status_id;
-                $task->task_status_id = $input['task_status_id'];
+                $currentStatusName = $task->taskStatus->name ?? null;
 
-                if ($oldStatus != $task->task_status_id) {
-                    Log::info("UPDATE STATUS: Task {$task->id} dari {$oldStatus} ke {$task->task_status_id}");
-                    
-                    $taskStatus = TaskStatus::find($input['task_status_id']);
+                $oldStatusId = $task->task_status_id;
+                $newStatusId = $input['task_status_id'];
+
+                if ($oldStatusId != $newStatusId) {
+                    if ($currentStatusName == ParamSchema::COMPLATE) {
+                        return $this->sendError('Gagal memperbarui status.', ['error' => 'Tugas yang sudah selesai tidak dapat diubah kembali.'], 403);
+                    }
+
+                    $taskStatus = TaskStatus::find($newStatusId);
                     
                     if ($taskStatus) {
                         if ($taskStatus->name == ParamSchema::COMPLATE || $taskStatus->name == ParamSchema::NOTCOMPLATE) {
+                            if (!$user->hasRole(RoleSchema::MANAGER)) {
+                                return $this->sendError('Akses Ditolak.', ['error' => 'Hanya Manager yang dapat menyetujui atau menolak tugas ini.'], 403);
+                            }
+
+                            Log::info("UPDATE STATUS: Task {$task->id} dari {$oldStatusId} ke {$newStatusId}");
+                            $task->task_status_id = $newStatusId;
                             
                             if ($taskStatus->name == ParamSchema::COMPLATE) {
                                 $point = $request->point ?? 0;
@@ -913,6 +923,9 @@ class DailyTaskMobileController extends BaseController
                             if (method_exists($this, 'statusrecord')) {
                                 $this->statusrecord($task, $taskStatus);
                             }
+                        } else {
+                            Log::info("UPDATE STATUS: Task {$task->id} dari {$oldStatusId} ke {$newStatusId}");
+                            $task->task_status_id = $newStatusId;
                         }
                     }
                 }
