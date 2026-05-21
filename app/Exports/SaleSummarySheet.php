@@ -104,12 +104,13 @@ class SaleSummarySheet implements WithTitle, WithEvents
                 $query = $this->buildQuery();
 
                 // Aggregate data
-                $totalSubtotal    = (clone $query)->sum('total_amount');
-                $totalPpn         = (clone $query)->sum('tax_amount');
-                $totalFinalAmount = (clone $query)->sum('final_amount');
+                // $totalFinalAmount = (clone $query)->sum('final_amount');
+                $totalSubAmount   = (clone $query)->sum('total_amount');
+                $totalTaxAmount   = (clone $query)->sum('tax_amount');
+                $totalFinalAmount = $totalSubAmount + $totalTaxAmount;
                 $totalTransaksi   = (clone $query)->count();
                 $paymentBreakdown = (clone $query)
-                    ->selectRaw('payment_method, SUM(final_amount) as total, COUNT(*) as jumlah')
+                    ->selectRaw('payment_method, SUM(total_amount + tax_amount) as total, COUNT(*) as jumlah')
                     ->groupBy('payment_method')
                     ->get()
                     ->keyBy('payment_method');
