@@ -888,7 +888,7 @@ class InternetCustomerShow extends Component
             DB::commit();
             
             dispatch(new ProvisionCustomerJob($this->customer->id));
-            // \App\Jobs\SyncInstalledCustomersJob::dispatch([$this->customer->id]);
+            \App\Jobs\SyncInstalledCustomersJob::dispatch([$this->customer->id]);
             
             $this->dispatchBrowserEvent('hideEditInstalasiModal');
             $this->dispatchBrowserEvent('showSuccessAlert', ['message' => 'Data instalasi berhasil diperbarui']);
@@ -978,7 +978,7 @@ class InternetCustomerShow extends Component
     
             if($internetCustomers->installation) {
                 dispatch(new ProvisionCustomerJob($internetPurchase->customer->id));
-                \App\Jobs\SyncInstalledCustomersJob::dispatch([$internetPurchase->customer->id]);
+                // \App\Jobs\SyncInstalledCustomersJob::dispatch([$internetPurchase->customer->id]);
             }
             SendPaymentSuccessWaJob::dispatch($internetPurchase->id);
 
@@ -1333,7 +1333,7 @@ class InternetCustomerShow extends Component
             if ($internetCustomer->status == ParamSchema::REACTIVATED && $internetCustomer->installation) 
             {
                 dispatch(new ProvisionCustomerJob($internetCustomer->id));
-                \App\Jobs\SyncInstalledCustomersJob::dispatch([$internetCustomer->id]);
+                // \App\Jobs\SyncInstalledCustomersJob::dispatch([$internetCustomer->id]);
             }
 
             SendPaymentSuccessWaJob::dispatch($purchase->id);
