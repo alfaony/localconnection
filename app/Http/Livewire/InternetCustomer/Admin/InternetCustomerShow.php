@@ -888,7 +888,7 @@ class InternetCustomerShow extends Component
             DB::commit();
             
             dispatch(new ProvisionCustomerJob($this->customer->id));
-            \App\Jobs\SyncInstalledCustomersJob::dispatch([$this->customer->id]);
+            // \App\Jobs\SyncInstalledCustomersJob::dispatch([$this->customer->id]);
             
             $this->dispatchBrowserEvent('hideEditInstalasiModal');
             $this->dispatchBrowserEvent('showSuccessAlert', ['message' => 'Data instalasi berhasil diperbarui']);
@@ -968,15 +968,17 @@ class InternetCustomerShow extends Component
                 }
             } else {
                 $post['status'] = ParamSchema::REACTIVATED;
-                dispatch(new ProvisionCustomerJob($internetCustomers->id));
-                \App\Jobs\SyncInstalledCustomersJob::dispatch([$internetCustomers->id]);
             }
             
             GenerateInternetPurchaseCouponJob::dispatch($internetPurchase->customer->id, $internetPurchase->id, $internetPurchase->payment_months);
             $internetPurchase->customer->update($post);
-
+            
             DB::commit();
-
+    
+            if($internetCustomers->installation) {
+                dispatch(new ProvisionCustomerJob($internetPurchase->customer->id));
+                \App\Jobs\SyncInstalledCustomersJob::dispatch([$internetPurchase->customer->id]);
+            }
             SendPaymentSuccessWaJob::dispatch($internetPurchase->id);
 
             $this->dispatchBrowserEvent('showSuccessAlert', ['message' => 'Pembayaran berhasil dikonfirmasi']);
@@ -1320,8 +1322,6 @@ class InternetCustomerShow extends Component
                 }
             } else {
                 $post['status'] = ParamSchema::REACTIVATED;
-                dispatch(new ProvisionCustomerJob($userCustomer->id));
-                \App\Jobs\SyncInstalledCustomersJob::dispatch([$userCustomer->id]);
             }
 
             GenerateInternetPurchaseCouponJob::dispatch($internetCustomer->id, $purchase->id, $months);
@@ -1330,6 +1330,10 @@ class InternetCustomerShow extends Component
             DB::commit();
 
             SendPaymentSuccessWaJob::dispatch($purchase->id);
+
+            if($internetCustomer->installation) {
+                dispatch(new ProvisionCustomerJob($internetCustomer->id));
+            }
 
             Log::info('Admin confirmed manual payment', [
                 'purchase_id'  => $purchase->id,

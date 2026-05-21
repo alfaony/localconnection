@@ -129,20 +129,21 @@ class ProvisionCustomerJob implements ShouldQueue
             // ✅ Trigger sync check after 45 seconds to update status to ACTIVE
             // setelah disconnectIfActive, router butuh waktu reconnect
             if (in_array($cust->status, [ParamSchema::REACTIVATED, ParamSchema::INSTALLED])) {
-                dispatch(new SyncInstalledCustomersJob([$cust->id]))->delay(now()->addSeconds(45));
+                dispatch(new SyncInstalledCustomersJob([$cust->id]))->delay(now()->addMinutes(1));
             }
 
         } catch (\Throwable $th) {
-            //throw $th;
-            // dd($th);
-            Log::error($th->getMessage());
+            Log::error('ProvisionCustomerJob failed: '.$th->getMessage(), [
+                'customer_id' => $this->internetCustomerId,
+            ]);
+            throw $th;
         }
     }
 
-    // public function failed(Exception $e): void
-    // {
-    //     dd($e->getMessage());
-    //     // log ke audit_logs atau update jobs_provisioning bila kamu pakai tabel itu
-    //     \Log::error('Provision failed: '.$e->getMessage(), ['cust'=>$this->internetCustomerId]);
-    // }
+    public function failed(Exception $e): void
+    {
+        // dd($e->getMessage());
+        // log ke audit_logs atau update jobs_provisioning bila kamu pakai tabel itu
+        \Log::error('Provision failed: '.$e->getMessage(), ['cust'=>$this->internetCustomerId]);
+    }
 }

@@ -125,8 +125,7 @@ class Kernel extends ConsoleKernel
         // ✅ IMPROVED: Batch processing instead of individual schedules
         $schedule->job(new BatchSyncInstalledCustomersJob())
             ->name('batch-sync-installed-customers')
-            ->everyFiveMinutes()
-            // ->everyMinute()
+            ->everyThreeHours()
             ->withoutOverlapping();
         
         // =============== END SYNC ROUTER ===============

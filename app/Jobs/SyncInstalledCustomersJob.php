@@ -28,8 +28,8 @@ class SyncInstalledCustomersJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    public int $timeout = 300;
-    public int $tries = 2;
+    public int $timeout = 600;
+    public int $tries = 5;
 
     public function __construct(public ?array $customerIds = null) {}
 

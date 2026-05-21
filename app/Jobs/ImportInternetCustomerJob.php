@@ -512,7 +512,7 @@ class ImportInternetCustomerJob implements ShouldQueue
         ]);
 
         dispatch(new ProvisionCustomerJob($internetCustomer->id));
-        \App\Jobs\SyncInstalledCustomersJob::dispatch([$internetCustomer->id]);
+        // \App\Jobs\SyncInstalledCustomersJob::dispatch([$internetCustomer->id]);
     }
 
     public function failed(\Throwable $exception): void

@@ -1463,13 +1463,13 @@ createApp({
                         id:              item.product_store_id,
                         code:            item.product_store.code,
                         name:            item.product_store.name,
-                        price:           item.original_price ?? item.unit_price,
-                        originalPrice:   item.original_price ?? item.unit_price,
-                        quantity:        item.quantity,
-                        stock:           item.product_store.inventory?.quantity ?? null,
+                        price:           parseFloat(item.original_price ?? item.unit_price) || 0,
+                        originalPrice:   parseFloat(item.original_price ?? item.unit_price) || 0,
+                        quantity:        parseInt(item.quantity) || 1,
+                        stock:           item.product_store.inventory?.quantity != null ? parseInt(item.product_store.inventory.quantity) : null,
                         unit:            item.product_store.inventory?.unit ?? 'pcs',
                         image:           item.product_store.primary_media?.file_url ?? null,
-                        discountPercent: item.discount_percent ?? 0,
+                        discountPercent: parseFloat(item.discount_percent) || 0,
                         discountType:    item.discount_type ?? 'percent',
                     }));
                     

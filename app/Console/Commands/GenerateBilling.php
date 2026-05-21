@@ -93,7 +93,12 @@ class GenerateBilling extends Command
                     $endWindow->toDateString(),
                 ])
                 ->whereHas('internetCustomer', function ($query) {
-                    $query->where('status', ParamSchema::WAITING_PAYMENT_SUBSCRIPTION);
+                    $query->whereIn('status', [
+                        ParamSchema::ACTIVE,
+                        ParamSchema::WAITING_PAYMENT_SUBSCRIPTION,
+                        ParamSchema::REACTIVATED,
+                        ParamSchema::DISCONNECTED,
+                    ]);
                 })
                 ->with(['internetCustomer.internetPackage', 'internetCustomer.purchases'])
                 ->get();
