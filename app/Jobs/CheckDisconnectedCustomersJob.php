@@ -5,6 +5,7 @@ namespace App\Jobs;
 use App\Models\InternetCustomer;
 use App\Services\RouterOSService;
 use App\Schemas\ParamSchema;
+use App\Jobs\BatchSyncInstalledCustomersJob;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -38,32 +39,59 @@ class CheckDisconnectedCustomersJob implements ShouldQueue
                 $this->checkCustomer($ros, $customer);
             }
         } else {
-            $this->checkAllDisconnected($ros);
+            $this->checkAll($ros);
         }
 
         Log::info('CheckDisconnectedCustomersJob completed');
     }
 
-    protected function checkAllDisconnected(RouterOSService $ros): void
+    protected function checkAll(RouterOSService $ros): void
     {
         $customers = InternetCustomer::with('router')
-            ->where('status', ParamSchema::DISCONNECTED)
+            ->whereIn('status', [
+                ParamSchema::DISCONNECTED,
+                ParamSchema::INSTALLED,
+                ParamSchema::REACTIVATED,
+            ])
             ->whereNotNull('router_id')
             ->whereNotNull('username')
             ->get();
 
-        Log::info('Found disconnected customers to check', ['count' => $customers->count()]);
+        if ($customers->isEmpty()) {
+            Log::info('CheckDisconnectedCustomersJob: no customers to check, skipping');
+            return;
+        }
 
-        foreach ($customers as $customer) {
+        $grouped = $customers->groupBy('status');
+
+        $disconnected = $grouped->get(ParamSchema::DISCONNECTED, collect());
+        $needsSync    = collect()
+            ->merge($grouped->get(ParamSchema::INSTALLED, collect()))
+            ->merge($grouped->get(ParamSchema::REACTIVATED, collect()));
+
+        Log::info('CheckDisconnectedCustomersJob found customers', [
+            'disconnected' => $disconnected->count(),
+            'installed'    => $grouped->get(ParamSchema::INSTALLED, collect())->count(),
+            'reactivated'  => $grouped->get(ParamSchema::REACTIVATED, collect())->count(),
+        ]);
+
+        foreach ($disconnected as $customer) {
             try {
                 $this->checkCustomer($ros, $customer);
             } catch (\Exception $e) {
                 Log::error('Failed to check disconnected customer', [
-                    'customer_id' => $customer->id,
+                    'customer_id'   => $customer->id,
                     'customer_code' => $customer->code,
-                    'error' => $e->getMessage(),
+                    'error'         => $e->getMessage(),
                 ]);
             }
+        }
+
+        if ($needsSync->isNotEmpty()) {
+            dispatch(new BatchSyncInstalledCustomersJob());
+            Log::info('Dispatched BatchSyncInstalledCustomersJob', [
+                'count' => $needsSync->count(),
+            ]);
         }
     }
 

@@ -460,14 +460,15 @@ class SaleIndex extends Component
                 $query->where('user_id', $this->filter_user_id);
             });
 
-        $totalFinalAmount = (clone $baseQuery)->sum('final_amount');
+        // $totalFinalAmount = (clone $baseQuery)->sum('final_amount');
         $totalSubAmount   = (clone $baseQuery)->sum('total_amount');
         $totalTaxAmount   = (clone $baseQuery)->sum('tax_amount');
+        $totalFinalAmount = $totalSubAmount + $totalTaxAmount;
 
         $paymentBreakdown = null;
         if (!$this->filter_payment_method) {
             $breakdown = (clone $baseQuery)
-                ->selectRaw('payment_method, SUM(final_amount) as total')
+                ->selectRaw('payment_method, SUM(total_amount + tax_amount) as total')
                 ->groupBy('payment_method')
                 ->pluck('total', 'payment_method');
 

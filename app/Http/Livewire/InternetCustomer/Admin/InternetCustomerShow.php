@@ -965,6 +965,7 @@ class InternetCustomerShow extends Component
                     foreach($userTechnical as $tech) {
                         $this->sentInbox($tech,$message, $directUrl);
                     }
+                    $internetPurchase->customer->update($post);
                 }
             } else {
                 $post['status'] = ParamSchema::REACTIVATED;
@@ -1328,6 +1329,12 @@ class InternetCustomerShow extends Component
             $internetCustomer->update($post);
 
             DB::commit();
+
+            if ($internetCustomer->status == ParamSchema::REACTIVATED && $internetCustomer->installation) 
+            {
+                dispatch(new ProvisionCustomerJob($internetCustomer->id));
+                \App\Jobs\SyncInstalledCustomersJob::dispatch([$internetCustomer->id]);
+            }
 
             SendPaymentSuccessWaJob::dispatch($purchase->id);
 

@@ -707,8 +707,7 @@
                             </div>
                             <div class="form-group col-md-4">
                                 <label for="user_id">Ditugaskan</label>
-                                <select class="form-control select2" id="user_id" name="user_id" >
-                                    <option value="">Pilih User</option>
+                                <select class="form-control select2" id="user_id" name="user_id[]" multiple="multiple" data-placeholder="Pilih User">
                                     @foreach($users as $user)
                                         <option value="{{ $user->id }}">{{ $user->name }}</option>
                                     @endforeach
@@ -1427,7 +1426,8 @@ $(document).ready(function() {
 
     $('.select2').select2({
         width: '100%',
-        placeholder: 'Pilih'
+        placeholder: 'Pilih',
+        allowClear: true,
     });
 
     $('input[name="start_date"]').on('change', function() {

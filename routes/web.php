@@ -628,6 +628,8 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
   
   Route::get('weekly-report/reminderDashboard', [WeeklyReportController::class, 'reminderDashboard'])->name('weekly-report.reminderDashboard');
   Route::resource('weekly-report', WeeklyReportController::class);
+
+  Route::resource('report-link', \App\Http\Controllers\ReportLinkController::class);
   
   Route::get('vehicle/infoPic', [VehicleController::class, 'infoPic'])->name('reminder.vehicle.pic');
   Route::get('vehicle/infoManager', [VehicleController::class, 'infoManager'])->name('reminder.vehicle.manager');
@@ -706,6 +708,7 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
   Route::get('internet-customer', InternetCustomerIndex::class)->name('internet-customer.index');
   Route::put('internet-customer/update/{id}', InternetCustomerIndex::class)->name('internet-customer.update');
   Route::get('internet-customer/edit/{id}', InternetCustomerForm::class)->name('internet-customer.edit');
+  Route::get('internet-customer/export/{format}', [InternetCustomerController::class, 'export'])->name('internet-customer.export');
   Route::get('internet-customer/{customerId}', InternetCustomerShow::class)->name('internet-customer.show');
   
   Route::get('promo', PromoIndex::class)->name('promo.index');
