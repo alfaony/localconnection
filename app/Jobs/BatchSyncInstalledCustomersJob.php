@@ -5,6 +5,7 @@ namespace App\Jobs;
 use App\Models\InternetCustomer;
 use App\Schemas\ParamSchema;
 use Illuminate\Bus\Queueable;
+use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
@@ -18,7 +19,7 @@ use Throwable;
  */
 class BatchSyncInstalledCustomersJob implements ShouldQueue
 {
-    use InteractsWithQueue, Queueable, SerializesModels;
+    use InteractsWithQueue, Queueable, SerializesModels, Dispatchable;
 
     public int $timeout = 300; // 5 minutes
     public int $tries = 3;
