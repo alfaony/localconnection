@@ -135,7 +135,7 @@ class SaleDetailSheet implements WithTitle, WithEvents
                     $sheet->setCellValue("F{$row}", $sale->user->name ?? '-');
                     $sheet->setCellValue("N{$row}", (float) $sale->total_amount);
                     $sheet->setCellValue("O{$row}", (float) $sale->tax_amount);
-                    $sheet->setCellValue("P{$row}", (float) $sale->final_amount);
+                    $sheet->setCellValue("P{$row}", $calculatedFinalAmount);
 
                     $sheet->getStyle("A{$row}:{$lastCol}{$row}")->applyFromArray([
                         'font' => ['bold' => true, 'size' => 10],
@@ -143,7 +143,7 @@ class SaleDetailSheet implements WithTitle, WithEvents
                     ]);
 
                     $sheet->getStyle("A{$row}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-                    $sheet->getStyle("M{$row}:O{$row}")->getNumberFormat()->setFormatCode('#,##0');
+                    $sheet->getStyle("M{$row}:P{$row}")->getNumberFormat()->setFormatCode('#,##0');
                     $row++;
 
                     // Item rows
@@ -164,7 +164,8 @@ class SaleDetailSheet implements WithTitle, WithEvents
                             'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER],
                         ]);
                         $sheet->getStyle("J{$row}")->getNumberFormat()->setFormatCode('#,##0');
-                        $sheet->getStyle("L{$row}")->getNumberFormat()->setFormatCode('#,##0');
+                        $sheet->getStyle("K{$row}")->getNumberFormat()->setFormatCode('#,##0');
+                        $sheet->getStyle("M{$row}")->getNumberFormat()->setFormatCode('#,##0');
                         $row++;
                     }
 
