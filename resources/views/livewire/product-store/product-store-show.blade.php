@@ -15,7 +15,10 @@
                                 <i class="fas fa-arrow-left mr-1"></i> Kembali ke Produk
                             </a>
                             @canAccess('edit','product_stores')
-                            <a href="{{ route('product-store.edit', [$product->id, 'page' => request()->query('page', 1)]) }}" class="btn btn-warning btn-sm">
+                            <a href="{{ route('product-store.edit', [$product->id, 'page' => request()->query('page', 1),'search' => $search, 
+                                                'categoryFilter' => $categoryFilter, 
+                                                'warehouseFilter' => $warehouseFilter, 
+                                                'zoneFilter' => $zoneFilter]) }}" class="btn btn-warning btn-sm">
                                 <i class="fas fa-edit mr-1"></i> Edit
                             </a>
                             @endcanAccess
@@ -109,7 +112,10 @@
                             <h5 class="text-muted">Belum Ada Foto Produk</h5>
                             <p class="text-muted mb-3">Upload foto produk untuk menampilkan galeri di sini</p>
                             @canAccess('edit','product_stores')
-                            <a href="{{ route('product-store.edit', [$product->id, 'page' => request()->query('page', 1)]) }}" class="btn btn-primary">
+                            <a href="{{ route('product-store.edit', [$product->id, 'page' => request()->query('page', 1),'search' => $search, 
+                                                'categoryFilter' => $categoryFilter, 
+                                                'warehouseFilter' => $warehouseFilter, 
+                                                'zoneFilter' => $zoneFilter]) }}" class="btn btn-primary">
                                 <i class="fas fa-edit mr-1"></i> Edit Produk
                             </a>
                             @endcanAccess

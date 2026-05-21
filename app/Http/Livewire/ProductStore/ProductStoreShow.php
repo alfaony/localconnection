@@ -14,11 +14,23 @@ class ProductStoreShow extends Component
     public $barcode2Svg;
     public $qrCodeSvg;
 
+    public $page;
+    public $search;
+    public $categoryFilter;
+    public $warehouseFilter;
+    public $zoneFilter;
+
 
     public function mount($id)
     {
         $this->product = ProductStore::with(['category', 'brand', 'creator', 'modifier', 'company'])
             ->findOrFail($id);
+
+        $this->page = request()->query('page', 1);
+        $this->search = request()->query('search', '');
+        $this->categoryFilter = request()->query('categoryFilter', '');
+        $this->warehouseFilter = request()->query('warehouseFilter', '');
+        $this->zoneFilter = request()->query('zoneFilter', '');
             
         // Generate barcode 1 (Code 128)
         $this->barcode1Svg = DNS1D::getBarcodeSVG($this->product->barcode, 'C128', 2, 60);

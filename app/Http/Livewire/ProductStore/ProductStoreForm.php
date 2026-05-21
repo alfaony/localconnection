@@ -67,6 +67,10 @@ class ProductStoreForm extends Component
         $this->racks = collect();
 
         $this->page = request()->query('page', 1);
+        $this->search = request()->query('search', '');
+        $this->categoryFilter = request()->query('categoryFilter', '');
+        $this->warehouseFilter = request()->query('warehouseFilter', '');
+        $this->zoneFilter = request()->query('zoneFilter', '');
         
         if($id) {
             $this->editProduct($id);
@@ -378,12 +382,20 @@ class ProductStoreForm extends Component
         $this->handlePhotoDeletion();
         $this->savePhotos($product);
 
+        $urlParams = [
+            'page' => $this->page,
+            'search' => $this->search,
+            'categoryFilter' => $this->categoryFilter,
+            'warehouseFilter' => $this->warehouseFilter,
+            'zoneFilter' => $this->zoneFilter,
+        ];
+
         if ($this->createAgain) {
             $this->resetForm();
-            return redirect()->route('product-store.create',['page' => $this->page])->with('success', 'Produk berhasil disimpan.');
+            return redirect()->route('product-store.create', ['page' => $this->page])->with('success', 'Produk berhasil disimpan.');
         } else {
             $this->resetForm();
-            return redirect()->route('product-store.index', ['page' => $this->page])->with('success', 'Produk berhasil disimpan.');
+            return redirect()->route('product-store.index', $urlParams)->with('success', 'Produk berhasil disimpan.');
         }
     }
 
@@ -455,7 +467,13 @@ class ProductStoreForm extends Component
             } catch (\Exception $e) {}
         }
         $this->resetForm();
-        return redirect()->route('product-store.index', ['page' => $this->page]);
+        return redirect()->route('product-store.index', [
+            'page' => $this->page,
+            'search' => $this->search,
+            'categoryFilter' => $this->categoryFilter,
+            'warehouseFilter' => $this->warehouseFilter,
+            'zoneFilter' => $this->zoneFilter,
+        ]);
     }
 
     public function createProduct()
