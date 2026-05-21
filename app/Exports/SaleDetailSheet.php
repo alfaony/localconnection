@@ -95,16 +95,15 @@ class SaleDetailSheet implements WithTitle, WithEvents
             AfterSheet::class => function (AfterSheet $event) {
                 $sheet   = $event->sheet->getDelegate();
                 $sales   = $this->buildQuery()->get();
-                $columns = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M','N'];
-                $lastCol = 'N';
+                $columns = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P'];
+                $lastCol = 'P';
                 $row     = 1;
                 $no      = 1;
 
                 // ── Header row ────────────────────────────────────────────────
                 $headers = [
-                    'No','Kode Transaksi', 'Email Pelanggan', 'Total', 'Total Akhir',
-                    'Status', 'Metode Bayar', 'Kasir',
-                    'Produk', 'Variant', 'Jumlah', 'Harga Satuan', 'Diskon', 'Subtotal',
+                    'No','Kode Transaksi', 'Email Pelanggan', 'Status', 'Metode Bayar', 'Kasir',
+                    'No', 'Produk', 'Variant', 'Jumlah', 'Harga Satuan', 'Diskon', 'Subtotal',
                     'Total', 'PPN', 'Total Akhir',
                 ];
                 foreach ($headers as $i => $header) {
@@ -125,40 +124,47 @@ class SaleDetailSheet implements WithTitle, WithEvents
                 foreach ($sales as $sale) {
                     $transactionRow = $row;
                     $calculatedFinalAmount = (float) $sale->total_amount + (float) $sale->tax_amount;
+                    $itemNo         = 1;
 
                     // Transaction row
                     $sheet->setCellValue("A{$row}", $no);
                     $sheet->setCellValue("B{$row}", $sale->transaction_code);
                     $sheet->setCellValue("C{$row}", $sale->customer_email ?? '-');
-                    $sheet->setCellValue("D{$row}", (float) $sale->total_amount);
-                    $sheet->setCellValue("E{$row}", $calculatedFinalAmount);
-                    $sheet->setCellValue("F{$row}", ucfirst($sale->status));
-                    $sheet->setCellValue("G{$row}", $this->formatPaymentMethod($sale->payment_method));
-                    $sheet->setCellValue("H{$row}", $sale->user->name ?? '-');
+                    $sheet->setCellValue("D{$row}", ucfirst($sale->status));
+                    $sheet->setCellValue("E{$row}", $this->formatPaymentMethod($sale->payment_method));
+                    $sheet->setCellValue("F{$row}", $sale->user->name ?? '-');
+                    $sheet->setCellValue("N{$row}", (float) $sale->total_amount);
+                    $sheet->setCellValue("O{$row}", (float) $sale->tax_amount);
+                    $sheet->setCellValue("P{$row}", (float) $sale->final_amount);
 
                     $sheet->getStyle("A{$row}:{$lastCol}{$row}")->applyFromArray([
                         'font' => ['bold' => true, 'size' => 10],
                         'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => 'FFdbeafe']],
                     ]);
+
                     $sheet->getStyle("A{$row}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-                    
-                    $sheet->getStyle("D{$row}:E{$row}")->getNumberFormat()->setFormatCode('#,##0');
+                    $sheet->getStyle("M{$row}:O{$row}")->getNumberFormat()->setFormatCode('#,##0');
                     $row++;
 
                     // Item rows
                     foreach ($sale->items as $item) {
-                        $sheet->setCellValue("I{$row}", $item->productStore->name ?? '-');
-                        $sheet->setCellValue("J{$row}", $item->productStore->variant ?? '-');
-                        $sheet->setCellValue("K{$row}", (int) $item->quantity);
-                        $sheet->setCellValue("L{$row}", (float) $item->unit_price);
-                        $sheet->setCellValue("M{$row}", $this->formatDiskon($item));
-                        $sheet->setCellValue("N{$row}", (float) $item->subtotal);
+                        $sheet->setCellValue("G{$row}", $itemNo++);
+                        $sheet->setCellValue("H{$row}", $item->productStore->name ?? '-');
+                        $sheet->setCellValue("I{$row}", $item->productStore->variant ?? '-');
+                        $sheet->setCellValue("J{$row}", (int) $item->quantity);
+                        $sheet->setCellValue("K{$row}", (float) $item->original_price);
+                        $sheet->setCellValue("L{$row}", $this->formatDiskon($item));
+                        $sheet->setCellValue("M{$row}", (float) $item->subtotal);
 
                         $sheet->getStyle("A{$row}:{$lastCol}{$row}")->applyFromArray([
                             'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => 'FFf8fafc']],
                         ]);
+                        $sheet->getStyle("F{$row}")->applyFromArray([
+                            'font'      => ['size' => 8, 'color' => ['argb' => 'FF64748b']],
+                            'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER],
+                        ]);
+                        $sheet->getStyle("J{$row}")->getNumberFormat()->setFormatCode('#,##0');
                         $sheet->getStyle("L{$row}")->getNumberFormat()->setFormatCode('#,##0');
-                        $sheet->getStyle("N{$row}")->getNumberFormat()->setFormatCode('#,##0');
                         $row++;
                     }
 
