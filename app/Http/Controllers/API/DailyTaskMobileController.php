@@ -20,6 +20,7 @@ use App\Models\DivisionQuotaLock;
 use App\Models\RecurringRule;
 use App\Models\Division;
 use App\Schemas\ParamSchema;
+use App\Schemas\RoleSchema;
 use Illuminate\Support\Facades\Log; 
 use App\Helpers\InboxHelper;
 use Illuminate\Support\Facades\Route;
@@ -1359,15 +1360,21 @@ class DailyTaskMobileController extends BaseController
             $user = Auth::user();
             $divisionIds = $user->divisions->pluck('id');
 
-            $data = Objective::byCompany($user->company_id)
-                // ->whereHas('division', function ($q) use ($divisionIds) {
-                //     $q->whereIn('id', $divisionIds);
-                // })
-                ->get(['id', 'name', 'division_id']);
+            if ($divisionIds->isEmpty()) {
+                return $this->sendResponse([], 'User tidak memiliki divisi.');
+            }
+
+            $data = Objective::with('divisions')
+                ->byCompany($user->company_id)
+                ->whereHas('divisions', function ($query) use ($divisionIds) {
+                    $query->whereIn('divisions.id', $divisionIds);
+                })
+                ->get(['id', 'name']);
 
             return $this->sendResponse($data->toArray(), 'Daftar objektif berhasil diambil.');
         } catch (\Exception $e) {
-            return $this->sendError('Gagal mengambil daftar objektif.', ['error' => $e->getMessage()]);
+            return $this->sendError('Gagal mengambil daftar objektif.', ['error' => $e->getMessage()]
+            );
         }
     }
 
@@ -1412,21 +1419,28 @@ class DailyTaskMobileController extends BaseController
         }
     }
 
-        /**
+     /**
      * @param int $objectiveId
      * @return \Illuminate\Http\JsonResponse
      */
     public function indexKeyResults($objectiveId)
     {
         try {
-            $objective = Objective::find($objectiveId);
+            $objective = Objective::with('divisions')->find($objectiveId);
             if (!$objective) {
                 return $this->sendError('Objektif tidak ditemukan.', ['objective_id' => $objectiveId], 404);
             }
 
             $keyResults = $objective->keyResults()
                 ->select('id', 'result')
-                ->get();
+                ->get()
+                ->map(function ($item) use ($objective) {
+                    return [
+                        'id' => $item->id,
+                        'result' => $item->result,
+                        'division_ids' => $objective->divisions->pluck('id')->values(),
+                    ];
+                });
 
             return $this->sendResponse($keyResults->toArray(), 'Daftar key result berhasil diambil.');
         } catch (\Exception $e) {
