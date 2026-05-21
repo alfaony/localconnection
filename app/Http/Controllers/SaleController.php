@@ -96,8 +96,8 @@ class SaleController extends Controller
             $finalAmount = $totalAmount + $taxAmount;
             $cashDeduction = 0;
 
-            // For cash payment, round down to nearest 100 (ratusan)
-            if ($saleData['payment_method'] === 'cash') {
+            // For cash and QRIS payment, round down to nearest 100 (ratusan)
+            if ($saleData['payment_method'] === 'cash' || $saleData['payment_method'] === 'qris') {
                 $roundedAmount = floor($finalAmount / 100) * 100;
                 $cashDeduction = $finalAmount - $roundedAmount;
                 $finalAmount = $roundedAmount;

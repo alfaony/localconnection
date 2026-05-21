@@ -259,9 +259,9 @@
                     <div class="alert alert-info">
                         <div class="d-flex justify-content-between align-items-center">
                             <span>Total yang harus dibayar:</span>
-                            <strong class="h4 mb-0">@{{ formatCurrency(paymentMethod === 'cash' ? cashRoundedTotal : grandTotal) }}</strong>
+                            <strong class="h4 mb-0">@{{ formatCurrency((paymentMethod === 'cash' || paymentMethod === 'qris') ? cashRoundedTotal : grandTotal) }}</strong>
                         </div>
-                        <div v-if="paymentMethod === 'cash' && cashDeduction > 0" class="d-flex justify-content-between align-items-center mt-1">
+                        <div v-if="(paymentMethod === 'cash' || paymentMethod === 'qris') && cashDeduction > 0" class="d-flex justify-content-between align-items-center mt-1">
                             <small class="text-muted">Total sebelum pembulatan: @{{ formatCurrency(grandTotal) }}</small>
                             <small class="text-muted">Potongan pembulatan: @{{ formatCurrency(cashDeduction) }}</small>
                         </div>
@@ -386,6 +386,16 @@
                                    v-model="paymentDetails.bankName"
                                    placeholder="BCA" required>
                             <small class="text-muted">Gunakan scanner untuk scan QR code</small>
+                            <div v-if="cashDeduction > 0" class="mt-3 p-3 bg-light rounded">
+                                <div class="d-flex justify-content-between">
+                                    <span>Total yang dibayar:</span>
+                                    <strong class="h5 mb-0">@{{ formatCurrency(cashRoundedTotal) }}</strong>
+                                </div>
+                                <div class="d-flex justify-content-between text-muted mt-1" style="font-size: 0.85em;">
+                                    <span>Potongan pembulatan dari @{{ formatCurrency(grandTotal) }}:</span>
+                                    <span>-@{{ formatCurrency(cashDeduction) }}</span>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
