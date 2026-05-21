@@ -946,7 +946,7 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
-const { createApp, ref, computed, onMounted, watch } = Vue;
+const { createApp, ref, computed, onMounted, watch, nextTick } = Vue;
 
 createApp({
     setup() {
@@ -1469,7 +1469,9 @@ createApp({
                         stock:           item.product_store.inventory?.quantity != null ? parseInt(item.product_store.inventory.quantity) : null,
                         unit:            item.product_store.inventory?.unit ?? 'pcs',
                         image:           item.product_store.primary_media?.file_url ?? null,
-                        discountPercent: parseFloat(item.discount_percent) || 0,
+                        discountPercent: item.discount_type === 'flat'
+                            ? parseFloat(item.discount_amount) || 0
+                            : parseFloat(item.discount_percent) || 0,
                         discountType:    item.discount_type ?? 'percent',
                     }));
                     
@@ -2400,12 +2402,13 @@ createApp({
         const paymentMethodsList = ['cash', 'debit_credit', 'qris'];
 
         // Focus first input of the currently selected payment method
+        // nextTick ensures v-if sections are fully rendered before attempting focus
         const focusFirstPaymentField = () => {
             let id = null;
             if (paymentMethod.value === 'cash') id = 'cashAmountInput';
             else if (paymentMethod.value === 'debit_credit') id = 'cardNumberInput';
             else if (paymentMethod.value === 'qris') id = 'qrisBankInput';
-            if (id) document.getElementById(id)?.focus();
+            if (id) nextTick(() => document.getElementById(id)?.focus());
         };
 
         // Clear the focused payment input and its Vue ref, then blur it
@@ -2461,10 +2464,18 @@ createApp({
             if (event.code === 'Enter' && currentStep.value === 2 && !isConfirmModalOpen) {
                 event.preventDefault();
                 if (isInInput) {
-                    // Keluar dari payment field → user bisa tekan Space untuk lanjut
-                    event.target.blur();
+                    // Debit/credit: Enter cycles through the 3 fields in order
+                    const id = event.target.id;
+                    if (id === 'cardNumberInput') {
+                        nextTick(() => document.getElementById('cardBankInput')?.focus());
+                    } else if (id === 'cardBankInput') {
+                        nextTick(() => document.getElementById('cardEdcInput')?.focus());
+                    } else {
+                        // Last field (or cash/qris single field) → blur, ready for Space
+                        event.target.blur();
+                    }
                 } else {
-                    // Belum di input → fokus ke field pertama metode yang dipilih
+                    // Not in any input → focus first field of selected method
                     focusFirstPaymentField();
                 }
                 return;
