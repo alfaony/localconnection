@@ -96,12 +96,10 @@ class SaleController extends Controller
             $finalAmount = $totalAmount + $taxAmount;
             $cashDeduction = 0;
 
-            // For cash and QRIS payment, round down to nearest 100 (ratusan)
-            if ($saleData['payment_method'] === 'cash' || $saleData['payment_method'] === 'qris') {
-                $roundedAmount = floor($finalAmount / 100) * 100;
-                $cashDeduction = $finalAmount - $roundedAmount;
-                $finalAmount = $roundedAmount;
-            }
+            // Round down to nearest 100 (ratusan) for all payment methods
+            $roundedAmount = floor($finalAmount / 100) * 100;
+            $cashDeduction = $finalAmount - $roundedAmount;
+            $finalAmount   = $roundedAmount;
 
             // Jika ada draft_id, maka update draft tersebut
             if (!empty($saleData['draft_id'])) {
@@ -356,7 +354,10 @@ class SaleController extends Controller
 
     public function loadDraft($id)
     {
-        $draft = Sale::with('items.productStore')
+        $draft = Sale::with([
+                'items.productStore.inventory',
+                'items.productStore.primaryMedia',
+            ])
             ->where('id', $id)
             ->where('user_id', Auth::id())
             ->where('status', 'draft')

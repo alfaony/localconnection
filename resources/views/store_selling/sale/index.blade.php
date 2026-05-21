@@ -123,8 +123,8 @@
                         {{-- Ringkasan bayar --}}
                         <div class="text-center mb-3">
                             <h4 class="mb-0">Total Pembayaran</h4>
-                            <h2 class="text-primary font-weight-bold">@{{ formatCurrency((paymentMethod === 'cash' || paymentMethod === 'qris') ? cashRoundedTotal : grandTotal) }}</h2>
-                            <small v-if="(paymentMethod === 'cash' || paymentMethod === 'qris') && cashDeduction > 0" class="text-muted">
+                            <h2 class="text-primary font-weight-bold">@{{ formatCurrency(cashRoundedTotal) }}</h2>
+                            <small v-if="cashDeduction > 0" class="text-muted">
                                 Sudah termasuk potongan pembulatan @{{ formatCurrency(cashDeduction) }}
                             </small>
                         </div>
@@ -134,7 +134,7 @@
                                 <div class="col-6"><p>Metode Pembayaran:</p></div>
                                 <div class="col-6 text-right">@{{ getPaymentMethodLabel(paymentMethod) }}</div>
                             </div>
-                            <div v-if="(paymentMethod === 'cash' || paymentMethod === 'qris') && cashDeduction > 0" class="row mt-1">
+                            <div v-if="cashDeduction > 0" class="row mt-1">
                                 <div class="col-6"><p class="text-muted">Potongan pembulatan:</p></div>
                                 <div class="col-6 text-right text-muted">-@{{ formatCurrency(cashDeduction) }}</div>
                             </div>
@@ -1460,11 +1460,17 @@ createApp({
                     const draftData = response.data.draft;
                     
                     cartItems.value = draftData.items.map(item => ({
-                        id: item.product_store_id,
-                        code: item.product_store.code,
-                        name: item.product_store.name,
-                        price: item.unit_price,
-                        quantity: item.quantity
+                        id:              item.product_store_id,
+                        code:            item.product_store.code,
+                        name:            item.product_store.name,
+                        price:           item.original_price ?? item.unit_price,
+                        originalPrice:   item.original_price ?? item.unit_price,
+                        quantity:        item.quantity,
+                        stock:           item.product_store.inventory?.quantity ?? null,
+                        unit:            item.product_store.inventory?.unit ?? 'pcs',
+                        image:           item.product_store.primary_media?.file_url ?? null,
+                        discountPercent: item.discount_percent ?? 0,
+                        discountType:    item.discount_type ?? 'percent',
                     }));
                     
                     paymentMethod.value = draftData.payment_method;
