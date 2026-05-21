@@ -15,9 +15,12 @@ use Illuminate\Support\Facades\Log;
 
 class SuspendOverdueInternetCustomers extends Command
 {
-    protected $signature = 'internet:suspend-overdue
+    protected $signature = 'internet:check-status
                             {--count : Tampilkan jumlah customer tanpa mengeksekusi}
-                            {--execute : Jalankan suspend dan kirim notifikasi WA}';
+                            {--execute : Jalankan suspend dan kirim notifikasi WA}
+                            {--countActive : Jalankan sync customer aktif}
+                            {--active : Jalankan sync customer aktif}
+                            ';
 
     protected $description = 'Suspend internet customers yang end_billing_date sudah lewat dan kirim notifikasi WA';
 
@@ -27,7 +30,6 @@ class SuspendOverdueInternetCustomers extends Command
         $this->newLine();
 
         $customers = $this->getOverdueCustomers();
-
         if ($customers->isEmpty()) {
             $this->info('Tidak ada customer yang melewati tanggal jatuh tempo.');
             return Command::SUCCESS;
@@ -62,6 +64,17 @@ class SuspendOverdueInternetCustomers extends Command
             return Command::SUCCESS;
         }
 
+        if($this->option('active')) {
+            \App\Jobs\BatchSyncInstalledCustomersJob::dispatch();
+            return Command::SUCCESS;
+        }
+
+         if($this->option('countActive')) {
+            $count = $this->getActiveCount();
+            $this->info("Ditemukan {$count} customer yang aktif.");
+            return Command::SUCCESS;
+        }
+
         $this->newLine();
         $this->warn('Gunakan --count untuk preview atau --execute untuk menjalankan suspend.');
 
@@ -82,6 +95,17 @@ class SuspendOverdueInternetCustomers extends Command
         })
         ->orderBy('company_id')
         ->get();
+    }
+
+    protected function getActiveCount()
+    {
+        return InternetCustomer::with([
+            'userCustomer',
+            'internetPackage',
+            'company',
+        ])
+        ->whereIn('status', [ParamSchema::INSTALLED, ParamSchema::REACTIVATED])
+        ->count();
     }
 
     protected function displayTable($customers)

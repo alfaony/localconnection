@@ -817,10 +817,11 @@ class InternetCustomerShow extends Component
         }else
         {
             $post['status'] = ParamSchema::REACTIVATED;
+            $internetPurchase->customer->update($post);
+            
             dispatch(new ProvisionCustomerJob($internetPurchase->customer->id));
             \App\Jobs\SyncInstalledCustomersJob::dispatch([$internetPurchase->customer->id]);
         }
 
-        $internetPurchase->customer->update($post);
     }
 }

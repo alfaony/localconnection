@@ -55,6 +55,12 @@ class InternetCustomer extends Model
                 $customer->code = $finalCode;
             });
         });
+
+        static::updating(function ($model) {
+            if ($model->isDirty('status')) {
+                $model->meta = null;
+            }
+        });
     }
 
     function generateProvincePrefix($provinceName)

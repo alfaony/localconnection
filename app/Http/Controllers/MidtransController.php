@@ -400,7 +400,7 @@ class MidtransController extends Controller
             $internetPurchase->customer->update($post);
             
             dispatch(new ProvisionCustomerJob($internetCustomers->id));
-            \App\Jobs\SyncInstalledCustomersJob::dispatch([$internetCustomers->id]);
+            // \App\Jobs\SyncInstalledCustomersJob::dispatch([$internetCustomers->id]);
         }
 
     }

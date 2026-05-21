@@ -884,11 +884,12 @@ class InternetCustomerShow extends Component
                     'device_serial_number' => $this->device_serial_number,
                 ]);
             }
-
+            
+            DB::commit();
+            
             dispatch(new ProvisionCustomerJob($this->customer->id));
             \App\Jobs\SyncInstalledCustomersJob::dispatch([$this->customer->id]);
             
-            DB::commit();
             $this->dispatchBrowserEvent('hideEditInstalasiModal');
             $this->dispatchBrowserEvent('showSuccessAlert', ['message' => 'Data instalasi berhasil diperbarui']);
             $this->mount($this->customer->id);
@@ -968,15 +969,17 @@ class InternetCustomerShow extends Component
                 }
             } else {
                 $post['status'] = ParamSchema::REACTIVATED;
-                $internetPurchase->customer->update($post);
-                dispatch(new ProvisionCustomerJob($internetCustomers->id));
-                \App\Jobs\SyncInstalledCustomersJob::dispatch([$internetCustomers->id]);
             }
             
             GenerateInternetPurchaseCouponJob::dispatch($internetPurchase->customer->id, $internetPurchase->id, $internetPurchase->payment_months);
-
+            $internetPurchase->customer->update($post);
+            
             DB::commit();
-
+    
+            if($internetCustomers->installation) {
+                dispatch(new ProvisionCustomerJob($internetPurchase->customer->id));
+                // \App\Jobs\SyncInstalledCustomersJob::dispatch([$internetPurchase->customer->id]);
+            }
             SendPaymentSuccessWaJob::dispatch($internetPurchase->id);
 
             $this->dispatchBrowserEvent('showSuccessAlert', ['message' => 'Pembayaran berhasil dikonfirmasi']);
@@ -1330,10 +1333,14 @@ class InternetCustomerShow extends Component
             if ($internetCustomer->status == ParamSchema::REACTIVATED && $internetCustomer->installation) 
             {
                 dispatch(new ProvisionCustomerJob($internetCustomer->id));
-                \App\Jobs\SyncInstalledCustomersJob::dispatch([$internetCustomer->id]);
+                // \App\Jobs\SyncInstalledCustomersJob::dispatch([$internetCustomer->id]);
             }
 
             SendPaymentSuccessWaJob::dispatch($purchase->id);
+
+            if($internetCustomer->installation) {
+                dispatch(new ProvisionCustomerJob($internetCustomer->id));
+            }
 
             Log::info('Admin confirmed manual payment', [
                 'purchase_id'  => $purchase->id,
