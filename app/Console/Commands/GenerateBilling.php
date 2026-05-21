@@ -42,7 +42,7 @@ class GenerateBilling extends Command
                         ParamSchema::INSTALLED,
                         ParamSchema::REACTIVATED,
                         ParamSchema::DISCONNECTED,
-                    ]);
+                    ])->whereHas('installation');
                 })
                 ->get();
 

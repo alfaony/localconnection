@@ -109,7 +109,7 @@ class Kernel extends ConsoleKernel
             $this->scheduleRouterHealthChecks();
         })
             ->name('dispatch-router-health-checks')
-            ->hourly()
+            ->everySixHours()
             ->withoutOverlapping(5); // 5 min expiry
 
         // =============== ROUTER SYNC JOBS ===============
@@ -123,10 +123,10 @@ class Kernel extends ConsoleKernel
 
         // =============== CUSTOMER SYNC ===============
         // ✅ IMPROVED: Batch processing instead of individual schedules
-        $schedule->job(new BatchSyncInstalledCustomersJob())
-            ->name('batch-sync-installed-customers')
-            ->everyThreeHours()
-            ->withoutOverlapping();
+        // $schedule->job(new BatchSyncInstalledCustomersJob())
+        //     ->name('batch-sync-installed-customers')
+        //     ->everyThreeHours()
+        //     ->withoutOverlapping();
         
         // =============== END SYNC ROUTER ===============
 
