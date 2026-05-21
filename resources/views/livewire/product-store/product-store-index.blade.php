@@ -580,7 +580,7 @@
                                     <td class="text-center align-middle">
                                         <div class="btn-group" role="group">
                                             @if($isShow)
-                                            <a href="{{ route('product-store.show', $product->id) }}" 
+                                            <a href="{{ route('product-store.show', [$product->id, 'page' => $products->currentPage()]) }}" 
                                                class="btn btn-sm btn-outline-info mb-1 mr-1" 
                                                title="Detail">
                                                 <i class="fas fa-eye"></i>
@@ -588,9 +588,9 @@
                                             @endif
 
                                             @if($isEdit)
-                                            <a href="{{ route('product-store.edit', $product->id) }}" 
-                                               class="btn btn-sm btn-outline-warning mb-1 mr-1" 
-                                               title="Edit">
+                                            <a href="{{ route('product-store.edit', [$product->id, 'page' => $products->currentPage()]) }}" 
+                                            class="btn btn-sm btn-outline-warning mb-1 mr-1" 
+                                            title="Edit">
                                                 <i class="fas fa-edit"></i>
                                             </a>
                                             @endif

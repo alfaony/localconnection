@@ -1363,7 +1363,7 @@ class DailyTaskMobileController extends BaseController
                 // ->whereHas('division', function ($q) use ($divisionIds) {
                 //     $q->whereIn('id', $divisionIds);
                 // })
-                ->get(['id', 'name']);
+                ->get(['id', 'name', 'division_id']);
 
             return $this->sendResponse($data->toArray(), 'Daftar objektif berhasil diambil.');
         } catch (\Exception $e) {
@@ -1378,7 +1378,17 @@ class DailyTaskMobileController extends BaseController
     public function indexDailyTaskUsers()
     {
         try {
-            $data = User::select('id', 'name')->get();
+            $users = User::select('id', 'name')
+                ->with('divisions:id') 
+                ->get();
+            $data = $users->map(function ($user) {
+                return [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'division_id' => $user->divisions->pluck('id')->toArray() 
+                ];
+            });
+
             return $this->sendResponse($data->toArray(), 'Daftar pengguna berhasil diambil.');
         } catch (\Exception $e) {
             return $this->sendError('Gagal mengambil daftar pengguna.', ['error' => $e->getMessage()]);
