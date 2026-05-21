@@ -104,11 +104,11 @@ class SaleSummarySheet implements WithTitle, WithEvents
                 $query = $this->buildQuery();
 
                 // Aggregate data
-                // $totalFinalAmount = (clone $query)->sum('final_amount');
-                $totalSubAmount   = (clone $query)->sum('total_amount');
-                $totalTaxAmount   = (clone $query)->sum('tax_amount');
-                $totalFinalAmount = $totalSubAmount + $totalTaxAmount;
+                $totalSubtotal    = (clone $query)->sum('total_amount');
+                $totalPpn         = (clone $query)->sum('tax_amount');
+                $totalFinalAmount = $totalSubtotal + $totalPpn;
                 $totalTransaksi   = (clone $query)->count();
+                
                 $paymentBreakdown = (clone $query)
                     ->selectRaw('payment_method, SUM(total_amount + tax_amount) as total, COUNT(*) as jumlah')
                     ->groupBy('payment_method')
@@ -177,7 +177,7 @@ class SaleSummarySheet implements WithTitle, WithEvents
                 foreach ([
                     ['Total Transaksi', $totalTransaksi, null],
                     ['Subtotal (Rp)', (float) $totalSubtotal, '#,##0'],
-                    ['Total PPN (Rp)', (float) $totalPpn, '#,##0'],
+                    ['Total PPN (Rp)', (float) $totalPpn, '#,##0'],         
                     ['Total Akhir (Rp)', (float) $totalFinalAmount, '#,##0'],
                 ] as [$label, $value, $fmt]) {
                     $sheet->setCellValue("B{$row}", $label);
