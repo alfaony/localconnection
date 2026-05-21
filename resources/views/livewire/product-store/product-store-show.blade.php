@@ -11,7 +11,7 @@
                             </h3>
                         </div>
                         <div class="col-md-6 text-right">
-                            <a href="{{ route('product-store.index') }}" class="btn btn-light btn-sm">
+                            <a href="{{ url()->previous() }}" class="btn btn-light btn-sm">
                                 <i class="fas fa-arrow-left mr-1"></i> Kembali ke Produk
                             </a>
                             @canAccess('edit','product_stores')
