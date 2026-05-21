@@ -884,11 +884,12 @@ class InternetCustomerShow extends Component
                     'device_serial_number' => $this->device_serial_number,
                 ]);
             }
-
+            
+            DB::commit();
+            
             dispatch(new ProvisionCustomerJob($this->customer->id));
             \App\Jobs\SyncInstalledCustomersJob::dispatch([$this->customer->id]);
             
-            DB::commit();
             $this->dispatchBrowserEvent('hideEditInstalasiModal');
             $this->dispatchBrowserEvent('showSuccessAlert', ['message' => 'Data instalasi berhasil diperbarui']);
             $this->mount($this->customer->id);
