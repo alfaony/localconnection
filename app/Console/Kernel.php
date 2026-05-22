@@ -97,8 +97,8 @@ class Kernel extends ConsoleKernel
 
         $schedule->command('customers:check-disconnected')
             ->timezone('Asia/Jakarta')
-            ->everyThreeHours()
-            ->withoutOverlapping(10)
+            ->everyTwoMinutes()
+            ->withoutOverlapping(5)
             ->runInBackground()
             ->onOneServer()
             ->appendOutputTo(storage_path('logs/disconnected-check.log'));
@@ -109,25 +109,24 @@ class Kernel extends ConsoleKernel
             $this->scheduleRouterHealthChecks();
         })
             ->name('dispatch-router-health-checks')
-            ->everyTwoMinutes()
+            ->everySixHours()
             ->withoutOverlapping(5); // 5 min expiry
 
         // =============== ROUTER SYNC JOBS ===============
         // ✅ Run once per hour, dispatch sync jobs untuk online routers only
-        $schedule->call(function () {
-            $this->scheduleRouterSyncJobs();
-        })
-            ->name('dispatch-router-sync-jobs')
-            ->hourly()
-            ->withoutOverlapping(10);
+        // $schedule->call(function () {
+        //     $this->scheduleRouterSyncJobs();
+        // })
+        //     ->name('dispatch-router-sync-jobs')
+        //     ->dailyAt('03:00')
+        //     ->withoutOverlapping(10);
 
         // =============== CUSTOMER SYNC ===============
         // ✅ IMPROVED: Batch processing instead of individual schedules
-        $schedule->job(new BatchSyncInstalledCustomersJob())
-            ->name('batch-sync-installed-customers')
-            ->everyFiveMinutes()
-            // ->everyMinute()
-            ->withoutOverlapping();
+        // $schedule->job(new BatchSyncInstalledCustomersJob())
+        //     ->name('batch-sync-installed-customers')
+        //     ->everyThreeHours()
+        //     ->withoutOverlapping();
         
         // =============== END SYNC ROUTER ===============
 

@@ -56,6 +56,12 @@ class InternetCustomer extends Model
                 $customer->code = $finalCode;
             });
         });
+
+        static::updating(function ($model) {
+            if ($model->isDirty('status')) {
+                $model->meta = null;
+            }
+        });
     }
 
     function generateProvincePrefix($provinceName)
@@ -234,6 +240,11 @@ class InternetCustomer extends Model
         return $this->hasMany(InternetCustomerPurchase::class);
     }
 
+    public function latestPurchase()
+    {
+        return $this->hasOne(InternetCustomerPurchase::class)->latestOfMany();
+    }
+
     public function actionBy()
     {
         return $this->belongsTo(User::class, 'action_user_id')->withTrashed();
@@ -315,5 +326,14 @@ class InternetCustomer extends Model
             $companyIds = auth()->user()->accessibleCompanies->pluck('id')->push($companyId)->unique();
             return $query->whereIn("company_id",$companyIds);
         }
+    }
+
+    public function scopeByCompanyJob($query,$companyIds)
+    {
+        if($companyIds)
+        {
+            return $query->whereIn("company_id",$companyIds);
+        }
+        return $query;
     }
 }

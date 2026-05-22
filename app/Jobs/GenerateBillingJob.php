@@ -115,7 +115,17 @@ class GenerateBillingJob implements ShouldQueue
                             . "*Hormat kami,*\n"
                             . "*Hikarinet by KAILI Global*";
 
-                $this->sendMessage($client, $customer->phone_number, $message);
+                $response = $this->sendMessage($client, $customer->phone_number, $message);
+
+                \App\Models\WablasLog::record(
+                    source: 'internet_customer',
+                    sourceId: $customer->internetCustomer->id,
+                    phone: $customer->phone_number,
+                    message: $message,
+                    response: $response ?? [],
+                    type: 'text'
+                );
+                
             }
         } catch (\Throwable $th) 
         {
@@ -126,6 +136,6 @@ class GenerateBillingJob implements ShouldQueue
     private function sendMessage($client, $phone, $message)
     {
         $send = new Message($client);
-        $send_text = $send->single_text($phone,$message);
+        return $send->single_text($phone,$message);
     }
 }

@@ -971,7 +971,7 @@ class InternetCustomerIndex extends Component
         $columns = [
             'id', 'name', 'code', 'status','address',
             'internet_package_id', 'user_customer_id', 'company_id',
-            'ktp_number', 'created_at','grouping_id','customer_type'
+            'ktp_number', 'created_at','grouping_id','customer_type','username'
         ];
         $query = InternetCustomer::query()
             ->byCompany($user->company_id) // batasi dataset sesuai akses
@@ -979,10 +979,11 @@ class InternetCustomerIndex extends Component
             // eager load minimal yang dipakai di blade
             ->with([
                 'installation:id,internet_customer_id,device_serial_number',
-                'installation.medias:id,internet_installation_id,photo,caption', // eager load photos
+                'installation.medias:id,internet_installation_id,photo,caption',
                 'userCustomer:id,name,email,phone_number,start_billing_date,end_billing_date',
                 'company:id,name',
-                'internetPackage:id,name'
+                'internetPackage:id,name',
+                'latestPurchase',
             ]);
 
         // Pencarian data
@@ -990,9 +991,6 @@ class InternetCustomerIndex extends Component
             $query->where(function ($q) {
                 $q->where('name', 'like', '%' . $this->search . '%')
                     ->orWhere('code', 'like', '%' . $this->search . '%')
-                    ->orWhereHas('installation', function ($q) {
-                        $q->where('device_serial_number', 'like', '%' . $this->search . '%');
-                    })
                     ->orWhereHas('userCustomer', function ($q) {
                         $q->where('name', 'like', '%' . $this->search . '%')
                           ->orWhere('email', 'like', '%' . $this->search . '%')
@@ -1002,8 +1000,7 @@ class InternetCustomerIndex extends Component
                         $q->where('name', 'like', '%' . $this->search . '%');
                     })
                     ->orWhere('ktp_number', 'like', '%' . $this->search . '%')
-                    ->orWhere('grouping_id', 'like', '%' . $this->search . '%')
-                    ;
+                    ->orWhere('grouping_id', 'like', '%' . $this->search . '%');
             });
         }
 
@@ -1366,6 +1363,19 @@ class InternetCustomerIndex extends Component
                 'available' => true
             ]);
         }
+    }
+
+    public function showFullAddress(string $customerId): void
+    {
+        $this->selectedCustomer = InternetCustomer::with([
+            'subdistrict:id,name',
+            'district:id,name',
+            'city:id,name',
+            'province:id,name',
+        ])->select(['id', 'address', 'subdistrict_id', 'district_id', 'city_id', 'province_id'])
+          ->find($customerId);
+
+        $this->dispatchBrowserEvent('show-address-modal');
     }
 
     public function checkGroupingIdAvailability(?string $value): void

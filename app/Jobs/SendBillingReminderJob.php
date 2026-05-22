@@ -166,7 +166,16 @@ class SendBillingReminderJob implements ShouldQueue
                 }
 
                 if($message){
-                    $this->sendMessage($client, $customer->phone_number, $message);
+                    $response = $this->sendMessage($client, $customer->phone_number, $message);
+
+                    \App\Models\WablasLog::record(
+                        source: 'internet_customer',
+                        sourceId: $customer->internetCustomer->id,
+                        phone: $customer->phone_number,
+                        message: $message,
+                        response: $response ?? [],
+                        type: 'text'
+                    );
                 }
 
                 Log::info("WhatsApp reminder sent successfully", [

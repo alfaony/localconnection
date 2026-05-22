@@ -393,14 +393,16 @@ class MidtransController extends Controller
                 foreach ($userTechnical as $tech) {
                     $this->sentInbox($tech, $from->id, $message, $directUrl);
                 }
+                $internetPurchase->customer->update($post);
             }
         } else {
             $post['status'] = ParamSchema::REACTIVATED;
+            $internetPurchase->customer->update($post);
+            
             dispatch(new ProvisionCustomerJob($internetCustomers->id));
-            \App\Jobs\SyncInstalledCustomersJob::dispatch([$internetCustomers->id]);
+            // \App\Jobs\SyncInstalledCustomersJob::dispatch([$internetCustomers->id]);
         }
 
-        $internetPurchase->customer->update($post);
     }
 
     /**

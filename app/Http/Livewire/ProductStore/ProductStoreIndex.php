@@ -58,6 +58,7 @@ class ProductStoreIndex extends Component
     public $perPage = 10;
 
     protected $queryString = [
+        'page' => ['except' => 1],
         'search' => ['except' => ''],
         'categoryFilter' => ['except' => ''],
         'warehouseFilter' => ['except' => ''],

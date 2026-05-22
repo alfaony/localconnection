@@ -292,7 +292,7 @@
                                                             <i class="fas fa-times-circle mr-1"></i>
                                                             Expired
                                                         </span>
-                                                    @elseif(!$purchase->isConfirmed() && ($customer->status == \App\Schemas\ParamSchema::WAITING_PAYMENT_SUBSCRIPTION || $customer->status == \App\Schemas\ParamSchema::SUSPENDED || $customer->status == \App\Schemas\ParamSchema::ACTIVE ) && $customer->getOldestUnconfirmed()->id == $purchase->id)
+                                                    @elseif(!$purchase->isConfirmed() && ($customer->status == \App\Schemas\ParamSchema::WAITING_PAYMENT_SUBSCRIPTION || $customer->status == \App\Schemas\ParamSchema::SUSPENDED || $customer->status == \App\Schemas\ParamSchema::ACTIVE || $customer->status == \App\Schemas\ParamSchema::REACTIVATED ) && $customer->getOldestUnconfirmed()->id == $purchase->id)
                                                         <button class="btn btn-sm btn-success" wire:click="showPaymentModal({{ $purchase->id }})">
                                                             <i class="fas fa-money-bill-wave mr-1"></i>Bayar Sekarang
                                                         </button>
