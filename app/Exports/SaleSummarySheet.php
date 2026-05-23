@@ -104,13 +104,15 @@ class SaleSummarySheet implements WithTitle, WithEvents
                 $query = $this->buildQuery();
 
                 // Aggregate data
-                $totalSubtotal    = (clone $query)->sum('total_amount');
-                $totalPpn         = (clone $query)->sum('tax_amount');
-                $totalFinalAmount = $totalSubtotal + $totalPpn;
-                $totalTransaksi   = (clone $query)->count();
-                
+                $totalSubtotal        = (clone $query)->sum('total_amount');
+                $totalPpn             = (clone $query)->sum('tax_amount');
+                $totalDeduction       = (clone $query)->sum('cash_deduction');
+                $totalBeforeDeduction = $totalSubtotal + $totalPpn;
+                $totalFinalAmount     = (clone $query)->sum('final_amount');
+                $totalTransaksi       = (clone $query)->count();
+
                 $paymentBreakdown = (clone $query)
-                    ->selectRaw('payment_method, SUM(total_amount + tax_amount) as total, COUNT(*) as jumlah')
+                    ->selectRaw('payment_method, SUM(final_amount) as total, COUNT(*) as jumlah')
                     ->groupBy('payment_method')
                     ->get()
                     ->keyBy('payment_method');
@@ -177,8 +179,10 @@ class SaleSummarySheet implements WithTitle, WithEvents
                 foreach ([
                     ['Total Transaksi', $totalTransaksi, null],
                     ['Subtotal (Rp)', (float) $totalSubtotal, '#,##0'],
-                    ['Total PPN (Rp)', (float) $totalPpn, '#,##0'],         
-                    ['Total Akhir (Rp)', (float) $totalFinalAmount, '#,##0'],
+                    ['Total PPN (Rp)', (float) $totalPpn, '#,##0'],
+                    ['Total Sebelum Deduction (Rp)', (float) $totalBeforeDeduction, '#,##0'],
+                    ['Potongan Pembulatan (Rp)', (float) $totalDeduction, '#,##0'],
+                    ['Total Akhir Setelah Deduction (Rp)', (float) $totalFinalAmount, '#,##0'],
                 ] as [$label, $value, $fmt]) {
                     $sheet->setCellValue("B{$row}", $label);
                     $sheet->setCellValue("C{$row}", $value);
