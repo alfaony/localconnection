@@ -930,16 +930,12 @@ class InternetCustomerShow extends Component
 
             $date = $internetPurchase->period_end ? Carbon::parse($internetPurchase->period_end) : Carbon::now();
         
-            // Smart billing date calculation
-            $periodStartDate = Carbon::parse($internetPurchase->period_start);
-            $maxBillingDate = config('services.internet_custom.max_billing_date', 20);
-            $currentBillingDay = $periodStartDate->day;
-            
-            if ($currentBillingDay > $maxBillingDate) {
-                $startBillingDate = $periodStartDate->copy()->addMonths($internetPurchase->payment_months)->firstOfMonth();
-            } else {
-                $startBillingDate = $periodStartDate->copy()->addMonths($internetPurchase->payment_months);
-            }
+            // Smart billing date calculation            
+            $createMonth = $this->createMonth($internetPurchase, $internetCustomers, $internetPurchase->payment_months);
+            $periodStart = $createMonth['periodStart'];
+            $periodEnd   = $createMonth['periodEnd'];
+            $startBillingDate = $createMonth['startBillingDate'];
+            $endBillingDate   = $createMonth['endBillingDate'];
             
             $gracePeriod = config('services.internet_custom.end_billing_of_days', 5);
             $endBillingDate = $startBillingDate->copy()->addDays($gracePeriod);
@@ -1261,10 +1257,11 @@ class InternetCustomerShow extends Component
             $userCustomer     = $internetCustomer->userCustomer;
 
             // ── Hitung periode ───────────────────────────────────────────────
-            $periodStart = $userCustomer->start_billing_date
-                ? Carbon::parse($userCustomer->start_billing_date)
-                : now()->startOfDay();
-            $periodEnd = $periodStart->copy()->addMonths($months)->subDay();
+            $createMonth = $this->createMonth($purchase, $userCustomer, $months);
+            $periodStart = $createMonth['periodStart'];
+            $periodEnd   = $createMonth['periodEnd'];
+            $startBillingDate = $createMonth['startBillingDate'];
+            $endBillingDate   = $createMonth['endBillingDate'];
 
             // ── Simpan file bukti ────────────────────────────────────────────
             $path = $this->admin_payment_proof->store('payment_proofs');
@@ -1288,16 +1285,8 @@ class InternetCustomerShow extends Component
                 'confirmation_finance_at'    => now(),
                 'user_finance_id'            => Auth::id(),
             ]);
-
-            // ── Smart billing date (sama persis dengan confirmPayment) ────────
-            $maxBillingDay    = config('services.internet_custom.max_billing_date', 20);
-            $startBillingDate = $periodStart->day > $maxBillingDay
-                ? $periodStart->copy()->addMonths($months)->firstOfMonth()
-                : $periodStart->copy()->addMonths($months);
-
-            $gracePeriod    = config('services.internet_custom.end_billing_of_days', 5);
-            $endBillingDate = $startBillingDate->copy()->addDays($gracePeriod);
-
+            
+            // dd($periodStart, $periodEnd, $startBillingDate, $endBillingDate);
             $userCustomer->update([
                 'start_billing_date' => $startBillingDate->format('Y-m-d'),
                 'end_billing_date'   => $endBillingDate->format('Y-m-d'),
@@ -1375,5 +1364,27 @@ class InternetCustomerShow extends Component
         $inboxHelper = new InboxHelper();
         $inboxHelper->sent($to, Auth::user()->id, $message, $directUrl);
         return true;
+    }
+
+    private function createMonth($purchase, $userCustomer, $months)
+    {
+        $monthCreate = Carbon::parse($purchase->created_at)->month;
+        $year   = Carbon::parse($purchase->created_at)->year;
+        $day    = Carbon::parse($userCustomer->start_billing_date)->day;
+
+        $periodStart = Carbon::create($year, $monthCreate, $day);
+        $periodEnd = $periodStart->copy()->addMonths($months)->subDay();
+
+        // ── Smart billing date (sama persis dengan confirmPayment) ────────
+        $gracePeriod    = config('services.internet_custom.end_billing_of_days', 5);
+        $startBillingDate = $periodStart->copy()->addMonths($months);
+        $endBillingDate = $startBillingDate->copy()->addDays($gracePeriod);
+
+        return [
+            'periodStart' => $periodStart,
+            'periodEnd' => $periodEnd,
+            'startBillingDate' => $startBillingDate,
+            'endBillingDate' => $endBillingDate,
+        ];
     }
 }
