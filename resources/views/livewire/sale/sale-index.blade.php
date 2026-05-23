@@ -226,7 +226,8 @@
                     @endif
 
                     <!-- Summary Card -->
-                    <div class="row mb-3">
+                    <div class="row mb-2">
+                        {{-- Baris 1: 4 metric utama --}}
                         <div class="col-md-3 col-sm-6 mb-2">
                             <div class="info-box mb-0 shadow-sm">
                                 <span class="info-box-icon bg-primary"><i class="fas fa-receipt"></i></span>
@@ -241,7 +242,7 @@
                                 <span class="info-box-icon bg-info"><i class="fas fa-money-bill-wave"></i></span>
                                 <div class="info-box-content">
                                     <span class="info-box-text">Subtotal</span>
-                                    <span class="info-box-number" style="font-size:1rem;">
+                                    <span class="info-box-number" style="font-size:0.9rem;">
                                         Rp {{ number_format($totalSubAmount, 0, ',', '.') }}
                                     </span>
                                 </div>
@@ -252,7 +253,7 @@
                                 <span class="info-box-icon bg-warning"><i class="fas fa-percent"></i></span>
                                 <div class="info-box-content">
                                     <span class="info-box-text">Total PPN</span>
-                                    <span class="info-box-number" style="font-size:1rem;">
+                                    <span class="info-box-number" style="font-size:0.9rem;">
                                         Rp {{ number_format($totalTaxAmount, 0, ',', '.') }}
                                     </span>
                                 </div>
@@ -260,29 +261,83 @@
                         </div>
                         <div class="col-md-3 col-sm-6 mb-2">
                             <div class="info-box mb-0 shadow-sm">
-                                <span class="info-box-icon bg-success"><i class="fas fa-calculator"></i></span>
+                                <span class="info-box-icon bg-secondary"><i class="fas fa-calculator"></i></span>
                                 <div class="info-box-content">
                                     <span class="info-box-text">Total Akhir</span>
-                                    <span class="info-box-number" style="font-size:1rem;">
-                                        Rp {{ number_format($totalFinalAmount, 0, ',', '.') }}
+                                    <span class="info-box-number" style="font-size:0.9rem;">
+                                        Rp {{ number_format($totalBeforeDeduction, 0, ',', '.') }}
                                     </span>
                                 </div>
                             </div>
                         </div>
-                        @if($paymentBreakdown !== null)
+
+                        {{-- Baris 2: Deduction flow + Payment breakdown --}}
                         <div class="col-12 mb-2">
-                            <div class="card shadow-sm border-0">
-                                <div class="card-body py-2 px-3">
-                                    <p class="mb-1 small fw-bold text-muted">Rincian Pembayaran</p>
-                                    <div class="d-flex flex-wrap gap-2" style="font-size:0.8rem;">
-                                        <span class="mr-1 mb-1"><i class="fas fa-money-bill-wave text-success"></i> Cash: <strong>Rp {{ number_format($paymentBreakdown['cash'], 0, ',', '.') }}</strong></span>
-                                        <span class="mr-1 mb-1"><i class="fas fa-qrcode text-info"></i> QRIS: <strong>Rp {{ number_format($paymentBreakdown['qris'], 0, ',', '.') }}</strong></span>
-                                        <span class="mr-1 mb-1"><i class="fas fa-credit-card text-primary"></i> Debit: <strong>Rp {{ number_format($paymentBreakdown['debit_credit'], 0, ',', '.') }}</strong></span>
+                            <div class="card shadow-sm border-0" style="border-radius:10px; overflow:hidden;">
+                                <div class="card-body py-3 px-4">
+
+                                    {{-- Deduction calculation row --}}
+                                    <div class="d-flex align-items-center flex-wrap" style="gap:8px;">
+                                        {{-- Before --}}
+                                        <div class="sale-calc-box" style="background:#f8f9fa; border-radius:8px; padding:10px 18px; text-align:center; min-width:160px;">
+                                            <div class="text-muted" style="font-size:0.72rem; text-transform:uppercase; letter-spacing:.05em;">Total Akhir</div>
+                                            <div style="font-size:1rem; font-weight:600; color:#495057;">
+                                                Rp {{ number_format($totalBeforeDeduction, 0, ',', '.') }}
+                                            </div>
+                                        </div>
+
+                                        {{-- Minus sign --}}
+                                        <div class="text-danger" style="font-size:1.1rem; font-weight:700;">−</div>
+
+                                        {{-- Deduction --}}
+                                        <div class="sale-calc-box" style="background:#fff5f5; border:1px solid #fed7d7; border-radius:8px; padding:10px 18px; text-align:center; min-width:160px;">
+                                            <div class="text-danger" style="font-size:0.72rem; text-transform:uppercase; letter-spacing:.05em;">Deduction</div>
+                                            <div style="font-size:1rem; font-weight:600; color:#e53e3e;">
+                                                Rp {{ number_format($totalDeduction, 0, ',', '.') }}
+                                            </div>
+                                        </div>
+
+                                        {{-- Equals sign --}}
+                                        <div class="text-muted" style="font-size:1.1rem; font-weight:700;">=</div>
+
+                                        {{-- Final Total --}}
+                                        <div class="sale-calc-box" style="background:#f0fff4; border:2px solid #68d391; border-radius:8px; padding:10px 22px; text-align:center; min-width:180px;">
+                                            <div class="text-success" style="font-size:0.72rem; text-transform:uppercase; letter-spacing:.05em; font-weight:700;">
+                                                <i class="fas fa-check-circle"></i> Final Total Akhir
+                                            </div>
+                                            <div style="font-size:1.2rem; font-weight:700; color:#276749;">
+                                                Rp {{ number_format($totalFinalAmount, 0, ',', '.') }}
+                                            </div>
+                                        </div>
+
+                                        {{-- Payment breakdown di kanan --}}
+                                        @if($paymentBreakdown !== null)
+                                        <div class="ml-auto pl-3" style="border-left:2px solid #e9ecef;">
+                                            <div class="text-muted" style="font-size:0.72rem; text-transform:uppercase; letter-spacing:.05em; margin-bottom:6px; font-weight:600;">Rincian Pembayaran</div>
+                                            <div class="d-flex flex-wrap" style="gap:12px; font-size:0.82rem;">
+                                                <span>
+                                                    <i class="fas fa-money-bill-wave text-success"></i>
+                                                    <span class="text-muted">Cash</span>
+                                                    <strong class="ml-1">Rp {{ number_format($paymentBreakdown['cash'], 0, ',', '.') }}</strong>
+                                                </span>
+                                                <span>
+                                                    <i class="fas fa-qrcode text-info"></i>
+                                                    <span class="text-muted">QRIS</span>
+                                                    <strong class="ml-1">Rp {{ number_format($paymentBreakdown['qris'], 0, ',', '.') }}</strong>
+                                                </span>
+                                                <span>
+                                                    <i class="fas fa-credit-card text-primary"></i>
+                                                    <span class="text-muted">Debit/Credit</span>
+                                                    <strong class="ml-1">Rp {{ number_format($paymentBreakdown['debit_credit'], 0, ',', '.') }}</strong>
+                                                </span>
+                                            </div>
+                                        </div>
+                                        @endif
                                     </div>
+
                                 </div>
                             </div>
                         </div>
-                        @endif
                     </div>
 
                     <!-- Tabel Penjualan Aktif -->
