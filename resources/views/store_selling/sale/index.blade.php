@@ -978,6 +978,9 @@ createApp({
         });
         const isLoading = ref(false);
         const loadingMessage = ref('Memproses...');
+        // Plain JS flag (non-reactive) sebagai hard lock untuk cegah double-submit.
+        // Dicek SEBELUM Vue reactive state sempat berubah ke DOM.
+        let _paymentLock = false;
         const productSelectionList = ref([]);
         const stockCheckResults  = ref([]);
         const stockCheckAllOk    = ref(true);
@@ -1312,10 +1315,15 @@ createApp({
         };
 
         const confirmPayment = async () => {
-            if (isLoading.value || isCheckingStock.value) return;
+            if (_paymentLock || isLoading.value || isCheckingStock.value) return;
+            _paymentLock = true;
             setLoading(true, 'Memproses pembayaran...');
             $('#paymentConfirmationModal').modal('hide');
-            await processPayment();
+            try {
+                await processPayment();
+            } finally {
+                _paymentLock = false;
+            }
         };
 
         const processPayment = async () => {
