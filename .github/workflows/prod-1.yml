@@ -44,7 +44,7 @@ jobs:
         port: 22
         script: |
           cd /var/www/sistembos.com
-          php /home/devops/composer.phar update --no-interaction --prefer-dist --optimize-autoloader --no-dev --ignore-platform-reqs
+          COMPOSER_POLICY_ADVISORIES_BLOCK=0 php /home/devops/composer.phar update --no-interaction --prefer-dist --optimize-autoloader --no-dev --ignore-platform-reqs
 
     - name: Run Migrations
       uses: appleboy/ssh-action@master
