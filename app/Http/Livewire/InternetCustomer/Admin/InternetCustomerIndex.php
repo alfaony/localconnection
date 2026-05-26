@@ -16,6 +16,10 @@ use App\Models\Router;
 use App\Models\CoverageService;
 use App\Models\OpticalDistribution;
 use App\Models\CoverageServiceDistribution;
+use App\Models\Province;
+use App\Models\City;
+use App\Models\District;
+use App\Models\Subdistrict;
 
 use App\Jobs\ProvisionCustomerJob;
 use App\Jobs\GenerateInternetPurchaseCouponJob;
@@ -64,6 +68,16 @@ class InternetCustomerIndex extends Component
     public $dateFrom = '';
     public $dateTo = '';
     public $dateType = 'billing';
+
+    // Wilayah filter (hanya aktif jika user tidak punya region restriction)
+    public $filterProvinceId = '';
+    public $filterCityId = '';
+    public $filterDistrictId = '';
+    public $filterSubdistrictId = '';
+    public array $filterCities = [];
+    public array $filterDistricts = [];
+    public array $filterSubdistricts = [];
+
     public $selectedCustomer = null;
     public $selectedPaymentProof;
 
@@ -113,6 +127,10 @@ class InternetCustomerIndex extends Component
         'dateFrom',
         'dateTo',
         'dateType' => ['except' => 'billing'],
+        'filterProvinceId' => ['except' => ''],
+        'filterCityId' => ['except' => ''],
+        'filterDistrictId' => ['except' => ''],
+        'filterSubdistrictId' => ['except' => ''],
     ];
 
     // Method untuk membuka modal
@@ -493,6 +511,7 @@ class InternetCustomerIndex extends Component
 
             DB::commit();
             \App\Helpers\XpHelper::award(Auth::user(), $customerInstallation, "Internet Instalattion");
+            $this->updateBilling($customer);
 
             Log::info('Installation completed successfully', [
                 'customer_id'    => $customer->id,
@@ -905,6 +924,64 @@ class InternetCustomerIndex extends Component
         }
     }
 
+    public function updatedFilterProvinceId($value): void
+    {
+        $this->filterCityId        = '';
+        $this->filterDistrictId    = '';
+        $this->filterSubdistrictId = '';
+        $this->filterDistricts     = [];
+        $this->filterSubdistricts  = [];
+        $this->resetPage();
+
+        $this->filterCities = $value
+            ? City::where('province_id', $value)->whereHas('cityCoverages')->orderBy('name')
+                ->get(['id', 'name'])->map(fn($c) => ['id' => $c->id, 'name' => $c->name])->toArray()
+            : [];
+    }
+
+    public function updatedFilterCityId($value): void
+    {
+        $this->filterDistrictId    = '';
+        $this->filterSubdistrictId = '';
+        $this->filterSubdistricts  = [];
+        $this->resetPage();
+
+        $this->filterDistricts = $value
+            ? District::where('city_id', $value)->whereHas('districtCoverages')->orderBy('name')
+                ->get(['id', 'name'])->map(fn($d) => ['id' => $d->id, 'name' => $d->name])->toArray()
+            : [];
+    }
+
+    public function updatedFilterDistrictId($value): void
+    {
+        $this->filterSubdistrictId = '';
+        $this->resetPage();
+
+        $this->filterSubdistricts = $value
+            ? Subdistrict::where('district_id', $value)->whereHas('subdistrictCoverages')->orderBy('name')
+                ->get(['id', 'name'])->map(fn($s) => ['id' => $s->id, 'name' => $s->name])->toArray()
+            : [];
+    }
+
+    protected function restoreFilterCascades(): void
+    {
+        if ($this->filterProvinceId) {
+            $this->filterCities = City::where('province_id', $this->filterProvinceId)
+                ->whereHas('cityCoverages')->orderBy('name')
+                ->get(['id', 'name'])->map(fn($c) => ['id' => $c->id, 'name' => $c->name])->toArray();
+        }
+        if ($this->filterCityId) {
+            $this->filterDistricts = District::where('city_id', $this->filterCityId)
+                ->whereHas('districtCoverages')->orderBy('name')
+                ->get(['id', 'name'])->map(fn($d) => ['id' => $d->id, 'name' => $d->name])->toArray();
+        }
+        if ($this->filterDistrictId) {
+            $this->filterSubdistricts = Subdistrict::where('district_id', $this->filterDistrictId)
+                ->whereHas('subdistrictCoverages')->orderBy('name')
+                ->get(['id', 'name'])->map(fn($s) => ['id' => $s->id, 'name' => $s->name])->toArray();
+        }
+    }
+
     public function resetSearch()
     {
         $this->search = '';
@@ -915,11 +992,38 @@ class InternetCustomerIndex extends Component
         $this->dateFrom = '';
         $this->dateTo = '';
         $this->dateType = 'billing';
+        $this->filterProvinceId    = '';
+        $this->filterCityId        = '';
+        $this->filterDistrictId    = '';
+        $this->filterSubdistrictId = '';
+        $this->filterCities        = [];
+        $this->filterDistricts     = [];
+        $this->filterSubdistricts  = [];
+        session()->forget('ic_filters_' . Auth::id());
     }
 
     public function mount(): void
     {
+        // Jika URL tidak membawa filter params (misal klik link "Kembali" biasa),
+        // restore filter terakhir dari session agar tidak reset ke default.
+        $filterKeys = [
+            'search', 'selectedPackage', 'statusFilter', 'customerTypeFilter',
+            'dateFrom', 'dateTo', 'dateType', 'perPage', 'sortField', 'sortDirection',
+            'filterProvinceId', 'filterCityId', 'filterDistrictId', 'filterSubdistrictId',
+        ];
+        $hasUrlParams = collect($filterKeys)->some(fn($k) => request()->query($k) !== null);
+
+        if (!$hasUrlParams) {
+            $saved = session('ic_filters_' . Auth::id(), []);
+            foreach ($saved as $key => $value) {
+                if (property_exists($this, $key)) {
+                    $this->$key = $value;
+                }
+            }
+        }
+
         $this->mountImportOdps();
+        $this->restoreFilterCascades();
     }
 
     public function render()
@@ -1009,12 +1113,13 @@ class InternetCustomerIndex extends Component
         $hasRegionPermission = Access::can('as_finance', 'internet_customers')
             || Access::can('as_marketing', 'internet_customers')
             || Access::can('as_technician', 'internet_customers')
-            || Access::can('as_manager', 'internet_customers')
-            ;
+            || Access::can('as_manager', 'internet_customers');
 
+        $hasRegion = false;
         if ($hasRegionPermission) {
             $userRegions = $user->internetCustomerRegions()->get();
-            if ($userRegions->isNotEmpty()) {
+            $hasRegion = $userRegions->isNotEmpty();
+            if ($hasRegion) {
                 $query->where(function ($q) use ($userRegions) {
                     foreach ($userRegions as $region) {
                         $q->orWhere(function ($q2) use ($region) {
@@ -1033,6 +1138,22 @@ class InternetCustomerIndex extends Component
             }
         }
 
+        // Wilayah filter — hanya aktif jika user tidak di-restrict ke region tertentu
+        if (!$hasRegion) {
+            if ($this->filterProvinceId) {
+                $query->where('province_id', $this->filterProvinceId);
+            }
+            if ($this->filterCityId) {
+                $query->where('city_id', $this->filterCityId);
+            }
+            if ($this->filterDistrictId) {
+                $query->where('district_id', $this->filterDistrictId);
+            }
+            if ($this->filterSubdistrictId) {
+                $query->where('subdistrict_id', $this->filterSubdistrictId);
+            }
+        }
+
         // Sorting + paginate
         $internetCustomers = $query
             ->byCompany($user->company_id)
@@ -1047,6 +1168,26 @@ class InternetCustomerIndex extends Component
         // Get filter options
         $packages = InternetPackage::byCompany($user->company_id)->orderBy('name')->get();
 
+        // Simpan state filter ke session agar terpulihkan saat user klik link "Kembali" biasa
+        session(['ic_filters_' . $user->id => [
+            'search'               => $this->search,
+            'selectedPackage'      => $this->selectedPackage,
+            'statusFilter'         => $this->statusFilter,
+            'customerTypeFilter'   => $this->customerTypeFilter,
+            'dateFrom'             => $this->dateFrom,
+            'dateTo'               => $this->dateTo,
+            'dateType'             => $this->dateType,
+            'perPage'              => $this->perPage,
+            'sortField'            => $this->sortField,
+            'sortDirection'        => $this->sortDirection,
+            'filterProvinceId'     => $this->filterProvinceId,
+            'filterCityId'         => $this->filterCityId,
+            'filterDistrictId'     => $this->filterDistrictId,
+            'filterSubdistrictId'  => $this->filterSubdistrictId,
+        ]]);
+
+        $provinces = Province::whereHas('provinceCoverages')->orderBy('name')->get(['id', 'name']);
+
         return view('livewire.internet-customer.admin.internet-customer-index', [
             'finance_access'       => Access::can('as_finance', 'internet_customers'),
             'technical_access'     => Access::can('as_technician', 'internet_customers'),
@@ -1054,6 +1195,11 @@ class InternetCustomerIndex extends Component
             'packages'             => $packages,
             'routers'              => $this->routers,
             'importAvailableOdps'  => $this->importAvailableOdps,
+            'provinces'            => $provinces,
+            'hasRegion'            => $hasRegion,
+            'filterCities'         => $this->filterCities,
+            'filterDistricts'      => $this->filterDistricts,
+            'filterSubdistricts'   => $this->filterSubdistricts,
         ])->extends('adminlte::page');
     }
 
@@ -1432,5 +1578,25 @@ class InternetCustomerIndex extends Component
         } catch (\Throwable $th) {
             throw $th;
         }
+    }
+
+    private function updateBilling($customer){
+        if(!$customer->userCustomer && !$customer->group) return;
+        $userCustomer = $customer->userCustomer;
+        $group = $customer->group;
+
+        $startDay = $group->start_day ?? 1;
+        $endDay = $group->end_day ?? 5;
+
+        $month = Carbon::parse($userCustomer->start_billing_date)->format('m');
+        $year = Carbon::parse($userCustomer->start_billing_date)->format('Y');
+        
+        $startDate = Carbon::create($year,$month,$startDay);
+        $endDate = Carbon::create($year,$month,$endDay);
+        
+        $userCustomer->update([
+            'start_billing_date' => $startDate,
+            'end_billing_date' => $endDate,
+        ]);
     }
 }

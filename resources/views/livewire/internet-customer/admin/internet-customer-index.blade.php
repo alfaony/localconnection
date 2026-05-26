@@ -91,6 +91,55 @@
                 </div>
             </div>
 
+            {{-- Baris 1b: Filter wilayah (hanya tampil jika user tidak punya region restriction) --}}
+            @if(!$hasRegion)
+            <div class="row no-gutters mt-2" style="gap: 0; margin: 0 -6px;">
+                <div class="col-12 px-2 mb-1">
+                    <label class="ic-label" style="font-size:.68rem; letter-spacing:.04em; color:#6c757d;">
+                        <i class="fas fa-map-marker-alt mr-1 text-info" style="opacity:.8;"></i>FILTER WILAYAH
+                    </label>
+                </div>
+                <div class="col-md-3 px-2 mb-2">
+                    <select wire:model="filterProvinceId" class="form-control form-control-sm ic-select">
+                        <option value="">Semua Provinsi</option>
+                        @foreach($provinces as $province)
+                            <option value="{{ $province->id }}">{{ $province->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="col-md-3 px-2 mb-2">
+                    <select wire:model="filterCityId"
+                            class="form-control form-control-sm ic-select"
+                            {{ !$filterProvinceId ? 'disabled' : '' }}>
+                        <option value="">{{ $filterProvinceId ? 'Semua Kota/Kab' : '— Pilih Provinsi —' }}</option>
+                        @foreach($filterCities as $city)
+                            <option value="{{ $city['id'] }}">{{ $city['name'] }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="col-md-3 px-2 mb-2">
+                    <select wire:model="filterDistrictId"
+                            class="form-control form-control-sm ic-select"
+                            {{ !$filterCityId ? 'disabled' : '' }}>
+                        <option value="">{{ $filterCityId ? 'Semua Kecamatan' : '— Pilih Kota —' }}</option>
+                        @foreach($filterDistricts as $district)
+                            <option value="{{ $district['id'] }}">{{ $district['name'] }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="col-md-3 px-2 mb-2">
+                    <select wire:model="filterSubdistrictId"
+                            class="form-control form-control-sm ic-select"
+                            {{ !$filterDistrictId ? 'disabled' : '' }}>
+                        <option value="">{{ $filterDistrictId ? 'Semua Kelurahan' : '— Pilih Kecamatan —' }}</option>
+                        @foreach($filterSubdistricts as $subdistrict)
+                            <option value="{{ $subdistrict['id'] }}">{{ $subdistrict['name'] }}</option>
+                        @endforeach
+                    </select>
+                </div>
+            </div>
+            @endif
+
             {{-- Baris 2: Filter tanggal --}}
             <div class="ic-date-zone d-flex flex-wrap align-items-end mt-3" style="gap:1.25rem;">
                 <div>

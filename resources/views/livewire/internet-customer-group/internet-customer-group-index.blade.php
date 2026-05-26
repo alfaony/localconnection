@@ -54,6 +54,30 @@
                 </div>
                 <div class="col-md-2">
                     <div class="form-group mb-2">
+                        <label class="font-weight-semibold">Hari Awal Pembayaran <span class="text-danger">*</span></label>
+                        <input type="number"
+                               wire:model.defer="start_day"
+                               class="form-control form-control-sm @error('start_day') is-invalid @enderror"
+                               placeholder="Start Day">
+                        @error('start_day')
+                            <span class="invalid-feedback">{{ $message }}</span>
+                        @enderror
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="form-group mb-2">
+                        <label class="font-weight-semibold">Hari Akhir Pembayaran <span class="text-danger">*</span></label>
+                        <input type="number"
+                               wire:model.defer="end_day"
+                               class="form-control form-control-sm @error('end_day') is-invalid @enderror"
+                               placeholder="Start Day">
+                        @error('end_day')
+                            <span class="invalid-feedback">{{ $message }}</span>
+                        @enderror
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="form-group mb-2">
                         <label class="font-weight-semibold">
                             Last Number
                             <small class="text-muted font-weight-normal">(seq terakhir)</small>
@@ -69,24 +93,10 @@
                         <small class="text-muted">Nomor urut terakhir yang sudah dipakai</small>
                     </div>
                 </div>
-                <div class="col-md-4 d-flex align-items-end">
-                    <div class="form-group mb-2 w-100">
-                        <button type="button"
-                                class="btn btn-primary btn-sm btn-block"
-                                wire:click="{{ $isEdit ? 'update' : 'store' }}"
-                                wire:loading.attr="disabled"
-                                wire:target="{{ $isEdit ? 'update' : 'store' }}">
-                            <span wire:loading wire:target="{{ $isEdit ? 'update' : 'store' }}">
-                                <i class="fas fa-spinner fa-spin mr-1"></i>
-                            </span>
-                            {{ $isEdit ? 'Simpan' : 'Tambah' }}
-                        </button>
-                    </div>
-                </div>
             </div>
 
             {{-- ODP Assignment --}}
-            <div class="row mt-2">
+            <div class="row mt-2 mb-2">
                 <div class="col-12">
                     <label class="font-weight-semibold">
                         ODP yang Dilayani
@@ -110,6 +120,21 @@
                         </select>
                     </div>
                     @endif
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-3">
+                    <div class="form-group mb-2 w-100">
+                    <button type="button"
+                            class="btn btn-primary btn-sm btn-block"
+                            wire:click="{{ $isEdit ? 'update' : 'store' }}"
+                            wire:loading.attr="disabled"
+                            wire:target="{{ $isEdit ? 'update' : 'store' }}">
+                        <span wire:loading wire:target="{{ $isEdit ? 'update' : 'store' }}">
+                            <i class="fas fa-spinner fa-spin mr-1"></i>
+                        </span>
+                        {{ $isEdit ? 'Simpan' : 'Tambah' }}
+                    </button>
                 </div>
             </div>
         </div>
@@ -147,6 +172,7 @@
                         <tr>
                             <th width="40">#</th>
                             <th>Nama Group</th>
+                            <th>Billing</th>
                             <th>ODP</th>
                             <th width="80" class="text-center">Pelanggan</th>
                             <th width="120" class="text-center">Aksi</th>
@@ -161,6 +187,9 @@
                                 @if($group->description)
                                     <span class="text-muted"> — {{ $group->description }}</span>
                                 @endif
+                            </td>
+                            <td>
+                                {{ $group->start_day }} - {{ $group->end_day }}
                             </td>
                             <td>
                                 @forelse($group->odps as $odp)

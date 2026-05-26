@@ -885,8 +885,10 @@ class InternetCustomerShow extends Component
                 ]);
             }
 
+            $this->updateBilling($this->customer);
+
             dispatch(new ProvisionCustomerJob($this->customer->id));
-            \App\Jobs\SyncInstalledCustomersJob::dispatch([$this->customer->id]);
+            // \App\Jobs\SyncInstalledCustomersJob::dispatch([$this->customer->id]);
             
             DB::commit();
             $this->dispatchBrowserEvent('hideEditInstalasiModal');
