@@ -95,8 +95,8 @@ class SaleDetailSheet implements WithTitle, WithEvents
             AfterSheet::class => function (AfterSheet $event) {
                 $sheet   = $event->sheet->getDelegate();
                 $sales   = $this->buildQuery()->get();
-                $columns = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P'];
-                $lastCol = 'P';
+                $columns = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R'];
+                $lastCol = 'R'; 
                 $row     = 1;
                 $no      = 1;
 
@@ -104,7 +104,7 @@ class SaleDetailSheet implements WithTitle, WithEvents
                 $headers = [
                     'No','Kode Transaksi', 'Email Pelanggan', 'Status', 'Metode Bayar', 'Kasir',
                     'No', 'Produk', 'Variant', 'Jumlah', 'Harga Satuan', 'Diskon', 'Subtotal',
-                    'Total', 'PPN', 'Total Akhir',
+                    'Total', 'PPN', 'Total Akhir', 'Deduction', 'Total Bersih',
                 ];
                 foreach ($headers as $i => $header) {
                     $sheet->setCellValue($columns[$i] . $row, $header);
@@ -124,6 +124,9 @@ class SaleDetailSheet implements WithTitle, WithEvents
                 foreach ($sales as $sale) {
                     $transactionRow = $row;
                     $calculatedFinalAmount = (float) $sale->total_amount + (float) $sale->tax_amount;
+                    $deduction = (float) ($sale->cash_deduction ?? 0); 
+                    $netTotal = $calculatedFinalAmount - $deduction;
+                    
                     $itemNo         = 1;
 
                     // Transaction row
@@ -136,6 +139,8 @@ class SaleDetailSheet implements WithTitle, WithEvents
                     $sheet->setCellValue("N{$row}", (float) $sale->total_amount);
                     $sheet->setCellValue("O{$row}", (float) $sale->tax_amount);
                     $sheet->setCellValue("P{$row}", $calculatedFinalAmount);
+                    $sheet->setCellValue("Q{$row}", $deduction);
+                    $sheet->setCellValue("R{$row}", $netTotal);
 
                     $sheet->getStyle("A{$row}:{$lastCol}{$row}")->applyFromArray([
                         'font' => ['bold' => true, 'size' => 10],
@@ -143,7 +148,7 @@ class SaleDetailSheet implements WithTitle, WithEvents
                     ]);
 
                     $sheet->getStyle("A{$row}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-                    $sheet->getStyle("M{$row}:P{$row}")->getNumberFormat()->setFormatCode('#,##0');
+                    $sheet->getStyle("M{$row}:R{$row}")->getNumberFormat()->setFormatCode('#,##0');
                     $row++;
 
                     // Item rows
@@ -178,7 +183,7 @@ class SaleDetailSheet implements WithTitle, WithEvents
                         ]);
                     }
 
-                    $row++; // empty separator
+                    $row++; 
                     $no++;
                 }
 

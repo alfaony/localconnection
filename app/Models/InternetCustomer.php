@@ -189,7 +189,7 @@ class InternetCustomer extends Model
 
     public function router()
     {
-        return $this->belongsTo(Router::class);
+        return $this->belongsTo(Router::class)->withTrashed();
     }
 
     public function hotspotServer()
