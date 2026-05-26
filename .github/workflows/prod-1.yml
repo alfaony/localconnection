@@ -1,4 +1,4 @@
-name: Deploy to PROD Server
+name: Deploy to PROD Server 1
 
 on:
   push:
