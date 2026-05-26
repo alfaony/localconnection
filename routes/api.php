@@ -110,6 +110,11 @@ Route::group(['middleware' => ['auth:api','role.permission.api']], function()
     Route::get('quotes/detail-pdf/{quote_number}', [QrScanApiController::class, 'getQuotationPdf'])
     ->where('quote_number', '.*');
 
+    Route::prefix('mom')->group(function() {
+        Route::post('/store', [MomApiController::class, 'store']);
+        Route::post('/store-custom', [MomApiController::class, 'storeCustomMoM']);
+    });
+
     Route::prefix('tasks')->group(function() {
         Route::get('today', [DailyTaskMobileController::class, 'indexToday']);
         Route::get('tomorrow', [DailyTaskMobileController::class, 'indexTomorrow']);
@@ -264,6 +269,7 @@ Route::group(['middleware' => ['auth:api']], function()
         Route::post('/{id}/tasks', [MomApiController::class, 'storeTask']); // POST - Create task
         Route::put('/tasks/{id}', [MomApiController::class, 'updateTask']); // PUT - Update task
         Route::delete('/tasks/{id}', [MomApiController::class, 'deleteTask']); // DELETE - Delete task
+        Route::post('/{id}/tasks', [MomApiController::class, 'storeTask']);
 
         // MOM Agenda Routes
         Route::post('/{id}/agendas', [MomApiController::class, 'storeAgenda']); // POST - Create agenda

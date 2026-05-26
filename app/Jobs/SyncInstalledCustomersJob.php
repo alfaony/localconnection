@@ -10,6 +10,7 @@ use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
+use Illuminate\Queue\Middleware\WithoutOverlapping;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
@@ -28,10 +29,24 @@ class SyncInstalledCustomersJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    public int $timeout = 300;
-    public int $tries = 2;
+    public int $timeout = 600;
+    public int $tries = 5;
 
     public function __construct(public ?array $customerIds = null) {}
+
+    public function middleware(): array
+    {
+        // Kalau job ini untuk semua customer (scheduled), pakai lock global.
+        // Kalau untuk customer spesifik (triggered manual), tidak diblokir.
+        if ($this->customerIds === null) {
+            return [
+                (new WithoutOverlapping('sync-installed-all'))
+                    ->expireAfter(360)
+                    ->dontRelease(),
+            ];
+        }
+        return [];
+    }
 
     public function handle(RouterOSService $ros): void
     {

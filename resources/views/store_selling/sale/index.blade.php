@@ -14,6 +14,20 @@
         </div>
     </div>
 
+    <!-- Internet Connection Indicator (Game-style HUD) -->
+    <div class="net-indicator" :class="isOnline ? 'net-online' : 'net-offline'" :title="isOnline ? 'Koneksi internet aktif' : 'Tidak ada koneksi internet'">
+        <div class="signal-bars">
+            <div class="bar bar-1"></div>
+            <div class="bar bar-2"></div>
+            <div class="bar bar-3"></div>
+            <div class="bar bar-4"></div>
+        </div>
+        <div class="net-text">
+            <span class="net-label">@{{ isOnline ? 'Online' : 'Offline' }}</span>
+            <span class="net-speed">@{{ netSpeedDisplay }}</span>
+        </div>
+    </div>
+
     <!-- Progress Steps -->
     <div class="row mb-4">
         <div class="col-md-8">
@@ -109,13 +123,20 @@
                         {{-- Ringkasan bayar --}}
                         <div class="text-center mb-3">
                             <h4 class="mb-0">Total Pembayaran</h4>
-                            <h2 class="text-primary font-weight-bold">@{{ formatCurrency(paymentMethod === 'cash' ? cashRoundedTotal : grandTotal) }}</h2>
+                            <h2 class="text-primary font-weight-bold">@{{ formatCurrency(cashRoundedTotal) }}</h2>
+                            <small v-if="cashDeduction > 0" class="text-muted">
+                                Sudah termasuk potongan pembulatan @{{ formatCurrency(cashDeduction) }}
+                            </small>
                         </div>
 
                         <div class="payment-details mb-3">
                             <div class="row">
                                 <div class="col-6"><p>Metode Pembayaran:</p></div>
                                 <div class="col-6 text-right">@{{ getPaymentMethodLabel(paymentMethod) }}</div>
+                            </div>
+                            <div v-if="cashDeduction > 0" class="row mt-1">
+                                <div class="col-6"><p class="text-muted">Potongan pembulatan:</p></div>
+                                <div class="col-6 text-right text-muted">-@{{ formatCurrency(cashDeduction) }}</div>
                             </div>
                             <div v-if="paymentMethod === 'cash'" class="row mt-1">
                                 <div class="col-6"><p>Dibayar:</p></div>
@@ -195,9 +216,12 @@
                     <button type="button" class="btn btn-success"
                             @click="confirmPayment"
                             :disabled="isLoading || isCheckingStock">
-                        <i class="fas fa-check" v-if="!isLoading"></i>
-                        <i class="fas fa-spinner fa-spin" v-if="isLoading"></i>
-                        Konfirmasi & Bayar
+                        <template v-if="!isLoading">
+                            <i class="fas fa-check"></i> Konfirmasi & Bayar
+                        </template>
+                        <template v-else>
+                            <i class="fas fa-spinner fa-spin"></i> Memproses...
+                        </template>
                     </button>
                 </div>
             </div>
@@ -798,11 +822,82 @@
     .product-row {
         transition: all 0.2s ease;
     }
-    
+
     .product-row:hover {
         background-color: #e3f2fd !important;
         transform: translateX(5px);
         box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    /* Internet Connection Indicator — Game-style HUD */
+    .net-indicator {
+        position: fixed;
+        top: 65px;
+        right: 16px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 5px 12px 5px 9px;
+        border-radius: 20px;
+        z-index: 1031;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.2);
+        transition: background 0.4s ease, border-color 0.4s ease, color 0.4s ease;
+        opacity: 0.93;
+        user-select: none;
+        pointer-events: none;
+    }
+    .net-online {
+        background: rgba(20, 115, 70, 0.10);
+        border: 1.5px solid rgba(25, 135, 84, 0.5);
+        color: #145a32;
+    }
+    .net-offline {
+        background: rgba(220, 53, 69, 0.13);
+        border: 1.5px solid rgba(220, 53, 69, 0.6);
+        color: #7b1a26;
+        animation: net-blink 1.3s ease-in-out infinite;
+    }
+    @keyframes net-blink {
+        0%, 100% { opacity: 0.93; }
+        50%       { opacity: 0.45; }
+    }
+    /* Signal bars */
+    .signal-bars {
+        display: flex;
+        align-items: flex-end;
+        gap: 2px;
+        height: 14px;
+        flex-shrink: 0;
+    }
+    .signal-bars .bar {
+        width: 3px;
+        border-radius: 2px;
+        transition: background 0.4s ease, opacity 0.4s ease;
+    }
+    .signal-bars .bar-1 { height: 4px; }
+    .signal-bars .bar-2 { height: 7px; }
+    .signal-bars .bar-3 { height: 10px; }
+    .signal-bars .bar-4 { height: 14px; }
+    .net-online  .signal-bars .bar { background: #28a745; opacity: 1; }
+    .net-offline .signal-bars .bar { background: #dc3545; opacity: 0.2; }
+    .net-offline .signal-bars .bar-1 { opacity: 0.9; }
+    /* Text block */
+    .net-text {
+        display: flex;
+        flex-direction: column;
+        line-height: 1.2;
+    }
+    .net-label {
+        font-size: 0.65rem;
+        font-weight: 800;
+        letter-spacing: 0.7px;
+        text-transform: uppercase;
+    }
+    .net-speed {
+        font-size: 0.68rem;
+        font-weight: 700;
+        letter-spacing: 0.2px;
+        opacity: 0.85;
     }
 </style>
 <style scoped>
@@ -851,7 +946,7 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
-const { createApp, ref, computed, onMounted, watch } = Vue;
+const { createApp, ref, computed, onMounted, watch, nextTick } = Vue;
 
 createApp({
     setup() {
@@ -872,8 +967,20 @@ createApp({
         const transactionResult = ref({});
         const drafts = ref(@json($drafts));
         const currentDraftId = ref(null);
+        const isOnline = ref(navigator.onLine);
+        const netSpeed = ref(null); // in bps, null = measuring
+        const netSpeedDisplay = computed(() => {
+            if (netSpeed.value === null) return '...';
+            const bps = netSpeed.value;
+            if (bps >= 1024 * 1024) return (bps / (1024 * 1024)).toFixed(1) + ' Mbps';
+            if (bps >= 1024)        return (bps / 1024).toFixed(0) + ' Kbps';
+            return bps.toFixed(0) + ' bps';
+        });
         const isLoading = ref(false);
         const loadingMessage = ref('Memproses...');
+        // Plain JS flag (non-reactive) sebagai hard lock untuk cegah double-submit.
+        // Dicek SEBELUM Vue reactive state sempat berubah ke DOM.
+        let _paymentLock = false;
         const productSelectionList = ref([]);
         const stockCheckResults  = ref([]);
         const stockCheckAllOk    = ref(true);
@@ -1208,9 +1315,15 @@ createApp({
         };
 
         const confirmPayment = async () => {
-            $('#paymentConfirmationModal').modal('hide');
+            if (_paymentLock || isLoading.value || isCheckingStock.value) return;
+            _paymentLock = true;
             setLoading(true, 'Memproses pembayaran...');
-            await processPayment();
+            $('#paymentConfirmationModal').modal('hide');
+            try {
+                await processPayment();
+            } finally {
+                _paymentLock = false;
+            }
         };
 
         const processPayment = async () => {
@@ -1355,11 +1468,19 @@ createApp({
                     const draftData = response.data.draft;
                     
                     cartItems.value = draftData.items.map(item => ({
-                        id: item.product_store_id,
-                        code: item.product_store.code,
-                        name: item.product_store.name,
-                        price: item.unit_price,
-                        quantity: item.quantity
+                        id:              item.product_store_id,
+                        code:            item.product_store.code,
+                        name:            item.product_store.name,
+                        price:           parseFloat(item.original_price ?? item.unit_price) || 0,
+                        originalPrice:   parseFloat(item.original_price ?? item.unit_price) || 0,
+                        quantity:        parseInt(item.quantity) || 1,
+                        stock:           item.product_store.inventory?.quantity != null ? parseInt(item.product_store.inventory.quantity) : null,
+                        unit:            item.product_store.inventory?.unit ?? 'pcs',
+                        image:           item.product_store.primary_media?.file_url ?? null,
+                        discountPercent: item.discount_type === 'flat'
+                            ? parseFloat(item.discount_amount) || 0
+                            : parseFloat(item.discount_percent) || 0,
+                        discountType:    item.discount_type ?? 'percent',
                     }));
                     
                     paymentMethod.value = draftData.payment_method;
@@ -2289,12 +2410,13 @@ createApp({
         const paymentMethodsList = ['cash', 'debit_credit', 'qris'];
 
         // Focus first input of the currently selected payment method
+        // nextTick ensures v-if sections are fully rendered before attempting focus
         const focusFirstPaymentField = () => {
             let id = null;
             if (paymentMethod.value === 'cash') id = 'cashAmountInput';
             else if (paymentMethod.value === 'debit_credit') id = 'cardNumberInput';
             else if (paymentMethod.value === 'qris') id = 'qrisBankInput';
-            if (id) document.getElementById(id)?.focus();
+            if (id) nextTick(() => document.getElementById(id)?.focus());
         };
 
         // Clear the focused payment input and its Vue ref, then blur it
@@ -2350,10 +2472,18 @@ createApp({
             if (event.code === 'Enter' && currentStep.value === 2 && !isConfirmModalOpen) {
                 event.preventDefault();
                 if (isInInput) {
-                    // Keluar dari payment field → user bisa tekan Space untuk lanjut
-                    event.target.blur();
+                    // Debit/credit: Enter cycles through the 3 fields in order
+                    const id = event.target.id;
+                    if (id === 'cardNumberInput') {
+                        nextTick(() => document.getElementById('cardBankInput')?.focus());
+                    } else if (id === 'cardBankInput') {
+                        nextTick(() => document.getElementById('cardEdcInput')?.focus());
+                    } else {
+                        // Last field (or cash/qris single field) → blur, ready for Space
+                        event.target.blur();
+                    }
                 } else {
-                    // Belum di input → fokus ke field pertama metode yang dipilih
+                    // Not in any input → focus first field of selected method
                     focusFirstPaymentField();
                 }
                 return;
@@ -2376,6 +2506,51 @@ createApp({
             // Auto-focus barcode input
             const barcodeInputEl = document.getElementById('barcodeSearchInput');
             if (barcodeInputEl) barcodeInputEl.focus();
+
+            // Internet connection + live speed monitoring
+            const applyConnectionSpeed = () => {
+                if (navigator.connection && navigator.connection.downlink) {
+                    netSpeed.value = navigator.connection.downlink * 1024 * 1024;
+                }
+            };
+
+            const runSpeedTest = async () => {
+                const testBytes = 50 * 1024; // 50KB
+                try {
+                    const t0 = performance.now();
+                    const res = await fetch(
+                        `https://speed.cloudflare.com/__down?bytes=${testBytes}&_=${Date.now()}`,
+                        { cache: 'no-store' }
+                    );
+                    const buf = await res.arrayBuffer();
+                    const t1  = performance.now();
+                    const bps = (buf.byteLength * 8) / ((t1 - t0) / 1000);
+                    netSpeed.value = bps;
+                } catch {
+                    applyConnectionSpeed(); // fallback ke navigator.connection
+                }
+            };
+
+            applyConnectionSpeed();
+            runSpeedTest();
+            const speedInterval = setInterval(runSpeedTest, 5000);
+
+            if (navigator.connection) {
+                navigator.connection.addEventListener('change', applyConnectionSpeed);
+            }
+
+            window.addEventListener('online', () => {
+                isOnline.value = true;
+                netSpeed.value = null;
+                runSpeedTest();
+                Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Koneksi internet tersambung', showConfirmButton: false, timer: 2000, timerProgressBar: true });
+            });
+            window.addEventListener('offline', () => {
+                isOnline.value = false;
+                netSpeed.value = 0;
+                clearInterval(speedInterval);
+                Swal.fire({ toast: true, position: 'top-end', icon: 'warning', title: 'Koneksi internet terputus!', text: 'Pastikan terhubung sebelum konfirmasi pembayaran.', showConfirmButton: false, timer: 4000, timerProgressBar: true });
+            });
 
             // Unified keyboard handler (replaces old keypress handler)
             document.addEventListener('keydown', handleKeyDown);
@@ -2414,6 +2589,8 @@ createApp({
             transactionResult,
             drafts,
             currentDraftId,
+            isOnline,
+            netSpeedDisplay,
             isLoading,
             loadingMessage,
             productSelectionList,

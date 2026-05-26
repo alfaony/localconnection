@@ -2,9 +2,8 @@
 
 namespace App\Jobs;
 
-use App\Models\InternetCustomer;
-use App\Schemas\ParamSchema;
 use Illuminate\Bus\Queueable;
+use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
@@ -12,16 +11,12 @@ use Illuminate\Queue\Middleware\WithoutOverlapping;
 use Illuminate\Support\Facades\Log;
 use Throwable;
 
-/**
- * ✅ NEW: Batch job untuk sync banyak customers sekaligus
- * Lebih efisien daripada schedule individual jobs
- */
 class BatchSyncInstalledCustomersJob implements ShouldQueue
 {
-    use InteractsWithQueue, Queueable, SerializesModels;
+    use InteractsWithQueue, Queueable, SerializesModels, Dispatchable;
 
-    public int $timeout = 300; // 5 minutes
-    public int $tries = 3;
+    public int $timeout = 300;
+    public int $tries = 2;
 
     public function middleware(): array
     {
@@ -34,55 +29,18 @@ class BatchSyncInstalledCustomersJob implements ShouldQueue
 
     public function handle(): void
     {
-        // Get customers yang perlu di-sync
-        $customers = InternetCustomer::query()
-            ->with('router')
-            ->whereIn('status', [
-                ParamSchema::INSTALLED,
-                ParamSchema::REACTIVATED
-            ])
-            ->whereNotNull('router_id')
-            ->whereNotNull('username')
-            ->get();
+        Log::info('[BatchSync] Dispatching single SyncInstalledCustomersJob for all customers');
 
-        if ($customers->isEmpty()) {
-            Log::info('[BatchSync] No customers to sync');
-            return;
-        }
-
-        // Group by router untuk efficient processing
-        $grouped = $customers->groupBy('router_id');
-
-        Log::info('[BatchSync] Starting batch sync', [
-            'total_customers' => $customers->count(),
-            'routers_count' => $grouped->count(),
-        ]);
-
-        foreach ($grouped as $routerId => $routerCustomers) {
-            // Dispatch individual sync job per customer
-            // Tapi batch per router untuk sequencing yang lebih baik
-            $customerIds = $routerCustomers->pluck('id')->toArray();
-            
-            // Batch size 10 customers per job
-            $chunks = array_chunk($customerIds, 10);
-            
-            foreach ($chunks as $chunk) {
-                dispatch(new SyncInstalledCustomersJob($chunk))
-                    // ->onQueue('mikrotik')
-                    ->delay(now()->addSeconds(2)); // Stagger untuk prevent overload
-            }
-        }
-
-        Log::info('[BatchSync] Batch sync completed', [
-            'jobs_dispatched' => count($customers),
-        ]);
+        // SyncInstalledCustomersJob dengan customerIds=null sudah menangani
+        // semua customer installed, dikelompokkan per router (1 koneksi per router).
+        // Tidak perlu chunk — cukup 1 job, bukan puluhan.
+        dispatch(new SyncInstalledCustomersJob(null));
     }
 
     public function failed(Throwable $e): void
     {
-        Log::error('[BatchSync] Batch sync failed', [
+        Log::error('[BatchSync] Failed to dispatch SyncInstalledCustomersJob', [
             'error' => $e->getMessage(),
-            'trace' => $e->getTraceAsString(),
         ]);
     }
 }

@@ -14,6 +14,7 @@ use App\Helpers\EmailNotifHelper;
 use App\Models\SettingCompany;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\URL;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use App\Jobs\ExportSaleJob;
 
@@ -67,6 +68,16 @@ class SaleController extends Controller
 
     public function processPayment(Request $request)
     {
+        $lockKey = 'payment_lock_' . Auth::id();
+        $lock = Cache::lock($lockKey, 30);
+
+        if (!$lock->get()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Pembayaran sedang diproses, harap tunggu sebentar.',
+            ], 429);
+        }
+
         DB::beginTransaction();
 
         try {
@@ -96,12 +107,10 @@ class SaleController extends Controller
             $finalAmount = $totalAmount + $taxAmount;
             $cashDeduction = 0;
 
-            // For cash payment, round down to nearest 100 (ratusan)
-            if ($saleData['payment_method'] === 'cash') {
-                $roundedAmount = floor($finalAmount / 100) * 100;
-                $cashDeduction = $finalAmount - $roundedAmount;
-                $finalAmount = $roundedAmount;
-            }
+            // Round down to nearest 100 (ratusan) for all payment methods
+            $roundedAmount = floor($finalAmount / 100) * 100;
+            $cashDeduction = $finalAmount - $roundedAmount;
+            $finalAmount   = $roundedAmount;
 
             // Jika ada draft_id, maka update draft tersebut
             if (!empty($saleData['draft_id'])) {
@@ -197,6 +206,7 @@ class SaleController extends Controller
             \App\Helpers\XpHelper::award(Auth::user(), $sale, 'Transaksi Kasir');
 
             DB::commit();
+            $lock->release();
 
             return response()->json([
                 'success' => true,
@@ -206,6 +216,7 @@ class SaleController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
+            $lock->release();
             return response()->json([
                 'success' => false,
                 'message' => 'Terjadi kesalahan: ' . $e->getMessage()
@@ -356,7 +367,10 @@ class SaleController extends Controller
 
     public function loadDraft($id)
     {
-        $draft = Sale::with('items.productStore')
+        $draft = Sale::with([
+                'items.productStore.inventory',
+                'items.productStore.primaryMedia',
+            ])
             ->where('id', $id)
             ->where('user_id', Auth::id())
             ->where('status', 'draft')

@@ -67,8 +67,6 @@ class ProvisionCustomerJob implements ShouldQueue
             }
             elseif ($cust->status == ParamSchema::SUSPENDED)
             {
-                $ros->disconnectIfActive($client, $cust->username);
-
                 $suspendProfileName = 'SUSPENDED';
                 // buat profile SUSPENDED di MikroTik jika belum ada (2M/2M, tanpa pool)
                 $ros->ensureSuspendedPppProfile($client, $suspendProfileName);
@@ -94,12 +92,13 @@ class ProvisionCustomerJob implements ShouldQueue
                     $cust->meta = $meta;
                     $cust->save();
                 }
+
+                $ros->disconnectIfActive($client, $cust->username);
             }
 
             elseif ($cust->status == ParamSchema::REACTIVATED) 
             {
-                $ros->disconnectIfActive($client, $cust->username);
-               $profile = $map->ros_profile ?? ('PKG_'.$pkg->id);
+                $profile = $map->ros_profile ?? ('PKG_'.$pkg->id);
 
                 $ros->ensurePppProfile($client, $pkg, $profile, null, $cust->router_id, $poolName, $gateway);
                 
@@ -123,25 +122,28 @@ class ProvisionCustomerJob implements ShouldQueue
                     $cust->meta = $meta;
                     $cust->save();
                 }
+
+                $ros->disconnectIfActive($client, $cust->username);
             }
             
             // ✅ Trigger sync check after 45 seconds to update status to ACTIVE
             // setelah disconnectIfActive, router butuh waktu reconnect
             if (in_array($cust->status, [ParamSchema::REACTIVATED, ParamSchema::INSTALLED])) {
-                dispatch(new SyncInstalledCustomersJob([$cust->id]))->delay(now()->addSeconds(45));
+                dispatch(new SyncInstalledCustomersJob([$cust->id]))->delay(now()->addMinutes(1));
             }
 
         } catch (\Throwable $th) {
-            //throw $th;
-            // dd($th);
-            Log::error($th->getMessage());
+            Log::error('ProvisionCustomerJob failed: '.$th->getMessage(), [
+                'customer_id' => $this->internetCustomerId,
+            ]);
+            throw $th;
         }
     }
 
-    // public function failed(Exception $e): void
-    // {
-    //     dd($e->getMessage());
-    //     // log ke audit_logs atau update jobs_provisioning bila kamu pakai tabel itu
-    //     \Log::error('Provision failed: '.$e->getMessage(), ['cust'=>$this->internetCustomerId]);
-    // }
+    public function failed(Exception $e): void
+    {
+        // dd($e->getMessage());
+        // log ke audit_logs atau update jobs_provisioning bila kamu pakai tabel itu
+        \Log::error('Provision failed: '.$e->getMessage(), ['cust'=>$this->internetCustomerId]);
+    }
 }

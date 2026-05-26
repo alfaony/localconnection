@@ -460,9 +460,11 @@ class SaleIndex extends Component
                 $query->where('user_id', $this->filter_user_id);
             });
 
-        $totalFinalAmount = (clone $baseQuery)->sum('final_amount');
-        $totalSubAmount   = (clone $baseQuery)->sum('total_amount');
-        $totalTaxAmount   = (clone $baseQuery)->sum('tax_amount');
+        $totalSubAmount         = (clone $baseQuery)->sum('total_amount');
+        $totalTaxAmount         = (clone $baseQuery)->sum('tax_amount');
+        $totalDeduction         = (clone $baseQuery)->sum('cash_deduction');
+        $totalBeforeDeduction   = $totalSubAmount + $totalTaxAmount;
+        $totalFinalAmount       = (clone $baseQuery)->sum('final_amount');
 
         $paymentBreakdown = null;
         if (!$this->filter_payment_method) {
@@ -531,6 +533,7 @@ class SaleIndex extends Component
 
         return view('livewire.sale.sale-index', compact(
             'sales', 'users', 'totalFinalAmount', 'totalSubAmount', 'totalTaxAmount',
+            'totalDeduction', 'totalBeforeDeduction',
             'paymentBreakdown', 'settingCompany',
             'deletedSales', 'deletedTotal', 'canSeeDeleted',
             'categories', 'brands', 'productRingkasan', 'ringkasanByCategory','canSeeProductSummary'

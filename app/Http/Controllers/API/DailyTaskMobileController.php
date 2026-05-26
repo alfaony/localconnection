@@ -20,6 +20,7 @@ use App\Models\DivisionQuotaLock;
 use App\Models\RecurringRule;
 use App\Models\Division;
 use App\Schemas\ParamSchema;
+use App\Schemas\RoleSchema;
 use Illuminate\Support\Facades\Log; 
 use App\Helpers\InboxHelper;
 use Illuminate\Support\Facades\Route;
@@ -726,13 +727,13 @@ class DailyTaskMobileController extends BaseController
      */
     public function update(Request $request, $slug)
     {
-
         if (!Auth::check()) {
             return $this->sendError('Akses Ditolak.', ['error' => 'Pengguna belum login.'], 401);
         }
 
         $input = $request->all();
         $userId = Auth::id();
+        $user = Auth::user();
 
         DB::beginTransaction();
         try {
@@ -751,9 +752,9 @@ class DailyTaskMobileController extends BaseController
                 return $this->sendError('Tugas sudah dihapus.', ['error' => 'Deleted Task'], 404);
             }
 
-            if ($task->user_id !== $userId) {
-                return $this->sendError('Tidak diizinkan memperbarui tugas ini.', ['error' => 'Forbidden'], 403);
-            }
+            // if ($task->user_id !== $userId) {
+            //     return $this->sendError('Tidak diizinkan memperbarui tugas ini.', ['error' => 'Forbidden'], 403);
+            // }
 
             $validator = Validator::make($input, [
                 'name' => 'required|string|max:255',
@@ -767,9 +768,10 @@ class DailyTaskMobileController extends BaseController
                 'daily_task_project_id' => 'nullable|exists:daily_task_projects,id',
                 'objective_id' => 'nullable|exists:objectives,id',
                 'task_status_id' => 'nullable|exists:task_statuses,id',
-                // 'recurring_days' => 'nullable|json',
                 'attachments' => 'nullable|array',
                 'attachments.*' => 'file|mimes:jpg,jpeg,png,pdf|max:5120',
+                'point' => 'nullable|integer',
+                'division_id' => 'nullable|exists:divisions,id',
 
                 'recurring' => 'nullable|array',
                 'recurring.frequency' => 'nullable|string|in:DAILY,WEEKLY,MONTHLY,YEARLY',
@@ -796,56 +798,53 @@ class DailyTaskMobileController extends BaseController
             $task->project_id = $input['project_id'] ?? $task->project_id;
             $task->daily_task_project_id = $input['daily_task_project_id'] ?? $task->daily_task_project_id;
             $task->objective_id = $input['objective_id'] ?? $task->objective_id;
-            // $task->recurring_days = $input['recurring_days'] ?? $task->recurring_days;
 
             if ($request->has('recurring')) {
-            $rec = is_array($input['recurring']) ? $input['recurring'] : null;
+                $rec = is_array($input['recurring']) ? $input['recurring'] : null;
+                $type = DailyTaskType::find($task->daily_task_type_id);
 
-            $type = DailyTaskType::find($task->daily_task_type_id);
+                if ($type && $type->name == ParamSchema::RECURRING && !empty($rec)) {
+                    $rule = null;
+                    if (!empty($task->recurring_rule_id)) {
+                        $rule = RecurringRule::withTrashed()->find($task->recurring_rule_id);
+                    }
 
-            if ($type && $type->name == ParamSchema::RECURRING && !empty($rec)) {
-                $rule = null;
-                if (!empty($task->recurring_rule_id)) {
-                    $rule = RecurringRule::withTrashed()->find($task->recurring_rule_id);
+                    if (!$rule) {
+                        $rule = new RecurringRule();
+                    }
+
+                    $recurringData = [
+                        'frequency' => $rec['frequency'] ?? $rule->frequency ?? null,
+                        'interval' => $rec['interval'] ?? $rule->interval ?? 1,
+                        'by_day' => null,
+                        'by_month_day' => null,
+                        'by_month' => null,
+                        'until' => $rec['until'] ?? $rule->until ?? null,
+                        'start_date' => $task->start_date,
+                    ];
+
+                    $freq = $recurringData['frequency'];
+                    if ($freq === 'WEEKLY') {
+                        $recurringData['by_day'] = $rec['by_day'] ?? $rule->by_day ?? null;
+                    } elseif ($freq === 'MONTHLY') {
+                        $recurringData['by_month_day'] = $rec['by_month_day'] ?? $rule->by_month_day ?? null;
+                    } elseif ($freq === 'YEARLY') {
+                        $recurringData['by_month_day'] = $rec['by_month_day'] ?? $rule->by_month_day ?? null;
+                        $recurringData['by_month'] = $rec['by_month'] ?? $rule->by_month ?? null;
+                    }
+
+                    $rule->fill($recurringData);
+                    $rule->save();
+
+                    $task->recurring_rule_id = $rule->id;
+                } else {
+                    $typeName = $type->name ?? null;
+                    if ($typeName !== ParamSchema::RECURRING && $task->recurring_rule_id) {
+                        RecurringRule::where('id', $task->recurring_rule_id)->delete();
+                        $task->recurring_rule_id = null;
+                    }
                 }
-
-                if (!$rule) {
-                    $rule = new RecurringRule();
-                }
-
-                $recurringData = [
-                    'frequency' => $rec['frequency'] ?? $rule->frequency ?? null,
-                    'interval' => $rec['interval'] ?? $rule->interval ?? 1,
-                    'by_day' => null,
-                    'by_month_day' => null,
-                    'by_month' => null,
-                    'until' => $rec['until'] ?? $rule->until ?? null,
-                    'start_date' => $task->start_date,
-                ];
-
-                $freq = $recurringData['frequency'];
-                if ($freq === 'WEEKLY') {
-                    $recurringData['by_day'] = $rec['by_day'] ?? $rule->by_day ?? null;
-                } elseif ($freq === 'MONTHLY') {
-                    $recurringData['by_month_day'] = $rec['by_month_day'] ?? $rule->by_month_day ?? null;
-                } elseif ($freq === 'YEARLY') {
-                    $recurringData['by_month_day'] = $rec['by_month_day'] ?? $rule->by_month_day ?? null;
-                    $recurringData['by_month'] = $rec['by_month'] ?? $rule->by_month ?? null;
-                }
-
-                $rule->fill($recurringData);
-                $rule->save();
-
-                $task->recurring_rule_id = $rule->id;
             }
-            else {
-                $typeName = $type->name ?? null;
-                if ($typeName !== ParamSchema::RECURRING && $task->recurring_rule_id) {
-                    RecurringRule::where('id', $task->recurring_rule_id)->delete();
-                    $task->recurring_rule_id = null;
-                }
-            }
-        }
 
             if ($request->has('key_results')) {
                 $keyResults = $request->input('key_results');
@@ -856,14 +855,82 @@ class DailyTaskMobileController extends BaseController
             }
 
             if (isset($input['task_status_id'])) {
-                $oldStatus = $task->task_status_id;
-                $task->task_status_id = $input['task_status_id'];
+                $currentStatusName = $task->taskStatus->name ?? null;
 
-                if ($oldStatus != $task->task_status_id) {
-                    Log::info("UPDATE STATUS: Task {$task->id} dari {$oldStatus} ke {$task->task_status_id}");
+                $oldStatusId = $task->task_status_id;
+                $newStatusId = $input['task_status_id'];
+
+                if ($oldStatusId != $newStatusId) {
+                    if ($currentStatusName == ParamSchema::COMPLATE) {
+                        return $this->sendError('Gagal memperbarui status.', ['error' => 'Tugas yang sudah selesai tidak dapat diubah kembali.'], 403);
+                    }
+
+                    $taskStatus = TaskStatus::find($newStatusId);
+                    
+                    if ($taskStatus) {
+                        if ($taskStatus->name == ParamSchema::COMPLATE || $taskStatus->name == ParamSchema::NOTCOMPLATE) {
+                            if (!$user->hasRole(RoleSchema::MANAGER)) {
+                                return $this->sendError('Akses Ditolak.', ['error' => 'Hanya Manager yang dapat menyetujui atau menolak tugas ini.'], 403);
+                            }
+
+                            Log::info("UPDATE STATUS: Task {$task->id} dari {$oldStatusId} ke {$newStatusId}");
+                            $task->task_status_id = $newStatusId;
+                            
+                            if ($taskStatus->name == ParamSchema::COMPLATE) {
+                                $point = $request->point ?? 0;
+                                
+                                if ($point > 0) {
+                                    $approvalValidator = Validator::make($input, [
+                                        'division_id' => 'required|exists:divisions,id',
+                                    ]);
+
+                                    if ($approvalValidator->fails()) {
+                                        return $this->sendError('Validasi kuota gagal.', $approvalValidator->errors(), 422);
+                                    }
+
+                                    $check = $this->checkDivisionQuota(new Request([
+                                        'division_id' => $request->division_id,
+                                        'point'       => $point
+                                    ]));
+
+                                    if (!($check->original['success'] ?? false)) {
+                                        return response()->json([
+                                            'success' => false,
+                                            'message' => $check->original['message']
+                                        ]);
+                                    }
+
+                                    $task->division_id = $request->division_id;
+                                    $task->division_quota_lock_id = $check->original['quota_lock_id'];
+                                }
+
+                                if ($task->assign) {
+                                    \App\Helpers\XpHelper::award($task->assign, $task, "Approval Dailytask via Update");
+                                    \App\Helpers\ChallengeProgressHelper::userCheckAndGiveReward($task->assign->id);
+                                }
+
+                                $task->point = $point;
+                                $task->approved = true;
+                            } 
+                            
+                            if ($taskStatus->name == ParamSchema::NOTCOMPLATE) {
+                                $task->approved = false;
+                                $task->report_note = null;
+                                $task->submit = null;
+                                $task->status_submit = null;
+                                $task->point = 0;
+                            }
+
+                            if (method_exists($this, 'statusrecord')) {
+                                $this->statusrecord($task, $taskStatus);
+                            }
+                        } else {
+                            Log::info("UPDATE STATUS: Task {$task->id} dari {$oldStatusId} ke {$newStatusId}");
+                            $task->task_status_id = $newStatusId;
+                        }
+                    }
                 }
             }
-
 
             if ($request->hasFile('attachments')) {
                 foreach ($request->file('attachments') as $file) {
@@ -884,12 +951,14 @@ class DailyTaskMobileController extends BaseController
                     ]);
                 }
             }
+
             $task->save();
             DB::commit();
 
             return $this->sendResponse($task->toArray(), 'Tugas berhasil diperbarui.');
         } catch (\Throwable $th) {
             DB::rollBack();
+            Log::error("Gagal update task: " . $th->getMessage());
             return $this->sendError('Gagal memperbarui tugas.', ['error' => $th->getMessage()]);
         }
     }
@@ -1291,15 +1360,21 @@ class DailyTaskMobileController extends BaseController
             $user = Auth::user();
             $divisionIds = $user->divisions->pluck('id');
 
-            $data = Objective::byCompany($user->company_id)
-                ->whereHas('division', function ($q) use ($divisionIds) {
-                    $q->whereIn('id', $divisionIds);
+            if ($divisionIds->isEmpty()) {
+                return $this->sendResponse([], 'User tidak memiliki divisi.');
+            }
+
+            $data = Objective::with('divisions')
+                ->byCompany($user->company_id)
+                ->whereHas('divisions', function ($query) use ($divisionIds) {
+                    $query->whereIn('divisions.id', $divisionIds);
                 })
                 ->get(['id', 'name']);
 
             return $this->sendResponse($data->toArray(), 'Daftar objektif berhasil diambil.');
         } catch (\Exception $e) {
-            return $this->sendError('Gagal mengambil daftar objektif.', ['error' => $e->getMessage()]);
+            return $this->sendError('Gagal mengambil daftar objektif.', ['error' => $e->getMessage()]
+            );
         }
     }
 
@@ -1310,7 +1385,17 @@ class DailyTaskMobileController extends BaseController
     public function indexDailyTaskUsers()
     {
         try {
-            $data = User::select('id', 'name')->get();
+            $users = User::select('id', 'name')
+                ->with('divisions:id') 
+                ->get();
+            $data = $users->map(function ($user) {
+                return [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'division_id' => $user->divisions->pluck('id')->toArray() 
+                ];
+            });
+
             return $this->sendResponse($data->toArray(), 'Daftar pengguna berhasil diambil.');
         } catch (\Exception $e) {
             return $this->sendError('Gagal mengambil daftar pengguna.', ['error' => $e->getMessage()]);
@@ -1334,21 +1419,28 @@ class DailyTaskMobileController extends BaseController
         }
     }
 
-        /**
+     /**
      * @param int $objectiveId
      * @return \Illuminate\Http\JsonResponse
      */
     public function indexKeyResults($objectiveId)
     {
         try {
-            $objective = Objective::find($objectiveId);
+            $objective = Objective::with('divisions')->find($objectiveId);
             if (!$objective) {
                 return $this->sendError('Objektif tidak ditemukan.', ['objective_id' => $objectiveId], 404);
             }
 
             $keyResults = $objective->keyResults()
                 ->select('id', 'result')
-                ->get();
+                ->get()
+                ->map(function ($item) use ($objective) {
+                    return [
+                        'id' => $item->id,
+                        'result' => $item->result,
+                        'division_ids' => $objective->divisions->pluck('id')->values(),
+                    ];
+                });
 
             return $this->sendResponse($keyResults->toArray(), 'Daftar key result berhasil diambil.');
         } catch (\Exception $e) {

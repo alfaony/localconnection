@@ -20,6 +20,9 @@ class ExportSaleJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
+    public int $timeout = 600;
+    public int $tries   = 1;
+
     protected $filters;
     protected $requestUser;
     protected $companyIds;

@@ -24,6 +24,14 @@
                     {{ $showImportSection ? 'Tutup Import' : 'Import Instalasi' }}
                 </button>
                 @endcanAccess
+                @canAccess('export', 'internet_customers')
+                <button type="button" class="btn btn-sm ic-btn" style="background:#217346;color:#fff;border-color:#217346;" onclick="exportInternetCustomer('xlsx')" title="Export Excel">
+                    <i class="fas fa-file-excel mr-1"></i>Excel
+                </button>
+                <button type="button" class="btn btn-sm ic-btn btn-primary" onclick="exportInternetCustomer('csv')" title="Export CSV">
+                    <i class="fas fa-file-csv mr-1"></i>CSV
+                </button>
+                @endcanAccess
                 <button class="btn btn-sm ic-btn ic-btn-ghost" wire:click="resetSearch" title="Reset semua filter">
                     <i class="fas fa-undo mr-1 text-muted"></i><span class="text-muted">Reset</span>
                 </button>
@@ -78,7 +86,7 @@
                         </div>
                         <input wire:model.debounce.300ms="search" type="text"
                                class="form-control ic-search-input"
-                               placeholder="Nama, kode, KTP, email, serial…">
+                               placeholder="Nama, kode, KTP, email, telp…">
                         @if($search)
                         <div class="input-group-append">
                             <button class="btn btn-outline-secondary ic-clear-btn" type="button"
@@ -389,8 +397,8 @@
                                     <i class="fas fa-sort ml-1 ic-sort-icon"></i>
                                 @endif
                             </th>
-                            <th class="ic-th" style="width:16%;">Alamat</th>
-                            <th class="ic-th" style="width:26%;">Paket &amp; Billing</th>
+                            <th class="ic-th" style="width:12%;">Alamat</th>
+                            <th class="ic-th" style="width:30%;">Paket &amp; Billing</th>
                             <th class="ic-th text-center" style="width:10%;">Status</th>
                             <th class="ic-th text-center" style="width:11%;">Aksi</th>
                             <th class="ic-th ic-th-sortable" wire:click="sortBy('created_at')" style="width:9%;">
@@ -455,10 +463,10 @@
                                 <div class="ic-package-name mb-1">
                                     {{ $customer->internetPackage->name ?? '—' }}
                                 </div>
-                                @if($customer->installation?->device_serial_number)
+                                @if($customer->username)
                                 <div class="d-flex align-items-center mb-1" style="gap:.3rem;">
                                     <i class="fas fa-barcode text-muted" style="width:12px; font-size:.7rem; opacity:.5;"></i>
-                                    <span class="ic-serial">{{ $customer->installation->device_serial_number }}</span>
+                                    <span class="ic-serial">{{ $customer->username }}</span>
                                 </div>
                                 @endif
                                 @if($customer->getOldestUnconfirmed()?->confirmation_finance_at)
@@ -500,6 +508,26 @@
                                         {{ $endBill->format('d M Y') }}
                                     </span>
                                 </div>
+                                {{-- Pembayaran Manual (transfer) --}}
+                                @if($customer->latestPurchase && in_array($customer->latestPurchase->payment_method, ['manual_transfer', 'transfer']))
+                                @php $lp = $customer->latestPurchase; @endphp
+                                <div class="ic-billing-row mt-1 px-1 py-1" style="background:#fffbeb; border:1px solid #fde68a; border-radius:5px; font-size:.68rem;">
+                                    <i class="fas fa-money-bill-wave mr-1" style="color:#b45309;"></i>
+                                    <span style="color:#92400e; font-weight:600;">Manual Transfer</span>
+                                    @if($lp->transfer_date)
+                                    <span class="ml-1" style="color:#78350f;">· {{ \Carbon\Carbon::parse($lp->transfer_date)->format('d M Y') }}</span>
+                                    @endif
+                                    @if($lp->transfer_from_bank)
+                                    <span class="ml-1" style="color:#78350f;">· {{ $lp->transfer_from_bank }}</span>
+                                    @endif
+                                    @if($lp->transfer_from_account_name)
+                                    <span class="ml-1 d-block" style="color:#78350f; padding-left:14px;">a/n <strong>{{ $lp->transfer_from_account_name }}</strong></span>
+                                    @endif
+                                    @if($lp->transfer_notes)
+                                    <span class="ml-1 d-block" style="color:#92400e; padding-left:14px; font-style:italic;">{{ Str::limit($lp->transfer_notes, 40) }}</span>
+                                    @endif
+                                </div>
+                                @endif
                                 {{-- Jatuh Tempo --}}
                                 <div class="ic-billing-row mt-1">
                                     <span class="ic-due-badge {{ $dueClass }}">
@@ -1080,7 +1108,7 @@ input[type="radio"].d-none:checked + .ic-radio-btn {
     transition: color .12s;
 }
 .ic-name-link:hover { color: var(--ic-primary) !important; text-decoration: underline !important; }
-.ic-address { font-size: .77rem; color: var(--ic-text-mid); line-height: 1.45; }
+.ic-address { font-size: .6rem; color: var(--ic-text-mid); line-height: 1.45; }
 .ic-more-link { font-size: .73rem; color: var(--ic-primary); margin-top: 2px; }
 .ic-package-name { font-size: .82rem; font-weight: 600; color: var(--ic-text-dark); }
 .ic-serial { font-family: 'SFMono-Regular', monospace; font-size: .73rem; color: var(--ic-text-muted); }
@@ -1725,5 +1753,18 @@ input[type="radio"].d-none:checked + .ic-radio-btn {
             if (importProgressInterval) clearInterval(importProgressInterval);
         });
     });
+</script>
+
+<script>
+    window.addEventListener('show-address-modal', () => {
+        $('#addressModal').modal('show');
+    });
+
+    function exportInternetCustomer(format) {
+        const params = new URLSearchParams(window.location.search);
+        const base = "{{ route('internet-customer.export', ['format' => ':format']) }}".replace(':format', format);
+        const qs = params.toString();
+        window.location.href = base + (qs ? '?' + qs : '');
+    }
 </script>
 @endpush

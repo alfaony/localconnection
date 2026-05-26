@@ -1,0 +1,95 @@
+name: Deploy to PROD Server
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: self-hosted
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+      
+    - name: Open Ownership
+      uses: appleboy/ssh-action@master
+      with:
+        host: "192.168.11.114"
+        username: "devops"
+        password: ${{ secrets.SSH_PROD_PASSWORD }}
+        port: 22
+        script: |
+          cd /var/www/sistembos.com
+          echo ${{ secrets.SSH_PROD_PASSWORD }} | sudo -S chown -R devops:devops storage bootstrap/cache
+          
+    - name: Git Pull
+      uses: appleboy/ssh-action@master
+      with:
+        host: "192.168.11.114"
+        username: "devops"
+        password: ${{ secrets.SSH_PROD_PASSWORD }}
+        port: 22
+        script: |
+          cd /var/www/sistembos.com
+          git pull origin main
+
+    - name: Install Dependencies
+      uses: appleboy/ssh-action@master
+      with:
+        host: "192.168.11.114"
+        username: "devops"
+        password: ${{ secrets.SSH_PROD_PASSWORD }}
+        port: 22
+        script: |
+          cd /var/www/sistembos.com
+          php /home/devops/composer.phar update --no-interaction --prefer-dist --optimize-autoloader --no-dev --ignore-platform-reqs
+
+    - name: Run Migrations
+      uses: appleboy/ssh-action@master
+      with:
+        host: "192.168.11.114"
+        username: "devops"
+        password: ${{ secrets.SSH_PROD_PASSWORD }}
+        port: 22
+        script: |
+          cd /var/www/sistembos.com
+          echo "yes" | php artisan migrate
+
+    - name: Clear Cache
+      uses: appleboy/ssh-action@master
+      with:
+        host: "192.168.11.114"
+        username: "devops"
+        password: ${{ secrets.SSH_PROD_PASSWORD }}
+        port: 22
+        script: |
+          cd /var/www/sistembos.com
+          php artisan optimize:clear
+          php artisan config:clear
+          php artisan view:clear
+          php artisan route:clear
+
+    - name: Close Ownership
+      uses: appleboy/ssh-action@master
+      with:
+        host: "192.168.11.114"
+        username: "devops"
+        password: ${{ secrets.SSH_PROD_PASSWORD }}
+        port: 22
+        script: |
+          cd /var/www/sistembos.com
+          echo ${{ secrets.SSH_PROD_PASSWORD }} | sudo -S chown -R www-data:www-data storage bootstrap/cache
+
+    - name: Update Supervisor
+      uses: appleboy/ssh-action@master
+      with:
+        host: "192.168.11.114"
+        username: "devops"
+        password: ${{ secrets.SSH_PROD_PASSWORD }}
+        port: 22
+        script: |
+          echo ${{ secrets.SSH_PROD_PASSWORD }} | sudo -S supervisorctl reread
+          echo ${{ secrets.SSH_PROD_PASSWORD }} | sudo -S supervisorctl update
+          echo ${{ secrets.SSH_PROD_PASSWORD }} | sudo -S supervisorctl restart sistembos.com-worker:*
