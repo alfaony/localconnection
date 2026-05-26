@@ -884,9 +884,6 @@ class InternetCustomerShow extends Component
                     'device_serial_number' => $this->device_serial_number,
                 ]);
             }
-
-            $this->updateBilling($this->customer);
-
             
             DB::commit();
             
