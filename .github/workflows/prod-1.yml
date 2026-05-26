@@ -92,4 +92,4 @@ jobs:
         script: |
           echo ${{ secrets.SSH_PROD_PASSWORD }} | sudo -S supervisorctl reread
           echo ${{ secrets.SSH_PROD_PASSWORD }} | sudo -S supervisorctl update
-          echo ${{ secrets.SSH_PROD_PASSWORD }} | sudo -S supervisorctl restart bos.keloola.com-worker:*
+          echo ${{ secrets.SSH_PROD_PASSWORD }} | sudo -S supervisorctl restart sistembos.com-worker:*
