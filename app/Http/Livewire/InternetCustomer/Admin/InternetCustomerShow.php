@@ -888,7 +888,7 @@ class InternetCustomerShow extends Component
             DB::commit();
             
             dispatch(new ProvisionCustomerJob($this->customer->id));
-            \App\Jobs\SyncInstalledCustomersJob::dispatch([$this->customer->id]);
+            // \App\Jobs\SyncInstalledCustomersJob::dispatch([$this->customer->id]);
             
             $this->dispatchBrowserEvent('hideEditInstalasiModal');
             $this->dispatchBrowserEvent('showSuccessAlert', ['message' => 'Data instalasi berhasil diperbarui']);

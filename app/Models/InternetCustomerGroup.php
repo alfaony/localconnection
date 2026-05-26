@@ -30,6 +30,9 @@ class InternetCustomerGroup extends Model
         'name',
         'description',
         'last_number',
+        'start_day',
+        'end_day'
+        
     ];
 
     protected $casts = [

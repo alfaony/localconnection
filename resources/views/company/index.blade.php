@@ -184,22 +184,52 @@ $no = ($company->currentPage() - 1) * $company->perPage() + 1;
         <tr>
             <th>No</th>
             <th>Company</th>
+            <th>Slug Default</th>
+            <th>Custom Slugs</th>
             <th>Aksi</th>
         </tr>
         @forelse($company as $a)
         <tr>
+            <td>{{ $no++ }}</td>
+            <td>{{ $a->name }}</td>
+            <td><code>{{ $a->slug }}</code></td>
             <td>
-                {{ $no++ }}
+                {{-- List custom slugs yang sudah ada --}}
+                @foreach($a->customSlugs as $cs)
+                <div class="d-flex align-items-center mb-1">
+                    <code class="mr-2">{{ $cs->slug }}</code>
+                    <form method="post" action="{{ route('company.custom-slug.destroy', [$a->slug, $cs->id]) }}">
+                        @csrf
+                        @method('delete')
+                        <button type="button"
+                                onclick="if(confirm('Hapus slug {{ $cs->slug }}?')) this.closest('form').submit()"
+                                class="btn btn-danger btn-xs"
+                                title="Hapus slug ini">
+                            <i class="fa fa-times"></i>
+                        </button>
+                    </form>
+                </div>
+                @endforeach
+
+                {{-- Form tambah custom slug baru --}}
+                <form method="post" action="{{ route('company.custom-slug.store', $a->slug) }}" class="d-flex align-items-center mt-1">
+                    @csrf
+                    <input type="text"
+                           name="slug"
+                           class="form-control form-control-sm mr-1"
+                           style="max-width:150px"
+                           placeholder="contoh: hikari-net">
+                    <button type="submit" class="btn btn-success btn-sm" title="Tambah slug">
+                        <i class="fa fa-plus"></i>
+                    </button>
+                </form>
             </td>
             <td>
-                {{ $a->name }}
-            </td>
-            <td>
-                <form method="post" action="{{ route('company.destroy',$a) }}">
+                <form method="post" action="{{ route('company.destroy', $a) }}">
                     @csrf
                     @method('delete')
                     @canAccess('edit','companies')
-                    <a href="{{ route('company.edit',$a->slug) }}" class="btn btn-primary btn-sm"><i class="fa fa-edit"></i></a>
+                    <a href="{{ route('company.edit', $a->slug) }}" class="btn btn-primary btn-sm"><i class="fa fa-edit"></i></a>
                     @endcanAccess
                     @canAccess('destroy','companies')
                     <button onclick="return window.confirm('{{ __('Apakah Anda Yakin ? ') }}')" class="btn btn-danger btn-sm"><i class="fa fa-trash"></i></button>
@@ -209,7 +239,7 @@ $no = ($company->currentPage() - 1) * $company->perPage() + 1;
         </tr>
         @empty
         <tr>
-            <td colspan="3">
+            <td colspan="5">
                 Data Kosong
             </td>
         </tr>

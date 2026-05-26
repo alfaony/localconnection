@@ -61,6 +61,45 @@ class Company extends Model
         return 'slug';
     }
 
+    public function customSlugs()
+    {
+        return $this->hasMany(CompanyCustomSlug::class);
+    }
+
+    /**
+     * Slug publik untuk generate URL: custom slug pertama jika ada, fallback ke slug default.
+     */
+    public function getPublicSlugAttribute(): string
+    {
+        return $this->customSlugs()->value('slug') ?? $this->slug;
+    }
+
+    /**
+     * Resolve company dari URL slug: cek company_custom_slugs dulu, lalu slug default.
+     * Mendukung semua custom slug sehingga URL lama tidak 404.
+     */
+    public static function resolveBySlug(string $slug): ?self
+    {
+        $custom = CompanyCustomSlug::where('slug', $slug)->first();
+
+        if ($custom) {
+            return $custom->company;
+        }
+
+        return static::where('slug', $slug)->first();
+    }
+
+    public static function resolveBySlugOrFail(string $slug): self
+    {
+        $company = static::resolveBySlug($slug);
+
+        if (!$company) {
+            abort(404);
+        }
+
+        return $company;
+    }
+
     public function user()
     {
         return $this->hasMany(User::class);
