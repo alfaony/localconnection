@@ -52,7 +52,7 @@ class SoftwareSharingController extends Controller
             abort(404, 'Tidak ada perusahaan yang tersedia.');
         }
 
-        return redirect()->route('public.software-sharing.index', $company->slug);
+        return redirect()->route('public.software-sharing.index', $company->public_slug);
     }
 
     /**
@@ -66,7 +66,7 @@ class SoftwareSharingController extends Controller
             return redirect()->route('customer-software.index');
         }
 
-        $company = Company::where('slug', $companySlug)->firstOrFail();
+        $company = Company::resolveBySlugOrFail($companySlug);
         $settingCompany = SettingCompany::byCompany($company->id)->where('menu','software_sharing_setting')->get()->pluck('field_value', 'field_title')->toArray();
 
         $softwares = Software::where('company_id', $company->id)
@@ -96,7 +96,7 @@ class SoftwareSharingController extends Controller
             return redirect()->route('customer-software.index');
         }
 
-        $company = Company::where('slug', $companySlug)->firstOrFail();
+        $company = Company::resolveBySlugOrFail($companySlug);
         return view('public.software-sharing.register', compact('company', 'companySlug'));
     }
 
@@ -105,7 +105,7 @@ class SoftwareSharingController extends Controller
      */
     public function register(Request $request, string $companySlug)
     {
-        $company = Company::where('slug', $companySlug)->firstOrFail();
+        $company = Company::resolveBySlugOrFail($companySlug);
         $role = Role::where('name', RoleSchema::CUSTOMER_SOFTWARE)->firstOrFail();
         
         $request->validate([
@@ -167,7 +167,7 @@ class SoftwareSharingController extends Controller
             return redirect()->route('customer-software.index');
         }
 
-        $company = Company::where('slug', $companySlug)->firstOrFail();
+        $company = Company::resolveBySlugOrFail($companySlug);
         return view('public.software-sharing.login', compact('company', 'companySlug'));
     }
 
@@ -176,7 +176,7 @@ class SoftwareSharingController extends Controller
      */
     public function login(Request $request, string $companySlug)
     {
-        $company = Company::where('slug', $companySlug)->firstOrFail();
+        $company = Company::resolveBySlugOrFail($companySlug);
 
         $request->validate([
             'login_field' => ['required', 'string'],
@@ -236,7 +236,7 @@ class SoftwareSharingController extends Controller
      */
     public function resendVerification(Request $request, string $companySlug)
     {
-        $company = Company::where('slug', $companySlug)->firstOrFail();
+        $company = Company::resolveBySlugOrFail($companySlug);
 
         $request->validate([
             'email' => ['required', 'email']
@@ -297,7 +297,7 @@ class SoftwareSharingController extends Controller
         if ($this->isLoggedInCustomer()) {
             return redirect()->route('customer-software.index');
         }
-        $company = Company::where('slug', $companySlug)->firstOrFail();
+        $company = Company::resolveBySlugOrFail($companySlug);
         return view('public.software-sharing.forgot-password', compact('company', 'companySlug'));
     }
 
@@ -306,7 +306,7 @@ class SoftwareSharingController extends Controller
      */
     public function sendResetLink(Request $request, string $companySlug)
     {
-        $company = Company::where('slug', $companySlug)->firstOrFail();
+        $company = Company::resolveBySlugOrFail($companySlug);
 
         $request->validate([
             'email' => ['required', 'email'],
@@ -339,7 +339,7 @@ class SoftwareSharingController extends Controller
         if ($this->isLoggedInCustomer()) {
             return redirect()->route('customer-software.index');
         }
-        $company = Company::where('slug', $companySlug)->firstOrFail();
+        $company = Company::resolveBySlugOrFail($companySlug);
         $email   = $request->query('email', '');
 
         return view('public.software-sharing.reset-password', compact('company', 'companySlug', 'token', 'email'));
@@ -350,7 +350,7 @@ class SoftwareSharingController extends Controller
      */
     public function resetPassword(Request $request, string $companySlug)
     {
-        $company = Company::where('slug', $companySlug)->firstOrFail();
+        $company = Company::resolveBySlugOrFail($companySlug);
 
         $request->validate([
             'token'    => ['required'],

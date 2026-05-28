@@ -424,6 +424,8 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
   Route::get('pricelist/show/{product}', [PricelistController::class, 'show'])->name('pricelist.show');
 
   Route::resource('company', CompanyController::class)->except(['create','show']);
+  Route::post('company/{company}/custom-slug', [CompanyController::class, 'storeCustomSlug'])->name('company.custom-slug.store');
+  Route::delete('company/{company}/custom-slug/{customSlug}', [CompanyController::class, 'destroyCustomSlug'])->name('company.custom-slug.destroy');
 
   Route::get('equipment/history/{slug}', [EquipmentController::class, 'history'])->name('equipment.history');
   Route::resource('equipment', EquipmentController::class);

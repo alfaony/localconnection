@@ -252,10 +252,10 @@
         {{ $settingCompany['software_sharing_company_name'] ?? '' }}
     </div>
     <div class="nav-actions">
-        <a href="{{ route('public.software-sharing.login', $company->slug) }}" class="nav-btn outline">
+        <a href="{{ route('public.software-sharing.login', $company->public_slug) }}" class="nav-btn outline">
             <i class="fas fa-sign-in-alt"></i> Masuk
         </a>
-        <a href="{{ route('public.software-sharing.register', $company->slug) }}" class="nav-btn filled">
+        <a href="{{ route('public.software-sharing.register', $company->public_slug) }}" class="nav-btn filled">
             <i class="fas fa-user-plus"></i> Daftar
         </a>
     </div>
@@ -274,7 +274,7 @@
             {{ $settingCompany['software_sharing_headline_support_message'] ?? '' }}
         </p>
         <div class="hero-actions animate delay-4">
-            <a href="{{ route('public.software-sharing.register', $company->slug) }}" class="btn-hero-primary">
+            <a href="{{ route('public.software-sharing.register', $company->public_slug) }}" class="btn-hero-primary">
                 <i class="fas fa-rocket"></i> Daftar Sekarang – Gratis!
             </a>
             <a href="#software-list" class="btn-hero-ghost">
@@ -392,7 +392,7 @@
 
             {{-- CTA --}}
             @if($software->has_available_slots)
-                <a href="{{ route('public.software-sharing.register', $company->slug) }}?software={{ $software->id }}"
+                <a href="{{ route('public.software-sharing.register', $company->public_slug) }}?software={{ $software->id }}"
                    class="btn-register primary">
                     <i class="fas fa-user-plus"></i> Daftar untuk Berlangganan
                 </a>

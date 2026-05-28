@@ -422,7 +422,7 @@ class ItemRequestController extends Controller
 
     public function publicIndex($companySlug)
     {
-        $company = Company::where('slug', $companySlug)->firstOrFail();
+        $company = Company::resolveBySlugOrFail($companySlug);
         $settingCompany = SettingCompany::byCompany($company->id)->where('field_title','closed_time')->get()->pluck('field_value','field_title');
 
         return view('item_request.public_index', compact('company', 'settingCompany'));
@@ -430,7 +430,7 @@ class ItemRequestController extends Controller
 
     public function loadByCompany($companySlug)
     {
-        $company = Company::where('slug', $companySlug)->firstOrFail();
+        $company = Company::resolveBySlugOrFail($companySlug);
 
         $requests = ItemRequest::with(['assignedPic', 'requester'])
             ->where('company_id', $company->id)

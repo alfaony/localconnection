@@ -630,7 +630,7 @@ class AppServiceProvider extends ServiceProvider
                 'list_sprinter' =>
                 [
                     'text' => 'List Sprinter',
-                    'url' => url("item-request/list/".Auth::user()->company->slug),
+                    'url' => url("item-request/list/".Auth::user()->company->public_slug),
                     'icon' => 'fa fa-list',
                 ],
                 'meetings' => 

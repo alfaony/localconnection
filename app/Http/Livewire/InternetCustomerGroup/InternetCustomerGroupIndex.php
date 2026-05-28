@@ -29,6 +29,8 @@ class InternetCustomerGroupIndex extends Component
     public array   $selectedOdpIds = [];
     public ?string $editingId   = null;
     public ?string $deletingId  = null;
+    public ?int $start_day = null;
+    public ?int $end_day = null;
 
     protected function rules(): array
     {
@@ -42,6 +44,8 @@ class InternetCustomerGroupIndex extends Component
             'description'      => ['nullable', 'string', 'max:255'],
             'last_number'      => ['nullable', 'integer', 'min:0'],
             'selectedOdpIds'   => ['array'],
+            'start_day'       => ['nullable', 'integer',"max:25"],
+            'end_day'         => ['nullable', 'integer','gt:start_day',"max:28"],
             'selectedOdpIds.*' => ['exists:optical_distributions,id'],
         ];
     }
@@ -81,6 +85,8 @@ class InternetCustomerGroupIndex extends Component
             'name'        => trim($this->name),
             'description' => trim($this->description) ?: null,
             'last_number' => $this->last_number,
+            'start_day'   => $this->start_day,
+            'end_day'     => $this->end_day,
         ]);
 
         $group->odps()->sync($this->selectedOdpIds);
@@ -126,6 +132,8 @@ class InternetCustomerGroupIndex extends Component
             'name'        => trim($this->name),
             'description' => trim($this->description) ?: null,
             'last_number' => $this->last_number,
+            'start_day'   => $this->start_day,
+            'end_day'     => $this->end_day,
         ]);
 
         $group->odps()->sync($this->selectedOdpIds);
