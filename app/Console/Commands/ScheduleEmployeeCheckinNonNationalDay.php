@@ -16,7 +16,7 @@ use Illuminate\Support\Str;
 use App\Schemas\RoleSchema;
 class ScheduleEmployeeCheckinNonNationalDay extends Command
 {
-    protected $signature = 'schedule:employee-checkin {--company_id}';
+    protected $signature = 'schedule:employee-checkin-non-national-day {--company_id}';
     protected $description = 'Schedule employee check-in excluding weekends, national holidays, and user leave days';
     protected $dayoffService;
 
