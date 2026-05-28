@@ -196,6 +196,8 @@ class Kernel extends ConsoleKernel
         $schedule->command('weekly:check-compliance')->timezone('Asia/Jakarta')->mondays()->at('3:00');
         $schedule->command('dailytask:check-status')->timezone('Asia/Jakarta')->dailyAt('00:00');
         $schedule->command('dailytask:complete-inreview')->timezone('Asia/Jakarta')->dailyAt('00:00');
+        // Run Scheduler
+        $schedule->command('schedule:employee-checkin')->dailyAt('04:00');
         
         $company = Company::all();
         foreach ($company as $a) 
@@ -237,9 +239,6 @@ class Kernel extends ConsoleKernel
             ->withoutOverlapping(10)
             ->runInBackground(); // Optional: prevent blocking
         }
-
-        // Run Scheduler
-        $schedule->command('schedule:employee-checkin')->dailyAt('04:00');
 
         $employeeCheckings = EmployeeChecking::where('is_active', true)
             ->where('is_dayoff', false)
