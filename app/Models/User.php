@@ -121,26 +121,6 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->hasMany(Attendance::class);
     }
 
-    public function wfoRules()
-    {
-        return $this->hasOne(WfoRule::class, 'user_id', 'id');
-    }
-
-    public function taskAssigns()
-    {
-        return $this->hasMany(TaskAssign::class,'user_assign_id');
-    }
-
-    public function dailyTaskAssigns()
-    {
-        return $this->hasMany(DailyTask::class,'assignment_user_id');
-    }
-
-    public function dailyTasks()
-    {
-        return $this->hasMany(DailyTask::class, 'user_id'); // pembuat
-    }
-
     public function settingCompany()
     {
         return $this->hasMany(SettingCompany::class);

@@ -1,75 +1,14 @@
-
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\ProjectController;
-use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\UserController;
-use App\Http\Controllers\PurchaseController;
-use App\Http\Controllers\ReportController;
-use App\Http\Controllers\SuplierController;
-use App\Http\Controllers\ManagerController;
-use App\Http\Controllers\ProductController;
-use App\Http\Controllers\CustomerController;
-use App\Http\Controllers\QuoteController;
-use App\Http\Controllers\WorkOrderController;
-use App\Http\Controllers\AgreementLetterController;
-use App\Http\Controllers\BastController;
-use App\Http\Controllers\ReportProjectController;
 use App\Http\Controllers\SettingCompanyController;
 use App\Http\Controllers\RoleController;
-
-use App\Http\Controllers\PricelistController;
 use App\Http\Controllers\CompanyController;
-use App\Http\Controllers\SortUrlController;
-use App\Http\Controllers\EquipmentController;
-use App\Http\Controllers\EquipmentReductionController;
-
-use App\Http\Controllers\TaskController;
-
-use App\Http\Controllers\TaskAssignController;
-use App\Http\Controllers\TasStatusController;
-use App\Http\Controllers\TaskTypeController;
-use App\Http\Controllers\AttendanceController;
-use App\Http\Controllers\ReportPointController;
-use App\Http\Controllers\AssetController;
-use App\Http\Controllers\AssetAssignController;
-use App\Http\Controllers\SecurityCheckController;
-use App\Http\Controllers\CctvCheckController;
-use App\Http\Controllers\TicketController;
-use App\Http\Controllers\TrainingController;
 use App\Http\Controllers\IpRightController;
-use App\Http\Controllers\SalesAchievementController;
-use App\Http\Controllers\ReportPointProductivityController;
-use App\Http\Controllers\DailyTaskController;
-use App\Http\Controllers\DailyTaskProjectController;
-use App\Http\Controllers\DivisionController;
-use App\Http\Controllers\ObjectiveController;
-use App\Http\Controllers\VisionController;
-use App\Http\Controllers\MissionController;
-use App\Http\Controllers\ProjectDashboardController;
-use App\Http\Controllers\DailyTaskCategoryController;
-use App\Http\Controllers\ShiftingObController;
-use App\Http\Controllers\ScheduleObController;
-use App\Http\Controllers\DivisionBudgetController;
-use App\Http\Controllers\ProductCategoryController;
-use App\Http\Controllers\InboxController;
-use App\Http\Controllers\LetterSubmissionController;
-use App\Http\Controllers\PositionController;
-use App\Http\Controllers\DeviceController;
-use App\Http\Controllers\NationalHolidayController;
-use App\Http\Controllers\EmployeeCheckingController;
-use App\Http\Controllers\XeroController;
-use App\Http\Controllers\InvoiceController;
-use App\Http\Controllers\XeroWebhookController;
-use App\Http\Controllers\Auth\LoginController;
-use App\Http\Controllers\PassCheckingController;
-use App\Http\Controllers\KyeController;
-use App\Http\Controllers\WarehouseController;
 use App\Http\Controllers\SensorController;
 use App\Http\Controllers\ZoneController;
 use App\Http\Controllers\RackController;
-use App\Http\Controllers\ShippingRateController;
 use App\Http\Controllers\ProviderController;
 use App\Http\Controllers\WilayahController;
 use App\Http\Controllers\ProvinceController;
@@ -77,72 +16,18 @@ use App\Http\Controllers\DistrictController;
 use App\Http\Controllers\SubdistrictController;
 use App\Http\Controllers\PostalCodeController;
 use App\Http\Controllers\CityController;
-use App\Http\Controllers\ShippingCalculationController;
-use App\Http\Controllers\AskBosController;
-use App\Http\Controllers\DecisionController;
-use App\Http\Controllers\PartnershipAgreementController;
-use App\Http\Controllers\UserBlacklistController;
-use App\Http\Controllers\SupplierCategoryController;
-use App\Http\Controllers\ProductSupplierController;
-use App\Http\Controllers\DayoffController;
-use App\Http\Controllers\OfficeMediaController;
-use App\Http\Controllers\WeeklyReportController;
-use App\Http\Controllers\ReportChartController;
-use App\Http\Controllers\VehicleController;
-use App\Http\Controllers\SubscribeLetterController;
-use App\Http\Controllers\FlowChartController;
-use App\Http\Controllers\ItemRequestController;
-use App\Http\Controllers\ChatMessageController;
-use App\Http\Controllers\ItemPurchaseController;
-use Illuminate\Support\Facades\Broadcast;
 use App\Http\Controllers\WablasWebhookController;
 use App\Http\Controllers\BroadcastAuthController;
-use App\Http\Controllers\PotentialVendorController;
-use App\Http\Controllers\MeetingController;
-use App\Http\Controllers\GoogleMeetController;
-use App\Http\Controllers\MomController;
-use App\Http\Controllers\UsedLaptopController;
-use App\Http\Controllers\MasterCheckItemController;
-use App\Http\Controllers\UsedItemController;
 use App\Http\Controllers\MikrotikSecretController;
 use App\Http\Controllers\MikrotikProfileController;
-
-
-use App\Http\Controllers\BarcodeAttendanceController;
-use App\Http\Controllers\OfficeAttendanceController;
-use App\Http\Controllers\SaleController;
 use App\Http\Controllers\XenditController;
 use App\Http\Controllers\MidtransController;
 use App\Http\Controllers\InternetCustomerController;
+use App\Http\Controllers\HotspotVoucherController;
+use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\Admin\DashboardController;
 
-use App\Http\Controllers\PartnerController;
-use App\Http\Controllers\PartnerDashboardController;
-use App\Http\Controllers\PartnerMonthlyReportController;
-use App\Http\Controllers\PartnerTargetController;
-use App\Http\Controllers\PartnerParameterTypeController;
-use App\Http\Controllers\PartnerTypeController;
-use App\Http\Controllers\Public\SoftwareSharingController;
-
-use App\Http\Controllers\Admin\{
-    DashboardController,
-    SoftwareController,
-    SoftwarePackageController,
-    MasterAccountController,
-    SubscriptionController as AdminSubscriptionController,
-    SubscriptionCustomerController,
-    SubscriptionChatController as AdminSubscriptionChatController
-};
-
-// Customer Controllers
-use App\Http\Controllers\Customer\{
-    SoftwareController as CustomerSoftwareController,
-    CustomerCheckoutController,
-    SubscriptionController as CustomerSubscriptionController,
-    SubscriptionPaymentController,
-    SubscriptionChatController as CustomerSubscriptionChatController
-};
-
-// LiveWired
+// LiveWire
 use App\Http\Livewire\DataCenter\Index;
 use App\Http\Livewire\DataCenter\Form;
 use App\Http\Livewire\Pop\PopIndex;
@@ -169,854 +54,185 @@ use App\Http\Livewire\Router\PackageProfileMapping;
 use App\Http\Livewire\Hotspot\HotspotServerIndex;
 use App\Http\Livewire\Hotspot\HotspotServerForm;
 use App\Http\Livewire\Hotspot\HotspotVoucherBatchIndex;
-use App\Http\Controllers\HotspotVoucherController;
-use App\Http\Livewire\WebhookSettingTable;
-use App\Http\Livewire\ProductSupplierTypeIndex;
-use App\Http\Livewire\ProductStore\ProductStoreIndex;
-use App\Http\Livewire\ProductStore\ProductStoreShow;
-use App\Http\Livewire\ProductStore\ProductStoreForm;
-use App\Http\Livewire\ProductStore\ProductStorePrint;
-use App\Http\Livewire\ProductStore\InventoryIndex;
-use App\Http\Livewire\Sale\SaleIndex;
-use App\Http\Livewire\Sale\SaleShow;
-use App\Http\Livewire\BrandProductStoreIndex;
-use App\Http\Livewire\CategoryProductStoreIndex;
-
-
-use App\Http\Livewire\PunishmentUserTable;
-
-
 
 /*
 |--------------------------------------------------------------------------
 | Web Routes
 |--------------------------------------------------------------------------
-|
-| Here is where you can register web routes for your application. These
-| routes are loaded by the RouteServiceProvider within a group which
-| contains the "web" middleware group. Now create something great!
-|
 */
+
+// Webhook (public, no auth)
 Route::post('wablas/webhook', [WablasWebhookController::class, 'handle']);
 Route::post('xendit/webhook', [XenditController::class, 'handle']);
 Route::post('keloola-pay/webhook', [XenditController::class, 'handleKeloolaPay']);
 Route::post('midtrans/webhook', [MidtransController::class, 'handleNotification']);
-Route::post('xero/webhook', [XeroWebhookController::class, 'handleWebhook'])->middleware('verify.xero.signature');
 
-
+// Internet Customer public routes
 Route::get('internet-customer/customer-active', CustomerCodeInput::class)->name('internet-customer.customer');
 Route::get('internet-customer/invoice/{purchaseId}', [InternetCustomerController::class, 'downloadInvoice'])->name('internet-customer.download-invoice');
+Route::get('internet-customer/registration/{companyId}', InternetCustomerForm::class)->name('internet-customer.create');
+Route::get('internet-customer/customer/{code}', CustomerShow::class)->name('internet-customer.customer.show');
 
-Route::get('xero/check/{id}', [XeroWebhookController::class, 'isCheckingInvoice']);
+// Internet Customer public registration API
+Route::get('/api/cities/{provinceId}', [InternetCustomerController::class, 'getCities'])->name('api.cities');
+Route::get('/api/districts/{cityId}', [InternetCustomerController::class, 'getDistricts'])->name('api.districts');
+Route::get('/api/subdistricts/{districtId}', [InternetCustomerController::class, 'getSubdistricts'])->name('api.subdistricts');
+Route::get('/api/coverage/{subdistrictId}', [InternetCustomerController::class, 'checkCoverage'])->name('api.coverage');
+
+Route::post('internet-customer/store', [InternetCustomerController::class, 'store'])->name('internet-customers.store');
+Route::post('internet-customer/check-promo', [InternetCustomerController::class, 'checkPromoAjax'])->name('internet-customers.check-promo');
+Route::get('internet-customer/create', [InternetCustomerController::class, 'create'])->name('internet-customer.create_direct');
 
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 
-Route::middleware('validate.vendor.token')->group(function () 
-{
-    Route::get('item-request/respond/{id}/{token}', [PotentialVendorController::class, 'edit'])->name('vendor.respond');
-    Route::post('item-request/respond/{id}/{token}', [PotentialVendorController::class, 'update'])->name('vendor.respond.submit');
+Route::group(['middleware' => ['auth', 'web']], function () {
+    Route::post('broadcasting/authorize', [BroadcastAuthController::class, 'broadcastingAuthorize'])->name('broadcasting.authorize');
 });
-// Public route (tidak membutuhkan login)
-Route::get('item-request/list/{companySlug}', [ItemRequestController::class, 'publicIndex'])->name('item-request.public.index');
-Route::get('item-request/ajax/{companySlug}', [ItemRequestController::class, 'loadByCompany']);
-
-Route::group(['middleware' => ['auth','web']], function(){
-  Route::post('broadcasting/authorize', [BroadcastAuthController::class, 'broadcastingAuthorize'])->name('broadcasting.authorize');
-});
-
-Route::group(['prefix' => 'google'], function () {
-  Route::get('oauth', [GoogleMeetController::class, 'redirectToGoogle'])->name('google.auth')->middleware('auth');
-  Route::get('oauth/callback', [GoogleMeetController::class, 'handleGoogleCallback']);
-});
-
-Route::group(['prefix' => 'mom/external'], function () 
-{
-  Route::get('task/{token}', [MomController::class, 'viewExternalTask'])->name('external.task.view');
-  Route::post('task/{token}/submit', [MomController::class, 'submitExternalTask'])->name('external.task.submit');
-});
-
-Route::prefix('meeting/public')->group(function () {
-    Route::view('error', 'meeting.public_error')->name('meeting.public.error');
-    Route::get('join/{slug}/{token}', [MeetingController::class, 'showPublicJoinForm'])->name('meeting.public.join');
-    Route::post('join/{slug}/{token}', [MeetingController::class, 'submitPublicJoinForm'])->name('meeting.public.join.submit');
-});
-    
-Route::group(['middleware' => ['auth','web', 'ensure.xero.connected','role.permission']], function(){
-  Route::get('xero',function(){
-    
-    return redirect('/invoice')->with('xero',true);
-    
-  });
-  
-  Route::get('invoice/downloadPdfA/{slug}',[InvoiceController::class,'downloadPdfA'])->name('invoice.download.pdfa');
-  Route::get('invoice/checkPdfAStatus', [InvoiceController::class, 'checkPdfAStatus'])->name('invoice.checkPdfAStatus');
-  Route::post('invoice/clearsessionPdfA', [InvoiceController::class, 'clearsessionPdfA'])->name('invoice.clearsessionPdfA');
-  Route::delete('invoice/destroyProduct/product/{invoiceProduct}',[invoiceController::class,'destroyProduct'])->name('invoice.destroy.product');
-  Route::get('invoice/history/{slug}', [InvoiceController::class, 'history'])->name('invoices.history');
-  Route::get('invoice/export/{format}', [InvoiceController::class, 'export'])->name('invoice.export');
-  Route::get('invoice/checkExportStatus', [InvoiceController::class, 'checkExportStatus'])->name('invoice.checkExportStatus');
-  Route::get('invoice/clearsession', [InvoiceController::class, 'clearsession'])->name('invoice.clearsession');
-  Route::get('invoice/productPrice/counting',[invoiceController::class,'productPrice'])->name('invoice.productPrice');
-  Route::get('invoice/select2', [invoiceController::class, 'select2'])->name('invoice.select2');
-  Route::get('invoice/dataTableJson', [invoiceController::class, 'dataTableJson'])->name('invoice.datatable');
-  Route::get('invoice/downloadPdf/pdf/{slug}',[invoiceController::class,'downloadPdf'])->name('invoice.download.pdf');
-  Route::get('invoice/counting',[invoiceController::class,'counting'])->name('invoice.counting');
-  Route::get('invoice/productCounting/counting',[invoiceController::class,'productCounting'])->name('invoice.productCounting');
-  Route::get('invoice/suggestionQuote/{id}/',[invoiceController::class,'suggestionQuote'])->name('invoice.suggestionQuote');
-  
-  Route::post('invoice/sentMail/{slug}', [InvoiceController::class, 'sentMail'])->name('invoice.sentMail');
-  Route::resource('invoice', invoiceController::class);
-});
-
 
 Auth::routes([
-  'register' => false, // Registration Routes...
-  'verify'   => true,  // Email Verification Routes (verification.verify, dll.)
+    'register' => false,
+    'verify'   => true,
 ]);
 
 Route::get('/', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
 Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
 
+Route::group(['middleware' => ['auth', 'web', 'role.permission', 'ip.restriction']], function () {
 
-Route::get('employee-checking/report', [EmployeeCheckingController::class, 'report'])->name('employee-checking.report');
+    // ========================================================================
+    // USER / ROLE / COMPANY
+    // ========================================================================
+    Route::get('user/profileEdit/{slug}', [UserController::class, 'profileEdit'])->name('user.profileEdit');
+    Route::put('user/profileUpdate/{slug}', [UserController::class, 'profileUpdate'])->name('user.profileUpdate');
+    Route::post('user/updatefcm', [UserController::class, 'updatefcm'])->name('user.updatefcm');
+    Route::resource('user', UserController::class);
 
-Route::get('partnership-agreement/sharePdf/{id}',[PartnershipAgreementController::class,'sharePdf'])->name('partnership-agreement.sharePdf');
-Route::post('partnership-agreement/verifySharePassword/{id}',[PartnershipAgreementController::class,'verifySharePassword'])->name('partnership-agreement.verifySharePassword');
-Route::put('partnership-agreement/signatureShare/{id}',[PartnershipAgreementController::class,'signatureShare'])->name('partnership-agreement.signatureShare');
+    Route::resource('role', RoleController::class);
+    Route::post('role/updateName/{role}', [RoleController::class, 'updateName'])->name('role.update-name');
+    Route::post('role/updateMenuPermissions/{role}', [RoleController::class, 'updateMenuPermissions'])->name('role.update-menu-permissions');
+    Route::post('role/selectAll/{role}', [RoleController::class, 'selectAll'])->name('role.select-all');
+    Route::post('role/deselectAll/{role}', [RoleController::class, 'deselectAll'])->name('role.deselect-all');
+    Route::post('role/{role}/duplicate', [RoleController::class, 'duplicate'])->name('role.duplicate');
+    Route::post('role/clearAllCache', [RoleController::class, 'clearAllCache'])->name('role.clear-all-cache');
 
-Route::get('used-laptop/showQr/{slug}', [UsedLaptopController::class,'showQr'])->name('used-laptop.show-qr');
-Route::get('used-item/showQr/{slug}', [UsedItemController::class,'showQr'])->name('used-item.show-qr');
+    Route::resource('company', CompanyController::class)->except(['create', 'show']);
+    Route::post('company/{company}/custom-slug', [CompanyController::class, 'storeCustomSlug'])->name('company.custom-slug.store');
+    Route::delete('company/{company}/custom-slug/{customSlug}', [CompanyController::class, 'destroyCustomSlug'])->name('company.custom-slug.destroy');
 
+    Route::resource('setting-company', SettingCompanyController::class)->only('index', 'store');
 
-// ============================================================
-// PUBLIC SOFTWARE SHARING REGISTRATION
-// ============================================================
-Route::prefix('software-sharing')->name('public.software-sharing.')->group(function () {
-    // Root tanpa slug → cari company pertama lalu redirect
-    Route::get('/', [SoftwareSharingController::class, 'redirectToFirst'])->name('root');
-    // Catalog halaman utama (list semua software)
-    Route::get('{companySlug}', [SoftwareSharingController::class, 'index'])->name('index');
-    // Form registrasi akun baru
-    Route::get('{companySlug}/register', [SoftwareSharingController::class, 'showRegister'])->name('register');
-    Route::post('{companySlug}/register', [SoftwareSharingController::class, 'register'])->name('register.post');
-    // Form login
-    Route::get('{companySlug}/login', [SoftwareSharingController::class, 'showLogin'])->name('login');
-    Route::post('{companySlug}/login', [SoftwareSharingController::class, 'login'])->name('login.post');
-    // Resend verifikasi
-    Route::post('{companySlug}/resend-verification', [SoftwareSharingController::class, 'resendVerification'])->name('resend-verification');
+    // ========================================================================
+    // REGION / WILAYAH (for internet customer addresses)
+    // ========================================================================
+    Route::get('city/select2', [CityController::class, 'select2'])->name('city.select2');
+    Route::get('district/select2', [DistrictController::class, 'select2'])->name('district.select2');
+    Route::get('wilayah/select2', [WilayahController::class, 'select2'])->name('wilayah.select2');
+
+    Route::get('province/dataTableJson', [ProvinceController::class, 'dataTableJson'])->name('province.dataTableJson');
+    Route::get('city/dataTableJson', [CityController::class, 'dataTableJson'])->name('city.dataTableJson');
+    Route::get('district/dataTableJson', [DistrictController::class, 'dataTableJson'])->name('district.dataTableJson');
+    Route::get('subdistrict/dataTableJson', [SubdistrictController::class, 'dataTableJson'])->name('subdistrict.dataTableJson');
+    Route::get('postal-code/dataTableJson', [PostalCodeController::class, 'dataTableJson'])->name('postal-code.dataTableJson');
+
+    Route::resources([
+        'province'    => ProvinceController::class,
+        'city'        => CityController::class,
+        'district'    => DistrictController::class,
+        'subdistrict' => SubdistrictController::class,
+        'postal-code' => PostalCodeController::class,
+    ]);
+
+    // ========================================================================
+    // INTERNET INFRASTRUCTURE
+    // ========================================================================
+    Route::resource('provider', ProviderController::class);
+    Route::resource('sensor', SensorController::class);
+    Route::resource('zone', ZoneController::class);
+    Route::post('rack/{rack}/assign-product-store', [RackController::class, 'assignProductStore'])->name('rack.assign-product-store');
+    Route::post('rack/{rack}/unassign-product-store', [RackController::class, 'unassignProductStore'])->name('rack.unassign-product-store');
+    Route::resource('rack', RackController::class);
+    Route::resource('ip-right', IpRightController::class);
+
+    Route::get('data-center', Index::class)->name('data-center.index');
+    Route::get('data-center/create', Form::class)->name('data-center.create');
+    Route::get('data-center/edit/{id}', Form::class)->name('data-center.edit');
+
+    Route::get('pop', PopIndex::class)->name('pop.index');
+    Route::get('pop/create', PopForm::class)->name('pop.create');
+    Route::get('pop/edit/{id}', PopForm::class)->name('pop.edit');
+
+    Route::get('optical-distribution', OdsIndex::class)->name('optical-distribution.index');
+    Route::get('optical-distribution/create', OdsForm::class)->name('optical-distribution.create');
+    Route::get('optical-distribution/edit/{id}', OdsForm::class)->name('optical-distribution.edit');
+
+    Route::get('coverage-service', CoverageServiceIndex::class)->name('coverage-service.index');
+    Route::get('coverage-service/create', CoverageServiceForm::class)->name('coverage-service.create');
+    Route::get('coverage-service/edit/{id}', CoverageServiceForm::class)->name('coverage-service.edit');
+
+    // ========================================================================
+    // MIKROTIK / ROUTER
+    // ========================================================================
+    Route::resource('mikrotik-profile', MikrotikProfileController::class);
+    Route::resource('mikrotik-secret', MikrotikSecretController::class);
+
+    Route::get('router', RouterIndex::class)->name('router.index');
+    Route::get('router/create', RouterForm::class)->name('router.create');
+    Route::get('router/edit/{mikrotik}', RouterForm::class)->name('router.edit');
+    Route::get('router/show/{routerId}', RouterInventory::class)->name('router.show');
+    Route::get('router/mapping/{routerId}', PackageProfileMapping::class)->name('router.mapping');
+
+    // ========================================================================
+    // HOTSPOT
+    // ========================================================================
+    Route::get('hotspot-server', HotspotServerIndex::class)->name('hotspot-server.index');
+    Route::get('hotspot-server/create', HotspotServerForm::class)->name('hotspot-server.create');
+    Route::get('hotspot-server/edit/{id}', HotspotServerForm::class)->name('hotspot-server.edit');
+
+    Route::get('hotspot-voucher-batch', HotspotVoucherBatchIndex::class)->name('hotspot-voucher-batch.index');
+    Route::get('hotspot-voucher/print/{batchId}', [HotspotVoucherController::class, 'printBatch'])->name('hotspot-voucher.print');
+
+    // ========================================================================
+    // INTERNET PACKAGES & PROMOS
+    // ========================================================================
+    Route::get('internet-package', InternetPackageIndex::class)->name('internet-package.index');
+    Route::get('internet-package/create', InternetPackageForm::class)->name('internet-package.create');
+    Route::get('internet-package/edit/{id}', InternetPackageForm::class)->name('internet-package.edit');
+
+    Route::get('promo', PromoIndex::class)->name('promo.index');
+    Route::get('promo/create', PromoForm::class)->name('promo.create');
+    Route::get('promo/edit/{id}', PromoForm::class)->name('promo.edit');
+
+    // ========================================================================
+    // INTERNET CUSTOMERS
+    // ========================================================================
+    Route::get('internet-customer-group', InternetCustomerGroupIndex::class)->name('internet-customer-group.index');
+    Route::get('internet-customer-user-region', InternetCustomerUserRegionIndex::class)->name('internet-customer-user-region.index');
+
+    Route::get('internet-customer', InternetCustomerIndex::class)->name('internet-customer.index');
+    Route::put('internet-customer/update/{id}', InternetCustomerIndex::class)->name('internet-customer.update');
+    Route::get('internet-customer/edit/{id}', InternetCustomerForm::class)->name('internet-customer.edit');
+    Route::get('internet-customer/export/{format}', [InternetCustomerController::class, 'export'])->name('internet-customer.export');
+    Route::get('internet-customer/{customerId}', InternetCustomerShow::class)->name('internet-customer.show');
+
+    // Software Dashboard (admin overview)
+    Route::get('software-dashboard', [DashboardController::class, 'index'])->name('software-dashboard.index');
 });
 
-// Email Verification untuk Customer Software (tanpa auth)
-Route::get('/customer-software/email/verify/{id}/{hash}', [SoftwareSharingController::class, 'verifyEmail'])
-    ->middleware(['signed'])
-    ->name('customer.email.verify');
-
-// Forgot Password untuk Customer Software
-Route::get('/software-sharing/{companySlug}/forgot-password', [SoftwareSharingController::class, 'showForgotPassword'])->name('customer.password.request');
-Route::post('/software-sharing/{companySlug}/forgot-password', [SoftwareSharingController::class, 'sendResetLink'])->name('customer.password.email');
-Route::get('/software-sharing/{companySlug}/reset-password/{token}', [SoftwareSharingController::class, 'showResetPassword'])->name('customer.password.reset.form');
-Route::post('/software-sharing/{companySlug}/reset-password', [SoftwareSharingController::class, 'resetPassword'])->name('customer.password.reset');
-
-Route::group(['middleware' => ['auth','role.permission','ip.restriction']], function()
-{
-  Route::get('home/softwareSharing', [App\Http\Controllers\HomeController::class, 'softwareSharing'])->name('home.softwareSharing');
-  Route::get('home/meetingAgenda', [App\Http\Controllers\HomeController::class, 'meetingAgenda'])->name('home.meetingAgenda');
-  Route::get('home/listDayoff', [App\Http\Controllers\HomeController::class, 'listDayoff'])->name('home.listDayoff');
-  Route::get('home/dashboardReport', [App\Http\Controllers\HomeController::class, 'dashboardReport'])->name('home.dashboardReport');
-  Route::get('home/leaderboard', [App\Http\Controllers\HomeController::class, 'leaderboard'])->name('home.leaderboard');
-  Route::get('home/xp-leaderboard', [App\Http\Controllers\HomeController::class, 'xpLeaderboard'])->name('home.xpLeaderboard');
-  Route::get('home/overdueRanking', [App\Http\Controllers\HomeController::class, 'overdueRanking'])->name('home.overdueRanking');
-  Route::get('home/user-badges', [App\Http\Controllers\HomeController::class, 'userBadges'])->name('home.userBadges');
-  Route::get('home/active-challenges', [App\Http\Controllers\HomeController::class, 'activeChallenges'])->name('home.activeChallenges');
-  Route::get('home/active-events', [App\Http\Controllers\HomeController::class, 'activeEvents'])->name('home.activeEvents');
-
-  Route::resource('office-media', OfficeMediaController::class)->only(['index', 'store','destroy']);
-  // Xero Setting
-  Route::get('xero/connect', [XeroController::class,'connect']);
-  Route::get('xero/disconnect', [XeroController::class,'disconnect']);
-  
-  Route::get('project/export', [ProjectController::class,'export'])->name('project.export');
-  Route::get('project/getSpkDetails/{id}', [ProjectController::class, 'getSpkDetails'])->name('project.getSpkDetails');
-  Route::resource('project', ProjectController::class);
-  Route::resource('employee', EmployeeController::class);
-  
-  Route::get('user-blacklist/search', [UserBlacklistController::class, 'search'])->name('user-blacklist.search');
-  Route::post('user-blacklist/import-inactive', [UserBlacklistController::class, 'importInactive'])->name('user-blacklist.importInactive');
-  Route::resource('user-blacklist', UserBlacklistController::class)->only(['index', 'store', 'destroy']);
-
-  Route::get('user/profileEdit/{slug}', [UserController::class,'profileEdit'])->name('user.profileEdit');
-  Route::put('user/profileUpdate/{slug}', [UserController::class,'profileUpdate'])->name('user.profileUpdate');
-  Route::post('user/updatefcm',[UserController::class,'updatefcm'])->name('user.updatefcm');
-  Route::resource('user', UserController::class);
-
-  Route::delete('suplier/deletePurchase/purchase/{purchase}',[SuplierController::class,'deletePurchase'])->name('suplier.destroy.purchase');
-  Route::get('suplier/suggestionWorkOrder/{id}/',[SuplierController::class,'suggestionWorkOrder'])->name('suplier.suggestionWorkOrder');
-  Route::get('suplier/productPrice/counting',[SuplierController::class,'productPrice'])->name('suplier.productPrice');
-  Route::resource('suplier', SuplierController::class);
-
-  Route::resource('report', ReportController::class)->only('index');
-
-  Route::delete('manager/destroyJob/job/{job}',[ManagerController::class,'destroyJob'])->name('manager.destroy.job');
-  Route::get('manager/counting',[ManagerController::class,'counting'])->name('manager.counting');
-  Route::resource('manager', ManagerController::class);
-
-  Route::resource('customer', CustomerController::class)->except(['create']);
-  
-  Route::resource('product', ProductController::class)->except(['create','show']);
-  Route::resource('product-category', ProductCategoryController::class);
-
-  Route::delete('quote/destroyProduct/product/{QuoteProduct}',[QuoteController::class,'destroyProduct'])->name('quote.destroy.product');
-  Route::get('quote/export/{format}', [QuoteController::class, 'export'])->name('quote.export');
-  Route::get('quote/checkExportStatus', [QuoteController::class, 'checkExportStatus'])->name('quote.checkExportStatus');
-  Route::get('quote/clearsession', [QuoteController::class, 'clearsession'])->name('quote.clearsession');
-  Route::get('quote/productPrice/counting',[QuoteController::class,'productPrice'])->name('quote.productPrice');
-  Route::get('quote/select2', [QuoteController::class, 'select2'])->name('quote.select2');
-  Route::get('quote/dataTableJson', [QuoteController::class, 'dataTableJson'])->name('quote.datatable');
-  Route::get('quote/downloadPdf/pdf/{slug}',[QuoteController::class,'downloadPdf'])->name('quote.download.pdf');
-  Route::get('quote/counting',[QuoteController::class,'counting'])->name('quote.counting');
-  Route::get('quote/productCounting/counting',[QuoteController::class,'productCounting'])->name('quote.productCounting');
-  Route::resource('quote', QuoteController::class)->except(['show']);
-
-  Route::delete('work-order/destroyProduct/product/{WorkOrderProduct}',[WorkOrderController::class,'destroyProduct'])->name('work-order.destroy.product');
-  Route::get('work-order/export/{format}', [WorkOrderController::class, 'export'])->name('work-order.export');
-  Route::get('work-order/checkExportStatus', [WorkOrderController::class, 'checkExportStatus'])->name('work-order.checkExportStatus');
-  Route::get('work-order/clearsession', [WorkOrderController::class, 'clearsession'])->name('work-order.clearsession');
-  Route::get('work-order/dataTableJsonQuoteWithoutWorkOrder', [WorkOrderController::class, 'dataTableJsonQuoteWithoutWorkOrder'])->name('work-order.dataTableJsonQuoteWithoutWorkOrder');
-  Route::get('work-order/createsuggest/{slug}', [WorkOrderController::class, 'createsuggest'])->name('work-order.createsuggest');
-  Route::get('work-order/productPrice/counting', [WorkOrderController::class, 'productPrice'])->name('work-order.productPrice');
-  Route::get('work-order/select2', [WorkOrderController::class, 'select2'])->name('work-order.select2');
-  Route::get('work-order/downloadPdf/pdf/{slug}/',[WorkOrderController::class,'downloadPdf'])->name('work-order.download.pdf');
-  Route::get('work-order/suggestionQuote/{id}/',[WorkOrderController::class,'suggestionQuote'])->name('work-order.suggestionQuote');
-  Route::get('work-order/dataTableJson', [WorkOrderController::class, 'dataTableJson'])->name('work-order.datatable');
-  Route::get('work-order/productCounting/counting',[WorkOrderController::class,'productCounting'])->name('work-order.productCounting');
-  Route::resource('work-order', WorkOrderController::class)->except(['show']);
-  
-  Route::get('agreement-letter/downloadPdf/pdf/{slug}/',[AgreementLetterController::class,'downloadPdf'])->name('agreement-letter.download.pdf');
-  Route::get('agreement-letter/dataTableJson', [AgreementLetterController::class, 'dataTableJson'])->name('agreement-letter.datatable');
-  Route::resource('agreement-letter', AgreementLetterController::class)->except(['show']);
-  
-  Route::post('bast/sendBastEmail/{slug}', [BastController::class, 'sendBastEmail'])->name('bast.sendEmail');
-  Route::get('bast/export/{format}', [BastController::class, 'export'])->name('bast.export');
-  Route::get('bast/checkExportStatus', [BastController::class, 'checkExportStatus'])->name('bast.checkExportStatus');
-  Route::get('bast/clearsession', [BastController::class, 'clearsession'])->name('bast.clearsession');
-  Route::get('bast/createsuggest/{slug}', [BastController::class, 'createsuggest'])->name('bast.createsuggest');
-  Route::get('bast/dataTableJsonWorkOrderWithoutBast', [BastController::class, 'dataTableJsonWorkOrderWithoutBast'])->name('bast.dataTableJsonWorkOrderWithoutBast');
-  Route::get('bast/downloadPdf/pdf/{slug}',[BastController::class,'downloadPdf'])->name('bast.download.pdf');
-  Route::get('bast/dataTableJson', [BastController::class, 'dataTableJson'])->name('bast.datatable');
-  Route::post('bast/requestReport', [BastController::class, 'requestReport'])->name('bast.requestReport');
-  Route::resource('bast', BastController::class);
-
-  Route::get('report-project/downloadall/{slug}', [ReportProjectController::class, 'downloadall'])->name('report-project.downloadall');
-  Route::get('report-project/createsuggest/{slug}', [ReportProjectController::class, 'createsuggest'])->name('report-project.createsuggest');
-  Route::get('report-project/dataTableJsonWorkOrderWithoutReportProject', [ReportProjectController::class, 'dataTableJsonWorkOrderWithoutReportProject'])->name('report-project.dataTableJsonWorkOrderWithoutReportProject');
-  Route::get('report-project/datatable', [ReportProjectController::class, 'dataTableJson'])->name('report-project.datatable');
-  Route::put('report-project/approvement/{slug}', [ReportProjectController::class, 'approvement'])->name('report-project.approvement');
-  Route::delete('report-project/destroyDetail/{ReportProjectDetail}',[ReportProjectController::class,'destroyDetail'])->name('report-project.destroy.detail');
-  Route::resource('report-project', ReportProjectController::class);
-
-  Route::resource('setting-company', SettingCompanyController::class)->only('index','store');
-  
-  Route::resource('role', RoleController::class);
-
-
-  Route::get('pricelist/dataTableJson', [PricelistController::class, 'dataTableJson'])->name('pricelist.datatable');
-  Route::get('pricelist', [PricelistController::class, 'index'])->name('pricelist.index');
-  Route::get('pricelist/show/{product}', [PricelistController::class, 'show'])->name('pricelist.show');
-
-  Route::resource('company', CompanyController::class)->except(['create','show']);
-  Route::post('company/{company}/custom-slug', [CompanyController::class, 'storeCustomSlug'])->name('company.custom-slug.store');
-  Route::delete('company/{company}/custom-slug/{customSlug}', [CompanyController::class, 'destroyCustomSlug'])->name('company.custom-slug.destroy');
-
-  Route::get('equipment/history/{slug}', [EquipmentController::class, 'history'])->name('equipment.history');
-  Route::resource('equipment', EquipmentController::class);
-
-  Route::resource('equipment-reduction', EquipmentReductionController::class);
-
-  Route::resource('task', TaskController::class)->except(['create','show']);
-
-  Route::put('task-assign/approvement/{slug}', [TaskAssignController::class, 'approvement'])->name('task-assign.approvement');
-  Route::put('task-assign/report/{slug}', [TaskAssignController::class, 'report'])->name('task-assign.report');
-  Route::resource('task-assign', TaskAssignController::class);
-
-  Route::get('report-point',[ReportPointController::class,'index'])->name('report-point.index');
-
-  Route::resource('attendance', AttendanceController::class);
-
-  Route::resource('asset', AssetController::class)->except(['create']);
-  Route::resource('asset-assign', AssetAssignController::class)->only(['store','update','destroy']);
-
-  Route::resource('security-check', SecurityCheckController::class);
-
-  Route::resource('cctv-check', CctvCheckController::class);
-
-  Route::resource('ticket', TicketController::class)->except(['create','store']);
-  
-  Route::resource('training', TrainingController::class);
-  Route::put('training/addpoint/{slug}', [TrainingController::class, 'addpoint'])->name('training.addPoint');
-  
-  Route::resource('ip-right', IpRightController::class);
-  Route::put('ip-right/addpoint/{slug}', [IpRightController::class, 'addpoint'])->name('ip-right.addPoint');
-  
-  Route::resource('sales_achievement', SalesAchievementController::class);
-  Route::put('sales_achievement/addpoint/{slug}', [SalesAchievementController::class, 'addpoint'])->name('sales_achievement.addPoint');
-  
-  Route::get('report-productivity',[ReportPointProductivityController::class,'index'])->name('report-productivity.index');
-  Route::get('report-productivity/details', [ReportPointProductivityController::class, 'details'])->name('report-productivity.details');
-  Route::get('report-productivity/export', [ReportPointProductivityController::class, 'export'])->name('report-productivity.export');
-
-  Route::post('dailytask/assignBacklog/{slug}', [DailyTaskController::class, 'assignBacklog'])->name('dailytask.assignBacklog');
-  Route::get('/dailytask/export', [DailyTaskController::class, 'export'])->name('dailytask.export');
-  Route::get('dailytask/template', [DailyTaskController::class, 'template'])->name('dailytask.template');
-  Route::get('dailytask/downloadtemplate', [DailyTaskController::class, 'downloadtemplate'])->name('dailytask.downloadtemplate');
-  Route::post('dailytask/checkDivisionQuota', [DailyTaskController::class, 'checkDivisionQuota'])->name('dailytask.checkDivisionQuota');
-  Route::post('dailytask/import', [DailyTaskController::class, 'import'])->name('dailytask.import');
-  Route::put('dailytask/storesubtask/{slug}', [DailyTaskController::class,'storesubtask'])->name('dailytask.storesubtask');
-  Route::put('dailytask/comment/{slug}', [DailyTaskController::class,'comment'])->name('dailytask.comment');
-  Route::put('dailytask/extend/{slug}', [DailyTaskController::class,'extend'])->name('dailytask.extend');
-  Route::put('dailytask/updatemedia/{slug}', [DailyTaskController::class,'updatemedia'])->name('dailytask.updatemedia');
-  Route::put('dailytask/report/{slug}', [DailyTaskController::class,'report'])->name('dailytask.report');
-  Route::delete('dailytask/deletemedia/{id}', [DailyTaskController::class, 'deletemedia'])->name('dailytask.deletemedia');
-  Route::put('dailytask/approvement/{slug}', [DailyTaskController::class,'approvement'])->name('dailytask.approvement');
-  Route::put('dailytask/statuschange/{slug}', [DailyTaskController::class,'statuschange'])->name('dailytask.statuschange');
-  Route::resource('dailytask', DailyTaskController::class);
-  
-  Route::get('daily_task_project/kanban/{slug}', [DailyTaskProjectController::class,'kanban'])->name('daily_task_project.kanban');
-  Route::post('dailytask/updatestatus', [DailyTaskController::class, 'updatestatus'])->name('dailytask.updatestatus');
-  Route::put('dailytask/assign/{slug}', [DailyTaskController::class, 'assign'])->name('dailytask.assign');
-  Route::put('daily_task_project/customfieldstore/{slug}', [DailyTaskProjectController::class, 'customfieldstore'])->name('customfieldstore');
-  Route::put('daily_task_project/customfieldupdate/{id}', [DailyTaskProjectController::class, 'customfieldupdate'])->name('customfieldupdate');
-  Route::delete('daily_task_project/customfielddestroy/{id}', [DailyTaskProjectController::class, 'customfielddestroy'])->name('customfielddestroy');
-  Route::get('daily_task_project/getcustomfield/{project}', [DailyTaskProjectController::class,'getcustomfield'])->name('getcustomfield');
-  Route::get('daily_task_project/showproject/{slug}', [DailyTaskProjectController::class,'showproject'])->name('daily_task_project.showproject');
-  Route::get('daily_task_project/createdailytask/{slug}', [DailyTaskProjectController::class,'createdailytask'])->name('daily_task_project.createdailytask');
-  Route::resource('daily_task_project', DailyTaskProjectController::class);
-  
-  Route::get('objective/showtask/{objective}', [ObjectiveController::class,'showtask'])->name('objective.showtask');
-  Route::get('objective/getresult/{objective}', [ObjectiveController::class,'getresult'])->name('getresult');
-  Route::resource('objective', ObjectiveController::class);
-  Route::post('objective/{objective}/key-result', [ObjectiveController::class, 'storeKeyResult'])->name('objective.key-result.store');
-  Route::put('objective/key-result/{keyResult}', [ObjectiveController::class, 'updateKeyResult'])->name('objective.key-result.update');
-  Route::delete('objective/key-result/{keyResult}', [ObjectiveController::class, 'destroyKeyResult'])->name('objective.key-result.destroy');
-
-  Route::get('division/ajaxDivisionTasks/{division}', [DivisionController::class, 'ajaxDivisionTasks'])->name('divisions.ajax.tasks');
-  Route::get('division/ajaxObjectiveChart/{division}', [DivisionController::class, 'ajaxObjectiveChart'])->name('divisions.ajax.objective-chart');
-  Route::get('division/fetchusertask/{userId}/{filter}', [DivisionController::class, 'fetchusertask'])->name('division.fetchusertask');
-  Route::resource('division', DivisionController::class);
-  
-  Route::resource('vision', VisionController::class);
-  Route::resource('mission', MissionController::class)->except(['index', 'show', 'create', 'edit']);
-
-  Route::get('project-dashboard/getVisions', [ProjectDashboardController::class, 'getVisions'])->name('visions');
-  Route::get('project-dashboard/visions/{vision}/missions', [ProjectDashboardController::class, 'getMissions'])->name('vision-missions');
-  Route::get('project-dashboard/missions/{mission}/objectives', [ProjectDashboardController::class, 'getObjectives'])->name('mission-objectives');
-  Route::get('project-dashboard/objectives/{objective}/key-results', [ProjectDashboardController::class, 'getKeyResults'])->name('objective-key-results');
-  Route::get('project-dashboard/key-results/{keyResult}/daily-tasks', [ProjectDashboardController::class, 'getDailyTasks'])->name('key-result-tasks');
-  Route::get('project-dashboard/getTotalCounts', [ProjectDashboardController::class, 'getTotalCounts'])->name('total-counts');
-  Route::get('project-dashboard/getOverdueTasks', [ProjectDashboardController::class, 'getOverdueTasks'])->name('overdue-tasks');
-  Route::get('project-dashboard/getUpcomingTasks', [ProjectDashboardController::class, 'getUpcomingTasks'])->name('upcoming-tasks');
-  Route::get('project-dashboard/fetchusertask/{userId}/{filter}', [ProjectDashboardController::class, 'fetchusertask'])->name('fetchusertask');
-  Route::get('project-dashboard', [ProjectDashboardController::class,'index'])->name('projectdashboard.index');
-
-  Route::resource('daily-task-category', DailyTaskCategoryController::class);
-
-  Route::resource('shifting-ob', ShiftingObController::class)->only(['index','store','update','destroy']);
-  Route::get('schedule-ob/calendar', [App\Http\Controllers\ScheduleObController::class, 'calendar'])->name('schedule-ob.calendar');
-  Route::resource('schedule-ob', ScheduleObController::class)->except(['edit','create','show']);
-
-  Route::post('division-budget/approve/{divisionBudget}', [DivisionBudgetController::class, 'approve'])->name('division-budget.approve');
-  Route::resource('division-budget', DivisionBudgetController::class);
-
-  Route::get('inbox/unreadcount', [InboxController::class, 'unreadcount'])->name('inbox.unreadcount');
-  Route::get('/inbox/{id}', [InboxController::class, 'show'])->name('inbox.show');
-  Route::get('/inbox', [InboxController::class, 'index'])->name('inbox.index');
-  
-  Route::patch('letter-submission/approvement', [LetterSubmissionController::class, 'approvement'])->name('letter-submission.approvement');
-  Route::resource('letter-submission', LetterSubmissionController::class);
-  
-  Route::resource('position', PositionController::class);
-  Route::get('device', [DeviceController::class,'index'])->name('device.index');
-  Route::get('device/dataJson', [DeviceController::class, 'dataJson'])->name('device.dataJson');
-
-  Route::resource('national-holiday', NationalHolidayController::class)->only(['index','store','update','destroy']);
-  
-  Route::get('employee-checking/export/{format}', [EmployeeCheckingController::class, 'export'])->name('employee-checking.export');
-  Route::get('employee-checking/checkExportStatus', [EmployeeCheckingController::class, 'checkExportStatus'])->name('employee-checking.checkExportStatus');
-  Route::get('employee-checking/clearsession', [EmployeeCheckingController::class, 'clearsession'])->name('employee-checking.clearsession');
-  Route::get('employee-checking/checkLastScheduledCheckin',[EmployeeCheckingController::class,'checkLastScheduledCheckin'])->name('employee-checking.checkLastScheduledCheckin');
-  Route::get('employee-checking/current-active',[EmployeeCheckingController::class,'currentActive'])->name('employee-checking.currentActive');
-  Route::put('employee-checking/updatestatus/{employee_checking}',[EmployeeCheckingController::class,'updatestatus'])->name('employee-checking.updatestatus');
-  Route::resource('employee-checking', EmployeeCheckingController::class)->only(['index','update']);
-
-  Route::resource('pass-checking', PassCheckingController::class);
-
-  Route::get('kye/KyeExport', [UserController::class,'KyeExport'])->name('kye.KyeExport');
-  Route::get('kye/export', [KyeController::class, 'export'])->name('kye.export');
-  Route::post('kye/verifyemail', [KyeController::class, 'verifyemail'])->name('kye.verify.email');
-  Route::patch('kye/approvement/{kye}', [KyeController::class, 'approvement'])->name('kye.approvement');
-  Route::resource('kye', KyeController::class);
-  
-
-  Route::get('warehouse/getLocation', [WarehouseController::class, 'getLocation'])->name('warehouses.get-location');
-  Route::resource('warehouse', WarehouseController::class);
-  Route::resource('sensor', SensorController::class);
-  Route::resource('zone', ZoneController::class);
-  Route::post('rack/{rack}/assign-product-store', [RackController::class, 'assignProductStore'])->name('rack.assign-product-store');
-  Route::post('rack/{rack}/unassign-product-store', [RackController::class, 'unassignProductStore'])->name('rack.unassign-product-store');
-  Route::resource('rack', RackController::class);
-  
-  Route::post('shipping-rate/validateCsv', [ShippingRateController::class, 'validateCsv'])->name('shipping-rate.validateCsv');
-  Route::post('shipping-rate/import', [ShippingRateController::class, 'import'])->name('shipping-rate.import');
-  Route::get('shipping-rate/progress/{batchId}', [ShippingRateController::class, 'progress'])->name('shipping-rate.progress');
-  Route::post('shipping-rate/checkDuplicate', [ShippingRateController::class, 'checkDuplicate'])->name('shipping-rate.checkDuplicate');
-  Route::get('shipping-rate/dataTableJson', [ShippingRateController::class, 'dataTableJson'])->name('shipping-rate.dataTableJson');
-  Route::resource('shipping-rate', ShippingRateController::class);
-    
-  Route::resource('provider', ProviderController::class);
-  
-  Route::get('city/select2', [CityController::class, 'select2'])->name('city.select2');
-  Route::get('district/select2', [DistrictController::class, 'select2'])->name('district.select2');
-  Route::get('wilayah/select2', [WilayahController::class, 'select2'])->name('wilayah.select2');
-  
-  Route::get('province/dataTableJson', [ProvinceController::class, 'dataTableJson'])->name('province.dataTableJson');
-  Route::get('city/dataTableJson', [CityController::class, 'dataTableJson'])->name('city.dataTableJson');
-  Route::get('district/dataTableJson', [DistrictController::class, 'dataTableJson'])->name('district.dataTableJson');
-  Route::get('subdistrict/dataTableJson', [SubdistrictController::class, 'dataTableJson'])->name('subdistrict.dataTableJson');
-  Route::get('postal-code/dataTableJson', [PostalCodeController::class, 'dataTableJson'])->name('postal-code.dataTableJson');
-  
-  Route::resources([
-      'province' => ProvinceController::class,
-      'city' => CityController::class,
-      'district' => DistrictController::class,
-      'subdistrict' => SubdistrictController::class,
-      'postal-code' => PostalCodeController::class,
-  ]);
-  
-  Route::get('shipping-calculation/detail', [ShippingCalculationController::class, 'detail'])->name('shipping-calculation.detail');
-  Route::get('shipping-calculation', [ShippingCalculationController::class, 'index'])->name('shipping-calculation.index');
-  Route::get('shipping-calculation/searchRates', [ShippingCalculationController::class, 'searchRates'])->name('shipping-calculation.searchRates');
-  Route::get('shipping-calculation/select2Origin', [ShippingCalculationController::class, 'select2Origin'])->name('shipping-calculation.select2Origin');
-  Route::get('shipping-calculation/select2Destination', [ShippingCalculationController::class, 'select2Destination'])->name('shipping-calculation.select2Destination');
-  
-  Route::get('ask-bos',[AskBosController::class,'index'])->name('ask-bos.index');
-  Route::get('ask-bos/checkResponse', [AskBosController::class, 'checkResponse'])->name('check.response');
-  Route::post('ask-bos/ask', [AskBosController::class, 'ask'])->name('ask.bos');
-  Route::post('ask-bos/makeDesition', [AskBosController::class, 'makeDesition'])->name('ask.makeDesition');
-  
-  Route::put('decision/approvement/{id}', [DecisionController::class, 'approvement'])->name('decision.approvement');
-  Route::resource('decision', DecisionController::class)->except(['create']);
-  
-  Route::get('partnership-agreement/share/{id}',[PartnershipAgreementController::class,'share'])->name('partnership-agreement.share');
-  Route::get('partnership-agreement/downloadPdf/{id}',[PartnershipAgreementController::class,'downloadPdf'])->name('partnership-agreement.downloadPdf');
-  Route::put('partnership-agreement/approvement/{id}',[PartnershipAgreementController::class,'approvement'])->name('partnership-agreement.approvement');
-  Route::put('partnership-agreement/signature/{id}',[PartnershipAgreementController::class,'signature'])->name('partnership-agreement.signature');
-  Route::post('partnership-agreement/submit/{id}',[PartnershipAgreementController::class,'submit'])->name('partnership-agreement.submit');
-  Route::resource('partnership-agreement', PartnershipAgreementController::class);
-
-  Route::resource('supplier-category', SupplierCategoryController::class);
-  
-  Route::get('product-supplier/importProgress/{batchId}', [ProductSupplierController::class, 'importProgress']);
-  Route::post('product-supplier/import', [ProductSupplierController::class, 'import'])->name('product-supplier.import');
-  Route::resource('product-supplier', ProductSupplierController::class);
-
-  
-  Route::get('dayoff/export/{format}', [DayoffController::class, 'export'])->name('dayoff.export');
-  Route::get('dayoff/checkExportStatus', [DayoffController::class, 'checkExportStatus'])->name('dayoff.checkExportStatus');
-  Route::get('dayoff/clearExportSession', [DayoffController::class, 'clearExportSession'])->name('dayoff.clearExportSession');
-  Route::get('dayoff/infoApprovementHr', [DayoffController::class, 'infoApprovementHr'])->name('dayoff.infoApprovementHr');
-  Route::get('dayoff/infoApprovementFinance', [DayoffController::class, 'infoApprovementFinance'])->name('dayoff.infoApprovementFinance');
-  Route::get('dayoff/checkInfo', [DayoffController::class, 'checkInfo'])->name('dayoff.checkInfo');
-  Route::post('dayoff/financeApprovement', [DayoffController::class, 'financeApprovement'])->name('dayoff.financeApprovement');
-  Route::post('dayoff/hrApprovement', [DayoffController::class, 'hrApprovement'])->name('dayoff.hrApprovement');
-  Route::resource('dayoff', DayoffController::class);
-
-  Route::get('dashboard-weekly-report', [ReportChartController::class, 'index'])->name('dashboard-weekly-report.index');
-  Route::get('dashboard-weekly-report/data', [ReportChartController::class, 'data'])->name('dasboard.weekly-report.fetch');
-  
-  Route::get('weekly-report/reminderDashboard', [WeeklyReportController::class, 'reminderDashboard'])->name('weekly-report.reminderDashboard');
-  Route::resource('weekly-report', WeeklyReportController::class);
-
-  Route::resource('report-link', \App\Http\Controllers\ReportLinkController::class);
-  
-  Route::get('vehicle/infoPic', [VehicleController::class, 'infoPic'])->name('reminder.vehicle.pic');
-  Route::get('vehicle/infoManager', [VehicleController::class, 'infoManager'])->name('reminder.vehicle.manager');
-  Route::post('vehicle/{vehicle}/photos', [VehicleController::class, 'storePhoto'])->name('vehicle.photo.store');
-  Route::delete('vehicle/{vehicle}/photos/{photo}', [VehicleController::class, 'destroyPhoto'])->name('vehicle.photo.destroy');
-  Route::resource('vehicle', VehicleController::class);
-  
-  Route::get('subscribe-letter/infoPic', [SubscribeLetterController::class, 'infoPic'])->name('reminder.letter.pic');
-  Route::get('subscribe-letter/infoManager', [SubscribeLetterController::class, 'infoManager'])->name('reminder.letter.manager');
-  Route::resource('subscribe-letter', SubscribeLetterController::class);
-  
-  Route::resource('flowchart', FlowChartController::class);
-  
-  Route::resource('chat-message', ChatMessageController::class)->only(['store','show']);
-  
-  Route::get('item-request/workflow/{id}', [ItemRequestController::class, 'workflow'])->name('item-request.workflow');
-  Route::get('item-request/dataTableJson', [ItemRequestController::class, 'dataTableJson'])->name('item-request.datatable');
-  Route::post('item-request/fetchProductSupplier', [ItemRequestController::class, 'fetchProductSupplier'])->name('item-request.fetch-suppliers');
-  Route::post('item-request/closed/{id}', [ItemRequestController::class, 'closed'])->name('item-request.closed');
-  Route::put('item-request/delivery/{id}', [ItemRequestController::class, 'delivery'])->name('item-request.delivery');
-  Route::resource('item-request', ItemRequestController::class);
-  
-  Route::post('item-purchase/complete/{id}', [ItemPurchaseController::class, 'complete'])->name('item-purchase.complete');
-  Route::put('item-purchase/payment/{id}', [ItemPurchaseController::class, 'payment'])->name('item-purchase.payment');
-  Route::resource('item-purchase', ItemPurchaseController::class)->only(['store','update']);  
-
-  Route::post('meeting/join', [MeetingController::class, 'join'])->name('meeting.join');
-  Route::get('meeting/export', [MeetingController::class, 'export'])->name('meeting.export');
-  Route::resource('meeting', MeetingController::class);
-
-  Route::put('mom/storeAgenda/{id}', [MomController::class,'storeAgenda'])->name('mom.storeAgenda');
-  Route::put('mom/updateAgenda/{id}', [MomController::class,'updateAgenda'])->name('mom.updateAgenda');
-  Route::delete('mom/deleteAgenda/{momAgenda}', [MomController::class,'deleteAgenda'])->name('mom.deleteAgenda');
-
-  Route::delete('mom/deleteTask/{momTask}', [MomController::class,'deleteTask'])->name('mom.deleteTask');
-  Route::post('mom/approveExternalTask/task/{token}', [MomController::class, 'approveExternalTask'])->name('external.task.approve');
-  Route::put('mom/storeTask/{id}', [MomController::class,'storeTask'])->name('mom.storeTask');
-  Route::put('mom/updateTask/{id}', [MomController::class,'updateTask'])->name('mom.updateTask');
-  
-  Route::resource('mom', MomController::class);
-
-  Route::delete('used-laptop/mediaDestroy/{id}', [UsedLaptopController::class,'mediaDestroy'])->name('used-laptop.media.destroy');
-  Route::patch('used-laptop/maskAsSold/{slug}', [UsedLaptopController::class,'maskAsSold'])->name('used-laptop.mark-as-sold');
-  Route::post('used-laptop/checkSerialNumber', [UsedLaptopController::class, 'checkSerialNumber'])->name('used-laptop.check-serial');
-  Route::resource('used-laptop', UsedLaptopController::class);
-
-  Route::resource('master-check-item', MasterCheckItemController::class)->only(['index', 'store', 'update', 'destroy']);
-  
-  Route::delete('used-item/mediaDestroy/{id}', [UsedItemController::class,'mediaDestroy'])->name('used-item.media.destroy');
-  Route::patch('used-item/maskAsSold/{slug}', [UsedItemController::class,'maskAsSold'])->name('used-item.mark-as-sold');
-  Route::resource('used-item', UsedItemController::class);
-  
-  Route::get('data-center', Index::class)->name('data-center.index');
-  Route::get('data-center/create', Form::class)->name('data-center.create');
-  Route::get('data-center/edit/{id}', Form::class)->name('data-center.edit');
-  
-  Route::get('pop', PopIndex::class)->name('pop.index');
-  Route::get('pop/create', PopForm::class)->name('pop.create');
-  Route::get('pop/edit/{id}', PopForm::class)->name('pop.edit');
-  
-  Route::get('optical-distribution', OdsIndex::class)->name('optical-distribution.index');
-  Route::get('optical-distribution/create', OdsForm::class)->name('optical-distribution.create');
-  Route::get('optical-distribution/edit/{id}', OdsForm::class)->name('optical-distribution.edit');
-  
-  Route::get('coverage-service', CoverageServiceIndex::class)->name('coverage-service.index');
-  Route::get('coverage-service/create', CoverageServiceForm::class)->name('coverage-service.create');
-  Route::get('coverage-service/edit/{id}', CoverageServiceForm::class)->name('coverage-service.edit');
-  
-  Route::get('internet-package', InternetPackageIndex::class)->name('internet-package.index');
-  Route::get('internet-package/create', InternetPackageForm::class)->name('internet-package.create');
-  Route::get('internet-package/edit/{id}', InternetPackageForm::class)->name('internet-package.edit');
-
-  Route::get('internet-customer-group', InternetCustomerGroupIndex::class)->name('internet-customer-group.index');
-  Route::get('internet-customer-user-region', InternetCustomerUserRegionIndex::class)->name('internet-customer-user-region.index');
-
-  Route::get('internet-customer', InternetCustomerIndex::class)->name('internet-customer.index');
-  Route::put('internet-customer/update/{id}', InternetCustomerIndex::class)->name('internet-customer.update');
-  Route::get('internet-customer/edit/{id}', InternetCustomerForm::class)->name('internet-customer.edit');
-  Route::get('internet-customer/export/{format}', [InternetCustomerController::class, 'export'])->name('internet-customer.export');
-  Route::get('internet-customer/{customerId}', InternetCustomerShow::class)->name('internet-customer.show');
-  
-  Route::get('promo', PromoIndex::class)->name('promo.index');
-  Route::get('promo/create', PromoForm::class)->name('promo.create');
-  Route::get('promo/edit/{id}', PromoForm::class)->name('promo.edit');
-  
-  Route::get('router', RouterIndex::class)->name('router.index');
-  Route::get('router/create', RouterForm::class)->name('router.create');
-  Route::get('router/edit/{mikrotik}', RouterForm::class)->name('router.edit');
-  Route::get('router/show/{routerId}', RouterInventory::class)->name('router.show');
-  Route::get('router/mapping/{routerId}', PackageProfileMapping::class)->name('router.mapping');
-
-  Route::get('webhook-setting', WebhookSettingTable::class)->name('webhook-setting.index');
-  
-  // Barcode 
-  Route::get('barcode', [BarcodeAttendanceController::class, 'index'])->name('barcode.index');
-  Route::post('barcode/generate', [BarcodeAttendanceController::class, 'generate'])->name('barcode.generate');
-  
-  // Scan Barcode
-  Route::get('office-attendance/export', [OfficeAttendanceController::class, 'export'])->name('office_attendance.export');
-  Route::get('office-attendance', [OfficeAttendanceController::class, 'index'])->name('office-attendance.index');
-  Route::get('office-attendance/scan/{code}', [OfficeAttendanceController::class, 'scan'])->name('office-attendance.scan');
-  
-  // Lengkapi data absen (foto + lokasi)
-  Route::put('office-attendance/complete/{code}', [OfficeAttendanceController::class, 'complete'])->name('office-attendance.complete');
-  
-  Route::get('supplier-type', ProductSupplierTypeIndex::class)->name('supplier-type.index');
-
-  Route::get('brand-product-store', BrandProductStoreIndex::class)->name('brand-product-store.index');
-  
-  Route::get('category-product-store', CategoryProductStoreIndex::class)->name('category-product-store.index');
-
-  Route::get('product-store/print', ProductStorePrint::class)->name('product-store.print');
-  Route::get('product-store/inventory', InventoryIndex::class)->name('product-store.inventory');
-  Route::get('product-store/create', ProductStoreForm::class)->name('product-store.create');
-  Route::get('product-store/edit/{id}', ProductStoreForm::class)->name('product-store.edit');
-  Route::get('product-store/{id}', ProductStoreShow::class)->name('product-store.show');
-  Route::get('product-store', ProductStoreIndex::class)->name('product-store.index');
-  Route::get('product-store/print', ProductStorePrint::class)->name('product-store.print');
-  
-  Route::get('punishment-user', PunishmentUserTable::class)->name('punishment-user.index');
-  
-  Route::get('sales', \App\Http\Livewire\Sale\SaleIndex::class)->name('sales.index');
-  Route::get('sales/export', [SaleController::class, 'export'])->name('sales.export');
-  Route::get('sales/print-receipt/{sale}', [SaleController::class, 'printReceiptManagement'])->name('sales.printReceipt');
-  Route::get('sales/{id}', \App\Http\Livewire\Sale\SaleShow::class)->name('sales.show');
-  
-  Route::get('store-selling', [SaleController::class, 'index'])->name('store-selling.index');
-  Route::post('store-selling/checkStock', [SaleController::class, 'checkStock'])->name('store-selling.checkStock');
-  Route::post('store-selling/sendReceiptByEmail', [SaleController::class, 'sendReceiptByEmail'])->name('store-selling.sendReceiptByEmail');
-  Route::post('store-selling/searchProduct', [SaleController::class, 'searchProduct'])->name('store-selling.searchProduct');
-  Route::post('store-selling/processPayment', [SaleController::class, 'processPayment'])->name('store-selling.processPayment');
-  Route::post('store-selling/saveDraft', [SaleController::class, 'saveDraft'])->name('store-selling.saveDraft');
-  Route::get('store-selling/loadDraft/{draft}', [SaleController::class, 'loadDraft'])->name('store-selling.loadDraft');
-  Route::delete('store-selling/deleteDraft/{draft}', [SaleController::class, 'deleteDraft'])->name('store-selling.deleteDraft');
-  Route::get('store-selling/printReceipt/{sale}', [SaleController::class, 'printReceipt'])->name('store-selling.printReceipt');
-  Route::get('store-selling/drafts', [SaleController::class, 'getDrafts'])->name('store-selling.drafts');
-  
-  Route::get('wfo-rule', App\Http\Livewire\WfoRuleIndex::class)->name('wfo-rule.index');
-  
-  Route::resource('partner-parameter-type', PartnerParameterTypeController::class);
-  Route::patch('partner-parameter-type/toggleActive/{parameterType}', [PartnerParameterTypeController::class, 'toggleActive'])->name('partner-parameter-type.toggle-active');
-  
-  Route::resource('partner-type', PartnerTypeController::class)->except(['create', 'show', 'edit']);
-  Route::resource('partner', PartnerController::class);
-  
-  Route::get('partner-dashboard/{partner}', [PartnerDashboardController::class, 'dashboard'])->name('partner.dashboard');
-  Route::get('partner-dashboard/{partner}/api', [PartnerDashboardController::class, 'api'])->name('partner.dashboard.api');
-  
-  // Partner Targets
-  Route::prefix('partner-target/{partner}/targets')->name('partner.targets.')->group(function () {
-      Route::get('create', [PartnerTargetController::class, 'create'])->name('create');
-      Route::post('/', [PartnerTargetController::class, 'store'])->name('store');
-      Route::get('{target}/edit', [PartnerTargetController::class, 'edit'])->name('edit');
-      Route::put('{target}', [PartnerTargetController::class, 'update'])->name('update');
-      Route::delete('{target}', [PartnerTargetController::class, 'destroy'])->name('destroy');
-  });
-  
-  // Monthly Reports
-  Route::prefix('partner-monthly-report/{partner}/targets/{target}/reports')->name('partner.reports.')->group(function () {
-    Route::get('manage', [PartnerMonthlyReportController::class, 'manage'])->name('manage'); // NEW: Manage all months
-    Route::get('create', [PartnerMonthlyReportController::class, 'create'])->name('create');
-    Route::post('/', [PartnerMonthlyReportController::class, 'store'])->name('store');
-    Route::get('{month}/edit', [PartnerMonthlyReportController::class, 'edit'])->name('edit');
-    Route::put('{month}', [PartnerMonthlyReportController::class, 'update'])->name('update');
-    Route::delete('{month}', [PartnerMonthlyReportController::class, 'destroy'])->name('destroy'); // NEW: Delete report
-  });
-
-  // AJAX routes for role permission management (to avoid max_input_vars limit)
-  // Additional routes untuk per-accordion functionality
-  Route::post('role/updateName/{role}', [RoleController::class, 'updateName'])
-      ->name('role.update-name');
-
-  Route::post('role/updateMenuPermissions/{role}', [RoleController::class, 'updateMenuPermissions'])
-      ->name('role.update-menu-permissions');
-
-  Route::post('role/selectAll/{role}', [RoleController::class, 'selectAll'])
-      ->name('role.select-all');
-
-  Route::post('role/deselectAll/{role}', [RoleController::class, 'deselectAll'])
-      ->name('role.deselect-all');
-
-  Route::post('role/{role}/duplicate', [RoleController::class, 'duplicate'])
-      ->name('role.duplicate');
-
-  Route::post('role/clearAllCache', [RoleController::class, 'clearAllCache'])
-      ->name('role.clear-all-cache');
-
-
-  // Direct Point Routes
-  Route::post('direct-point/checkQuota', [App\Http\Controllers\DirectPointController::class, 'checkQuota'])->name('direct-point.check-quota');
-  Route::post('direct-point/{directPoint}/approve', [App\Http\Controllers\DirectPointController::class, 'approve'])->name('direct-point.approve');
-  Route::post('direct-point/{directPoint}/reject', [App\Http\Controllers\DirectPointController::class, 'reject'])->name('direct-point.reject');
-  Route::resource('direct-point', App\Http\Controllers\DirectPointController::class);
-
-    // ========================================================================
-    // SOFTWARE MANAGEMENT
-    // ========================================================================
-    Route::get('software-dashboard', [DashboardController::class, 'index'])->name('software-dashboard.index');
-    Route::get('software/import/template', [SoftwareController::class, 'importTemplate'])->name('software.import.template');
-    Route::post('software/import', [SoftwareController::class, 'import'])->name('software.import');
-    Route::get('software/import/status', [SoftwareController::class, 'importStatus'])->name('software.import.status');
-    Route::get('software/{software}/packages/create', [SoftwarePackageController::class, 'create'])->name('software.packages.create');
-    Route::get('software/{software}/packages/{package}/edit', [SoftwarePackageController::class, 'edit'])->name('software.packages.edit');
-    Route::resource('software', SoftwareController::class);
-    Route::post('software/{software}/toggleStatus', [SoftwareController::class, 'toggleStatus'])->name('software.toggleStatus');
-    
-    // ========================================================================
-    // SOFTWARE PACKAGES MANAGEMENT
-    // ========================================================================
-    Route::resource('software.packages', SoftwarePackageController::class)->except(['create', 'edit']);
-    
-    
-    // Toggle package status (AJAX)
-    Route::post('software/{software}/packages/{package}/toggleStatus', [SoftwarePackageController::class, 'toggleStatus'])->name('software.packages.toggleStatus');
-
-
-    // ========================================================================
-    // MASTER ACCOUNTS MANAGEMENT
-    // ========================================================================
-    Route::resource('master-account', MasterAccountController::class);
-    Route::post('master-account/{masterAccount}/toggle-status', [MasterAccountController::class, 'toggleStatus'])->name('master-account.toggle-status');
-    Route::get('master-account/{masterAccount}/customers', [MasterAccountController::class, 'customers'])->name('master-account.customers');
-
-    // ========================================================================
-    // subscription MANAGEMENT
-    // ========================================================================
-    Route::get('subscription', [AdminSubscriptionController::class, 'index'])->name('subscription.index');
-    Route::get('subscription/create-marketplace', [AdminSubscriptionController::class, 'createMarketplace'])->name('subscription.create-marketplace');
-    Route::post('subscription/store-marketplace', [AdminSubscriptionController::class, 'storeMarketplace'])->name('subscription.store-marketplace');
-    Route::post('subscription/check-user-email', [AdminSubscriptionController::class, 'checkUserEmail'])->name('subscription.check-user-email');
-    Route::post('subscription/check-username', [AdminSubscriptionController::class, 'checkUsername'])->name('subscription.check-username');
-    Route::get('subscription/{subscription}', [AdminSubscriptionController::class, 'show'])->name('subscription.show');
-    Route::get('subscription/{subscription}/edit-expiry', [AdminSubscriptionController::class, 'editExpiry'])->name('subscription.edit-expiry');
-    Route::put('subscription/{subscription}/update-expiry', [AdminSubscriptionController::class, 'updateExpiry'])->name('subscription.update-expiry');
-    Route::get('subscription/{subscription}/edit-order-number', [AdminSubscriptionController::class, 'editOrderNumber'])->name('subscription.edit-order-number');
-    Route::put('subscription/{subscription}/update-order-number', [AdminSubscriptionController::class, 'updateOrderNumber'])->name('subscription.update-order-number');
-    Route::get('subscription/{subscription}/edit-master-account', [AdminSubscriptionController::class, 'editMasterAccount'])->name('subscription.edit-master-account');
-    Route::put('subscription/{subscription}/update-master-account', [AdminSubscriptionController::class, 'updateMasterAccount'])->name('subscription.update-master-account');
-    Route::post('subscription/{subscription}/suspend', [AdminSubscriptionController::class, 'suspend'])->name('subscription.suspend');
-    Route::post('subscription/{subscription}/activate', [AdminSubscriptionController::class, 'activate'])->name('subscription.activate');
-    Route::get('subscription/{subscription}/payments', [AdminSubscriptionController::class, 'payments'])->name('subscription.payments');
-    Route::post('subscription/manual-approve/{payment}/manual-approve', [AdminSubscriptionController::class, 'manualApprove'])->name('subscription.payments.manual-approve');
-
-    // ========================================================================
-    // SUBSCRIPTION CHAT (Admin)
-    // ========================================================================
-    Route::get('subscription/{subscription}/chat', [AdminSubscriptionChatController::class, 'index'])->name('subscription.chat.index');
-    Route::post('subscription/{subscription}/chat', [AdminSubscriptionChatController::class, 'store'])->name('subscription.chat.store');
-
-      // ========================================================================
-      // SOFTWARE CATALOG
-      // ========================================================================
-      Route::get('customer-software', [CustomerSoftwareController::class, 'index'])->name('customer-software.index');
-      Route::get('customer-software/{slug}', [CustomerSoftwareController::class, 'show'])->name('customer-software.show');
-
-      // ========================================================================
-      // CHECKOUT PROCESS
-      // ========================================================================   
-      Route::post('customer-checkout/{slug}/{package}', [CustomerCheckoutController::class, 'process'])->name('customer-checkout.process');
-      Route::get('customer-checkout/{slug}/{package}', [CustomerCheckoutController::class, 'show'])->name('customer-checkout.show');
-      Route::get('customer-checkout/payment/pending/{order}', [CustomerCheckoutController::class, 'paymentPending'])->name('customer-checkout.payment.pending');
-      Route::get('customer-checkout/payment/success/{order}', [CustomerCheckoutController::class, 'paymentSuccess'])->name('customer-checkout.payment.success');
-      Route::get('customer-checkout/payment/failed/{order}', [CustomerCheckoutController::class, 'paymentFailed'])->name('customer-checkout.payment.failed');
-
-            // Handle stuck/stale payment
-      Route::post('customer-checkout/payment/pending/{subscription}/cancel-pending-payment', [CustomerCheckoutController::class, 'cancelPending'])->name('customer-checkout.cancel-pending');
-      Route::get('customer-checkout/payment/pending/{subscription}/resume-payment', [CustomerCheckoutController::class, 'resumePayment'])->name('customer-checkout.resume-payment');
-      Route::get('customer-checkout/payment/pending/{subscription}/retry-payment', [CustomerCheckoutController::class, 'retryPayment'])->name('customer-checkout.retry-payment');
-
-      // ========================================================================
-      // MY subscription
-      // ========================================================================
-      Route::get('customer-subscription', [CustomerSubscriptionController::class, 'index'])->name('customer-subscription.index');
-      // View subscription detail (with credentials if active+paid)
-      Route::get('customer-subscription/{subscription}', [CustomerSubscriptionController::class, 'show'])->name('customer-subscription.show');
-      // Show renewal form
-      Route::get('customer-subscription/{subscription}/renew', [CustomerSubscriptionController::class, 'renew'])->name('customer-subscription.renew');
-      // Process renewal
-      Route::post('customer-subscription/{subscription}/renew', [CustomerSubscriptionController::class, 'processRenewal'])->name('customer-subscription.process-renewal');
-
-      // Cancel pending renewal
-      Route::post('customer-subscription/{subscription}/cancel-renewal-payment', [CustomerSubscriptionController::class, 'cancelRenewalPayment'])->name('customer-subscription.cancel-renewal-payment');
-      // Resume pending renewal
-      Route::get('customer-subscription/{subscription}/resume-renewal-payment', [CustomerSubscriptionController::class, 'resumeRenewalPayment'])->name('customer-subscription.resume-renewal-payment');
-
-      // View payment history for subscription
-      Route::get('customer-subscription/{subscription}/payments', [CustomerSubscriptionController::class, 'payments'])->name('customer-subscription.payments');
-
-      // ========================================================================
-      // PAYMENT HANDLING
-      // ========================================================================    
-      Route::get('subscription-payment/success', [SubscriptionPaymentController::class, 'success'])->name('subscription-payment.success');
-      // Payment failed (redirect from Xendit)
-      Route::get('subscription-payment/failed', [SubscriptionPaymentController::class, 'failed'])->name('subscription-payment.failed');
-      // Upload proof of transfer
-      Route::post('subscription-payment/{payment}/upload-proof', [SubscriptionPaymentController::class, 'uploadProof'])->name('subscription-payment.upload-proof');
-      // Check payment status (AJAX)
-      Route::get('subscription-payment/check-status/{orderNumber}', [SubscriptionPaymentController::class, 'checkStatus'])->name('subscription-payment.check-status');
-
-      // ========================================================================
-      // SUBSCRIPTION CHAT
-      // ========================================================================
-      Route::get('customer-subscription/{subscription}/chat', [CustomerSubscriptionChatController::class, 'index'])->name('customer-subscription.chat.index');
-      Route::post('customer-subscription/{subscription}/chat', [CustomerSubscriptionChatController::class, 'store'])->name('customer-subscription.chat.store');
-      
-      // ========================================================================
-      // EMPLOYEE XP SYSTEM
-      // ========================================================================
-      Route::get('xp-config/assign', [App\Http\Controllers\XpConfigController::class, 'assignIndex'])->name('xp-config.assign');
-      Route::post('xp-config/assign', [App\Http\Controllers\XpConfigController::class, 'assignUpdate'])->name('xp-config.assign.update');
-      Route::resource('xp-config', App\Http\Controllers\XpConfigController::class)->except(['show']);
-      
-      Route::get('employee-xp', [App\Http\Controllers\EmployeeXpController::class, 'index'])->name('employee-xp.index');
-      Route::post('employee-xp', [App\Http\Controllers\EmployeeXpController::class, 'store'])->name('employee-xp.store');
-      Route::delete('employee-xp/{employeeXp}', [App\Http\Controllers\EmployeeXpController::class, 'destroy'])->name('employee-xp.destroy');
-      Route::get('employee-xp/history', [App\Http\Controllers\EmployeeXpController::class, 'myHistory'])->name('employee-xp.my-history');
-      Route::get('employee-xp/leaderboard', [App\Http\Controllers\EmployeeXpController::class, 'leaderboard'])->name('employee-xp.leaderboard');
-      Route::get('employee-xp/history/{userId}', [App\Http\Controllers\EmployeeXpController::class, 'userHistory'])->name('employee-xp.user-history');    
-
-      // ========================================================================
-      // BADGE / GELAR
-      // ========================================================================
-      Route::get('badge/assign', [App\Http\Controllers\BadgeController::class, 'assignIndex'])->name('badge.assign');
-      Route::post('badge/assign', [App\Http\Controllers\BadgeController::class, 'assignStore'])->name('badge.assign.store');
-      Route::delete('badge/revoke/{userBadge}', [App\Http\Controllers\BadgeController::class, 'revokeUserBadge'])->name('badge.revoke');
-      Route::resource('badge', App\Http\Controllers\BadgeController::class)->except(['show']);
-
-      // ========================================================================
-      // CHALLENGE SYSTEM
-      // ========================================================================
-      Route::delete('challenge/{challenge}/user/{userId}', [App\Http\Controllers\ChallengeController::class, 'removeUser'])->name('challenge.removeUser');
-      Route::resource('challenge', App\Http\Controllers\ChallengeController::class)->except(['show']);
-      Route::post('challenge/{challenge}/invite', [App\Http\Controllers\ChallengeController::class, 'invite'])->name('challenge.invite');
-      Route::get('challenge/{challenge}', [App\Http\Controllers\ChallengeController::class, 'show'])->name('challenge.show');
-
-      // ========================================================================
-      // EVENT SYSTEM
-      // ========================================================================
-      Route::delete('event/{event}/user/{userId}', [App\Http\Controllers\EventController::class, 'removeUser'])->name('event.removeUser');
-      Route::post('event/{event}/invite', [App\Http\Controllers\EventController::class, 'invite'])->name('event.invite');
-      Route::post('event/{event}/mark-viewed', [App\Http\Controllers\EventController::class, 'markViewed'])->name('event.markViewed');
-      Route::resource('event', App\Http\Controllers\EventController::class)->except(['show']);
-      Route::get('event/{event}', [App\Http\Controllers\EventController::class, 'show'])->name('event.show');
-      Route::get('event/{event}/detail', [App\Http\Controllers\EventController::class, 'detail'])->name('event.detail');
-    });
-  // Hotspot Server
-  Route::get('hotspot-server', HotspotServerIndex::class)->name('hotspot-server.index');
-  Route::get('hotspot-server/create', HotspotServerForm::class)->name('hotspot-server.create');
-  Route::get('hotspot-server/edit/{id}', HotspotServerForm::class)->name('hotspot-server.edit');
-
-  // Hotspot Voucher Batch
-  Route::get('hotspot-voucher-batch', HotspotVoucherBatchIndex::class)->name('hotspot-voucher-batch.index');
-  Route::get('hotspot-voucher/print/{batchId}', [HotspotVoucherController::class, 'printBatch'])->name('hotspot-voucher.print');
-    
-
-
-  Route::get('internet-customer/registration/{companyId}', InternetCustomerForm::class)->name('internet-customer.create');
-  Route::get('internet-customer/customer-active/{code}', CustomerShow::class)->name('internet-customer.customer.show');
-
-
+// Error page
 Route::get('error/{code?}', function ($code = 500) {
     return view('public_error', [
-        'code' => $code,
-        'title' => session('title', 'Terjadi Kesalahan'),
+        'code'    => $code,
+        'title'   => session('title', 'Terjadi Kesalahan'),
         'message' => session('message', 'Kesalahan tidak diketahui'),
-        'icon' => session('icon', 'fas fa-exclamation-triangle'),
+        'icon'    => session('icon', 'fas fa-exclamation-triangle'),
     ]);
 })->name('public.error');
 
-Route::post('bos-ticket', [TicketController::class,'store'])->name('bos-ticket.store');
-Route::get('bos-ticket', [TicketController::class,'create'])->name('bos-ticket.create');
 Route::get('page/privacy-policy', function () {
-  return view('policy');
+    return view('policy');
 })->name('page.privacy-policy');
 
 Route::get('/robots.txt', function () {
     return response("User-agent: *\nDisallow: /storage/", 200)
         ->header('Content-Type', 'text/plain');
 });
-
-Route::get('/{slug}',[SortUrlController::class,'index'])->name('download.index');
-
-
-
