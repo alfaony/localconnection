@@ -613,12 +613,6 @@ class AppServiceProvider extends ServiceProvider
                     'route' => 'supplier-type.index',
                     'icon' => 'fa fa-list',
                 ],
-                'list_sprinter' =>
-                [
-                    'text' => 'List Sprinter',
-                    'url' => url("item-request/list/".Auth::user()->company->public_slug),
-                    'icon' => 'fa fa-list',
-                ],
                 'meetings' => 
                 [
                     'text' => 'Rapat',

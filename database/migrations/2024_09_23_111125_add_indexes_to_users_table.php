@@ -1,3 +1,4 @@
+
 <?php
 
 use Illuminate\Database\Migrations\Migration;
@@ -17,9 +18,9 @@ return new class extends Migration
         });
 
         // Assuming there is a task_status_name column that is often queried
-        Schema::table('task_statuses', function (Blueprint $table) {
-            $table->index('name', 'task_statuses_name_index');
-        });
+        // Schema::table('task_statuses', function (Blueprint $table) {
+        //     $table->index('name', 'task_statuses_name_index');
+        // });
     }
 
     /**
@@ -33,8 +34,8 @@ return new class extends Migration
         });
 
         // Dropping index from task_status_name in tasks table
-        Schema::table('task_statuses', function (Blueprint $table) {
-            $table->dropIndex('task_statuses_name_index');
-        });
+        // Schema::table('task_statuses', function (Blueprint $table) {
+        //     $table->dropIndex('task_statuses_name_index');
+        // });
     }
 };

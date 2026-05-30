@@ -16,6 +16,8 @@ use App\Models\Router;
 use App\Models\CoverageService;
 use App\Models\OpticalDistribution;
 use App\Models\CoverageServiceDistribution;
+use App\Models\Province;
+
 
 use App\Jobs\ProvisionCustomerJob;
 use App\Jobs\GenerateInternetPurchaseCouponJob;
@@ -1225,6 +1227,8 @@ class InternetCustomerIndex extends Component
             'packages'             => $packages,
             'routers'              => $this->routers,
             'importAvailableOdps'  => $this->importAvailableOdps,
+            'provinces'            => $provinces,
+            'hasRegion'            => $hasRegion,
         ])->extends('adminlte::page');
     }
 

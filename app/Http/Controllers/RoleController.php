@@ -344,87 +344,98 @@ class RoleController extends Controller
     {
         return [
             // a
-            'agreement_letters', 'ask_bos', 'asset_assigns', 'assets', 'attendances',
+            // 'agreement_letters', 'ask_bos', 'asset_assigns', 'assets', 'attendances',
 
             // b
-            'badges', 'barcodes', 'basts', 'brand_product_stores',
+            // 'badges', 'barcodes', 'basts', 'brand_product_stores',
 
             // c
-            'category_product_stores', 'cctv_checks', 'challenges', 'chat_messages', 'cities',
-            'companies', 'coverage_services', 'customer_checkouts', 'customer_software', 'customer_subscriptions',
-            'customers',
+            // 'category_product_stores', 'cctv_checks', 'challenges', 'chat_messages', 'cities',
+            // 'companies', 'coverage_services', 'customer_checkouts', 'customer_software', 'customer_subscriptions',
+            // 'customers',
 
             // d
-            'daily_task_categories', 'daily_task_projects', 'dailytasks', 'dashboard_weekly_reports', 'data_centers',
-            'dayoffs', 'decisions', 'devices', 'districts', 'division_budgets',
-            'divisions',
+            // 'daily_task_categories', 'daily_task_projects', 'dailytasks', 'dashboard_weekly_reports', 
+            'data_centers',
+            // 'dayoffs', 'decisions', 'devices', 'districts', 'division_budgets',
+            // 'divisions',
 
             // e
-            'employee_checkings', 'employees', 'equipment', 'equipment_reductions','events','employee_xps',
+            // 'employee_checkings', 'employees', 'equipment', 'equipment_reductions','events','employee_xps',
 
             // f
-            'flowcharts',
+            // 'flowcharts',
 
             // h
-            'homes',
+            // 'homes',
 
             // i
-            'inboxes', 'internet_customers', 'internet_packages', 'invoices', 'ip_rights',
-            'item_purchases', 'item_requests','internet_customer_groups','internet_customer_user_regions',
+            // 'inboxes', 
+            'internet_customers', 'internet_packages', 
+            // 'invoices', 'ip_rights',
+            // 'item_purchases', 'item_requests','internet_customer_groups',
+            'internet_customer_user_regions',
 
             // k
-            'kyes',
+            // 'kyes',
 
             // l
-            'letter_submissions',
+            // 'letter_submissions',
 
             // m
-            'managers', 'master_accounts', 'master_check_items', 'meetings', 'missions',
-            'moms',
+            // 'managers', 'master_accounts', 'master_check_items', 'meetings', 'missions',
+            // 'moms',
 
             // n
-            'national_holidays',
+            // 'national_holidays',
 
             // o
-            'objectives', 'office_attendances', 'office_media', 'optical_distributions',
+            // 'objectives', 'office_attendances', 'office_media', 
+            'optical_distributions',
 
             // p
-            'partner_parameter_types', 'partner_types', 'partners', 'partnership_agreements', 'pass_checkings',
-            'pops', 'positions', 'postal_codes', 'pricelists', 'product_categories',
-            'product_stores', 'product_suppliers', 'products', 'project_dashboards', 'projects',
-            'promos', 'providers', 'provinces', 'punishment_users',
+            // 'partner_parameter_types', 'partner_types', 'partners', 'partnership_agreements', 'pass_checkings',
+            'pops',
+            //  'positions',
+             'postal_codes', 
+            // 'pricelists', 'product_categories',
+            // 'product_stores', 'product_suppliers', 'products', 'project_dashboards', 'projects',
+            'promos', 'providers', 'provinces',
+            //  'punishment_users',
 
             // q
             'quotes',
 
             // r
-            'racks', 'report_points', 'report_productivities', 'report_projects', 'reports',
-            'roles', 'routers','report_links',
+            // 'racks', 'report_points', 'report_productivities', 'report_projects', 'reports',
+            'roles', 
+            // 'routers','report_links',
 
             // s
-            'sales', 'sales_achievements', 'schedule_obs', 'security_checks', 'sensors',
-            'setting_companies', 'shifting_obs', 'shipping_calculations', 'shipping_rates', 'software',
-            'software_dashboards', 'software_packages', 'store_sellings', 'subdistricts', 'subscribe_letters',
-            'subscription_payments', 'subscriptions', 'supliers', 'supplier_categories', 'supplier_types',
+            // 'sales', 'sales_achievements', 'schedule_obs', 'security_checks', 'sensors',
+            // 'setting_companies', 'shifting_obs', 'shipping_calculations', 'shipping_rates', 'software',
+            // 'software_dashboards', 'software_packages', 'store_sellings', 'subdistricts', 'subscribe_letters',
+            // 'subscription_payments', 'subscriptions', 'supliers', 'supplier_categories', 'supplier_types',
 
             // t
-            'task_assigns', 'tasks', 'tickets', 'trainings',
+            // 'task_assigns', 'tasks', 'tickets', 'trainings',
 
             // u
-            'used_items', 'used_laptops', 'users','user_blacklists',
+            // 'used_items', 'used_laptops', 'users','user_blacklists',
 
             // v
-            'vehicles', 'visions',
+            // 'vehicles', 'visions',
 
             // w
-            'warehouses', 'webhook_settings', 'weekly_reports', 'wfo_rules', 'wilayahs',
-            'work_orders',
+            // 'warehouses', 'webhook_settings', 'weekly_reports', 'wfo_rules', 
+            'wilayahs',
+            // 'work_orders',
 
             // x
-            'xeros', 'xp_configs',
+            // 'xeros', 'xp_configs',
 
             // z
-            'zones',
+            // 'zones',
         ];
     }
 }

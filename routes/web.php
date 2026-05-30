@@ -5,35 +5,25 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\SettingCompanyController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\CompanyController;
-use App\Http\Controllers\IpRightController;
-use App\Http\Controllers\SensorController;
-use App\Http\Controllers\ZoneController;
-use App\Http\Controllers\RackController;
-use App\Http\Controllers\ProviderController;
-use App\Http\Controllers\WilayahController;
-use App\Http\Controllers\ProvinceController;
+use App\Http\Controllers\CityController;
 use App\Http\Controllers\DistrictController;
 use App\Http\Controllers\SubdistrictController;
 use App\Http\Controllers\PostalCodeController;
-use App\Http\Controllers\CityController;
+use App\Http\Controllers\ProvinceController;
+use App\Http\Controllers\WilayahController;
 use App\Http\Controllers\WablasWebhookController;
 use App\Http\Controllers\BroadcastAuthController;
-use App\Http\Controllers\MikrotikSecretController;
-use App\Http\Controllers\MikrotikProfileController;
 use App\Http\Controllers\XenditController;
 use App\Http\Controllers\MidtransController;
 use App\Http\Controllers\InternetCustomerController;
-use App\Http\Controllers\HotspotVoucherController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Admin\DashboardController;
 
 // LiveWire
-use App\Http\Livewire\DataCenter\Index;
-use App\Http\Livewire\DataCenter\Form;
-use App\Http\Livewire\Pop\PopIndex;
-use App\Http\Livewire\Pop\PopForm;
 use App\Http\Livewire\Ods\OdsIndex;
 use App\Http\Livewire\Ods\OdsForm;
+use App\Http\Livewire\Pop\PopIndex;
+use App\Http\Livewire\Pop\PopForm;
 use App\Http\Livewire\InternetCustomerGroup\InternetCustomerGroupIndex;
 use App\Http\Livewire\CoverageService\CoverageServiceIndex;
 use App\Http\Livewire\CoverageService\CoverageServiceForm;
@@ -51,9 +41,6 @@ use App\Http\Livewire\Router\RouterForm;
 use App\Http\Livewire\Router\RouterIndex;
 use App\Http\Livewire\Router\RouterInventory;
 use App\Http\Livewire\Router\PackageProfileMapping;
-use App\Http\Livewire\Hotspot\HotspotServerIndex;
-use App\Http\Livewire\Hotspot\HotspotServerForm;
-use App\Http\Livewire\Hotspot\HotspotVoucherBatchIndex;
 
 /*
 |--------------------------------------------------------------------------
@@ -83,11 +70,8 @@ Route::post('internet-customer/store', [InternetCustomerController::class, 'stor
 Route::post('internet-customer/check-promo', [InternetCustomerController::class, 'checkPromoAjax'])->name('internet-customers.check-promo');
 Route::get('internet-customer/create', [InternetCustomerController::class, 'create'])->name('internet-customer.create_direct');
 
+Route::get('internet-customer', InternetCustomerIndex::class)->name('internet-customer.index');
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
-
-Route::group(['middleware' => ['auth', 'web']], function () {
-    Route::post('broadcasting/authorize', [BroadcastAuthController::class, 'broadcastingAuthorize'])->name('broadcasting.authorize');
-});
 
 Auth::routes([
     'register' => false,
@@ -97,7 +81,7 @@ Auth::routes([
 Route::get('/', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
 Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
 
-Route::group(['middleware' => ['auth', 'web', 'role.permission', 'ip.restriction']], function () {
+Route::group(['middleware' => ['auth','role.permission','ip.restriction']], function() {
 
     // ========================================================================
     // USER / ROLE / COMPANY
@@ -143,19 +127,13 @@ Route::group(['middleware' => ['auth', 'web', 'role.permission', 'ip.restriction
     ]);
 
     // ========================================================================
-    // INTERNET INFRASTRUCTURE
+    // INTERNET INFRASTRUCTURE (Router, ODS, POP, Coverage)
     // ========================================================================
-    Route::resource('provider', ProviderController::class);
-    Route::resource('sensor', SensorController::class);
-    Route::resource('zone', ZoneController::class);
-    Route::post('rack/{rack}/assign-product-store', [RackController::class, 'assignProductStore'])->name('rack.assign-product-store');
-    Route::post('rack/{rack}/unassign-product-store', [RackController::class, 'unassignProductStore'])->name('rack.unassign-product-store');
-    Route::resource('rack', RackController::class);
-    Route::resource('ip-right', IpRightController::class);
-
-    Route::get('data-center', Index::class)->name('data-center.index');
-    Route::get('data-center/create', Form::class)->name('data-center.create');
-    Route::get('data-center/edit/{id}', Form::class)->name('data-center.edit');
+    Route::get('router', RouterIndex::class)->name('router.index');
+    Route::get('router/create', RouterForm::class)->name('router.create');
+    Route::get('router/edit/{mikrotik}', RouterForm::class)->name('router.edit');
+    Route::get('router/show/{routerId}', RouterInventory::class)->name('router.show');
+    Route::get('router/mapping/{routerId}', PackageProfileMapping::class)->name('router.mapping');
 
     Route::get('pop', PopIndex::class)->name('pop.index');
     Route::get('pop/create', PopForm::class)->name('pop.create');
@@ -168,28 +146,6 @@ Route::group(['middleware' => ['auth', 'web', 'role.permission', 'ip.restriction
     Route::get('coverage-service', CoverageServiceIndex::class)->name('coverage-service.index');
     Route::get('coverage-service/create', CoverageServiceForm::class)->name('coverage-service.create');
     Route::get('coverage-service/edit/{id}', CoverageServiceForm::class)->name('coverage-service.edit');
-
-    // ========================================================================
-    // MIKROTIK / ROUTER
-    // ========================================================================
-    Route::resource('mikrotik-profile', MikrotikProfileController::class);
-    Route::resource('mikrotik-secret', MikrotikSecretController::class);
-
-    Route::get('router', RouterIndex::class)->name('router.index');
-    Route::get('router/create', RouterForm::class)->name('router.create');
-    Route::get('router/edit/{mikrotik}', RouterForm::class)->name('router.edit');
-    Route::get('router/show/{routerId}', RouterInventory::class)->name('router.show');
-    Route::get('router/mapping/{routerId}', PackageProfileMapping::class)->name('router.mapping');
-
-    // ========================================================================
-    // HOTSPOT
-    // ========================================================================
-    Route::get('hotspot-server', HotspotServerIndex::class)->name('hotspot-server.index');
-    Route::get('hotspot-server/create', HotspotServerForm::class)->name('hotspot-server.create');
-    Route::get('hotspot-server/edit/{id}', HotspotServerForm::class)->name('hotspot-server.edit');
-
-    Route::get('hotspot-voucher-batch', HotspotVoucherBatchIndex::class)->name('hotspot-voucher-batch.index');
-    Route::get('hotspot-voucher/print/{batchId}', [HotspotVoucherController::class, 'printBatch'])->name('hotspot-voucher.print');
 
     // ========================================================================
     // INTERNET PACKAGES & PROMOS
@@ -208,14 +164,13 @@ Route::group(['middleware' => ['auth', 'web', 'role.permission', 'ip.restriction
     Route::get('internet-customer-group', InternetCustomerGroupIndex::class)->name('internet-customer-group.index');
     Route::get('internet-customer-user-region', InternetCustomerUserRegionIndex::class)->name('internet-customer-user-region.index');
 
-    Route::get('internet-customer', InternetCustomerIndex::class)->name('internet-customer.index');
     Route::put('internet-customer/update/{id}', InternetCustomerIndex::class)->name('internet-customer.update');
     Route::get('internet-customer/edit/{id}', InternetCustomerForm::class)->name('internet-customer.edit');
     Route::get('internet-customer/export/{format}', [InternetCustomerController::class, 'export'])->name('internet-customer.export');
     Route::get('internet-customer/{customerId}', InternetCustomerShow::class)->name('internet-customer.show');
 
-    // Software Dashboard (admin overview)
-    Route::get('software-dashboard', [DashboardController::class, 'index'])->name('software-dashboard.index');
+    // Dashboard
+    Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard.index');
 });
 
 // Error page

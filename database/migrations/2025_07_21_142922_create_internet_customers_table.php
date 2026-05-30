@@ -23,7 +23,7 @@ return new class extends Migration
             $table->foreignId('subdistrict_id')->constrained('subdistricts')->onDelete('cascade')->onUpdate('cascade');
 
             $table->foreignId('internet_package_id')->constrained('internet_packages')->onDelete('cascade')->onUpdate('cascade');
-            $table->foreignId('partnership_agreement_id')->nullable()->constrained('partnership_agreements')->onDelete('cascade')->onUpdate('cascade');
+            // $table->foreignId('partnership_agreement_id')->nullable()->constrained('partnership_agreements')->onDelete('cascade')->onUpdate('cascade');
 
             $table->string('code')->nullable();
             $table->string('name');
