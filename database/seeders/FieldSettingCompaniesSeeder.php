@@ -16,7 +16,7 @@ class FieldSettingCompaniesSeeder extends Seeder
      */
     public function run()
     {
-        $field = ['name' => 'PT. Gema Teknologi Cahaya Gemilang','director'=>'Dr. Eddy Yansen','address' => 'GSA #B8/DH. Jl.S.Parman. Jakarta Barat','npwp_number' => '0707979797','currency'=>'Rp','currency_usd'=>"15000",'nib_file'=>'','acta_file'=> '','npwp_file' => '','signature_file' => ''];
+        $field = ['name' => '','director'=>'','address' => '','npwp_number' => '','currency'=>'Rp','currency_usd'=>"",'nib_file'=>'','acta_file'=> '','npwp_file' => '','signature_file' => ''];
         $user = User::first();
 
         foreach ($field as $key => $value) 

@@ -240,6 +240,7 @@ class RoleController extends Controller
             ]);
             
         } catch (\Throwable $th) {
+            dd("here");
             DB::rollback();
             Log::error($th);
             return response()->json(['success' => false, 'message' => $th->getMessage()], 500);

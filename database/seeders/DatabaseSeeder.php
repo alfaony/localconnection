@@ -14,10 +14,25 @@ class DatabaseSeeder extends Seeder
      */
     public function run()
     {
-        $this->call(UserSeeder::class);
+        // $this->call(UserSeeder::class);
         $this->call(FieldSettingCompaniesSeeder::class);
-        // $this->call(PermissionForProductTillSettingCompanySeeder::class);
-        // $this->call(AllUserIsAdminSeeder::class);
+        $this->call(PermissionForProductTillSettingCompanySeeder::class);
+        $this->call(AllUserIsAdminSeeder::class);
+        $this->call(PermissionForMenuDataCenter::class);
+        $this->call(PermissionForMenuPopSeeder::class);
+        $this->call(PermissionForMenuOdsSeeder::class);
+        $this->call(PermissionForMenuCoverageServiceSeeder::class);
+        $this->call(PermissionForMenuRole::class);
+        $this->call(PermissionForMenuInternetPackageSeeder::class);
+        $this->call(PermissionForMenuProvider::class);
+        // $this->call(PermissionForMenuInternetCustomerSeeder::class);
+        // $this->call(PermissionForMenuInternetPackage::class);
+        // $this->call(PermissionForMenuInternetCustomer::class);
+        $this->call(permissionForMenuPromoSeeder::class);
+        $this->call(PermissionForMenuRouterSeeder::class);
+        $this->call(PermissionForMenuMasterGroupSeeder::class);
+        $this->call(PermissionForMenuWilayahSeeder::class);
+        $this->call(ClearPermissionSeeder::class);
         // $this->call(PermissionForProductPriceQuoteAndWorkOrderSeeder::class);
         // $this->call(PermissionForDeleteDetailReportSeeder::class);
         // $this->call(PermissionForProductPriceSuplierSeeder::class);

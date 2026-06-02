@@ -21,7 +21,7 @@ class PermissionForMenuRole extends Seeder
     public function run()
     {   
 
-        $methods = ['updateName','updateMenuPermissions','selectAll','deselectAll','duplicate','clearAllCache'];
+        $methods = ['index','updateName','updateMenuPermissions','selectAll','deselectAll','duplicate','clearAllCache'];
        
         $root = Role::where('name',RoleSchema::ROOT)->first();
 

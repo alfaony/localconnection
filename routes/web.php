@@ -20,6 +20,8 @@ use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Admin\DashboardController;
 
 // LiveWire
+use App\Http\Livewire\DataCenter\Index;
+use App\Http\Livewire\DataCenter\Form;
 use App\Http\Livewire\Ods\OdsIndex;
 use App\Http\Livewire\Ods\OdsForm;
 use App\Http\Livewire\Pop\PopIndex;
@@ -134,6 +136,10 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
     Route::get('router/edit/{mikrotik}', RouterForm::class)->name('router.edit');
     Route::get('router/show/{routerId}', RouterInventory::class)->name('router.show');
     Route::get('router/mapping/{routerId}', PackageProfileMapping::class)->name('router.mapping');
+
+    Route::get('data-center', Index::class)->name('data-center.index');
+    Route::get('data-center/create', Form::class)->name('data-center.create');
+    Route::get('data-center/edit/{id}', Form::class)->name('data-center.edit');
 
     Route::get('pop', PopIndex::class)->name('pop.index');
     Route::get('pop/create', PopForm::class)->name('pop.create');

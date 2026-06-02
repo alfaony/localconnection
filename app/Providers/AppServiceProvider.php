@@ -131,19 +131,20 @@ class AppServiceProvider extends ServiceProvider
             $managementSoftwareMenuArray = Array();
 
             $managementUmumMenu = [
-                'punishment_users',
-                'employee_xps',
-                'events',
-                'meetings','moms','dashboard_weekly_reports','weekly_reports','report_links','flowcharts',
-                'ask_bos','decisions','partnership_agreements','national_holidays',
-                'letter_submissions','companies'
+                // 'punishment_users',
+                // 'employee_xps',
+                // 'events',
+                // 'meetings','moms','dashboard_weekly_reports','weekly_reports','report_links','flowcharts',
+                // 'ask_bos','decisions','partnership_agreements','national_holidays',
+                // 'letter_submissions',
+                'companies'
             ];
 
             $managementKaryawanMenu = [
-                'kyes',
-                'challenges',
-                'employees','users','positions','managers','attendances',
-                'shifting_obs','schedule_obs','dayoffs','wfo_rules','barcodes','employee_checkings','office_attendances','trainings','user_blacklists'
+                // 'kyes',
+                // 'challenges',
+                // 'employees','users','positions','managers','attendances',
+                // 'shifting_obs','schedule_obs','dayoffs','wfo_rules','barcodes','employee_checkings','office_attendances','trainings','user_blacklists'
             ];
 
             $managementInternetMenu = 
@@ -153,48 +154,53 @@ class AppServiceProvider extends ServiceProvider
             ];
 
             $managementTokoOnlineMenu = [
-                'pricelists','products','supplier_types','product_suppliers','supplier_categories',
-                'product_categories','supliers','customers','item_requests',
-                'providers','shipping_rates','shipping_calculations',
-                'brand_product_stores','category_product_stores','product_stores','store_sellings',
-                'sales',
+                // 'pricelists','products','supplier_types','product_suppliers','supplier_categories',
+                // 'product_categories','supliers','customers','item_requests',
+                // 'providers','shipping_rates','shipping_calculations',
+                // 'brand_product_stores','category_product_stores','product_stores','store_sellings',
+                // 'sales',
             ];
 
             $managementGedungMenu = 
             [
-                'warehouses','zones','racks','sensors',
-                'assets','security_checks','cctv_checks','tickets',
-                'devices','equipment','equipment_reductions',
-                'vehicles','subscribe_letters'
+                // 'warehouses','zones','racks','sensors',
+                // 'assets','security_checks','cctv_checks','tickets',
+                // 'devices','equipment','equipment_reductions',
+                // 'vehicles','subscribe_letters'
             ];
 
             $managementProductionMenu =
             [
-                'master_check_items','used_laptops','used_items',
+                // 'master_check_items','used_laptops','used_items',
             ];
 
             $managementProduktifitasMenu = [
-                'report_productivities','project_dashboards','division_budgets','visions',
-                'divisions','objectives','daily_task_projects','daily_task_categories',
-                'dailytasks','report_points','tasks','task_assigns',
-                'ip_rights','sales_achievements','direct_points'
+                // 'report_productivities','project_dashboards','division_budgets','visions',
+                // 'divisions','objectives','daily_task_projects','daily_task_categories',
+                // 'dailytasks','report_points','tasks','task_assigns',
+                // 'ip_rights','sales_achievements','direct_points'
             ];
 
             $managementPenjualanMenu = 
             [
-            'quotes','work_orders','agreement_letters','projects',
-            'report_projects','basts','invoices','partners' ,'reports'
+            // 'quotes','work_orders','agreement_letters','projects',
+            // 'report_projects','basts','invoices','partners' ,'reports'
             ];
             
             $managementMasterDataMenu = [
-            'provinces','cities','districts','subdistricts','postal_codes','partner_parameter_types'
+            'provinces','cities','districts','subdistricts','postal_codes',
+            // 'partner_parameter_types'
             ];
 
-            $managementSettingMenu = ['badges','xp_configs','partner_types','setting_companies','roles','webhook_settings'];
+            $managementSettingMenu = [
+                // 'badges','xp_configs','partner_types',
+                'setting_companies','roles',
+                // 'webhook_settings'
+            ];
 
             $managementSoftwareMenu = [
-                'software_dashboards','software','master_accounts','subscriptions',
-                'customer_software','customer_subscriptions'
+                // 'software_dashboards','software','master_accounts','subscriptions',
+                // 'customer_software','customer_subscriptions'
             ];
 
 

@@ -135,36 +135,8 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->belongsTo(User::class, 'approvement_user_id');
     }
 
-    public function divisions()
-    {
-        return $this->belongsToMany(Division::class)
-            ->withPivot('weekly_report_required', 'is_primary');
-    }
-
-    public function assignedRequests()
-    {
-        return $this->hasMany(ItemRequest::class, 'assigned_pic_id');
-    }
-
-    public function request()
-    {
-        return $this->hasMany(ItemRequest::class, 'user_id');
-    }
-
-    public function usedItems()
-    {
-        return $this->hasMany(UsedItem::class);
-    }
     
-    public function getFirstDivisionAttribute()
-    {
-        return $this->divisions->first();
-    }
 
-    public function getPrimaryDivisionAttribute()
-    {
-        return $this->divisions->firstWhere('pivot.is_primary', true);
-    }
     
     public function getBackGroundVerifiedAttribute()
     {
@@ -177,46 +149,9 @@ class User extends Authenticatable implements MustVerifyEmail
             && !empty($existingAchievements)
             && !empty($existingFailures);
     }
-    public function userPosition()
-    {
-        return $this->hasMany(UserPosition::class);
-    }
 
-    public function employeeCheckings()
-    {
-        return $this->hasMany(EmployeeChecking::class);
-    }
-
-    public function dayoffQuotas()
-    {
-        return $this->hasMany(DayoffQuota::class);
-    }
-
-    public function getLastPositionAttribute()
-    {
-        return $this->userPosition()
-        ? $this->userPosition()->whereNull('end_date')->orderBy('created_at', 'desc')->first()
-        : null;
-    }
     
-    public function getLastPositionNowAttribute()
-    {
-        return $this->userPosition()
-        ? $this->userPosition()->orderBy('created_at', 'desc')->first()
-        : null;
-    }
 
-    public function getFirstPositionAttribute()
-    {
-        return $this->userPosition() ? $this->userPosition()
-            ->whereHas('letterSubmission', function ($query) {
-                $query->whereHas('letterType', function ($query) {
-                    $query->where('template', ParamSchema::TEMPLATEPERJANJIANKERJA);
-                });
-            })
-            ->latest('created_at')  // Assuming you want the latest based on 'created_at'/
-            ->first() : "";
-    }
     public function getAchievementDecodeAttribute()
     {
         return json_decode($this->achievement, true) ?? [];
@@ -267,25 +202,6 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->wfo_working_days[$dayName] ?? false;
     }
 
-    public function salary()
-    {
-        return $this->hasMany(UserSalary::class);
-    }
-
-    public function dayoffs()
-    {
-        return $this->hasMany(Dayoff::class);
-    }
-
-    public function agreementLetter()
-    {
-        return $this->hasMany(AgreementLetter::class,'user_created_id');
-    }
-
-    public function kye()
-    {
-        return $this->hasOne(Kye::class);
-    }
     
     public function accessibleCompanies()
     {
@@ -295,190 +211,14 @@ class User extends Authenticatable implements MustVerifyEmail
     /**
      * Riwayat XP karyawan ini.
      */
-    public function xpHistories()
-    {
-        return $this->hasMany(EmployeeXpHistory::class);
-    }
-    public function getLastSalaryAttribute()
-    {
-        return $this->salary()->latest()->first();
-    }
-
-    public function remainingDayoffQuotas()
-    {
-        if (! $this->dayoff_active) {
-            return collect();
-        }
-
-        return $this->dayoffQuotas
-            ->filter(fn($quota) => $quota->type?->is_limited) // hanya quota terbatas
-            ->map(function ($quota) {
-                $total = $quota->quota ?? $quota->type->default_quota;
-                $used = $quota->used ?? 0;
-                return [
-                    'type' => $quota->type->name,
-                    'remaining' => $total - $used,
-                ];
-            });
-    }
 
     public function internetCustomerRegions()
     {
         return $this->hasMany(InternetCustomerUserRegion::class);
     }
 
-    public function showName(): Attribute
-    {
-        return Attribute::make(
-            get: function () {
-                if ($this->kye) {
-                    switch ($this->kye->approval_status) {
-                        case 'approved':
-                            return $this->name . ' <i class="fa fa-check-circle text-primary"></i>';
-                        case 'pending':
-                            return $this->name . ' <i class="fa fa-clock text-warning"></i>';
-                        case 'rejected':
-                            return $this->name . ' <i class="fa fa-times-circle text-white"></i>';
-                        default:
-                            return $this->name;
-                    }
-                }
-
-                return $this->name; // Jika tidak ada KYE
-            }
-        );
-    }
-    public function getPointCheckinAttribute()
-    {
-        $totalCheckins = $this->total_successful_checkins ?? 0;
-        $targetCheckins = $this->total_days * ParamSchema::TARGET_CHECKIN;
-
-        $pointPercentage = $targetCheckins ? ($totalCheckins / $targetCheckins) * 100 : 0;
-
-        return "{$totalCheckins} (" . number_format($pointPercentage, 0) . "%)";
-    }
-
-    public function getTodayPercentageAttribute()
-    {
-        $totalToday = $this->total_checkin_today ?? 0;
-
-        $todayPercentage = $totalToday ? ($totalToday / 10) * 100 : 0;
-
-        return "{$totalToday} (" . number_format($todayPercentage, 0) . "%)";
-    }
-
-    public function getPointPercentageAttribute()
-    {
-        $totalCheckins = $this->total_successful_checkins ?? 0;
-        $targetCheckins = $this->total_days * ParamSchema::TARGET_CHECKIN;
-
-        return ($targetCheckins ? number_format(($totalCheckins / $targetCheckins) * 100, 0) : 0);
-    }
-
-    public function isSick(): bool
-    {
-        $today = Carbon::today();
-
-        return $this->dayoffs()
-            ->whereHas('type', fn($q) => $q->where('permission_required', true))
-            ->whereDate('date_start', '<=', $today)
-            ->whereDate('date_end', '>=', $today)
-            ->whereNull('rejected_at')
-            ->whereNotNull('approved_hr_at')
-            ->whereNotNull('approved_finance_at')
-            ->exists();
-    }
-
-    public function isDayoff(): bool
-    {
-        $today = Carbon::today();
-
-        return $this->dayoffs()
-            ->whereHas('type', fn($q) => $q->where('permission_required','!=', true))
-            ->whereDate('date_start', '<=', $today)
-            ->whereDate('date_end', '>=', $today)
-            ->whereNull('rejected_at')
-            ->where(function ($query) {
-                $query->whereNotNull('approved_hr_at')
-                    ->orWhereNotNull('approved_finance_at');
-            })
-            ->exists();
-    }
-
-    public function isSearchDayoff(): bool
-    {
-        return (Access::can('hrApprovement', 'dayoffs') ||  Access::can('financeApprovement', 'dayoffs') || Auth::user()->role->name == RoleSchema::ROOT || Auth::user()->role->name == RoleSchema::ADMIN || Auth::user()->role->name == RoleSchema::DIRECTOR);
-    }
     // Scope query untuk mendapatkan data user dengan perhitungan
-    public function scopeWithCheckinCounts($query, $userId = null, $start = null, $end = null, $today = null)
-    {
-        return $query->select('users.*')
-            ->byCompany(auth()->user()->company_id)
-            ->when($userId, function ($query) use ($userId) {
-                $query->where('id', $userId);
-            })
-            ->withCount([
-                'employeeCheckings as total_checkin_today' => function ($query) use ($today) {
-                    $query->where('is_active', false)
-                          ->where('is_completed', true)
-                          ->where('is_dayoff', false)
-                          ->where('is_permission', false)
-                          ->whereDate('created_at', $today);
-                },
-                'employeeCheckings as total_successful_checkins' => function ($query) use ($start, $end) {
-                    $query->where('is_active', false)
-                          ->where('is_completed', true)
-                          ->where('is_dayoff', false)
-                          ->where('is_permission', false);
-                    if ($start && $end) {
-                        $query->whereBetween('created_at', [$start, $end]);
-                    }
-                },
-                'employeeCheckings as total_days' => function ($query) use ($start, $end) {
-                    $query->select(DB::raw('COUNT(DISTINCT DATE(created_at))'))
-                          ->where('is_dayoff', false)
-                          ->where('is_permission', false);
-                    if ($start && $end) {
-                        $query->whereBetween('created_at', [$start, $end]);
-                    }
-                }
-            ]);
-    }
 
-    public function scopeWithCheckinCountsJob($query, $companyId = null, $userId = null, $start = null, $end = null, $today = null, $role = null)
-    {
-        return $query->select('users.*')
-            ->byCompanyJob($companyId, $role)
-            ->when($userId, function ($query) use ($userId) {
-                $query->where('id', $userId);
-            })
-            ->withCount([
-                'employeeCheckings as total_checkin_today' => function ($query) use ($today) {
-                    $query->where('is_active', false)
-                          ->where('is_completed', true)
-                          ->where('is_dayoff', false)
-                          ->where('is_permission', false)
-                          ->whereDate('created_at', $today);
-                },
-                'employeeCheckings as total_successful_checkins' => function ($query) use ($start, $end) {
-                    $query->where('is_active', false)
-                          ->where('is_completed', true)
-                          ->where('is_dayoff', false)
-                          ->where('is_permission', false);
-                    if ($start && $end) {
-                        $query->whereBetween('created_at', [$start, $end]);
-                    }
-                },
-                'employeeCheckings as total_days' => function ($query) use ($start, $end) {
-                    $query->select(DB::raw('COUNT(DISTINCT DATE(created_at))'))
-                          ->where('is_dayoff', false)
-                          ->where('is_permission', false);
-                    if ($start && $end) {
-                        $query->whereBetween('created_at', [$start, $end]);
-                    }
-                }
-            ]);
-    }
     public function scopeByCompany($query,$companyId)
     {
         $companyIds = auth()->user()->accessibleCompanies->pluck('id')->push($companyId)->unique();
@@ -492,14 +232,6 @@ class User extends Authenticatable implements MustVerifyEmail
     public function scopeByCompanyPublic($query,$companyId)
     {
         if($companyId)
-        {
-            return $query->where("company_id",$companyId);
-        }
-    }
-
-    public function scopeByCompanyJob($query,$companyId, $role)
-    {
-        if($companyId && $role && $role != RoleSchema::ROOT)
         {
             return $query->where("company_id",$companyId);
         }
@@ -579,21 +311,9 @@ class User extends Authenticatable implements MustVerifyEmail
     //     }
     // }
     
-    /**
-     * Scope to get only active users (users with divisions)
-     */
-    public function scopeIsActive($query)
-    {
-        return $query->whereHas('divisions');
-    }
+
     
-    /**
-     * Scope to get only inactive users (users without divisions)
-     */
-    public function scopeIsNotActive($query)
-    {
-        return $query->whereDoesntHave('divisions');
-    }
+
     public function scopeByCompanyAccess($query, $user, $companyId, $role)
     {
         if ($companyId && $role && $role != RoleSchema::ROOT) {

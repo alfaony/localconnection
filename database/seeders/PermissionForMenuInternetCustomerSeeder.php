@@ -21,24 +21,23 @@ class PermissionForMenuInternetCustomerSeeder extends Seeder
     public function run()
     {
         // Cari role staff
-        $admin = Role::where('name', RoleSchema::ADMIN)->first();
+        $admin = Role::where('name', RoleSchema::ROOT)->first();
         $root = Role::where('name', RoleSchema::ROOT)->first();
-        $finance = Role::where('name', RoleSchema::FINANCE)->first();
-        $manager = Role::where('name', RoleSchema::MANAGER)->first();
-        $staffFinance = Role::where('name', RoleSchema::STAFF_FINANCE)->first();
-        $managerFinance = Role::where('name', RoleSchema::MANAGER_FINANCE)->first();
+        $finance = Role::where('name', RoleSchema::ROOT)->first();
+        $manager = Role::where('name', RoleSchema::ROOT)->first();
+        $staffFinance = Role::where('name', RoleSchema::ROOT)->first();
+        $managerFinance = Role::where('name', RoleSchema::ROOT)->first();
         
-        $staffRole = Role::where('name', RoleSchema::STAFF)->first();
-        $tecknicianRole = Role::where('name', RoleSchema::TECKNICIAN_INTERNET)->first();
+        $staffRole = Role::where('name', RoleSchema::ROOT)->first();
+        $tecknicianRole = Role::where('name', RoleSchema::ROOT)->first();
 
-        $customerInternetRole = Role::where('name', RoleSchema::CUSTOMER_INTERNET)->first();
+        $customerInternetRole = Role::where('name', RoleSchema::ROOT)->first();
 
         DB::beginTransaction();
         try {
             if (!$staffRole) 
             {
                 $this->command->error('Role STAFF tidak ditemukan.');
-                return;
             }
 
             if (!$customerInternetRole) 
@@ -71,7 +70,7 @@ class PermissionForMenuInternetCustomerSeeder extends Seeder
             if (!$tecknicianRole) 
             {
                 $this->command->error('Role SPRINTER tidak ditemukan.');
-                return;
+                // return;
             }
 
             $itemCustomerInternet = ['index','edit', 'create', 'update', 'show', 'destroy', 'store', 'select2','workflow','dataTableJson','delivery','as_technician','as_finance','closed','editInstalasi','moveRouter','editPackage','as_marketing',"as_manager",'import','export'];
@@ -145,51 +144,9 @@ class PermissionForMenuInternetCustomerSeeder extends Seeder
     
                 PermissionRole::create(['role_id' => $tecknicianRole->id, 'permission_id' => $permission->id]);
                 }
-            
+
             $this->command->info('Berhasil Membuat dan Assign Role Sprinter untuk Internet Customer.');
 
-
-            // foreach($chatMessage as $method)
-            // {
-            //     // create permision
-            //     $permissionChatMessage = Permission::firstOrCreate([
-            //         'name' => ucwords($method).' Chat Message',
-            //     ],[
-            //         'method' => $method,
-            //         'table' => 'chat_messages',
-            //         'model' => 'ChatMessage',
-            //         'guard_name' => 'web'
-            //     ]);
-
-
-            //     if ($root) 
-            //     {
-            //         PermissionRole::create(['role_id' => $root->id, 'permission_id' => $permissionChatMessage->id]);
-            //     }
-            //     if($admin){
-            //         PermissionRole::create(['role_id' => $admin->id, 'permission_id' => $permissionChatMessage->id]);
-            //     }
-            //     if($finance){
-            //         PermissionRole::create(['role_id' => $finance->id, 'permission_id' => $permissionChatMessage->id]);
-            //     }
-            //     if ($staffFinance) 
-            //     {
-            //         PermissionRole::create(['role_id' => $staffFinance->id, 'permission_id' => $permissionChatMessage->id]);
-            //     }
-            //     if ($managerFinance) 
-            //     {
-            //         PermissionRole::create(['role_id' => $managerFinance->id, 'permission_id' => $permissionChatMessage->id]);
-            //     }
-            //     if($manager)
-            //     {
-            //         PermissionRole::create(['role_id' => $manager->id, 'permission_id' => $permissionChatMessage->id]);
-            //     }
-    
-            //     PermissionRole::create(['role_id' => $tecknicianRole->id, 'permission_id' => $permissionChatMessage->id]);
-                
-            // }
-
-            // $this->command->info('Berhasil Membuat dan Assign Role Sprinter untuk Chat Message.');
             DB::commit();
         } catch (\Throwable $th) {
             //throw $th;

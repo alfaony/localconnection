@@ -14,7 +14,7 @@ return [
     |
     */
 
-    'title' => 'BOS - Bright Operating System',
+    'title' => 'Internet Management',
     'title_prefix' => '',
     'title_postfix' => '',
 

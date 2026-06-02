@@ -13,7 +13,7 @@ use App\Schemas\RoleSchema;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
-class permissionForMenuPromoSeeder extends Seeder
+class PermissionForMenuPromoSeeder extends Seeder
 {
     /**
      * Run the database seeds.

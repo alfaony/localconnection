@@ -1,0 +1,194 @@
+<?php
+
+namespace Database\Seeders;
+
+use App\Models\Role;
+use App\Models\Permission;
+use App\Models\PermissionRole;
+use App\Schemas\RoleSchema;
+use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
+
+class PermissionForProductTillSettingCompanySeeder extends Seeder
+{
+    /**
+     * Run the database seeds.
+     *
+     * @return void
+     */
+    public function run()
+    {
+
+        // const ROOT = 'Super Administrator'; // all access
+        // const ADMIN = 'Administrator'; // all except role & permission (his company only)
+        // const FINANCE = 'Top Management';
+        // const PROCUREMENT = 'Procurement';
+        // const PM = 'Project Manager';
+        // const HR = 'Human Resource';
+        // const SALES = 'Sales';
+
+        // Create Roles
+        $root = Role::where('name',RoleSchema::ROOT)->first();
+        if(!$root)
+        {
+            $root = Role::create([
+                'name' => RoleSchema::ROOT,
+                'desc' => 'Akun utama developer yang berfungsi untuk mengkontrol seluruh akses',
+                'guard_name' => 'web'
+            ]);
+        }
+
+        $admin = Role::where('name',RoleSchema::ADMIN)->first();
+        if(!$admin)
+        {
+            $admin = Role::create([
+                'name' => RoleSchema::ADMIN,
+                'desc' => 'Akun utama developer yang berfungsi untuk mengkontrol seluruh akses',
+                'guard_name' => 'web'
+            ]);
+        }
+
+        
+        $finance = Role::where('name',RoleSchema::FINANCE)->first();
+        if(!$finance)
+        {
+
+            $finance = Role::create([
+                'name' => RoleSchema::FINANCE,
+                'desc' => 'Akun utama developer yang berfungsi untuk mengkontrol seluruh akses',
+                'guard_name' => 'web'
+            ]);
+        }
+
+        $procurement = Role::where('name',RoleSchema::PROCUREMENT)->first();
+        if(!$procurement)
+        {
+            $procurement = Role::create([
+                'name' => RoleSchema::PROCUREMENT,
+                'desc' => 'Akun utama developer yang berfungsi untuk mengkontrol seluruh akses',
+                'guard_name' => 'web'
+            ]);
+        }
+
+        $pm = Role::where('name',RoleSchema::PM)->first();
+        if(!$pm)
+        {
+            $pm = Role::create([
+                'name' => RoleSchema::PM,
+                'desc' => 'Akun utama developer yang berfungsi untuk mengkontrol seluruh akses',
+                'guard_name' => 'web'
+            ]);
+        }
+        
+        
+        $hr = Role::where('name',RoleSchema::HR)->first();
+        if(!$hr)
+        {
+            $hr = Role::create([
+                'name' => RoleSchema::HR,
+                'desc' => 'Akun utama developer yang berfungsi untuk mengkontrol seluruh akses',
+                'guard_name' => 'web'
+            ]);
+        }
+
+
+        $sales = Role::where('name',RoleSchema::SALES)->first();
+        if(!$sales)
+        {
+            $sales = Role::create([
+                'name' => RoleSchema::SALES,
+                'desc' => 'Akun utama developer yang berfungsi untuk mengkontrol seluruh akses',
+                'guard_name' => 'web'
+            ]);
+        }
+        
+        // project
+        $projects = ['index','create', 'show', 'edit', 'update', 'destroy', 'store', 'select2'];
+
+        // Project
+        foreach ($projects as $method) 
+        {
+            // create permision
+            $permission = Permission::firstOrCreate([
+                'name' => ucwords($method).' Project',
+            ],[
+                'method' => $method,
+                'table' => 'projects',
+                'model' => 'Project',
+                'guard_name' => 'web'
+            ]);
+
+            //assign role & permission
+            PermissionRole::create(['role_id' => $root->id, 'permission_id' => $permission->id]);
+            PermissionRole::create(['role_id' => $admin->id, 'permission_id' => $permission->id]);
+            PermissionRole::create(['role_id' => $pm->id, 'permission_id' => $permission->id]);
+        }
+
+        $employees = ['index','create', 'show', 'edit', 'update', 'destroy', 'store', 'select2'];
+
+        // Employee
+        foreach ($employees as $method) 
+        {
+            // create permision
+            $permission = Permission::firstOrCreate([
+                'name' => ucwords($method).' Employee',
+            ],[
+                'method' => $method,
+                'table' => 'employees',
+                'model' => 'Employee',
+                'guard_name' => 'web'
+            ]);
+
+            //assign role & permission
+            PermissionRole::create(['role_id' => $root->id, 'permission_id' => $permission->id]);
+            PermissionRole::create(['role_id' => $admin->id, 'permission_id' => $permission->id]);
+            PermissionRole::create(['role_id' => $hr->id, 'permission_id' => $permission->id]);
+        }
+
+        // User
+        $users = ['index','create', 'show', 'edit', 'update', 'destroy', 'store', 'select2'];
+
+        foreach ($employees as $method) 
+        {
+            // create permision
+            $permission = Permission::firstOrCreate([
+                'name' => ucwords($method).' User',
+            ],[
+                'method' => $method,
+                'table' => 'users',
+                'model' => 'User',
+                'guard_name' => 'web'
+            ]);
+
+            //assign role & permission
+            PermissionRole::create(['role_id' => $root->id, 'permission_id' => $permission->id]);
+            PermissionRole::create(['role_id' => $admin->id, 'permission_id' => $permission->id]);
+            PermissionRole::create(['role_id' => $finance->id, 'permission_id' => $permission->id]);
+            PermissionRole::create(['role_id' => $procurement->id, 'permission_id' => $permission->id]);
+            PermissionRole::create(['role_id' => $hr->id, 'permission_id' => $permission->id]);
+            PermissionRole::create(['role_id' => $sales->id, 'permission_id' => $permission->id]);
+            PermissionRole::create(['role_id' => $pm->id, 'permission_id' => $permission->id]);
+        }
+
+        // roles
+        $roles = ['index','edit', 'update', 'show', 'destroy', 'store' ,'create'];
+
+        foreach ($roles as $method) 
+        {
+            // create permision
+            $permission = Permission::firstOrCreate([
+                'name' => ucwords($method).' Role',
+            ],[
+                'method' => $method,
+                'table' => 'roles',
+                'model' => 'Role',
+                'guard_name' => 'web'
+            ]);
+
+            //assign role & permission
+            PermissionRole::create(['role_id' => $root->id, 'permission_id' => $permission->id]);
+        }
+    }
+}
+
