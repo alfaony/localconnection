@@ -182,11 +182,6 @@ class InternetCustomer extends Model
         return $this->belongsTo(AddressPool::class, 'override_pool_id');
     }
 
-    public function partnershipAgreement()
-    {
-        return $this->belongsTo(PartnershipAgreement::class)->withTrashed();
-    }
-
     public function router()
     {
         return $this->belongsTo(Router::class)->withTrashed();

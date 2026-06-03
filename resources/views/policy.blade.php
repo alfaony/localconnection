@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Privacy Policy - BOS (Bright Operating System)</title>
+    <title>Privacy Policy</title>
     <style>
         * {
             margin: 0;
@@ -219,15 +219,13 @@
 <body>
     <div class="container">
         <div class="header">
-            <div class="logo">BOS</div>
             <h1>Privacy Policy</h1>
-            <p>Bright Operating System</p>
         </div>
 
         <div class="content">       
             <div class="section">
                 <h2>1. Pengantar</h2>
-                <p>Selamat datang di BOS (Bright Operating System). Kami menghargai privasi Anda dan berkomitmen untuk melindungi data pribadi Anda. Kebijakan Privasi ini menjelaskan bagaimana kami mengumpulkan, menggunakan, dan melindungi informasi Anda saat menggunakan sistem kami.</p>
+                <p>Selamat datang. Kami menghargai privasi Anda dan berkomitmen untuk melindungi data pribadi Anda. Kebijakan Privasi ini menjelaskan bagaimana kami mengumpulkan, menggunakan, dan melindungi informasi Anda saat menggunakan sistem kami.</p>
                 <div class="highlight-box">
                     <strong>Komitmen Kami:</strong> Kami tidak akan pernah menjual data pribadi Anda kepada pihak ketiga untuk tujuan pemasaran.
                 </div>
@@ -257,7 +255,7 @@
                 <h2>3. Penggunaan Informasi</h2>
                 <p>Kami menggunakan informasi yang dikumpulkan untuk:</p>
                 <ul>
-                    <li>Menyediakan dan memelihara layanan BOS</li>
+                    <li>Menyediakan dan memelihara layanan kami</li>
                     <li>Mengautentikasi dan mengelola akun pengguna</li>
                     <li>Meningkatkan pengalaman pengguna dan fungsionalitas sistem</li>
                     <li>Mengirim notifikasi penting terkait sistem</li>
@@ -307,7 +305,7 @@
 
             <div class="section">
                 <h2>7. Cookie dan Teknologi Pelacakan</h2>
-                <p>BOS menggunakan cookie dan teknologi serupa untuk:</p>
+                <p>Sistem kami menggunakan cookie dan teknologi serupa untuk:</p>
                 <ul>
                     <li>Menjaga sesi login Anda tetap aktif</li>
                     <li>Mengingat preferensi dan pengaturan Anda</li>
@@ -321,7 +319,7 @@
                 <h2>8. Retensi Data</h2>
                 <p>Kami menyimpan data pribadi Anda selama:</p>
                 <ul>
-                    <li>Akun Anda aktif dan menggunakan layanan BOS</li>
+                    <li>Akun Anda aktif dan menggunakan layanan kami</li>
                     <li>Diperlukan untuk memenuhi tujuan yang dijelaskan dalam kebijakan ini</li>
                     <li>Diwajibkan oleh peraturan hukum atau perpajakan yang berlaku</li>
                 </ul>
@@ -332,7 +330,7 @@
                 <h2>9. Perubahan Kebijakan</h2>
                 <p>Kami dapat memperbarui Kebijakan Privasi ini dari waktu ke waktu. Perubahan akan dinotifikasikan melalui:</p>
                 <ul>
-                    <li>Notifikasi di dalam sistem BOS</li>
+                    <li>Notifikasi di dalam sistem kami</li>
                     <li>Email ke alamat terdaftar Anda</li>
                     <li>Pembaruan tanggal "Terakhir diperbarui" di halaman ini</li>
                 </ul>
@@ -341,7 +339,7 @@
         </div>
 
         <div class="footer">
-            <p>&copy; {{ date('Y') }} BOS (Bright Operating System)</p>
+            <p>&copy; {{ date('Y') }} Sistem Manajemen Internet</p>
         </div>
     </div>
 

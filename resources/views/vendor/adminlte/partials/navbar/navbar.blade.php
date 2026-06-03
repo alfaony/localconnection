@@ -13,33 +13,35 @@
         {{-- Custom left links --}}
         @yield('content_top_nav_left')
     </ul>
-    
+
     <ul class="navbar-nav mr-auto">
-      <li class="nav-item active">
-        <a class="nav-link" href="/">{{ Auth::user()->company ? Auth::user()->company->name : '' }} <span class="sr-only"></span></a>
-      </li>
+        <li class="nav-item d-none d-md-flex align-items-center">
+            <span class="nav-brand-label">
+                <i class="fas fa-wifi mr-1 text-primary"></i>
+                {{ Auth::user()->company ? Auth::user()->company->name : 'Dashboard Internet' }}
+            </span>
+        </li>
     </ul>
 
-
     {{-- Navbar right links --}}
-    <ul class="navbar-nav ml-auto">
+    <ul class="navbar-nav ml-auto align-items-center">
         {{-- Custom right links --}}
         @yield('content_top_nav_right')
 
         {{-- Configured right links --}}
         @each('adminlte::partials.navbar.menu-item', $adminlte->menu('navbar-right'), 'item')
 
-        {{-- Envelope link with notification count --}}
+        {{-- Inbox notification --}}
         @canAccess('index','inboxes')
-        <li class="nav-item">
-            <a class="nav-link" href="{{ route('inbox.index') }}">
-                <i class="fas fa-envelope"></i>
-                <span class="badge badge-success navbar-badge"></span>
+        <li class="nav-item mx-1">
+            <a class="nav-link nav-icon-btn" href="{{ route('inbox.index') }}" title="Inbox">
+                <i class="fas fa-bell"></i>
+                <span class="badge badge-dot"></span>
             </a>
         </li>
         @endcanAccess
 
-        {{-- User menu link --}}
+        {{-- User menu --}}
         @if(Auth::user())
             @if(config('adminlte.usermenu_enabled'))
                 @include('adminlte::partials.navbar.menu-item-dropdown-user-menu')
@@ -48,7 +50,7 @@
             @endif
         @endif
 
-        {{-- Right sidebar toggler link --}}
+        {{-- Right sidebar toggler --}}
         @if(config('adminlte.right_sidebar'))
             @include('adminlte::partials.navbar.menu-item-right-sidebar-toggler')
         @endif

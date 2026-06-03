@@ -25,13 +25,14 @@ class DatabaseSeeder extends Seeder
         $this->call(PermissionForMenuRole::class);
         $this->call(PermissionForMenuInternetPackageSeeder::class);
         $this->call(PermissionForMenuProvider::class);
-        // $this->call(PermissionForMenuInternetCustomerSeeder::class);
+        $this->call(PermissionForMenuInternetCustomerSeeder::class);
         // $this->call(PermissionForMenuInternetPackage::class);
         // $this->call(PermissionForMenuInternetCustomer::class);
         $this->call(permissionForMenuPromoSeeder::class);
         $this->call(PermissionForMenuRouterSeeder::class);
         $this->call(PermissionForMenuMasterGroupSeeder::class);
         $this->call(PermissionForMenuWilayahSeeder::class);
+        $this->call(PermissionForMenuInternetSeeder::class);
         $this->call(ClearPermissionSeeder::class);
         // $this->call(PermissionForProductPriceQuoteAndWorkOrderSeeder::class);
         // $this->call(PermissionForDeleteDetailReportSeeder::class);
@@ -113,7 +114,7 @@ class DatabaseSeeder extends Seeder
         // $this->call(PermissionForMenuMeetingSeeder::class);
         // $this->call(PermissionForMenuMomSeeder::class);
         // $this->call(PermissionForMenuUsedComputer::class);
-        // $this->call(PermissionForMenuInternetSeeder::class);
+
         // $this->call(PermissionForMenuRouterSeeder::class);
         // $this->call(PermissionForMenuWebhookSettingSeeder::class);
         // $this->call(PermissionForMenuOfficeAttendance::class);
@@ -139,8 +140,9 @@ class DatabaseSeeder extends Seeder
         // $this->call(PermissionForMenuMasterGroupSeeder::class);
         // $this->call(PermissionForMenuUserBlackListSeeder::class);
         // $this->call(PermissionForMenuInternetCustomerUserRegionSeeder::class);
-        
-        
+        // $this->call(PermissionForHomeDashboardSeeder::class);
+
+
 
     }
 }

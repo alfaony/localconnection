@@ -8,15 +8,15 @@
                     <div class="mb-5">
                         @include('components.alert')
                         <div class="progress-steps">
-                            @foreach(['Alamat', 'Data Pribadi', 'Persetujuan', 'Pembayaran', 'Konfirmasi'] as $index => $title)
+                            @foreach(['Alamat', 'Data Pribadi', 'Pembayaran', 'Konfirmasi'] as $index => $title)
                                 <div class="step-item {{ $step === $index + 1 ? 'active' : ($step > $index + 1 ? 'completed' : '') }}">
-                                    <span class="step-number">Step {{ $index + 1 }}</span>
+                                    <div class="step-number"><span>{{ $index + 1 }}</span></div>
                                     <span class="step-title">{{ $title }}</span>
                                 </div>
                             @endforeach
                         </div>
                         <div class="progress" style="height: 8px;">
-                            <div class="progress-bar" role="progressbar" style="width: {{ ($step - 1) * 25 }}%" aria-valuenow="{{ ($step - 1) * 25 }}" aria-valuemin="0" aria-valuemax="100"></div>
+                            <div class="progress-bar" role="progressbar" style="width: {{ ($step - 1) * 33 }}%" aria-valuenow="{{ ($step - 1) * 33 }}" aria-valuemin="0" aria-valuemax="100"></div>
                         </div>
                     </div>
 
@@ -33,17 +33,12 @@
                         @endif
 
                         @if($step === 3)
-                            <!-- STEP 3: TANDA TANGAN & PERSETUJUAN (DIPINDAH) -->
-                            @include('livewire.internet-customer.steps.step3-signature')
-                        @endif
-
-                        @if($step === 4)
-                            <!-- STEP 4: PEMBAYARAN (DIPINDAH) -->
+                            <!-- STEP 3: PEMBAYARAN -->
                             @include('livewire.internet-customer.steps.step4-payment')
                         @endif
 
-                        @if($step === 5)
-                            <!-- STEP 5: KONFIRMASI -->
+                        @if($step === 4)
+                            <!-- STEP 4: KONFIRMASI -->
                             @include('livewire.internet-customer.steps.step5-confirmation')
                         @endif
                     </div>

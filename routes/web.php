@@ -82,6 +82,7 @@ Auth::routes([
 
 Route::get('/', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
 Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
+Route::get('/home/internet-report', [App\Http\Controllers\HomeController::class, 'internetReport'])->name('home.internet-report')->middleware(['auth', 'ip.restriction']);
 
 Route::group(['middleware' => ['auth','role.permission','ip.restriction']], function() {
 
@@ -177,6 +178,19 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
 
     // Dashboard
     Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard.index');
+
+    // ========================================================================
+    // INTERNET ASSET
+    // ========================================================================
+    Route::get('internet-asset', \App\Http\Livewire\Asset\AssetIndex::class)->name('internet-asset.index');
+    Route::get('internet-asset/create', \App\Http\Livewire\Asset\AssetForm::class)->name('internet-asset.create');
+    Route::get('internet-asset/edit/{id}', \App\Http\Livewire\Asset\AssetForm::class)->name('internet-asset.edit');
+
+    // ========================================================================
+    // INTERNET REPORT
+    // ========================================================================
+    Route::get('internet-report', [\App\Http\Controllers\InternetReportController::class, 'index'])->name('internet-report.index');
+    Route::get('internet-report/data', [\App\Http\Controllers\InternetReportController::class, 'data'])->name('internet-report.data');
 });
 
 // Error page

@@ -5,12 +5,6 @@
     <label class="form-label fw-bold">Segmen Pelanggan <span class="text-danger">*</span></label>
     <div class="d-flex gap-3">
         <div class="form-check form-check-inline">
-            <input class="form-check-input" type="radio" id="ct_bisnis" name="customer_type" value="bisnis" wire:model="customer_type">
-            <label class="form-check-label" for="ct_bisnis">
-                <i class="fas fa-building me-1 text-primary"></i> <strong>Bisnis</strong>
-            </label>
-        </div>
-        <div class="form-check form-check-inline">
             <input class="form-check-input" type="radio" id="ct_rumah" name="customer_type" value="rumah" wire:model="customer_type">
             <label class="form-check-label" for="ct_rumah">
                 <i class="fas fa-home me-1 text-success"></i> <strong>Rumah</strong>

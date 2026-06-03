@@ -1,0 +1,71 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <defs>
+    <!-- Gradient untuk Background Sinyal (Aksen Modern) -->
+    <linearGradient id="netGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#00d2ff" />
+      <stop offset="100%" stop-color="#0066ff" />
+    </linearGradient>
+    
+    <!-- Gradient untuk Perumahan/User -->
+    <linearGradient id="homeGradient" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#ff6a00" />
+      <stop offset="100%" stop-color="#ee0979" />
+    </linearGradient>
+
+    <!-- Drop Shadow Efek -->
+    <filter id="dropShadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="8" stdDeviation="6" flood-opacity="0.15" />
+    </filter>
+  </defs>
+
+  <!-- Background Bulat Lembut (Optional, cocok untuk Icon Aplikasi/Web) -->
+  <rect width="512" height="512" rx="128" fill="#ffffff" />
+
+  <g filter="url(#dropShadow)">
+    <!-- Tower / Pemancar Pusat (Simbol Core ISP) -->
+    <g transform="translate(256, 170)">
+      <!-- Titik Pusat Sinyal (Router/NOC) -->
+      <circle cx="0" cy="0" r="18" fill="#0066ff" />
+      
+      <!-- Tiang Tower -->
+      <path d="M -8 10 L -16 120 L 16 120 L 8 10 Z" fill="#0066ff" opacity="0.8" />
+      <path d="M -12 60 L 12 60 M -14 90 L 14 90 M -8 10 L 16 120 M 8 10 L -16 120" stroke="#ffffff" stroke-width="3" stroke-linecap="round" />
+    </g>
+
+    <!-- Gelombang Sinyal Wi-Fi / Distribusi RT-RW -->
+    <!-- Sinyal 1 (Terdekat) -->
+    <path d="M 216 130 A 56 56 0 0 1 296 130" fill="none" stroke="url(#netGradient)" stroke-width="12" stroke-linecap="round" />
+    <!-- Sinyal 2 (Menengah) -->
+    <path d="M 186 100 A 96 96 0 0 1 326 100" fill="none" stroke="url(#netGradient)" stroke-width="14" stroke-linecap="round" />
+    <!-- Sinyal 3 (Terluar / Luas) -->
+    <path d="M 150 64 A 146 146 0 0 1 362 64" fill="none" stroke="url(#netGradient)" stroke-width="16" stroke-linecap="round" />
+
+    <!-- Kluster Perumahan RT / RW (Pelanggan/End Users) -->
+    <!-- Rumah Kiri -->
+    <g transform="translate(110, 270)">
+      <!-- Atap -->
+      <polygon points="50,0 0,45 10,45 10,90 90,90 90,45 100,45" fill="url(#homeGradient)" />
+      <!-- Detail Pintu/Sinyal Masuk -->
+      <rect x="40" y="60" width="20" height="30" rx="4" fill="#ffffff" />
+    </g>
+
+    <!-- Rumah Kanan (Bertingkat/Padat) -->
+    <g transform="translate(302, 270)">
+      <!-- Atap -->
+      <polygon points="50,0 0,45 10,45 10,90 90,90 90,45 100,45" fill="url(#homeGradient)" />
+      <!-- Detail Pintu/Sinyal Masuk -->
+      <rect x="40" y="60" width="20" height="30" rx="4" fill="#ffffff" />
+    </g>
+
+    <!-- Rumah Tengah (Fokus Utama / Pusat RT-RW) -->
+    <g transform="translate(196, 240)">
+      <!-- Atap Rumah Utama -->
+      <polygon points="60,0 0,55 12,55 12,110 108,110 108,55 120,55" fill="#1e293b" />
+      <!-- Jalur Kabel / Interkoneksi LAN/Mikhmon (Simbolis Terhubung ke Tower) -->
+      <rect x="48" y="70" width="24" height="40" rx="4" fill="#ffffff" />
+    </g>
+    
+    <!-- Kabel FO / Simbol Distribusi Ethernet Jaringan Bawah -->
+    <path d="M 170 360 L 256 320 L 342 360" fill="none" stroke="#00d2ff" stroke-width="6" stroke-linecap="round" stroke-dasharray="8 6" />
+  </g>
+</svg>

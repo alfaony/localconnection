@@ -24,7 +24,6 @@ class InternetCustomerShow extends Component
     use WithFileUploads;
 
     public $customer;
-    public $agreementFields;
     public $paymentProofUrl;
     public $ktpPhotoUrl;
     public $installationPhotos = [];
@@ -92,7 +91,6 @@ class InternetCustomerShow extends Component
             'district',
             'subdistrict',
             'internetPackage.regions',  // eager-load regions untuk harga per wilayah
-            'partnershipAgreement',
             'userCustomer',
             'purchases',
             'installation'
@@ -138,10 +136,6 @@ class InternetCustomerShow extends Component
                 'message' => 'Terdapat Kesalahan pada Link Akun',
                 'icon' => 'fas fa-ban'
             ]);
-        }
-
-        if ($this->customer->partnershipAgreement) {
-            $this->agreementFields = json_decode($this->customer->partnershipAgreement->fields, true);
         }
 
         $this->ktpPhotoUrl = $this->customer->ktp_photo;

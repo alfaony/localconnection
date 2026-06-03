@@ -387,46 +387,6 @@
                 </div>
                 @endif
                 
-                {{-- 
-                @if($agreementFields)
-                <div class="row mt-4">
-                    <div class="col-md-12">
-                        <h4 class="text-primary mb-3">
-                            <i class="fas fa-file-contract mr-2"></i>Perjanjian Kerjasama
-                        </h4>
-                        <div class="card border-primary">
-                            <div class="card-header bg-light">
-                                <h5 class="card-title mb-0">Detail Perjanjian</h5>
-                            </div>
-                            <div class="card-body">
-                                @php
-                                    $agreement = $customer->partnershipAgreement;
-                                @endphp
-                                @if(view()->exists('partnership_agreement.pdf.' . $agreement->type->name_format))
-                                <div class="card scrollable" id="printThis">
-                                    @include('partnership_agreement.pdf.' . $agreement->type->name_format, ['agreement' => $agreement])
-                                </div>
-                                <div class="d-flex justify-content-center mt-3">
-                                    <button type="button" id="downloadWorkOrder" class="btn btn-info mb-2 mr-2"><i class="fa fa-file-pdf"></i> Download</button>
-                                </div>
-                                @else
-                                <div class="d-flex justify-content-center">
-                                    <div class="card">
-                                        <div class="card-body text-center">
-                                            <h5><i class="fa fa-exclamation-circle"></i> Tidak Ada Template Yang Tersedia</h5>
-                                        </div>
-                                    </div>
-                                </div>
-                                @endif
-                            </div>
-                            <div class="card-footer text-muted">
-                                <small>Dibuat pada: {{ \Carbon\Carbon::parse($customer->partnershipAgreement->created_at)->locale('id')->translatedFormat('d F Y') }}</small>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                @endif
-                --}}
             </div>
         </div>
     </div>
@@ -1001,33 +961,6 @@
     }
 </script>
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-
-@if($customer->partnershipAgreement)
-<script>
-    function prinsts() 
-    {
-        let name = "{{$customer->partnershipAgreement->number_result}}" + " {{ $customer->partnershipAgreement->type->name}}";
-        let printContents = document.getElementById("printThis").innerHTML;
-        let originalContents = document.body.innerHTML;
-
-        document.body.innerHTML = printContents;
-
-        window.addEventListener("beforeprint", (event) => {
-            document.title = name;
-        });
-
-        window.print();
-        document.body.innerHTML = originalContents;
-    }
-
-    $(document).ready(function () {
-        $("#downloadWorkOrder").click(function(e) {
-            e.preventDefault();
-            prinsts();
-        });
-    });
-</script>
-@endif
 
 <script>
 document.addEventListener('livewire:load', function() {

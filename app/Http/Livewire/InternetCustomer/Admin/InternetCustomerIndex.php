@@ -34,7 +34,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 
-use App\Helpers\InboxHelper;
+// use App\Helpers\InboxHelper;
 use App\Helpers\Access;
 
 use App\Schemas\ParamSchema;
@@ -1581,13 +1581,13 @@ class InternetCustomerIndex extends Component
 
     private function sentInbox($to,$message,$directUrl)
     {
-        $inboxHelper = new InboxHelper();
-        $inboxHelper->sent(
-            $to, 
-            Auth::user()->id, 
-            $message, 
-            $directUrl
-        );
+        // $inboxHelper = new InboxHelper();
+        // $inboxHelper->sent(
+        //     $to, 
+        //     Auth::user()->id, 
+        //     $message, 
+        //     $directUrl
+        // );
         return true;
     }
 

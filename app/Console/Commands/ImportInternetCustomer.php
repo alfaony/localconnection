@@ -20,8 +20,6 @@ use Illuminate\Support\Str;
 use Maatwebsite\Excel\Facades\Excel;
 use Carbon\Carbon;
 use App\Models\CoverageService;
-use App\Models\PartnershipAgreement;
-use App\Models\PartnershipAgreementType;
 use App\Models\User;
 use App\Models\AgreementSignature;
 use App\Helpers\InboxHelper;
@@ -317,14 +315,6 @@ class ImportInternetCustomer extends Command
                 'is_paid' => $promoData['has_free_months'], // Jika ada promo, langsung dianggap sudah bayar
                 'status' => $promoData['has_free_months'] ? ParamSchema::CUSTOMER_EXISTING : ParamSchema::WAITING_PAYMENT_CONFIRMATION,
             ]);
-
-             $agreement = $this->createPartnershipAgreement(
-                $company, 
-                $internetCustomer, 
-                $data, 
-                null,
-                null,
-            );
 
             // Buat user customer
             // $userCustomer = UserCustomer::create([

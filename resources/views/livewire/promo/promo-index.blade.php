@@ -159,8 +159,8 @@
                                 </tr>
                                 @empty
                                 <tr>
-                                    <td colspan="6" class="text-center py-5">
-                                        <div class="d-flex flex-column align-items-center">
+                                    <td colspan="7" class="text-center py-5">
+                                        <div class="d-flex flex-column align-items-center mt-5">
                                             <i class="fas fa-tags fa-3x text-muted mb-3"></i>
                                             <h5 class="text-muted">Tidak ada promo ditemukan</h5>
                                             <p class="text-muted">Silahkan tambahkan promo baru</p>

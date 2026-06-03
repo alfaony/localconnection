@@ -48,27 +48,28 @@ class PermissionForMenuRouterSeeder extends Seeder
                 ]);
                 if (in_array($method, ['destroy']))
                 {
-                    PermissionRole::create(['role_id' => $admin->id, 'permission_id' => $permission->id]);
+                    // PermissionRole::create(['role_id' => $admin->id, 'permission_id' => $permission->id]);
                     PermissionRole::create(['role_id' => $root->id, 'permission_id' => $permission->id]);  
-                    PermissionRole::create(['role_id' => $tecknicianRole->id, 'permission_id' => $permission->id]);
+                    // PermissionRole::create(['role_id' => $tecknicianRole->id, 'permission_id' => $permission->id]);
                 } 
                 
                 if (in_array($method, ['mapping'])) 
                 {
-                    PermissionRole::create(['role_id' => $admin->id, 'permission_id' => $permission->id]);
+                    // PermissionRole::create(['role_id' => $admin->id, 'permission_id' => $permission->id]);
                     PermissionRole::create(['role_id' => $root->id, 'permission_id' => $permission->id]);
-                    PermissionRole::create(['role_id' => $manager->id, 'permission_id' => $permission->id]);
-                    PermissionRole::create(['role_id' => $tecknicianRole->id, 'permission_id' => $permission->id]);
+                    // PermissionRole::create(['role_id' => $manager->id, 'permission_id' => $permission->id]);
+                    // PermissionRole::create(['role_id' => $tecknicianRole->id, 'permission_id' => $permission->id]);
                     continue;
                 }
 
-                    PermissionRole::create(['role_id' => $admin->id, 'permission_id' => $permission->id]);
+                    // PermissionRole::create(['role_id' => $admin->id, 'permission_id' => $permission->id]);
                     PermissionRole::create(['role_id' => $root->id, 'permission_id' => $permission->id]);
-                    PermissionRole::create(['role_id' => $manager->id, 'permission_id' => $permission->id]);
-                    PermissionRole::create(['role_id' => $tecknicianRole->id, 'permission_id' => $permission->id]);
+                    // PermissionRole::create(['role_id' => $manager->id, 'permission_id' => $permission->id]);
+                    // PermissionRole::create(['role_id' => $tecknicianRole->id, 'permission_id' => $permission->id]);
 
             }
             DB::commit();
+            $this->call(ClearPermissionSeeder::class);
         } catch (\Throwable $th) {
             //throw $th;
             // dd($th);

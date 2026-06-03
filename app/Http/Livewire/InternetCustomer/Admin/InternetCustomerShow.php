@@ -43,7 +43,6 @@ class InternetCustomerShow extends Component
     use WithPagination, WithFileUploads;
 
     public $customer;
-    public $agreementFields;
     public $paymentProofUrl;
     public $showPaymentProofModal = false;
     public $ktpPhotoUrl;
@@ -121,7 +120,6 @@ class InternetCustomerShow extends Component
             'district',
             'subdistrict',
             'internetPackage.regions',  // eager-load regions untuk harga per wilayah
-            'partnershipAgreement',
             'userCustomer',
             'purchases',
             'installation',
@@ -129,10 +127,6 @@ class InternetCustomerShow extends Component
         ])
         ->byCompany(Auth::user()->company_id)
         ->findOrFail($customerId);
-
-        if ($this->customer->partnershipAgreement) {
-            $this->agreementFields = json_decode($this->customer->partnershipAgreement->fields, true);
-        }
 
         $this->ktpPhotoUrl    = $this->customer->ktp_photo;
         $this->npwp_photo_url = $this->customer->npwp_photo;
@@ -848,17 +842,6 @@ class InternetCustomerShow extends Component
                     'end_billing_date'   => $this->end_billing_date,
                 ]);
 
-                if($this->customer->partnershipAgreement)
-                {
-                    $fields = json_decode($this->customer->partnershipAgreement->fields);
-                    $fields->nama = $this->name;
-                    $fields->email = $this->email;
-                    $fields->telephon = $this->phone_number;
-                    
-                    $this->customer->partnershipAgreement->update([
-                        'fields' => json_encode($fields),
-                    ]);
-                }
             }
 
             DB::commit();

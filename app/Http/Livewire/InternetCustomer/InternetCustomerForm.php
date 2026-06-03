@@ -14,11 +14,8 @@ use App\Models\InternetCustomer;
 use App\Models\Company;
 use App\Models\UserCustomer;
 use App\Models\Role;
-use App\Models\PartnershipAgreement;
 use App\Models\SettingCompany;
 use App\Models\User;
-use App\Models\PartnershipAgreementType;
-use App\Models\AgreementSignature;
 use App\Models\InternetCustomerPurchase;
 
 use App\Schemas\RoleSchema;
@@ -28,7 +25,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
-use App\Helpers\InboxHelper;
+// use App\Helpers\InboxHelper;
 use App\Services\XenditService;
 use App\Services\MidtransService;
 use Illuminate\Support\Facades\Log;
@@ -75,14 +72,8 @@ class InternetCustomerForm extends Component
     public $npwp_number;
     public $npwp_photo;
     public $terms = false;
-    public $agreement;
-    
-    // Step 3: Tanda Tangan (dipindah dari step 4)
-    public $signature;
-    public $signaturePreview;
-    public $agreeTerms = false;
-    
-    // Step 4: Pembayaran (dipindah dari step 3)
+
+    // Step 3: Pembayaran
     public $payment_months = 1;
     public $payment_method = null; // 'manual_transfer' atau 'xendit'
     public $payment_proof;
@@ -139,20 +130,15 @@ class InternetCustomerForm extends Component
     public $manualPaymentEnabled = true; // Default enabled
     public $midtransPayWithPpn = false; // Midtrans auto-calculate PPN
 
-    protected $rules = [
-        'signature' => 'nullable|string',
-    ];
-
     protected $listeners = [
         'coverageChecked',
-        'saveSignatureStep3' => 'handleSaveSignature'
     ];
 
     public function updatedKtpPhoto($value)
     {   
         // Validate
         $this->validateOnly('ktp_photo', [
-            'ktp_photo' => 'required|file|mimes:jpg,jpeg,png,pdf|max:2048'
+            'ktp_photo' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:2048'
         ]);
 
         if ($this->ktp_input_mode === 'manual') {
@@ -348,32 +334,6 @@ class InternetCustomerForm extends Component
         $this->calculatePricing();
     }
 
-    public function saveSignature($signatureData)
-    {
-        Log::info('saveSignature called', [
-            'has_data' => !empty($signatureData),
-            'data_length' => $signatureData ? strlen($signatureData) : 0
-        ]);
-        
-        if($signatureData) {
-            $this->dispatchBrowserEvent('signature-saved');
-        }
-        
-        $this->signature = $signatureData;
-        $this->generateAgreementPreviewJson();
-    }
-
-    public function handleSaveSignature()
-    {        
-        $this->validate([
-            'signature' => 'required',
-        ], [
-            'signature.required' => 'Tanda tangan wajib diisi. Silakan gambar tanda tangan Anda.'
-        ]);
-        
-        $this->step++;
-    }
-
     public function mount($companyId)
     {
         $company = Company::resolveBySlug($companyId);
@@ -466,7 +426,6 @@ class InternetCustomerForm extends Component
                 ->orWhere('menu','profile')
                 ->get()
                 ->pluck('field_value','field_title'),
-            'agreement' => new PartnershipAgreement(),
             'provinces' => Province::whereHas('provinceCoverages')->get(),
             'cities' => $this->province_id ? City::where('province_id', $this->province_id)->whereHas('cityCoverages')->get() : [],
             'districts' => $this->city_id ? District::where('city_id', $this->city_id)->whereHas('districtCoverages')->get() : [],
@@ -595,8 +554,6 @@ class InternetCustomerForm extends Component
 
     public function nextStep()
     {
-        // $this->generateAgreementPreviewJson();
-
         if ($this->step === 1) {
             $this->validateStep1();
             $this->checkCoverage();
@@ -604,13 +561,7 @@ class InternetCustomerForm extends Component
             $this->validateStep2();
             $this->checkPromo();
         } elseif ($this->step === 3) {
-            $this->handleSaveSignature();
-        } elseif ($this->step === 4) {
             $this->validateStep4();
-        }
-
-        if ($this->step === 3) {
-            $this->generateAgreementPreviewJson();
         }
     }
 
@@ -652,8 +603,8 @@ class InternetCustomerForm extends Component
             'email'        => ['required', 'email'],
             'phone_number' => ['required', 'string', 'regex:/^[0-9]+$/'],
             'address'      => 'required|min:10',
-            'ktp_number'   => ['required', 'digits:16'],
-            'ktp_photo'    => 'required|file|mimes:jpg,jpeg,png,pdf|max:2048',
+            'ktp_number'   => ['nullable', 'digits:16'],
+            'ktp_photo'    => ['nullable', 'file', 'mimes:jpg,jpeg,png,pdf', 'max:20480'],
         ];
 
         if ($this->customer_type === 'bisnis') {
@@ -669,11 +620,8 @@ class InternetCustomerForm extends Component
             'phone_number.regex' => 'Nomor telepon hanya boleh berisi angka, tanpa simbol.',
             'ktp_number.digits' => 'Nomor KTP harus 16 digit.',
             'ktp_number.required' => 'Nomor KTP wajib diisi.',
-            'ktp_photo.required' => 'Foto KTP wajib diupload.',
             'ktp_photo.mimes' => 'File KTP harus berupa JPG, PNG, atau PDF.',
             'ktp_photo.max' => 'Ukuran file KTP maksimal 2MB.',
-            'ktp_number' => 'required|digits:16',
-            'ktp_photo' => 'required|file|mimes:jpg,jpeg,png,pdf|max:20480',
         ]);
 
         // Verify file is uploaded and accessible
@@ -750,14 +698,6 @@ class InternetCustomerForm extends Component
         $this->submitForm();
     }
 
-    public function clearSignature()
-    {
-        Log::info('clearSignature called');
-        $this->signature = null;
-        $this->dispatchBrowserEvent('signature-cleared');
-    }
-
-
     private function submitForm()
     {
         if ($this->ktp_photo) {
@@ -826,22 +766,6 @@ class InternetCustomerForm extends Component
         
         DB::beginTransaction();
         try {
-            $signaturePath = null;
-
-            // Save signature
-            if ($ktpPath && (preg_match('/^data:image\/(\w+);base64,/', $this->signature, $type))) {
-                $imageType = $type[1];
-                $data = substr($this->signature, strpos($this->signature, ',') + 1);
-                $data = base64_decode($data);
-                
-                if ($data === false) {
-                    throw new \Exception('Base64 decode failed');
-                }
-                
-                $signaturePath = 'signatures/' . uniqid() . '.' . $imageType;
-                Storage::put($signaturePath, $data);
-            }
-
             // Create internet customer
             $internetCustomer = InternetCustomer::create([
                 'company_id' => $this->company_id,
@@ -854,7 +778,7 @@ class InternetCustomerForm extends Component
                 'access_type' => $this->selectedPackage->access_type ?? 'pppoe',
                 'name' => $this->name,
                 'address' => $this->address,
-                'ktp_number' => $this->ktp_number,
+                'ktp_number' => $this->ktp_number ?? null,
                 'ktp_photo'    => $ktpPath ?: null,
                 'npwp_number'  => $this->customer_type === 'bisnis' ? ($this->npwp_number ?: null) : null,
                 'npwp_photo'   => $npwpPhotoPath ?: null,
@@ -865,10 +789,8 @@ class InternetCustomerForm extends Component
                     : ($this->payment_method === 'xendit' || $this->payment_method === 'midtrans' ? ParamSchema::WAITING_PAYMENT_SUBSCRIPTION : ParamSchema::WAITING_PAYMENT_CONFIRMATION),
             ]);
             
-            $agreement = $this->createPartnershipAgreement($ktpPath, $signaturePath);
             $this->code = $internetCustomer->code;
-            
-        
+
             $userCustomer = UserCustomer::create([
                 'start_billing_date' => $this->start_billing_date,
                 'name' => $this->name,
@@ -881,7 +803,6 @@ class InternetCustomerForm extends Component
             ]);
 
             $internetCustomer->update([
-                'partnership_agreement_id' => $agreement->id,
                 'user_customer_id' => $userCustomer->id
             ]);
 
@@ -939,9 +860,10 @@ class InternetCustomerForm extends Component
 
             $this->internet_customer_id = $internetCustomer->id;
             DB::commit();
-            $this->step = 5;
+            $this->step = 4;
 
         } catch (\Throwable $th) {
+            dd($th);
             DB::rollBack();
             Log::error('Registration form submission failed', [
                 'error' => $th->getMessage(),
@@ -1073,85 +995,6 @@ class InternetCustomerForm extends Component
         return $randomCode;
     }
 
-    private function generateAgreementPreviewJson()
-    {
-        $this->agreement = new PartnershipAgreement();
-        $this->agreement->fields = json_encode([
-            'nama' => $this->name,
-            'ktp' => $this->ktp_number,
-            'alamat' => $this->address,
-            'telephon' => $this->phone_number,
-            'email' => $this->email,
-            'nama_bank' => $this->nama_bank,
-            'holder_name' => $this->holder_name,
-            'account_number' => $this->account_number,
-            'branch_office' => $this->branch_office,
-            'alamat_pemasangan' => $this->address,
-            'jangka_waktu' => $this->payment_months . ' bulan',
-            'periode_berlangganan' => '-',
-            'nama_paket' => $this->selectedPackage->name ?? '',
-            'detail_paket' => $this->selectedPackage->description ?? '',
-        ]);
-    }
-
-    private function createPartnershipAgreement($ktpPath, $signaturePath)
-    {
-        try {
-            $letter_number = PartnershipAgreement::where('company_id',$this->company_id)->withTrashed()->max('letter_number') + 1;
-            $date = Carbon::now()->format('m/Y');
-            $numberResult = $letter_number.'/'.$date;
-            $type = PartnershipAgreementType::where('name_format', ParamSchema::PERJANJIAN_INTERNET)->first();
-            
-            $dataArray = json_encode([
-                'nama' => $this->name,
-                'ktp' => $this->ktp_number,
-                'alamat' => $this->address,
-                'telephon' => $this->phone_number,
-                'email' => $this->email,
-                'nama_bank' => $this->nama_bank,
-                'holder_name' => $this->holder_name,
-                'account_number' => $this->account_number,
-                'branch_office' => $this->branch_office,
-                'alamat_pemasangan' => $this->address,
-                'jangka_waktu' => $this->payment_months . ' bulan',
-                'periode_berlangganan' => '-',
-                'nama_paket' => $this->selectedPackage->name ?? '',
-                'detail_paket' => $this->selectedPackage->description ?? '',
-            ]);
-            
-            $admin = User::with('role')
-                    ->whereHas('role', fn ($query) => $query->whereIn('name', [RoleSchema::ROOT, RoleSchema::ADMIN, RoleSchema::DIRECTOR]))
-                    ->where('company_id', $this->company_id)
-                    ->first();
-
-            $data['partnership_agreement_type_id'] = $type->id;
-            $data['status'] = ParamSchema::SIGNATURE;
-            $data['letter_number'] = $letter_number;
-            $data['date_agreement'] = Carbon::now()->format('Y-m-d');
-            $data['number_result'] = $numberResult;
-            $data['fields'] = $dataArray;
-            $data['company_id'] = $this->company_id;
-            $data['user_created_id'] = $admin->id;
-            $data['user_updated_id'] = $admin->id;
-    
-            $partnershipAgreement = PartnershipAgreement::create($data);
-    
-            $agreementSignature = new AgreementSignature();
-            $agreementSignature->partnership_agreement_id = $partnershipAgreement->id;
-            $agreementSignature->signature = $signaturePath;
-            $agreementSignature->image_ktp = $ktpPath ?? null;
-            $agreementSignature->order = $partnershipAgreement->getNextSignatureNumber();
-            $agreementSignature->save();
-
-            $partnershipAgreement->status = ParamSchema::ONREVIEW;
-            $partnershipAgreement->save();
-
-            return $partnershipAgreement;
-        } catch (\Throwable $th) {
-            throw $th;
-        }
-    }
-
     protected function notifyFinanceTeam($internetCustomer)
     {
         $userFinance = User::whereHas('role.permissions', function ($q) {
@@ -1208,8 +1051,9 @@ class InternetCustomerForm extends Component
 
     private function sentInbox($to,$from, $message,$directUrl)
     {
-        $inboxHelper = new InboxHelper();
-        $inboxHelper->sent($to, $from, $message, $directUrl);
+        // $inboxHelper = new InboxHelper();
+        // $inboxHelper->sent($to, $from, $message, $directUrl);
+        
         return true;
     }
 

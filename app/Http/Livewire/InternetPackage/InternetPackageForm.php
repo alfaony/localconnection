@@ -324,7 +324,7 @@ class InternetPackageForm extends Component
             'rate_up_mbps'            => $this->rate_up_mbps,
             'fup_rate_down_mbps'      => $this->fup_rate_down_mbps,
             'fup_rate_up_mbps'        => 0,
-            'quota_bytes'             => $isHotspot ? $this->quota_bytes : null,
+            'quota_bytes'             => $isHotspot ? $this->quota_bytes : 0,
             'session_timeout_seconds' => $isHotspot ? $this->session_timeout_seconds : null,
         ];
         

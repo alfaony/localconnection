@@ -29,9 +29,9 @@ class PermissionForMenuInternetCustomerSeeder extends Seeder
         $managerFinance = Role::where('name', RoleSchema::ROOT)->first();
         
         $staffRole = Role::where('name', RoleSchema::ROOT)->first();
-        $tecknicianRole = Role::where('name', RoleSchema::ROOT)->first();
+        $tecknicianRole = Role::where('name', RoleSchema::TECKNICIAN_INTERNET)->first();
 
-        $customerInternetRole = Role::where('name', RoleSchema::ROOT)->first();
+        $customerInternetRole = Role::where('name', RoleSchema::CUSTOMER_INTERNET)->first();
 
         DB::beginTransaction();
         try {
@@ -144,6 +144,46 @@ class PermissionForMenuInternetCustomerSeeder extends Seeder
     
                 PermissionRole::create(['role_id' => $tecknicianRole->id, 'permission_id' => $permission->id]);
                 }
+
+            // Report
+            $reportInternetCustomer = ['index','data'];
+            foreach ($reportInternetCustomer as $method) 
+            {
+                // create permision
+                $permission = Permission::firstOrCreate([
+                    'name' => ucwords($method).' Report Internet Customer',
+                ],[
+                    'method' => $method,
+                    'table' => 'internet_reports',
+                    'model' => 'InternetReport',
+                    'guard_name' => 'web'
+                ]);
+    
+                //assign role & permission
+                if ($root) 
+                {
+                    PermissionRole::create(['role_id' => $root->id, 'permission_id' => $permission->id]);
+                }
+                if($admin){
+                    PermissionRole::create(['role_id' => $admin->id, 'permission_id' => $permission->id]);
+                }
+                if($finance){
+                    PermissionRole::create(['role_id' => $finance->id, 'permission_id' => $permission->id]);
+                }
+                if ($staffFinance) 
+                {
+                    PermissionRole::create(['role_id' => $staffFinance->id, 'permission_id' => $permission->id]);
+                }
+                if ($managerFinance) 
+                {
+                    PermissionRole::create(['role_id' => $managerFinance->id, 'permission_id' => $permission->id]);
+                }
+                if($manager)
+                {
+                    PermissionRole::create(['role_id' => $manager->id, 'permission_id' => $permission->id]);
+                }
+    
+            }
 
             $this->command->info('Berhasil Membuat dan Assign Role Sprinter untuk Internet Customer.');
 

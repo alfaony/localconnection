@@ -35,6 +35,11 @@ use App\Models\Dayoff;
 use App\Models\CustomerSubscription;
 use App\Models\Software;
 use App\Helpers\XpHelper;
+use App\Models\InternetCustomer;
+use App\Models\InternetCustomerPurchase;
+use App\Models\InternetPackage;
+use App\Models\InternetAsset;
+use Illuminate\Support\Facades\DB;
 
 class HomeController extends Controller
 {
@@ -189,6 +194,157 @@ class HomeController extends Controller
     // }
     public function index(){
         return view('home');
+    }
+
+    public function internetReport(Request $request)
+    {
+        $companyId = Auth::user()->company_id;
+
+        $baseQuery = fn() => InternetCustomer::byCompany($companyId);
+
+        // ── Customer Stats ──────────────────────────────────────────
+        $totalAll        = $baseQuery()->count();
+        $totalActive     = $baseQuery()->whereIn('status', [ParamSchema::ACTIVE, ParamSchema::REACTIVATED])->count();
+        $totalExpired    = $baseQuery()->where('status', ParamSchema::EXPIRED)->count();
+        $totalSuspended  = $baseQuery()->where('status', ParamSchema::SUSPENDED)->count();
+        $totalDisconn    = $baseQuery()->where('status', ParamSchema::DISCONNECTED)->count();
+        $totalCancelled  = $baseQuery()->where('status', ParamSchema::CANCELLED)->count();
+        $totalClosed     = $baseQuery()->where('status', 'closed')->count();
+        $totalInactive   = $baseQuery()->where('status', ParamSchema::INACTIVE)->count();
+
+        // Pendaftar baru (belum aktif)
+        $totalPending            = $baseQuery()->where('status', ParamSchema::PENDING)->count();
+        $totalWaitingPaySub      = $baseQuery()->where('status', ParamSchema::WAITING_PAYMENT_SUBSCRIPTION)->count();
+        $totalWaitingPayConf     = $baseQuery()->where('status', ParamSchema::WAITING_PAYMENT_CONFIRMATION)->count();
+        $totalProcessInstall     = $baseQuery()->where('status', ParamSchema::PROCESS_INSTALLATION)->count();
+        $totalInstalled          = $baseQuery()->where('status', ParamSchema::INSTALLED)->count();
+        $totalWantToRegister     = $totalPending + $totalWaitingPaySub + $totalWaitingPayConf + $totalProcessInstall + $totalInstalled;
+
+        // New customer this month
+        $newThisMonth = $baseQuery()->whereMonth('created_at', now()->month)->whereYear('created_at', now()->year)->count();
+
+        // ── Revenue ─────────────────────────────────────────────────
+        $companyIds = auth()->user()->accessibleCompanies->pluck('id')->push($companyId)->unique();
+
+        $revThisMonth = InternetCustomerPurchase::whereHas('customer', fn($q) => $q->whereIn('company_id', $companyIds))
+            ->whereNotNull('confirmation_finance_at')
+            ->whereMonth('confirmation_finance_at', now()->month)
+            ->whereYear('confirmation_finance_at', now()->year)
+            ->sum('amount_paid');
+
+        $revLastMonth = InternetCustomerPurchase::whereHas('customer', fn($q) => $q->whereIn('company_id', $companyIds))
+            ->whereNotNull('confirmation_finance_at')
+            ->whereMonth('confirmation_finance_at', now()->subMonth()->month)
+            ->whereYear('confirmation_finance_at', now()->subMonth()->year)
+            ->sum('amount_paid');
+
+        $revGrowthPct = $revLastMonth > 0
+            ? round((($revThisMonth - $revLastMonth) / $revLastMonth) * 100, 1)
+            : ($revThisMonth > 0 ? 100 : 0);
+
+        // Monthly revenue last 6 months
+        $monthlyRevenue = [];
+        for ($i = 5; $i >= 0; $i--) {
+            $month = now()->subMonths($i);
+            $rev = InternetCustomerPurchase::whereHas('customer', fn($q) => $q->whereIn('company_id', $companyIds))
+                ->whereNotNull('confirmation_finance_at')
+                ->whereMonth('confirmation_finance_at', $month->month)
+                ->whereYear('confirmation_finance_at', $month->year)
+                ->sum('amount_paid');
+            $monthlyRevenue[] = [
+                'label' => $month->format('M Y'),
+                'value' => (float) $rev,
+            ];
+        }
+
+        // ── Top Packages ─────────────────────────────────────────────
+        $topPackages = InternetCustomer::byCompany($companyId)
+            ->select('internet_package_id', \DB::raw('count(*) as total'))
+            ->with('internetPackage:id,name,price')
+            ->groupBy('internet_package_id')
+            ->orderByDesc('total')
+            ->limit(5)
+            ->get()
+            ->map(fn($c) => [
+                'name'  => $c->internetPackage->name ?? '-',
+                'price' => (float) ($c->internetPackage->price ?? 0),
+                'total' => $c->total,
+            ]);
+
+        // ── Recent Registrations ──────────────────────────────────────
+        $recentRegistrations = $baseQuery()
+            ->whereIn('status', [ParamSchema::PENDING, ParamSchema::WAITING_PAYMENT_SUBSCRIPTION, ParamSchema::WAITING_PAYMENT_CONFIRMATION, ParamSchema::PROCESS_INSTALLATION, ParamSchema::INSTALLED])
+            ->with('internetPackage:id,name')
+            ->latest()
+            ->limit(8)
+            ->get()
+            ->map(fn($c) => [
+                'id'      => $c->id,
+                'code'    => $c->code,
+                'name'    => $c->name,
+                'package' => $c->internetPackage->name ?? '-',
+                'status'  => $c->status,
+                'created' => $c->created_at->format('d M Y'),
+            ]);
+
+        // ── Asset & ROI ───────────────────────────────────────────────
+        $totalAssetValue  = (float) InternetAsset::byCompany($companyId)->sum(DB::raw('unit_price * quantity'));
+        $totalAssetCount  = InternetAsset::byCompany($companyId)->count();
+        $activeAssetValue = (float) InternetAsset::byCompany($companyId)->active()->sum(DB::raw('unit_price * quantity'));
+        $damagedCount     = InternetAsset::byCompany($companyId)->where('status','damaged')->count();
+
+        $roiMonths = ($revLastMonth > 0 && $totalAssetValue > 0)
+            ? round($totalAssetValue / $revLastMonth, 1) : null;
+        $roiYears  = $roiMonths ? round($roiMonths / 12, 1) : null;
+
+        $recoveredPct = ($totalAssetValue > 0 && $revLastMonth > 0)
+            ? min(100, round(($revLastMonth * 12) / $totalAssetValue * 100, 1)) : 0;
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'customer' => [
+                    'total_all'               => $totalAll,
+                    'total_active'            => $totalActive,
+                    'total_expired'           => $totalExpired,
+                    'total_suspended'         => $totalSuspended,
+                    'total_disconnected'      => $totalDisconn,
+                    'total_cancelled'         => $totalCancelled,
+                    'total_closed'            => $totalClosed,
+                    'total_inactive'          => $totalInactive,
+                    'new_this_month'          => $newThisMonth,
+                ],
+                'registration' => [
+                    'total'                         => $totalWantToRegister,
+                    'pending'                       => $totalPending,
+                    'waiting_payment_subscription'  => $totalWaitingPaySub,
+                    'waiting_payment_confirmation'  => $totalWaitingPayConf,
+                    'process_installation'          => $totalProcessInstall,
+                    'installed'                     => $totalInstalled,
+                ],
+                'revenue' => [
+                    'this_month'    => (float) $revThisMonth,
+                    'last_month'    => (float) $revLastMonth,
+                    'growth_pct'    => $revGrowthPct,
+                    'monthly_chart' => $monthlyRevenue,
+                ],
+                'asset' => [
+                    'total_value'   => $totalAssetValue,
+                    'active_value'  => $activeAssetValue,
+                    'total_count'   => $totalAssetCount,
+                    'damaged_count' => $damagedCount,
+                ],
+                'roi' => [
+                    'roi_months'    => $roiMonths,
+                    'roi_years'     => $roiYears,
+                    'recovered_pct' => $recoveredPct,
+                    'mrr'           => (float) $revLastMonth,
+                    'total_asset'   => $totalAssetValue,
+                ],
+                'top_packages'         => $topPackages,
+                'recent_registrations' => $recentRegistrations,
+            ],
+        ]);
     }
 
     /**

@@ -193,10 +193,10 @@ return [
     'classes_content_wrapper' => '',
     'classes_content_header' => '',
     'classes_content' => '',
-    'classes_sidebar' => 'sidebar-dark-primary elevation-4',
-    'classes_sidebar_nav' => '',
-    'classes_topnav' => 'navbar-danger navbar-dark',
-    'classes_topnav_nav' => 'navbar-expand static',
+    'classes_sidebar' => 'sidebar-custom elevation-0',
+    'classes_sidebar_nav' => 'nav-child-indent',
+    'classes_topnav' => 'navbar-white navbar-light',
+    'classes_topnav_nav' => 'navbar-expand',
     'classes_topnav_container' => 'container',
 
     /*
@@ -370,16 +370,81 @@ return [
         //     'route'         => 'bast.index',
         //     'icon' => 'fa fa-file-signature',
         // ],
-        // [
-        //     'text'        => 'Laporan',
-        //     'route'         => 'report.index',
-        //     'icon' => 'fa fa-file',
-        // ],
-        // [
-        //     'text'        => 'Setting Perusahaan',
-        //     'route'         => 'setting-company.index',
-        //     'icon' => 'fa fa-file',
-        // ],
+        // ── Internet Management ─────────────────────────────────────
+        [
+            'header' => 'INTERNET MANAGEMENT',
+        ],
+        [
+            'text'  => 'Dashboard',
+            'route' => 'home',
+            'icon'  => 'fas fa-fw fa-tachometer-alt',
+        ],
+        [
+            'text'    => 'Pelanggan',
+            'icon'    => 'fas fa-fw fa-users',
+            'submenu' => [
+                [
+                    'text'  => 'Semua Pelanggan',
+                    'route' => 'internet-customer.index',
+                    'icon'  => 'fas fa-fw fa-list',
+                ],
+                [
+                    'text'  => 'Tambah Pelanggan',
+                    'route' => 'internet-customer.create_direct',
+                    'icon'  => 'fas fa-fw fa-user-plus',
+                ],
+            ],
+        ],
+        [
+            'text'    => 'Paket & Promo',
+            'icon'    => 'fas fa-fw fa-box',
+            'submenu' => [
+                [
+                    'text'  => 'Paket Internet',
+                    'route' => 'internet-package.index',
+                    'icon'  => 'fas fa-fw fa-wifi',
+                ],
+                [
+                    'text'  => 'Promo',
+                    'route' => 'promo.index',
+                    'icon'  => 'fas fa-fw fa-tag',
+                ],
+            ],
+        ],
+        [
+            'text'  => 'Master Aset',
+            'route' => 'internet-asset.index',
+            'icon'  => 'fas fa-fw fa-hdd',
+        ],
+        [
+            'text'  => 'Laporan & ROI',
+            'route' => 'internet-report.index',
+            'icon'  => 'fas fa-fw fa-chart-line',
+        ],
+        [
+            'text'    => 'Infrastruktur',
+            'icon'    => 'fas fa-fw fa-network-wired',
+            'submenu' => [
+                [
+                    'text'  => 'Router',
+                    'route' => 'router.index',
+                    'icon'  => 'fas fa-fw fa-server',
+                ],
+                [
+                    'text'  => 'Data Center',
+                    'route' => 'data-center.index',
+                    'icon'  => 'fas fa-fw fa-database',
+                ],
+            ],
+        ],
+        [
+            'header' => 'PENGATURAN',
+        ],
+        [
+            'text'  => 'Setting',
+            'route' => 'setting-company.index',
+            'icon'  => 'fas fa-fw fa-cog',
+        ],
     ],
 
     /*
