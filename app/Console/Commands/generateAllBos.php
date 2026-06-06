@@ -44,7 +44,7 @@ class generateAllBos extends Command
 
             // BOS 1
             $company = new Company();
-            $company->name = "BOS 1";
+            $company->name = "Internet Rakyat";
             $company->save();
 
             $user = User::all();

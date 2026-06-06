@@ -22,6 +22,7 @@ use App\Models\Province;
 use App\Jobs\ProvisionCustomerJob;
 use App\Jobs\GenerateInternetPurchaseCouponJob;
 use App\Jobs\ImportInternetCustomerJob;
+use App\Jobs\ImportRegisterAndActivateJob;
 use App\Jobs\GenerateGroupingIdJob;
 use App\Models\InternetCustomerGroup;
 
@@ -109,7 +110,7 @@ class InternetCustomerIndex extends Component
     public $canApprove;
     public $canTechnical;
 
-    // ── Import properties ──────────────────────────────────────────────────
+    // ── Import (instalasi) properties ─────────────────────────────────────
     public $csvFile;
     public bool $isFileReady     = false;
     public bool $uploadingFile   = false;
@@ -119,6 +120,17 @@ class InternetCustomerIndex extends Component
     public bool $showImportSection = false;
     public ?string $import_odp_id  = null;
     public array $importAvailableOdps = [];
+
+    // ── Import Daftar & Aktifkan properties ───────────────────────────────
+    public $raaCsvFile;
+    public bool $raaIsFileReady      = false;
+    public bool $raaUploadingFile    = false;
+    public ?string $raaBatchId       = null;
+    public ?array $raaProgress       = null;
+    public bool $raaIsImporting      = false;
+    public bool $showRaaSection      = false;
+    public ?string $raa_odp_id       = null;
+    public ?string $raa_group_id     = null;
 
     protected $queryString = [
         'search' => ['except' => ''],
@@ -835,6 +847,186 @@ class InternetCustomerIndex extends Component
         };
     }
 
+    // ── Import Daftar & Aktifkan Methods ───────────────────────────────────
+
+    public function toggleRaaSection(): void
+    {
+        $this->showRaaSection = !$this->showRaaSection;
+
+        if (!$this->showRaaSection) {
+            $this->resetRaa();
+        }
+    }
+
+    public function resetRaa(): void
+    {
+        $this->reset([
+            'raaCsvFile', 'raaBatchId', 'raaProgress',
+            'raaIsImporting', 'raaIsFileReady', 'raaUploadingFile',
+            'raa_odp_id', 'raa_group_id',
+        ]);
+        $this->resetValidation(['raaCsvFile', 'raa_odp_id']);
+    }
+
+    public function updatedRaaCsvFile(): void
+    {
+        $this->resetValidation('raaCsvFile');
+        $this->raaIsFileReady   = (bool) $this->raaCsvFile;
+        $this->raaUploadingFile = false;
+    }
+
+    public function importRegisterAndActivate(): void
+    {
+        $this->validate([
+            'raa_odp_id' => 'required|exists:optical_distributions,id',
+            'raaCsvFile' => 'required|file|max:10240',
+        ], [
+            'raa_odp_id.required' => 'Pilih ODP terlebih dahulu sebelum import',
+            'raa_odp_id.exists'   => 'ODP tidak valid',
+            'raaCsvFile.required' => 'File CSV wajib diupload',
+            'raaCsvFile.max'      => 'Ukuran file maksimal 10MB',
+        ]);
+
+        if (!$this->raaIsFileReady || !$this->raaCsvFile) {
+            $this->addError('raaCsvFile', 'File belum siap. Silakan tunggu sebentar.');
+            return;
+        }
+
+        try {
+            if (!$this->raaCsvFile->exists()) {
+                $this->addError('raaCsvFile', 'File tidak ditemukan. Silakan upload ulang.');
+                return;
+            }
+
+            $fileContent = $this->raaCsvFile->get();
+
+            if (empty($fileContent)) {
+                $this->addError('raaCsvFile', 'File kosong atau corrupt.');
+                return;
+            }
+
+            $csv = \League\Csv\Reader::createFromString($fileContent);
+            $csv->setHeaderOffset(null);
+            $csvData = iterator_to_array($csv->getRecords());
+
+            if (count($csvData) <= 1) {
+                $this->addError('raaCsvFile', 'File CSV kosong atau hanya berisi header.');
+                return;
+            }
+
+            $this->raaBatchId = \Illuminate\Support\Str::uuid()->toString();
+
+            ImportProgress::create([
+                'batch_id'     => $this->raaBatchId,
+                'processed'    => 0,
+                'total'        => count($csvData) - 1,
+                'total_import' => 0,
+                'errors'       => [],
+            ]);
+
+            ImportRegisterAndActivateJob::dispatch(
+                $csvData,
+                Auth::id(),
+                Auth::user()->company_id,
+                $this->raaBatchId,
+                $this->raa_odp_id,
+                $this->raa_group_id
+            );
+
+            $this->raaProgress = [
+                'batch_id'     => $this->raaBatchId,
+                'processed'    => 0,
+                'total'        => count($csvData) - 1,
+                'total_import' => 0,
+                'success'      => 0,
+                'failed'       => 0,
+                'percentage'   => 0,
+                'status'       => 'processing',
+                'errors'       => [],
+                'updated_at'   => now()->toDateTimeString(),
+            ];
+            $this->raaIsImporting  = true;
+            $this->raaIsFileReady  = false;
+            $this->raaUploadingFile = false;
+            $this->raaCsvFile      = null;
+
+            $this->dispatchBrowserEvent('raa-import-started', [
+                'total_rows' => count($csvData) - 1,
+            ]);
+
+            $this->dispatchBrowserEvent('start-raa-progress-check');
+
+        } catch (\Exception $e) {
+            Log::error('ImportRegisterAndActivate error', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+            $this->addError('raaCsvFile', 'Terjadi kesalahan: ' . $e->getMessage());
+            $this->raaIsFileReady   = false;
+            $this->raaUploadingFile = false;
+        }
+    }
+
+    public function checkRaaProgress(): void
+    {
+        if (!$this->raaBatchId) {
+            return;
+        }
+
+        $progress = ImportProgress::where('batch_id', $this->raaBatchId)->first();
+
+        if (!$progress) {
+            return;
+        }
+
+        $errors = is_array($progress->errors) ? $progress->errors : [];
+        $isDone = $progress->total > 0 && $progress->processed >= $progress->total;
+
+        $this->raaProgress = [
+            'batch_id'    => $progress->batch_id,
+            'processed'   => $progress->processed,
+            'total'       => $progress->total,
+            'total_import'=> $progress->total_import,
+            'success'     => $progress->success,
+            'failed'      => $progress->failed,
+            'percentage'  => $progress->percentage,
+            'status'      => $isDone ? 'completed' : 'processing',
+            'errors'      => $errors,
+            'updated_at'  => $progress->updated_at->toDateTimeString(),
+        ];
+
+        if ($isDone) {
+            $this->dispatchBrowserEvent('raa-import-completed', [
+                'progress' => $this->raaProgress,
+            ]);
+        }
+    }
+
+    public function downloadRaaTemplate(): \Symfony\Component\HttpFoundation\StreamedResponse
+    {
+        return response()->streamDownload(function () {
+            $file = fopen('php://output', 'w');
+
+            fputcsv($file, [
+                'provinsi', 'kota_kabupaten', 'kecamatan', 'kelurahan',
+                'paket_internet', 'nama_lengkap', 'phone', 'email', 'alamat',
+                'username_pppoe', 'password_pppoe', 'serial_number', 'router',
+                'start_billing_date', 'end_billing_date', 'pppoe_pool', 'grouping',
+            ]);
+
+            fputcsv($file, [
+                'Jawa Timur', 'Kota Surabaya', 'Genteng', 'Genteng',
+                'Paket 10Mbps', 'Budi Santoso', '08123456789', 'budi@email.com', 'Jl. Contoh No. 1',
+                'budi_pppoe', 'P@ssw0rd', 'SN-ABC123456', 'Router-Utama',
+                '2025-01-01', '2025-02-01', '', '',
+            ]);
+
+            fclose($file);
+        }, 'template_import_daftar_aktifkan.csv', [
+            'Content-Type' => 'text/csv',
+        ]);
+    }
+
     // Search
     public function updatingSearch()
     {
@@ -1220,6 +1412,10 @@ class InternetCustomerIndex extends Component
 
         $provinces = Province::whereHas('provinceCoverages')->orderBy('name')->get(['id', 'name']);
 
+        $raaGroups = InternetCustomerGroup::byCompany(Auth::user()->company_id)
+            ->orderBy('name')
+            ->get(['id', 'name']);
+
         return view('livewire.internet-customer.admin.internet-customer-index', [
             'finance_access'       => Access::can('as_finance', 'internet_customers'),
             'technical_access'     => Access::can('as_technician', 'internet_customers'),
@@ -1229,6 +1425,7 @@ class InternetCustomerIndex extends Component
             'importAvailableOdps'  => $this->importAvailableOdps,
             'provinces'            => $provinces,
             'hasRegion'            => $hasRegion,
+            'raaGroups'            => $raaGroups,
         ])->extends('adminlte::page');
     }
 

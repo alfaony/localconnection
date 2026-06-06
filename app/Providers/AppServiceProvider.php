@@ -155,7 +155,7 @@ class AppServiceProvider extends ServiceProvider
                 
             $managementMasterInternetMenu = 
             [
-                'data_centers','pops','optical_distributions','coverage_services','routers'
+                'data_centers','pops','optical_distributions','coverage_services','routers','internet_assets'
             ];
 
             $managementTokoOnlineMenu = [
@@ -883,6 +883,12 @@ class AppServiceProvider extends ServiceProvider
                     'route' => 'internet-report.index',
                     'icon' => 'fa fa-file',
                 ],
+                'internet_assets' =>
+                [
+                    'text' => 'Aset Internet',
+                    'route' => 'internet-asset.index',
+                    'icon' => 'fa fa-server',
+                ]
             ];
 
             // foreach ($listMenu as $role) 

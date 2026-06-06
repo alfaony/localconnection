@@ -64,9 +64,9 @@ return [
     */
  
     'logo' => '&zwnj;',
-    'logo_img' => 'logo/logo-thrive.png',
+    'logo_img' => 'logo/icon_1.svg',
     'logo_img_class' => 'brand-image',
-    'logo_img_xl' => 'logo/logo-thrive.png',
+    'logo_img_xl' => 'logo/icon_1.svg',
     'logo_img_xl_class' => 'brand-image-xl',
     'logo_img_alt' => env('APP_NAME'),
 
@@ -87,7 +87,7 @@ return [
         'enabled' => true,
         'img' => 
         [
-            'path' => 'logo/logo-thrive.png',
+            'path' => 'logo/icon_1.svg',
             'alt' => 'Auth Logo',
             'class' => '',
             'width' => 210,
@@ -110,7 +110,7 @@ return [
     'preloader' => [
         'enabled' => false,
         'img' => [
-            'path' => 'logo/logo-thrive.png',
+            'path' => 'logo/icon_1.svg',
             'alt' => 'AdminLTE Preloader Image',
             'effect' => 'animation__shake',
             'width' => 60,

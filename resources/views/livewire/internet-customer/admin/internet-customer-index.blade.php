@@ -21,7 +21,11 @@
                 @canAccess('import', 'internet_customers')
                 <button type="button" class="btn btn-sm ic-btn ic-btn-outline-warning" wire:click="toggleImportSection">
                     <i class="fas fa-file-import mr-1"></i>
-                    {{ $showImportSection ? 'Tutup Import' : 'Import Instalasi' }}
+                    {{ $showImportSection ? 'Tutup Import Instalasi' : 'Import Instalasi' }}
+                </button>
+                <button type="button" class="btn btn-sm ic-btn" style="background:#36b9cc;color:#fff;border-color:#2ab0c4;" wire:click="toggleRaaSection">
+                    <i class="fas fa-rocket mr-1"></i>
+                    {{ $showRaaSection ? 'Tutup Daftar & Aktifkan' : 'Daftar & Aktifkan' }}
                 </button>
                 @endcanAccess
                 @canAccess('export', 'internet_customers')
@@ -364,6 +368,188 @@
     @endif
     @endcanAccess
     {{-- ══ END IMPORT SECTION ═══════════════════════════════════════════════ --}}
+
+    {{-- ══ IMPORT DAFTAR & AKTIFKAN SECTION ══════════════════════════════════ --}}
+    @canAccess('import', 'internet_customers')
+    @if($showRaaSection)
+    <div class="card ic-card mb-3" style="border-left:3px solid #36b9cc !important;">
+        <div class="card-header ic-import-header d-flex align-items-center py-2 px-3" style="background:linear-gradient(90deg,#1c7a8a,#36b9cc);">
+            <i class="fas fa-rocket text-white mr-2"></i>
+            <span class="ic-section-title text-white">Import Daftar &amp; Aktifkan Pelanggan</span>
+        </div>
+        <div class="card-body px-3 py-3">
+            <div class="alert ic-alert-info d-flex py-2 mb-3 small">
+                <i class="fas fa-info-circle mt-1 flex-shrink-0 mr-2"></i>
+                <div>
+                    <strong>Panduan:</strong> Download template → isi semua kolom (registrasi + instalasi) → pilih ODP → upload.
+                    Pelanggan yang sudah terdaftar akan langsung lanjut ke instalasi.
+                    Format tanggal: <code>YYYY-MM-DD</code>.
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <button wire:click="downloadRaaTemplate" class="btn btn-sm ic-btn ic-btn-outline-secondary">
+                    <i class="fas fa-download mr-1"></i> Download Template CSV
+                </button>
+            </div>
+
+            @if(!$raaIsImporting)
+            <form wire:submit.prevent="importRegisterAndActivate">
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label class="ic-label">Pilih ODP <span class="text-danger">*</span></label>
+                        <select wire:model="raa_odp_id"
+                                class="form-control form-control-sm ic-select @error('raa_odp_id') is-invalid @enderror">
+                            <option value="">— Pilih ODP —</option>
+                            @foreach($importAvailableOdps as $odp)
+                                <option value="{{ $odp['id'] }}">{{ $odp['label'] }}</option>
+                            @endforeach
+                        </select>
+                        @error('raa_odp_id')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                        <small class="form-text text-muted">Berlaku untuk semua baris dalam file CSV.</small>
+                    </div>
+
+                    <div class="col-md-4 mb-3">
+                        <label class="ic-label">
+                            Grup Pelanggan
+                            <span class="badge badge-secondary ml-1" style="font-size:.65rem;padding:2px 6px;border-radius:4px">Opsional</span>
+                        </label>
+                        <select wire:model="raa_group_id"
+                                class="form-control form-control-sm ic-select">
+                            <option value="">— Tanpa Grup —</option>
+                            @foreach($raaGroups as $grp)
+                                <option value="{{ $grp->id }}">{{ $grp->name }}</option>
+                            @endforeach
+                        </select>
+                        <small class="form-text text-muted">
+                            <i class="fas fa-info-circle mr-1"></i>
+                            Semua pelanggan dalam CSV ini akan masuk ke grup ini.
+                        </small>
+                    </div>
+
+                    <div class="col-md-5 mb-3">
+                        <label class="ic-label">File CSV <span class="text-danger">*</span></label>
+                        <input type="file"
+                               class="form-control form-control-sm @error('raaCsvFile') is-invalid @enderror"
+                               wire:model="raaCsvFile" accept=".csv"
+                               wire:loading.attr="disabled" wire:target="raaCsvFile">
+                        @error('raaCsvFile')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                        <small class="form-text text-muted">Format CSV · Maks. 10 MB</small>
+
+                        <div wire:loading wire:target="raaCsvFile" class="mt-2">
+                            <div class="alert ic-alert-info py-2 mb-0 d-flex align-items-center small">
+                                <div class="spinner-border spinner-border-sm flex-shrink-0 mr-2"></div>
+                                <span>Mengupload file… mohon tunggu</span>
+                            </div>
+                        </div>
+                        @if($raaIsFileReady && $raaCsvFile)
+                        <div class="mt-2">
+                            <div class="alert alert-success py-2 mb-0 d-flex align-items-center small">
+                                <i class="fas fa-check-circle text-success flex-shrink-0 mr-2"></i>
+                                <span class="flex-grow-1"><strong>Siap:</strong> {{ $raaCsvFile->getClientOriginalName() }}</span>
+                                <button type="button" class="btn btn-sm btn-outline-danger py-0 px-1 ml-2" wire:click="resetRaa">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                        </div>
+                        @endif
+                    </div>
+                    <div class="col-md-3 mb-3 d-flex align-items-end">
+                        <button type="submit" class="btn w-100 ic-btn"
+                                style="background:#36b9cc;color:#fff;border-color:#36b9cc;"
+                                wire:loading.attr="disabled"
+                                wire:target="importRegisterAndActivate,raaCsvFile"
+                                {{ !$raaIsFileReady ? 'disabled' : '' }}>
+                            <span wire:loading wire:target="importRegisterAndActivate">
+                                <span class="spinner-border spinner-border-sm mr-1"></span>Memproses…
+                            </span>
+                            <span wire:loading wire:target="raaCsvFile">
+                                <span class="spinner-border spinner-border-sm mr-1"></span>Mengupload…
+                            </span>
+                            <span wire:loading.remove wire:target="importRegisterAndActivate,raaCsvFile">
+                                <i class="fas fa-rocket mr-1"></i>{{ $raaIsFileReady ? 'Mulai Import' : 'Upload & Import' }}
+                            </span>
+                        </button>
+                    </div>
+                </div>
+            </form>
+            @endif
+
+            @if($raaProgress)
+            <div class="mt-4">
+                <hr class="my-3">
+                <div class="d-flex align-items-center mb-3">
+                    <i class="fas fa-hourglass-split text-info mr-2"></i>
+                    <span class="font-weight-semibold" style="font-size:.9rem;">Progress Import</span>
+                </div>
+                <div class="progress mb-3 ic-progress">
+                    <div class="progress-bar progress-bar-striped progress-bar-animated"
+                         style="width:{{ $raaProgress['percentage'] }}%;background:#36b9cc;">
+                        <strong>{{ $raaProgress['percentage'] }}%</strong>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-6 col-md-3 mb-2">
+                        <div class="ic-stat-card">
+                            <span class="badge badge-{{ $this->getImportStatusColor($raaProgress['status']) }} mb-1">
+                                {{ strtoupper($raaProgress['status'] ?? 'PROCESSING') }}
+                            </span>
+                            <div class="ic-stat-label">Status</div>
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-3 mb-2">
+                        <div class="ic-stat-card">
+                            <div class="ic-stat-value">{{ $raaProgress['total'] }}</div>
+                            <div class="ic-stat-label">Total</div>
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-3 mb-2">
+                        <div class="ic-stat-card" style="border-color:#28a745 !important;">
+                            <div class="ic-stat-value text-success">{{ $raaProgress['total_import'] }}</div>
+                            <div class="ic-stat-label">Berhasil</div>
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-3 mb-2">
+                        <div class="ic-stat-card" style="border-color:#dc3545 !important;">
+                            <div class="ic-stat-value text-danger">{{ count($raaProgress['errors'] ?? []) }}</div>
+                            <div class="ic-stat-label">Gagal</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="text-center mb-2">
+                    <small class="text-muted">
+                        <i class="fas fa-clock mr-1"></i>
+                        Update terakhir: {{ \Carbon\Carbon::parse($raaProgress['updated_at'])->format('d/m/Y H:i:s') }}
+                    </small>
+                </div>
+                @if(!empty($raaProgress['errors']) && count($raaProgress['errors']) > 0)
+                <div class="alert alert-warning py-2">
+                    <div class="small font-weight-bold mb-2">
+                        <i class="fas fa-exclamation-triangle mr-1"></i>
+                        Detail Gagal ({{ count($raaProgress['errors']) }} baris)
+                    </div>
+                    <div style="max-height:200px; overflow-y:auto;">
+                        @foreach($raaProgress['errors'] as $err)
+                        @if(is_array($err))
+                        <div class="d-flex align-items-start border-bottom pb-2 mb-2" style="gap:.5rem;">
+                            <span class="badge badge-danger flex-shrink-0">Baris {{ $err['row'] ?? '?' }}</span>
+                            <div class="small">
+                                {{ $err['message'] ?? 'Unknown error' }}
+                                @if(isset($err['data']))<div class="text-muted">{{ $err['data'] }}</div>@endif
+                            </div>
+                        </div>
+                        @endif
+                        @endforeach
+                    </div>
+                </div>
+                @endif
+            </div>
+            @endif
+        </div>
+    </div>
+    @endif
+    @endcanAccess
+    {{-- ══ END IMPORT DAFTAR & AKTIFKAN ════════════════════════════════════════ --}}
 
     {{-- ══ TABLE CARD ══════════════════════════════════════════════════════ --}}
     <div class="card ic-card">
@@ -1768,6 +1954,51 @@ input[type="radio"].d-none:checked + .ic-radio-btn {
 
         window.addEventListener('beforeunload', () => {
             if (importProgressInterval) clearInterval(importProgressInterval);
+        });
+
+        // ── IMPORT DAFTAR & AKTIFKAN ──────────────────────────────────────────
+        let raaProgressInterval = null;
+
+        window.addEventListener('raa-import-started', event => {
+            Swal.mixin({ toast: true, position: 'top-end', showConfirmButton: false, timer: 2000 })
+                .fire({ icon: 'info', title: 'Import Dimulai', text: `Total ${event.detail.total_rows} pelanggan akan didaftarkan & diaktifkan` });
+        });
+
+        window.addEventListener('start-raa-progress-check', event => {
+            if (raaProgressInterval) clearInterval(raaProgressInterval);
+            raaProgressInterval = setInterval(() => { @this.call('checkRaaProgress'); }, 1000);
+        });
+
+        window.addEventListener('raa-import-completed', event => {
+            if (raaProgressInterval) { clearInterval(raaProgressInterval); raaProgressInterval = null; }
+            const progress = event.detail.progress;
+            const failed = (progress.errors || []).length;
+            Swal.fire({
+                icon: failed > 0 ? 'warning' : 'success',
+                title: 'Import Selesai!',
+                html: `<div class="text-left">
+                    <p class="mb-2"><strong>Rangkuman Import Daftar &amp; Aktifkan:</strong></p>
+                    <ul class="list-unstyled">
+                        <li>📊 <strong>Total Data:</strong> ${progress.total}</li>
+                        <li>✅ <strong>Berhasil:</strong> <span class="text-success">${progress.total_import}</span></li>
+                        <li>❌ <strong>Gagal:</strong> <span class="text-danger">${failed}</span></li>
+                    </ul>
+                    ${failed > 0 ? `
+                        <hr>
+                        <p class="text-warning mb-2"><strong>⚠️ Detail Baris Gagal:</strong></p>
+                        <div style="max-height:200px; overflow-y:auto;">
+                            ${(progress.errors || []).map(err => `
+                                <small><strong>Baris ${err.row}:</strong> ${err.message}
+                                ${err.data ? `<br><em class="text-muted">Data: ${err.data}</em>` : ''}</small><hr class="my-1">
+                            `).join('')}
+                        </div>` : ''}
+                    </div>`,
+                confirmButtonText: 'OK', allowOutsideClick: false, width: '600px',
+            }).then(() => { @this.call('resetRaa'); });
+        });
+
+        window.addEventListener('beforeunload', () => {
+            if (raaProgressInterval) clearInterval(raaProgressInterval);
         });
     });
 </script>

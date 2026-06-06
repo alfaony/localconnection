@@ -330,9 +330,11 @@
                 <a href="{{ route('internet-customer.index') }}" class="quick-link-btn">
                     <i class="fas fa-users"></i> Data Pelanggan
                 </a>
+                @canAccess('index','internet_assets')
                 <a href="{{ route('internet-asset.create') }}" class="quick-link-btn">
                     <i class="fas fa-plus-circle"></i> Tambah Aset
                 </a>
+                @endcanAccess
                 <a href="{{ route('internet-report.index') }}" class="quick-link-btn">
                     <i class="fas fa-chart-bar"></i> Laporan & ROI
                 </a>

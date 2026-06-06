@@ -24,7 +24,7 @@ messaging.onBackgroundMessage((payload) => {
     const notificationTitle = payload.notification.title;
     const notificationOptions = {
         body: payload.notification.body,
-        icon: '/logo/logo-thrive.png',  // Update path ke icon
+        icon: '/logo/icon_1.svg',  // Update path ke icon
         data: { url: payload.data.url || '/' } // URL untuk pengalihan
     };
     

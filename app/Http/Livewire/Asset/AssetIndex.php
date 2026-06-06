@@ -21,6 +21,11 @@ class AssetIndex extends Component
 
     // Delete confirm
     public $deleteId = null;
+    public bool $showDeleteModal = false;
+
+    // Flash message
+    public string $flashMessage = '';
+    public string $flashType    = 'success';
 
     protected $queryString = ['search', 'statusFilter', 'categoryFilter'];
 
@@ -40,30 +45,53 @@ class AssetIndex extends Component
 
     public function confirmDelete($id)
     {
-        $this->deleteId = $id;
-        $this->dispatchBrowserEvent('show-delete-modal');
+        $this->deleteId      = $id;
+        $this->showDeleteModal = true;
+    }
+
+    public function cancelDelete()
+    {
+        $this->deleteId        = null;
+        $this->showDeleteModal = false;
     }
 
     public function destroy()
     {
-        $asset = InternetAsset::byCompany(Auth::user()->company_id)->findOrFail($this->deleteId);
-        $asset->delete();
-        $this->deleteId = null;
-        $this->dispatchBrowserEvent('hide-delete-modal');
-        session()->flash('success', 'Asset berhasil dihapus.');
+        if (!$this->deleteId) return;
+
+        try {
+            $asset = InternetAsset::findOrFail($this->deleteId);
+            $asset->delete();
+            $this->flash('Asset berhasil dihapus.', 'success');
+        } catch (\Throwable $e) {
+            $this->flash('Gagal menghapus asset: ' . $e->getMessage(), 'danger');
+        }
+
+        $this->deleteId        = null;
+        $this->showDeleteModal = false;
     }
 
     public function toggleStatus($id)
     {
-        $asset = InternetAsset::byCompany(Auth::user()->company_id)->findOrFail($id);
+        try {
+            $asset = InternetAsset::findOrFail($id);
 
-        if ($asset->status === 'active') {
-            $asset->update(['status' => 'damaged', 'damaged_at' => now()->toDateString()]);
-            session()->flash('success', 'Asset dinonaktifkan — tanggal rusak dicatat.');
-        } else {
-            $asset->update(['status' => 'active', 'damaged_at' => null]);
-            session()->flash('success', 'Asset diaktifkan kembali.');
+            if ($asset->status === 'active') {
+                $asset->update(['status' => 'damaged', 'damaged_at' => now()->toDateString()]);
+                $this->flash('Asset dinonaktifkan — tanggal rusak dicatat.', 'warning');
+            } else {
+                $asset->update(['status' => 'active', 'damaged_at' => null]);
+                $this->flash('Asset diaktifkan kembali.', 'success');
+            }
+        } catch (\Throwable $e) {
+            $this->flash('Gagal mengubah status: ' . $e->getMessage(), 'danger');
         }
+    }
+
+    private function flash(string $message, string $type = 'success')
+    {
+        $this->flashMessage = $message;
+        $this->flashType    = $type;
     }
 
     public function render()
@@ -100,6 +128,6 @@ class AssetIndex extends Component
             'assets'     => $assets,
             'stats'      => $stats,
             'categories' => InternetAsset::categoryOptions(),
-        ])->extends('adminlte::page');
+        ])->extends('adminlte::page')->section('content');
     }
 }
