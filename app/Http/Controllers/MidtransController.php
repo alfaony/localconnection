@@ -446,8 +446,8 @@ class MidtransController extends Controller
 
     protected function createMonth($purchase, $userCustomer, $months)
     {
-        $monthCreate = Carbon::parse($purchase->created_at)->month;
-        $year   = Carbon::parse($purchase->created_at)->year;
+        $monthCreate = Carbon::now()->month;
+        $year   = Carbon::now()->year;
         $day    = Carbon::parse($userCustomer->start_billing_date)->day;
 
         $periodStart = Carbon::create($year, $monthCreate, $day);
