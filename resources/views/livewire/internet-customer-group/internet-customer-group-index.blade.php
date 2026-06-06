@@ -281,6 +281,9 @@
 
 @section('js')
 <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
 <script>
     function initOdpSelect2(selectedIds) {
         var $el = $('#odpSelect2');
@@ -324,6 +327,7 @@
 
         // Toast notifications
         window.addEventListener('show-toast', function (e) {
+            console.log('Toast event:', e.detail);
             if (typeof Swal !== 'undefined') {
                 Swal.fire({
                     toast: true,

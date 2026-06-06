@@ -9,21 +9,21 @@ use App\Models\Company;
 use App\Models\Role;
 use App\Schemas\RoleSchema;
 
-class GenerateInternetSettingToAllCompany extends Command
+class GenerateAccountBankToAllCompanies extends Command
 {
     /**
      * The name and signature of the console command.
      *
      * @var string
      */
-    protected $signature = 'generate:setting-internet-to-all-company';
+    protected $signature = 'generate:bank-account';
 
     /**
      * The console command description.
      *
      * @var string
      */
-    protected $description = 'Generate internet invoice branding settings for all companies.';
+    protected $description = 'Command description';
 
     /**
      * Execute the console command.
@@ -42,9 +42,9 @@ class GenerateInternetSettingToAllCompany extends Command
         }
         
         $companies = Company::all();
-        $menu = 'internet_customer_setting';
-        $fields = ['internet_icon' => '','internet_company_name' => '','internet_company_address' => '','internet_phone' => '','internet_footer_message' => '', 'internet_message_blast' => '', 'manual_payment_status' => '', 'internet_remainder_billing' => '', 'internet_remainder_billing_3' => '', 'internet_remainder_billing_1' => '', 'internet_remainder_billing_0' => '', 'internet_remainder_billing_isolir' => '', 'internet_message_success' => ''];
-        
+        $menu = 'bank';
+
+        $fields = ['atas_nama' => null,'rekening_number' => null, 'nama_bank' => null,'cabang_bank' => null];
         foreach ($companies as $company) 
         {
             // Mencari user dengan role admin atau root pada setiap perusahaan
@@ -74,12 +74,22 @@ class GenerateInternetSettingToAllCompany extends Command
                     $field->field_title = $key;
                     $field->field_value = $value;
                     $field->save();
-
-                    $checking = "create";
                 } 
+                $this->info("Successfully for company '{$company->name}'.");
             }
 
-            $this->info("Successfully {$checking} for company '{$company->name}'.");
+            $fieldClosedTimeExists = SettingCompany::byCompany($company->id)->where('field_title', "closed_time")->first();
+            if (!$fieldClosedTimeExists) 
+            {
+                // Jika field belum ada, buat baru
+                $field = new SettingCompany();
+                $field->menu = "profile";
+                $field->user_id = $user->id;
+                $field->field_title = "closed_time";
+                $field->field_value = "16:00";
+                $field->save();
+            }
+
         }
         return Command::SUCCESS;
     }

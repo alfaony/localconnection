@@ -56,7 +56,6 @@ class ProvisionCustomerJob implements ShouldQueue
                 // Default: PPPoE flow (tidak berubah)
                 $this->handlePppoe($radius, $cust, $pkg, $groupName, $router);
                     // upsert secret + enable/disable by status
-                $ros->upsertPppSecret($client, $cust, $profile, $cust->local_address);
             }
             
             // ✅ Trigger sync check after 45 seconds to update status to ACTIVE
@@ -165,11 +164,24 @@ class ProvisionCustomerJob implements ShouldQueue
         try {
             $ros = app(RouterOSService::class);
             $client = $ros->client($router);
-            $ros->ensurePppProfile($client, $pkg, $profileName, null, $router->id);
+
+            // Pool, local_address: PackageRouterProfile → fallback PPPoE Server router
+            $mapping = PackageRouterProfile::where('router_id', $router->id)
+                ->where('package_id', $pkg->id)
+                ->with('addressPool')
+                ->first();
+
+            $poolNameOverride = $mapping?->addressPool?->name;
+            // local_address di mapping prioritas utama, fallback ke gateway AddressPool
+            $gatewayOverride  = $mapping?->local_address ?: $mapping?->addressPool?->gateway;
+
+            $ros->ensurePppProfile($client, $pkg, $profileName, null, $router->id, $poolNameOverride, $gatewayOverride);
 
             Log::info('[ProvisionJob] PPP Profile ensured via Direct API', [
-                'router'  => $router->name,
-                'profile' => $profileName,
+                'router'        => $router->name,
+                'profile'       => $profileName,
+                'pool'          => $poolNameOverride ?? 'fallback PPPoE Server',
+                'local_address' => $gatewayOverride  ?? 'fallback PPPoE Server',
             ]);
         } catch (\Throwable $e) {
             Log::warning('[ProvisionJob] Direct API profile setup failed (non-fatal)', [
@@ -296,8 +308,8 @@ class ProvisionCustomerJob implements ShouldQueue
                 Log::info('[ProvisionJob] SUSPENDED via Direct API ✅', ['customer' => $cust->username]);
             } else {
                 // Installed/Reactivated: upsert secret + disconnect old session
-                $ros->disconnectIfActive($client, $cust->username);
                 $ros->upsertPppSecret($client, $cust, $profileName, $cust->local_address);
+                $ros->disconnectIfActive($client, $cust->username);
                 Log::info('[ProvisionJob] ' . strtoupper($cust->status) . ' via Direct API ✅', [
                     'customer' => $cust->username, 'profile' => $profileName,
                 ]);

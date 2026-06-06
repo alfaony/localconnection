@@ -757,18 +757,6 @@
                     </div>
 
                     <div class="form-group">
-                        <label class="ic-label">Pilih IP Pool <span class="text-muted">(opsional)</span></label>
-                        <select class="form-control ic-input" wire:model="override_pool_id"
-                                wire:key="pool-select-{{ $router_id }}-{{ count($availablePools) }}" id="selectPool">
-                            <option value="">— Ikuti mapping otomatis —</option>
-                            @foreach($availablePools as $pool)
-                                <option value="{{ $pool['id'] }}">{{ $pool['label'] }}</option>
-                            @endforeach
-                        </select>
-                        <small class="form-text text-muted">Kosongkan jika ingin pakai pool default/PPPoE server router.</small>
-                    </div>
-
-                    <div class="form-group">
                         <label class="ic-label">Local Address</label>
                         <div class="input-group">
                             <input type="text" class="form-control ic-input" id="local_address" placeholder="192.168.1.1">
@@ -868,6 +856,7 @@
 
 @push('css')
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
 <style>
 /* ═══════════════════════════════════════════════════
    IC DESIGN SYSTEM — Bootstrap 4 Compatible
@@ -1284,6 +1273,7 @@ input[type="radio"].d-none:checked + .ic-radio-btn {
 @push('js')
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
 
     function copyShareLink() {
@@ -1531,19 +1521,6 @@ input[type="radio"].d-none:checked + .ic-radio-btn {
             }
         });
 
-        window.addEventListener('pools-options', (e) => {
-            const select = document.querySelector('select[wire\\:model="override_pool_id"]');
-            if (!select) return;
-            select.querySelectorAll('option:not(:first-child)').forEach(o => o.remove());
-            const options = e.detail.options || [];
-            options.forEach(p => {
-                const opt = document.createElement('option');
-                opt.value = p.id; opt.textContent = p.label;
-                select.appendChild(opt);
-            });
-            select.dispatchEvent(new Event('change', { bubbles: true }));
-        });
-        
         // Fungsi toggle auth fields (username/password) berdasarkan mode bypassed
         function toggleBypassedMode(isBypassed) {
             currentBypassMode = isBypassed;
@@ -1635,14 +1612,11 @@ input[type="radio"].d-none:checked + .ic-radio-btn {
             routerSelect.value = '';
             document.getElementById('routerSelectMirror').value = '';
             @this.set('router_id', '');
-            @this.set('override_pool_id', '');
 
             routerSelect.onchange = function(e) {
                 const val = e.target.value || '';
                 document.getElementById('routerSelectMirror').value = val;
                 @this.set('router_id', val);
-                @this.set('override_pool_id', '');
-                @this.call('loadPoolsForRouter', val);
             };
 
             // Reset form fields
@@ -1692,7 +1666,6 @@ input[type="radio"].d-none:checked + .ic-radio-btn {
             const groupingId       = (document.getElementById('groupingIdPreview')?.value || '').trim() || null;
             const username         = @this.username;
             const password         = document.getElementById('modalPassword').value;
-            const override_pool_id = @this.override_pool_id;
             const local_address    = @this.local_address;
 
             if (!odpId)         return Swal.fire({ icon: 'warning', title: 'Perhatian', text: 'ODP harus dipilih' });
@@ -1728,7 +1701,7 @@ input[type="radio"].d-none:checked + .ic-radio-btn {
                 await new Promise(resolve => setTimeout(resolve, 500));
                 const success = await @this.call('completeInstallation',
                     serialNumber, notes, routerId, username, password,
-                    override_pool_id, local_address, odpId, groupingId
+                    null, local_address, odpId, groupingId
                 );
                 if (success !== false) {
                     $('#installationModal').modal('hide');

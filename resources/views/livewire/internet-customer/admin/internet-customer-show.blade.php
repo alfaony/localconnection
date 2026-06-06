@@ -71,73 +71,6 @@
                                             <td>{{ $customer->userCustomer->phone_number ?? '-' }}</td>
                                         </tr>
                                         <tr>
-                                            <th>Nomor KTP</th>
-                                            <td>
-                                                <span class="font-weight-bold">{{ $customer->ktp_number ?: '-' }}</span>
-                                                <div class="mt-1">
-                                                    @if($ktpPhotoUrl)
-                                                        <button wire:click="viewKtpPhoto" class="btn btn-sm btn-info mr-1">
-                                                            <i class="fas fa-eye mr-1"></i>Lihat KTP
-                                                        </button>
-                                                        <button wire:click="downloadKtpPhoto" class="btn btn-sm btn-secondary mr-1">
-                                                            <i class="fas fa-download mr-1"></i>Download
-                                                        </button>
-                                                    @endif
-                                                    @canAccess('edit', 'internet_customers')
-                                                    <button wire:click="toggleKtpUpload" class="btn btn-sm {{ $showKtpUpload ? 'btn-danger' : 'btn-outline-warning' }}">
-                                                        <i class="fas {{ $showKtpUpload ? 'fa-times' : 'fa-upload' }} mr-1"></i>
-                                                        {{ $showKtpUpload ? 'Tutup' : ($ktpPhotoUrl ? 'Ganti Foto KTP' : 'Upload Foto KTP') }}
-                                                    </button>
-                                                    @endcanAccess
-                                                </div>
-                                            </td>
-                                        </tr>
-                                        @if($showKtpUpload)
-                                        <tr>
-                                            <td colspan="2" class="p-0">
-                                                <div class="bg-light border-left border-warning p-3" style="border-left-width:4px!important">
-                                                    <label class="font-weight-bold text-warning mb-2">
-                                                        <i class="fas fa-id-card mr-1"></i>
-                                                        {{ $ktpPhotoUrl ? 'Ganti Foto KTP' : 'Upload Foto KTP' }}
-                                                    </label>
-                                                    <input type="file"
-                                                        wire:model="ktp_photo_upload"
-                                                        class="form-control form-control-sm"
-                                                        accept="image/*,application/pdf"
-                                                        @if($ktp_photo_pending_path) disabled @endif>
-                                                    <div wire:loading wire:target="ktp_photo_upload" class="mt-2">
-                                                        <small class="text-warning">
-                                                            <i class="fas fa-spinner fa-spin mr-1"></i> Mengunggah ke server...
-                                                        </small>
-                                                    </div>
-                                                    <div wire:loading.remove wire:target="ktp_photo_upload" class="mt-1">
-                                                        @if($ktp_photo_pending_path)
-                                                            <div class="d-flex align-items-center mt-2">
-                                                                <small class="text-success mr-3">
-                                                                    <i class="fas fa-check-circle mr-1"></i> Foto siap disimpan.
-                                                                </small>
-                                                                <button wire:click="saveKtpPhoto"
-                                                                    wire:loading.attr="disabled"
-                                                                    wire:target="saveKtpPhoto"
-                                                                    class="btn btn-sm btn-success">
-                                                                    <span wire:loading.remove wire:target="saveKtpPhoto">
-                                                                        <i class="fas fa-save mr-1"></i>Simpan Foto KTP
-                                                                    </span>
-                                                                    <span wire:loading wire:target="saveKtpPhoto">
-                                                                        <i class="fas fa-spinner fa-spin mr-1"></i>Menyimpan...
-                                                                    </span>
-                                                                </button>
-                                                            </div>
-                                                        @else
-                                                            <small class="text-muted">Format: JPG, PNG, PDF (maks. 2MB)</small>
-                                                        @endif
-                                                    </div>
-                                                    @error('ktp_photo_upload') <small class="text-danger d-block mt-1">{{ $message }}</small> @enderror
-                                                </div>
-                                            </td>
-                                        </tr>
-                                        @endif
-                                        <tr>
                                             <th>Alamat Lengkap</th>
                                             <td>{{ $customer->address }}</td>
                                         </tr>
@@ -224,6 +157,7 @@
                                                 {{ $customer->province->name ?? '-' }}
                                             </td>
                                         </tr>
+                                        {{-- 
                                         @if($customer->coupons->count() > 0)
                                         <tr>
                                             <td colspan="6">
@@ -240,6 +174,7 @@
                                             </td>
                                         </tr>
                                         @endif
+                                        --}}
                                         <tr>
                                             <th>Tanggal Pembayaran Selanjutnya</th>
                                             <td>
@@ -729,6 +664,76 @@
                                             {{ $purchases->links('pagination::bootstrap-4') }}
                                         </div>
                                     </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    @endif
+
+                    @if($wablasLogs->count() > 0)
+                    <div class="row mt-4">
+                        <div class="col-md-12">
+                            <div class="card shadow border-0">
+                                <div class="card-header bg-success text-white">
+                                    <h4 class="card-title mb-0">
+                                        <i class="fab fa-whatsapp mr-2"></i>Log Wablas
+                                        <span class="badge badge-light text-success ml-2">{{ $wablasLogs->total() }}</span>
+                                    </h4>
+                                </div>
+                                <div class="card-body p-0">
+                                    <div class="table-responsive">
+                                        <table class="table table-bordered table-striped table-sm mb-0">
+                                            <thead class="thead-light">
+                                                <tr>
+                                                    <th width="15%">Waktu</th>
+                                                    <th width="10%">Tipe</th>
+                                                    <th width="15%">No. HP</th>
+                                                    <th>Pesan</th>
+                                                    <th width="10%" class="text-center">Status</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @foreach($wablasLogs as $log)
+                                                <tr>
+                                                    <td class="text-nowrap">
+                                                        <small>{{ \Carbon\Carbon::parse($log->created_at)->locale('id')->translatedFormat('d M Y H:i') }}</small>
+                                                    </td>
+                                                    <td>
+                                                        @if($log->type === 'image')
+                                                            <span class="badge badge-info"><i class="fas fa-image mr-1"></i>Image</span>
+                                                        @elseif($log->type === 'document')
+                                                            <span class="badge badge-secondary"><i class="fas fa-file mr-1"></i>Doc</span>
+                                                        @elseif($log->type === 'audio')
+                                                            <span class="badge badge-warning"><i class="fas fa-microphone mr-1"></i>Audio</span>
+                                                        @elseif($log->type === 'video')
+                                                            <span class="badge badge-primary"><i class="fas fa-video mr-1"></i>Video</span>
+                                                        @else
+                                                            <span class="badge badge-light border"><i class="fas fa-comment mr-1"></i>Text</span>
+                                                        @endif
+                                                    </td>
+                                                    <td><small>{{ $log->phone }}</small></td>
+                                                    <td>
+                                                        <small class="text-muted" style="white-space: pre-wrap; word-break: break-word;">{{ \Illuminate\Support\Str::limit($log->message, 120) }}</small>
+                                                    </td>
+                                                    <td class="text-center">
+                                                        @if($log->status === 'success')
+                                                            <span class="badge badge-success"><i class="fas fa-check mr-1"></i>Terkirim</span>
+                                                        @elseif($log->status === 'failed')
+                                                            <span class="badge badge-danger"><i class="fas fa-times mr-1"></i>Gagal</span>
+                                                        @else
+                                                            <span class="badge badge-warning"><i class="fas fa-clock mr-1"></i>Pending</span>
+                                                        @endif
+                                                    </td>
+                                                </tr>
+                                                @endforeach
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    @if($wablasLogs->hasPages())
+                                    <div class="card-footer bg-white py-2">
+                                        {{ $wablasLogs->withQueryString()->links('vendor.pagination.bootstrap-4') }}
+                                    </div>
+                                    @endif
                                 </div>
                             </div>
                         </div>
@@ -1255,6 +1260,7 @@
 
     @push('js')
     <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
         // Fungsi untuk membuka modal edit data pribadi
         function openEditPribadiModal() {
@@ -2061,8 +2067,7 @@
                 
 
                 // Reset error messages
-                @this.resetErrorBag();
-                @this.resetValidation();
+                @this.call('clearErrors');
             });
         });
     </script>

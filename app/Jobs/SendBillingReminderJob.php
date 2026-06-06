@@ -101,82 +101,50 @@ class SendBillingReminderJob implements ShouldQueue
                 $dateJatuhTempo = Carbon::parse($customer->end_billing_date)->format('d')
                     . ' ' . Carbon::parse($customer->end_billing_date)->locale('id')->monthName
                     . ' ' . Carbon::parse($customer->end_billing_date)->year;
-
                 $tutorialPayment = config('services.internet_custom.tutorial_payment');
 
-                // Get latest purchase for invoice number
-                $latestPurchase = $customer->internetCustomer->purchases()->latest()->first();
-                $invoiceNumber = $latestPurchase->code ?? '-';
+                // Ambil pesan template dari setting
+                $internetSetting = SettingCompany::byCompany($customer->internetCustomer->company_id)
+                    ->where('menu', 'wablas')
+                    ->get()
+                    ->pluck('field_value', 'field_title');
 
-                // Template message untuk reminder (1 hari sebelum jatuh tempo)
-                $url = route('internet-customer.customer.show', $customer->internetCustomer->code);
-                $dateJatuhTempo = Carbon::parse($customer->end_billing_date)->format('d') . ' ' . Carbon::parse($customer->end_billing_date)->locale('id')->monthName . ' ' . Carbon::parse($customer->end_billing_date)->year;
+                $settingKey = match((int)$daysBeforeDue) {
+                    0 => 'internet_remainder_billing_0',
+                    1 => 'internet_remainder_billing_1',
+                    3 => 'internet_remainder_billing_3',
+                    default => 'internet_remainder_billing_isolir',
+                };
 
-                $tutorialPayment = config('services.internet_custom.tutorial_payment');
-                $message = null;
+                $template = trim($internetSetting[$settingKey] ?? '');
 
-                if ($daysBeforeDue == 0) {
-                    $message = "*Ringkasan Tagihan Layanan Internet*\n\n"
-                            . "*Yth. Bapak/Ibu {$customer->name},*\n"
-                            . "Kami informasikan bahwa tagihan internet Anda *jatuh tempo HARI INI*. Mohon segera lakukan pembayaran untuk menghindari pemutusan layanan.\n\n"
-                            . "Berikut detail tagihan Anda:\n\n"
-                            . "ID Pelanggan: {$customer->internetCustomer->code}\n"
-                            . "Paket Layanan: {$customer->internetCustomer->internetPackage->name}\n"
-                            . "Jatuh Tempo Pembayaran: {$dateJatuhTempo}\n"
-                            . "Total Tagihan: Rp. " . number_format($customer->internetCustomer->internetPackage->price_nett, 2, ',', '.') . "\n\n"
-                            . "⛔ *PERHATIAN:* Layanan internet Anda akan dihentikan jika pembayaran tidak dilakukan hari ini.\n\n"
-                            . "Untuk melakukan pembayaran atau konfirmasi, silakan klik tautan berikut:\n\n"
-                            . "{$url}\n\n"
-                            . "{$tutorialPayment}"
-                            . "Terima kasih atas perhatian dan kerjasama nya 🙏.\n\n"
-                            . "*Hormat kami,*\n"
-                            . "*Hikarinet by KAILI Global*";
-                } elseif ($daysBeforeDue == 1) {
-                    $message = "*Ringkasan Tagihan Layanan Internet*\n\n"
-                            . "*Yth. Bapak/Ibu {$customer->name},*\n"
-                            . "Kami informasikan bahwa jatuh tempo pembayaran tagihan internet akan berakhir kurang dari 1 hari lagi .\n\n"
-                            . "Berikut ini adalah pengingat tagihan Anda dengan detail sebagai berikut:\n\n"
-                            . "ID Pelanggan: {$customer->internetCustomer->code}\n"
-                            . "Paket Layanan: {$customer->internetCustomer->internetPackage->name}\n"
-                            . "Jatuh Tempo Pembayaran: {$dateJatuhTempo}\n"
-                            . "Total Tagihan: Rp. " . number_format($customer->internetCustomer->internetPackage->price_nett, 2, ',', '.') . "\n\n"
-                            . "⛔ Mohon segera lakukan pembayaran sebelum tanggal jatuh tempo untuk menghindari penghentian layanan dan pemutusan koneksi internet.\n\n"
-                            . "Untuk melakukan pembayaran atau konfirmasi, silakan klik tautan berikut:\n\n"
-                            . "{$url}\n\n"
-                            . "{$tutorialPayment}"
-                            . "Terima kasih atas perhatian dan kerjasama nya 🙏.\n\n"
-                            . "*Hormat kami,*\n"
-                            . "*Hikarinet by KAILI Global*";
-                } elseif ($daysBeforeDue == 3) {
-                    $message = "*Ringkasan Tagihan Layanan Internet*\n\n"
-                            . "*Yth. Bapak/Ibu {$customer->name},*\n"
-                            . "Kami informasikan bahwa jatuh tempo pembayaran tagihan internet Anda tinggal *3 hari lagi*.\n\n"
-                            . "Berikut ini adalah pengingat tagihan Anda dengan detail sebagai berikut:\n\n"
-                            . "ID Pelanggan: {$customer->internetCustomer->code}\n"
-                            . "Paket Layanan: {$customer->internetCustomer->internetPackage->name}\n"
-                            . "Jatuh Tempo Pembayaran: {$dateJatuhTempo}\n"
-                            . "Total Tagihan: Rp. " . number_format($customer->internetCustomer->internetPackage->price_nett, 2, ',', '.') . "\n\n"
-                            . "⛔ Mohon segera lakukan pembayaran sebelum tanggal jatuh tempo untuk menghindari penghentian layanan dan pemutusan koneksi internet.\n\n"
-                            . "Untuk melakukan pembayaran atau konfirmasi, silakan klik tautan berikut:\n\n"
-                            . "{$url}\n\n"
-                            . "{$tutorialPayment}"
-                            . "Terima kasih atas perhatian dan kerjasama nya 🙏.\n\n"
-                            . "*Hormat kami,*\n"
-                            . "*Hikarinet by KAILI Global*";
-                }
+                // Jika pesan kosong di setting, tidak perlu kirim
+                if (empty($template)) {
+                    Log::info("Reminder template kosong untuk key={$settingKey}, skip kirim WA", [
+                        'customer_code' => $customer->internetCustomer->code,
+                    ]);
+                    return;
+                }            
 
-                if($message){
-                    $response = $this->sendMessage($client, $customer->phone_number, $message);
+                $message = strtr($template, [
+                    '{{nama}}'       => $customer->name,
+                    '{{kode}}'       => $customer->internetCustomer->code,
+                    '{{paket}}'      => $customer->internetCustomer->internetPackage->name,
+                    '{{jatuh_tempo}}' => $dateJatuhTempo,
+                    '{{tagihan}}'    => 'Rp. ' . number_format($customer->internetCustomer->internetPackage->price_nett, 2, ',', '.'),
+                    '{{url}}'        => $url,
+                ]);
 
-                    \App\Models\WablasLog::record(
-                        source: 'internet_customer',
-                        sourceId: $customer->internetCustomer->id,
-                        phone: $customer->phone_number,
-                        message: $message,
-                        response: $response ?? [],
-                        type: 'text'
-                    );
-                }
+                $response = $this->sendMessage($client, $customer->phone_number, $message);
+
+                \App\Models\WablasLog::record(
+                    source: 'internet_customer',
+                    sourceId: $customer->internetCustomer->id,
+                    phone: $customer->phone_number,
+                    message: $message,
+                    response: $response ?? [],
+                    type: 'text'
+                );
 
                 Log::info("WhatsApp reminder sent successfully", [
                     'customer_code' => $customer->internetCustomer->code,

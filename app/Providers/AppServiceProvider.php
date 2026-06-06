@@ -122,6 +122,7 @@ class AppServiceProvider extends ServiceProvider
             $managementUmumMenuArray = Array();
             $managementKaryawanMenuArray = Array();
             $managementInternetMenuArray = Array();
+            $managementMasterInternetMenuArray = Array();
             $managementTokoOnlineMenuArray = Array();
             $managementGedungAsetMenuArray = Array();
             $managementProduktifitasMenuArray = Array();
@@ -149,8 +150,12 @@ class AppServiceProvider extends ServiceProvider
 
             $managementInternetMenu = 
             [
-                'data_centers','pops','optical_distributions','coverage_services',
-                'internet_packages','internet_customers','promos','routers','internet_customer_groups','internet_customer_user_regions'
+                'internet_reports','internet_customers','internet_packages','promos','internet_customer_groups','internet_customer_user_regions'
+            ];
+                
+            $managementMasterInternetMenu = 
+            [
+                'data_centers','pops','optical_distributions','coverage_services','routers'
             ];
 
             $managementTokoOnlineMenu = [
@@ -872,6 +877,12 @@ class AppServiceProvider extends ServiceProvider
                     'route' => 'report-link.index',
                     'icon' => 'fa fa-link',
                 ],
+                'internet_reports' =>
+                [
+                    'text' => 'Laporan Internet',
+                    'route' => 'internet-report.index',
+                    'icon' => 'fa fa-file',
+                ],
             ];
 
             // foreach ($listMenu as $role) 
@@ -1252,6 +1263,7 @@ class AppServiceProvider extends ServiceProvider
             $managementUmumMenuArray          = $buildSubmenu($managementUmumMenu);
             $managementKaryawanMenuArray      = $buildSubmenu($managementKaryawanMenu);
             $managementInternetMenuArray      = $buildSubmenu($managementInternetMenu);
+            $managementMasterInternetMenuArray = $buildSubmenu($managementMasterInternetMenu);
             $managementProductionMenuArray    = $buildSubmenu($managementProductionMenu);
             $managementTokoOnlineMenuArray    = $buildSubmenu($managementTokoOnlineMenu);
             $managementGedungMenuArray        = $buildSubmenu($managementGedungMenu);
@@ -1275,6 +1287,11 @@ class AppServiceProvider extends ServiceProvider
             $sectionInternet = [
                 'text'    => 'Manajemen Internet',
                 'submenu' => $managementInternetMenuArray,
+            ];
+
+            $sectionMasterInternet = [
+                'text'    => 'Master Internet',
+                'submenu' => $managementMasterInternetMenuArray,
             ];
 
             $sectionTokoOnline = [
@@ -1322,6 +1339,7 @@ class AppServiceProvider extends ServiceProvider
                 $sectionUmum,
                 $sectionKaryawan,
                 $sectionInternet,
+                $sectionMasterInternet,
                 $sectionSoftware,
                 $sectionTokoOnline,
                 $sectionProduction,

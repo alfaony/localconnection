@@ -189,6 +189,26 @@ class PermissionForProductTillSettingCompanySeeder extends Seeder
             //assign role & permission
             PermissionRole::create(['role_id' => $root->id, 'permission_id' => $permission->id]);
         }
+
+        // permision
+         $settingCompany = ['index','store'];
+
+        foreach ($settingCompany as $method) 
+        {
+            // create permision
+            $permission = Permission::firstOrCreate([
+                'name' => ucwords($method).' SettingCompany',
+            ],[
+                'method' => $method,
+                'table' => 'setting_companies',
+                'model' => 'SettingCompany',
+                'guard_name' => 'web'
+            ]);
+
+            //assign role & permission
+            PermissionRole::create(['role_id' => $root->id, 'permission_id' => $permission->id]);
+            PermissionRole::create(['role_id' => $admin->id, 'permission_id' => $permission->id]);
+        }
     }
 }
 

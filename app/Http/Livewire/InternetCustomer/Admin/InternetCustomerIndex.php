@@ -549,7 +549,7 @@ class InternetCustomerIndex extends Component
             }
 
             DB::commit();
-            \App\Helpers\XpHelper::award(Auth::user(), $customerInstallation, "Internet Instalattion");
+            // \App\Helpers\XpHelper::award(Auth::user(), $customerInstallation, "Internet Instalattion");
             $this->updateBilling($customer);
 
             Log::info('Installation completed successfully', [

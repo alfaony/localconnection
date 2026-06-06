@@ -304,7 +304,7 @@ class InternetCustomer extends Model
             case 'disconnected':
                 return '<span class="badge badge-danger">Disconnected</span>';
             case "reactivated":
-                return '<span class="badge badge-success">Reactivated</span>';
+                return '<span class="badge badge-success">Connecting</span>';
             case 'closed':
                 return '<span class="badge badge-dark">Closed</span>';
             case 'inactive':

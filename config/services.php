@@ -97,7 +97,7 @@ return [
     [
         'end_billing_of_days' => env('END_BILLING_OF_DAYS', 5),
         'max_billing_date' => env('MAX_BILLING_DATE', 20), // Jika > 20, normalisasi ke tanggal 1
-        'default_tax_rate' => env('DEFAULT_TAX_RATE', 11), // Default PPN 11%
+        'default_tax_rate' => env('DEFAULT_TAX_RATE', 0), // Default PPN 11%
         'tutorial_payment' => env('TUTORIAL_PAYMENT', null),
     ],
     'used_laptop_charge' =>

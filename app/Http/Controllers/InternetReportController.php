@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\DataCenter;
 use App\Models\InternetAsset;
 use App\Models\InternetCustomer;
 use App\Models\InternetCustomerPurchase;
 use App\Models\InternetPackage;
+use App\Models\Pop;
 use App\Schemas\ParamSchema;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -84,7 +86,12 @@ class InternetReportController extends Controller
             ->count();
 
         $activatedInRange = InternetCustomer::byCompany($companyId)
-            ->whereIn('status', [ParamSchema::ACTIVE, ParamSchema::REACTIVATED])
+            ->where('status', ParamSchema::ACTIVE)
+            ->whereBetween('updated_at', [$from, $to])
+            ->count();
+
+        $connectingInRange = InternetCustomer::byCompany($companyId)
+            ->where('status', ParamSchema::REACTIVATED)
             ->whereBetween('updated_at', [$from, $to])
             ->count();
 
@@ -94,7 +101,11 @@ class InternetReportController extends Controller
             ->count();
 
         $totalActiveNow = InternetCustomer::byCompany($companyId)
-            ->whereIn('status', [ParamSchema::ACTIVE, ParamSchema::REACTIVATED])
+            ->where('status', ParamSchema::ACTIVE)
+            ->count();
+
+        $totalConnectingNow = InternetCustomer::byCompany($companyId)
+            ->where('status', ParamSchema::REACTIVATED)
             ->count();
 
         // Average revenue per active customer (ARPU)
@@ -156,6 +167,42 @@ class InternetReportController extends Controller
             ")
             ->first();
 
+        // ── Expenses ─────────────────────────────────────────────────
+        // Hitung jumlah bulan dalam periode yang dipilih
+        $periodMonths = max(1, (int) round($from->diffInDays($to) / 30));
+
+        $dataCenters = DataCenter::byCompany($companyId)
+            ->select('id', 'name', 'cost_per_month', 'capacity_mb', 'tanggal_tagihan')
+            ->orderBy('name')
+            ->get()
+            ->map(fn($dc) => [
+                'id'              => $dc->id,
+                'name'            => $dc->name,
+                'cost_per_month'  => (float) $dc->cost_per_month,
+                'total_in_period' => (float) $dc->cost_per_month * $periodMonths,
+                'capacity_mb'     => $dc->capacity_mb,
+                'tanggal_tagihan' => $dc->tanggal_tagihan,
+            ]);
+
+        $pops = Pop::byCompany($companyId)
+            ->select('id', 'name', 'monthly_cost', 'capacity_mb', 'lease_expiration_date')
+            ->orderBy('name')
+            ->get()
+            ->map(fn($p) => [
+                'id'                    => $p->id,
+                'name'                  => $p->name,
+                'monthly_cost'          => (float) $p->monthly_cost,
+                'total_in_period'       => (float) $p->monthly_cost * $periodMonths,
+                'capacity_mb'           => $p->capacity_mb,
+                'lease_expiration_date' => $p->lease_expiration_date,
+            ]);
+
+        $totalDataCenterMonthly = $dataCenters->sum('cost_per_month');
+        $totalPopMonthly        = $pops->sum('monthly_cost');
+        $totalExpenseMonthly    = $totalDataCenterMonthly + $totalPopMonthly;
+        $totalExpensePeriod     = $totalExpenseMonthly * $periodMonths;
+        $netIncome              = (float) $totalIncome - $totalExpensePeriod;
+
         return response()->json([
             'success' => true,
             'data' => [
@@ -173,11 +220,13 @@ class InternetReportController extends Controller
                     'by_package'      => $incomeByPackage,
                 ],
                 'customer' => [
-                    'new'             => $newCustomers,
-                    'activated'       => $activatedInRange,
-                    'churned'         => $churnedInRange,
-                    'total_active_now'=> $totalActiveNow,
-                    'mrr_history'     => $mrrHistory,
+                    'new'               => $newCustomers,
+                    'activated'         => $activatedInRange,
+                    'connecting'        => $connectingInRange,
+                    'churned'           => $churnedInRange,
+                    'total_active_now'  => $totalActiveNow,
+                    'total_connecting_now' => $totalConnectingNow,
+                    'mrr_history'       => $mrrHistory,
                     'monthly_recurring' => (float) $monthlyRecurring,
                 ],
                 'asset' => [
@@ -194,6 +243,16 @@ class InternetReportController extends Controller
                     'recovered_pct'     => $totalAssetValue > 0
                         ? min(100, round(($monthlyRecurring * 12) / $totalAssetValue * 100, 1))
                         : 0,
+                ],
+                'expense' => [
+                    'period_months'            => $periodMonths,
+                    'data_center_monthly'      => $totalDataCenterMonthly,
+                    'pop_monthly'              => $totalPopMonthly,
+                    'total_monthly'            => $totalExpenseMonthly,
+                    'total_period'             => $totalExpensePeriod,
+                    'net_income'               => $netIncome,
+                    'data_centers'             => $dataCenters,
+                    'pops'                     => $pops,
                 ],
             ],
         ]);

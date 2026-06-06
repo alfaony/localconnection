@@ -21,10 +21,11 @@ class PackageRouterProfile extends Model
     }
 
     protected $fillable = [
-        'id','router_id','package_id','ros_profile','ros_queue_type_up','ros_queue_type_down','meta'
+        'id','router_id','package_id','ros_profile','address_pool_id','local_address','ros_queue_type_up','ros_queue_type_down','meta'
     ];
     protected $casts = ['meta' => 'array'];
 
-    public function router()  { return $this->belongsTo(Router::class); }
-    public function package() { return $this->belongsTo(InternetPackage::class, 'package_id'); }
+    public function router()      { return $this->belongsTo(Router::class); }
+    public function package()     { return $this->belongsTo(InternetPackage::class, 'package_id'); }
+    public function addressPool() { return $this->belongsTo(AddressPool::class, 'address_pool_id'); }
 }

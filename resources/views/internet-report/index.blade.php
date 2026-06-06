@@ -100,17 +100,77 @@
     </div>
 </div>
 
+{{-- ── Section: Pengeluaran ── --}}
+<div class="section-head">Pengeluaran Langganan</div>
+<div class="row mb-4">
+
+    {{-- Total Pengeluaran --}}
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="kpi-card" style="border-left-color:#dc2626">
+            <div style="font-size:.72rem;color:#64748b;text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px">
+                <i class="fas fa-arrow-circle-down mr-1 text-danger"></i>Total Pengeluaran
+            </div>
+            <div class="kpi-val" id="kpi-expense-total">
+                <div class="skeleton" style="width:70%"></div>
+            </div>
+            <div class="kpi-lbl" id="kpi-expense-period">Dalam periode dipilih</div>
+            <div id="kpi-expense-monthly" class="kpi-sub warn d-none">
+                <i class="fas fa-calendar-alt"></i><span></span>/bulan
+            </div>
+        </div>
+    </div>
+
+    {{-- Net Income --}}
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="kpi-card" style="border-left-color:#0891b2">
+            <div style="font-size:.72rem;color:#64748b;text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px">
+                <i class="fas fa-balance-scale mr-1 text-info"></i>Net Income
+            </div>
+            <div class="kpi-val md" id="kpi-net-income">
+                <div class="skeleton" style="width:60%"></div>
+            </div>
+            <div class="kpi-lbl">Pendapatan – Pengeluaran</div>
+        </div>
+    </div>
+
+    {{-- Breakdown DataCenter --}}
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="card h-100">
+            <div class="card-header">
+                <h5><i class="fas fa-server text-danger"></i> Data Center</h5>
+            </div>
+            <div class="card-body" id="expense-datacenter-list">
+                <div class="skeleton mb-2"></div>
+                <div class="skeleton mb-2"></div>
+            </div>
+        </div>
+    </div>
+
+    {{-- Breakdown POP --}}
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="card h-100">
+            <div class="card-header">
+                <h5><i class="fas fa-network-wired text-warning"></i> POP</h5>
+            </div>
+            <div class="card-body" id="expense-pop-list">
+                <div class="skeleton mb-2"></div>
+                <div class="skeleton mb-2"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
 {{-- ── Section: Charts ── --}}
 <div class="section-head">Grafik Pendapatan & Pelanggan</div>
 <div class="row mb-4">
 
     {{-- Monthly Income Chart --}}
     <div class="col-lg-8 mb-3">
-        <div class="dash-card h-100">
-            <div class="dash-card-header">
+        <div class="card h-100">
+            <div class="card-header">
                 <h5><i class="fas fa-chart-bar text-primary"></i> Pendapatan per Bulan</h5>
             </div>
-            <div class="dash-card-body">
+            <div class="card-body">
                 <div class="chart-box"><canvas id="incomeChart"></canvas></div>
             </div>
         </div>
@@ -118,11 +178,11 @@
 
     {{-- Income by Package --}}
     <div class="col-lg-4 mb-3">
-        <div class="dash-card h-100">
-            <div class="dash-card-header">
+        <div class="card h-100">
+            <div class="card-header">
                 <h5><i class="fas fa-layer-group text-success"></i> Top Paket</h5>
             </div>
-            <div class="dash-card-body" id="pkg-list">
+            <div class="card-body" id="pkg-list">
                 <div class="skeleton mb-2" style="height:40px;border-radius:8px"></div>
                 <div class="skeleton mb-2" style="height:40px;border-radius:8px"></div>
                 <div class="skeleton" style="height:40px;border-radius:8px"></div>
@@ -137,11 +197,11 @@
 
     {{-- MRR Trend --}}
     <div class="col-lg-7 mb-3">
-        <div class="dash-card h-100">
-            <div class="dash-card-header">
+        <div class="card h-100">
+            <div class="card-header">
                 <h5><i class="fas fa-chart-line text-info"></i> Tren MRR 12 Bulan Terakhir</h5>
             </div>
-            <div class="dash-card-body">
+            <div class="card-body">
                 <div class="chart-box"><canvas id="mrrChart"></canvas></div>
             </div>
         </div>
@@ -149,11 +209,11 @@
 
     {{-- Asset by Category --}}
     <div class="col-lg-5 mb-3">
-        <div class="dash-card h-100">
-            <div class="dash-card-header">
+        <div class="card h-100">
+            <div class="card-header">
                 <h5><i class="fas fa-hdd text-warning"></i> Aset per Kategori</h5>
             </div>
-            <div class="dash-card-body">
+            <div class="card-body">
                 <div class="chart-box" style="height:200px"><canvas id="assetChart"></canvas></div>
                 <div id="asset-summary-list" class="mt-3"></div>
             </div>
@@ -165,8 +225,8 @@
 <div class="section-head">Detail Metode Pembayaran</div>
 <div class="row mb-4">
     <div class="col-md-6 mb-3">
-        <div class="dash-card">
-            <div class="dash-card-header">
+        <div class="card">
+            <div class="card-header">
                 <h5><i class="fas fa-credit-card text-primary"></i> Pembayaran per Metode</h5>
             </div>
             <div id="method-table-wrap">
@@ -178,11 +238,11 @@
     </div>
 
     <div class="col-md-6 mb-3">
-        <div class="dash-card">
-            <div class="dash-card-header">
+        <div class="card">
+            <div class="card-header">
                 <h5><i class="fas fa-users text-success"></i> Ringkasan Pelanggan</h5>
             </div>
-            <div class="dash-card-body" id="customer-summary">
+            <div class="card-body" id="customer-summary">
                 <div class="skeleton mb-2"></div>
                 <div class="skeleton mb-2"></div>
                 <div class="skeleton mb-2"></div>
@@ -328,7 +388,7 @@ function renderPackageList(pkgs) {
             <small class="text-muted">${p.count} transaksi</small>
         </div>`;
     });
-    setHtml('pkg-list', `<div class="dash-card-body">${h}</div>`);
+    setHtml('pkg-list', `<div class="card-body">${h}</div>`);
 }
 
 function renderMethodTable(methods) {
@@ -358,10 +418,11 @@ function renderMethodTable(methods) {
 
 function renderCustomerSummary(c) {
     const items = [
-        {icon:'fa-user-plus',  color:'#7c3aed', label:'Pelanggan Baru', val:c.new},
-        {icon:'fa-user-check', color:'#16a34a', label:'Aktif Sekarang',  val:c.total_active_now},
-        {icon:'fa-user-slash', color:'#dc2626', label:'Churn / Cabut',   val:c.churned},
-        {icon:'fa-dollar-sign',color:'#0891b2', label:'MRR Bulan Lalu',  val:fmtRp(c.monthly_recurring)},
+        {icon:'fa-user-plus',  color:'#7c3aed', label:'Pelanggan Baru',  val:c.new},
+        {icon:'fa-user-check', color:'#16a34a', label:'Aktif',            val:c.total_active_now},
+        {icon:'fa-sync-alt',   color:'#2563eb', label:'Connecting',       val:c.total_connecting_now || 0},
+        {icon:'fa-user-slash', color:'#dc2626', label:'Churn / Cabut',    val:c.churned},
+        {icon:'fa-dollar-sign',color:'#0891b2', label:'MRR Bulan Lalu',   val:fmtRp(c.monthly_recurring)},
     ];
     let h = '';
     items.forEach(it=>{
@@ -395,6 +456,23 @@ function renderAssetSummary(asset) {
     setHtml('asset-summary-list', h || '<div class="text-muted text-center" style="font-size:.8rem">Belum ada data aset</div>');
 }
 
+function renderExpenseList(items, nameKey, costKey, containerId) {
+    if (!items || !items.length) {
+        setHtml(containerId, '<div class="text-muted text-center" style="font-size:.8rem">Belum ada data</div>');
+        return;
+    }
+    let h = '';
+    items.forEach(item => {
+        h += `<div class="d-flex align-items-center justify-content-between py-2" style="border-bottom:1px solid #f8fafc">
+            <span style="font-size:.8rem;color:#475569">${item[nameKey]}</span>
+            <div class="text-right">
+                <div style="font-size:.8rem;font-weight:700;color:#dc2626">${fmtRp(item[costKey])}<small class="text-muted font-weight-normal">/bln</small></div>
+            </div>
+        </div>`;
+    });
+    setHtml(containerId, h);
+}
+
 // ── Main load ─────────────────────────────────────────────────────
 function loadReport() {
     const from = document.getElementById('rpt-from').value;
@@ -413,7 +491,7 @@ function loadReport() {
     .then(json=>{
         if (!json.success) return;
         const d = json.data;
-        const {income, customer, asset, roi} = d;
+        const {income, customer, asset, roi, expense} = d;
 
         // KPIs
         setText('kpi-income', fmtFull(income.total));
@@ -423,7 +501,12 @@ function loadReport() {
 
         setText('kpi-arpu', fmtFull(income.arpu));
         const activeEl = document.getElementById('kpi-active-count');
-        if (activeEl) { activeEl.querySelector('span').textContent = customer.total_active_now; activeEl.classList.remove('d-none'); }
+        if (activeEl) {
+            activeEl.querySelector('span').textContent =
+                customer.total_active_now + ' aktif' +
+                (customer.total_connecting_now > 0 ? ' + ' + customer.total_connecting_now + ' connecting' : '');
+            activeEl.classList.remove('d-none');
+        }
 
         setText('kpi-new-cust', customer.new.toLocaleString('id-ID'));
         const churnEl = document.getElementById('kpi-churn');
@@ -461,6 +544,21 @@ function loadReport() {
         renderMethodTable(income.by_method);
         renderCustomerSummary({...customer});
         renderAssetSummary(asset);
+
+        // Pengeluaran
+        setText('kpi-expense-total', fmtFull(expense.total_period));
+        setText('kpi-expense-period', `${expense.period_months} bulan × ${fmtRp(expense.total_monthly)}/bln`);
+        const expMonthlyEl = document.getElementById('kpi-expense-monthly');
+        if (expMonthlyEl) { expMonthlyEl.querySelector('span').textContent = fmtRp(expense.total_monthly); expMonthlyEl.classList.remove('d-none'); }
+
+        const netEl = document.getElementById('kpi-net-income');
+        if (netEl) {
+            netEl.textContent = fmtFull(expense.net_income);
+            netEl.style.color = expense.net_income >= 0 ? '#16a34a' : '#dc2626';
+        }
+
+        renderExpenseList(expense.data_centers, 'name', 'cost_per_month', 'expense-datacenter-list');
+        renderExpenseList(expense.pops,         'name', 'monthly_cost',   'expense-pop-list');
     })
     .catch(err=>console.error('Report error:', err));
 }

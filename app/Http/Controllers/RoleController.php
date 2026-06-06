@@ -405,7 +405,7 @@ class RoleController extends Controller
             //  'punishment_users',
 
             // q
-            'quotes',
+            // 'quotes',
 
             // r
             // 'racks', 'report_points', 'report_productivities', 'report_projects', 'reports',

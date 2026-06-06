@@ -179,6 +179,52 @@
                         </div>
                     </div>
 
+                    <div class="card">
+                        <div class="card-header" id="headingRekening">
+                            <h2 class="mb-0">
+                                <button class="btn btn-link btn-block text-left" type="button" data-toggle="collapse" data-target="#collapseRekening" aria-expanded="false" aria-controls="collapseRekening">
+                                    Rekening
+                                </button>
+                            </h2>
+                        </div>
+
+                        <div id="collapseRekening" class="collapse" aria-labelledby="headingRekening" data-parent="#accordion">
+                            <div class="card-body">
+                                <div class="form-group">
+                                    <label for="rekening_number">Nomor Rekening</label>
+                                    <input type="text" name="rekening_number" class="form-control" value="{{ old('rekening_number', isset($data['rekening_number']) ? $data['rekening_number'] : '') }}">
+                                    @error('rekening_number')
+                                    <span class="text-danger text-sm">{{ $message }}</span>
+                                    @enderror
+                                </div>
+    
+                                <div class="form-group">
+                                    <label for="atas_nama">Nama Pemilik Rekening (opsional)</label>
+                                    <input type="text" name="atas_nama" class="form-control" placeholder="opsional, kosongkan jika nama atas nama sama dengan nama perusahaan" value="{{ old('atas_nama', isset($data['atas_nama']) ? $data['atas_nama'] : '') }}">
+                                    @error('atas_nama')
+                                    <span class="text-danger text-sm">{{ $message }}</span>
+                                    @enderror
+                                </div>
+    
+                                <div class="form-group">
+                                    <label for="nama_bank">Nama Bank</label>
+                                    <input type="text" name="nama_bank" class="form-control" value="{{ old('nama_bank', isset($data['nama_bank']) ? $data['nama_bank'] : '') }}">
+                                    @error('nama_bank')
+                                    <span class="text-danger text-sm">{{ $message }}</span>
+                                    @enderror
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="cabang_bank">Cabang Bank</label>
+                                    <input type="text" name="cabang_bank" class="form-control" value="{{ old('cabang_bank', isset($data['cabang_bank']) ? $data['cabang_bank'] : '') }}">
+                                    @error('cabang_bank')
+                                    <span class="text-danger text-sm">{{ $message }}</span>
+                                    @enderror
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- Internet Invoice Branding Card -->
                     <div class="card">
                         <div class="card-header" id="headingInvoice">
@@ -261,51 +307,58 @@
                                     @enderror
                                 </div>
 
+                                @php
+                                $varHint = 'Variabel: <code>@{{nama}}</code> Nama, <code>@{{kode}}</code> Kode, <code>@{{paket}}</code> Paket, <code>@{{jatuh_tempo}}</code> Jatuh Tempo, <code>@{{tagihan}}</code> Nominal, <code>@{{url}}</code> Link Portal, <code>@{{tutorial}}</code> Tutorial Bayar. <strong>Kosongkan = tidak kirim WA.</strong>';
+                                @endphp
+
                                 <div class="form-group">
-                                    <label for="internet_footer_message">Pesan Remainder Billing</label>
-                                    <input class="thriveEditor form-control" id="description_remainder_billing" data-ids="remainder_billing" name="internet_remainder_billing" rows="3" placeholder="yang akan dicetak di perjanjian" value="{{ old('internet_remainder_billing', $data['internet_remainder_billing'] ?? null) }}"/>
-                                    <small class="form-text text-muted">Pesan terima kasih atau catatan yang tertera di footer invoice</small>
-                                    @error('internet_footer_message')
+                                    <label for="internet_remainder_billing">Pesan WA Saat Generate Tagihan Baru</label>
+                                    <input class="thriveEditor form-control" id="description_remainder_billing" data-ids="remainder_billing" name="internet_remainder_billing" rows="3" placeholder="Pesan WA dikirim ke customer saat tagihan baru dibuat. Kosongkan jika tidak perlu kirim." value="{{ old('internet_remainder_billing', $data['internet_remainder_billing'] ?? null) }}"/>
+                                    <small class="form-text text-muted">
+                                        Dikirim otomatis saat billing baru digenerate (tiap siklus bulanan). Tambahan variabel: <code>@{{faktur}}</code> Nomor Faktur.
+                                        {!! $varHint !!}
+                                    </small>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="internet_remainder_billing_3">Pesan Reminder H-3 (3 Hari Sebelum Jatuh Tempo)</label>
+                                    <input class="thriveEditor form-control" id="description_remainder_billing_3" data-ids="remainder_billing_3" name="internet_remainder_billing_3" rows="3" placeholder="Kosongkan jika tidak perlu kirim." value="{{ old('internet_remainder_billing_3', $data['internet_remainder_billing_3'] ?? null) }}"/>
+                                    <small class="form-text text-muted">{!! $varHint !!}</small>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="internet_remainder_billing_1">Pesan Reminder H-1 (1 Hari Sebelum Jatuh Tempo)</label>
+                                    <input class="thriveEditor form-control" id="description_remainder_billing_1" data-ids="remainder_billing_1" name="internet_remainder_billing_1" rows="3" placeholder="Kosongkan jika tidak perlu kirim." value="{{ old('internet_remainder_billing_1', $data['internet_remainder_billing_1'] ?? null) }}"/>
+                                    <small class="form-text text-muted">{!! $varHint !!}</small>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="internet_remainder_billing_0">Pesan Reminder H-0 (Hari Terakhir Jatuh Tempo)</label>
+                                    <input class="thriveEditor form-control" id="description_remainder_billing_0" data-ids="remainder_billing_0" name="internet_remainder_billing_0" rows="3" placeholder="Kosongkan jika tidak perlu kirim." value="{{ old('internet_remainder_billing_0', $data['internet_remainder_billing_0'] ?? null) }}"/>
+                                    <small class="form-text text-muted">{!! $varHint !!}</small>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="internet_remainder_billing_isolir">Pesan Reminder Saat Customer Diisolir</label>
+                                    <input class="thriveEditor form-control" id="description_remainder_billing_isolir" data-ids="remainder_billing_isolir" name="internet_remainder_billing_isolir" rows="3" placeholder="Pesan WA dikirim ke customer saat berhasil diisolir. Kosongkan jika tidak perlu kirim." value="{{ old('internet_remainder_billing_isolir', $data['internet_remainder_billing_isolir'] ?? null) }}"/>
+                                    <small class="form-text text-muted">{!! $varHint !!}</small>
+                                    @error('internet_remainder_billing_isolir')
                                     <span class="text-danger text-sm">{{ $message }}</span>
                                     @enderror
                                 </div>
 
                                 <div class="form-group">
-                                    <label for="internet_footer_message">Pesan Remainder H-3</label>
-                                    <input class="thriveEditor form-control" id="description_remainder_billing_3" data-ids="remainder_billing_3" name="internet_remainder_billing_3" rows="3" placeholder="yang akan dicetak di perjanjian" value="{{ old('internet_remainder_billing_3', $data['internet_remainder_billing_3'] ?? null) }}"/>
-                                    <small class="form-text text-muted">Pesan terima kasih atau catatan yang tertera di footer invoice</small>
-                                    @error('internet_footer_message')
+                                    <label for="internet_message_success">Pesan Sukses Pembayaran (setelah isolir lunas)</label>
+                                    <input class="thriveEditor form-control" id="description_message_success" data-ids="message_success" name="internet_message_success" rows="3" placeholder="Pesan WA dikirim ke customer setelah pembayaran dikonfirmasi. Kosongkan jika tidak perlu kirim." value="{{ old('internet_message_success', $data['internet_message_success'] ?? null) }}"/>
+                                    <small class="form-text text-muted">
+                                        Variabel: <code>@{{nama}}</code> Nama, <code>@{{kode}}</code> Kode, <code>@{{paket}}</code> Paket, <code>@{{tagihan}}</code> Jumlah Bayar, <code>@{{url}}</code> Link Portal.
+                                        <strong>Kosongkan = tidak kirim WA.</strong>
+                                    </small>
+                                    @error('internet_message_success')
                                     <span class="text-danger text-sm">{{ $message }}</span>
                                     @enderror
                                 </div>
 
-                                <div class="form-group">
-                                    <label for="internet_footer_message">Pesan Remainder H-1</label>
-                                    <input class="thriveEditor form-control" id="description_remainder_billing_1" data-ids="remainder_billing_1" name="internet_remainder_billing_1" rows="3" placeholder="yang akan dicetak di perjanjian" value="{{ old('internet_remainder_billing_1', $data['internet_remainder_billing_1'] ?? null) }}"/>
-                                    <small class="form-text text-muted">Pesan terima kasih atau catatan yang tertera di footer invoice</small>
-                                    @error('internet_footer_message')
-                                    <span class="text-danger text-sm">{{ $message }}</span>
-                                    @enderror
-                                </div>
-
-                                <div class="form-group">
-                                    <label for="internet_footer_message">Pesan Remainder Hari Terakhir Jatuh Tempo</label>
-                                    <input class="thriveEditor form-control" id="description_remainder_billing_0" data-ids="remainder_billing_0" name="internet_remainder_billing_0" rows="3" placeholder="yang akan dicetak di perjanjian" value="{{ old('internet_remainder_billing_0', $data['internet_remainder_billing_0'] ?? null) }}"/>
-                                    <small class="form-text text-muted">Pesan terima kasih atau catatan yang tertera di footer invoice</small>
-                                    @error('internet_footer_message')
-                                    <span class="text-danger text-sm">{{ $message }}</span>
-                                    @enderror
-                                </div>
-
-                                <div class="form-group">
-                                    <label for="internet_footer_message">Pesan Remainder Hari Terakhir ISOLIR</label>
-                                    <input class="thriveEditor form-control" id="description_remainder_billing_isolir" data-ids="remainder_billing_isolir" name="internet_remainder_billing_isolir" rows="3" placeholder="yang akan dicetak di perjanjian" value="{{ old('internet_remainder_billing_isolir', $data['internet_remainder_billing_isolir'] ?? null) }}"/>
-                                    <small class="form-text text-muted">Pesan terima kasih atau catatan yang tertera di footer invoice</small>
-                                    @error('internet_footer_message')
-                                    <span class="text-danger text-sm">{{ $message }}</span>
-                                    @enderror
-                                </div>
-                                
                             </div>
                         </div>
                     </div>

@@ -53,6 +53,22 @@
         </div>
     </div>
 
+    {{-- Connecting (Reactivated) --}}
+    <div class="col-6 col-md-3 mb-3">
+        <div class="stat-card">
+            <div class="stat-icon blue"><i class="fas fa-sync-alt"></i></div>
+            <div class="stat-body">
+                <div class="stat-value" id="val-connecting">
+                    <div class="skeleton short"></div>
+                </div>
+                <div class="stat-label">Connecting</div>
+                <div class="stat-sub neutral" style="margin-top:5px">
+                    <i class="fas fa-redo"></i> Proses reaktivasi
+                </div>
+            </div>
+        </div>
+    </div>
+
     {{-- Revenue Bulan Ini --}}
     <div class="col-6 col-md-3 mb-3">
         <div class="stat-card">
@@ -376,6 +392,7 @@
             process_installation:         'Proses Instalasi',
             installed:                    'Sudah Terpasang',
             active:                       'Aktif',
+            reactivated:                  'Connecting',
             expired:                      'Expired',
             suspended:                    'Suspend',
             disconnected:                 'Disconnected',
@@ -388,6 +405,7 @@
     function renderStatusDistribution(customer, totalAll) {
         const items = [
             { key: 'active',      label: 'Aktif',         color: '#16a34a', val: customer.total_active },
+            { key: 'connecting',  label: 'Connecting',    color: '#2563eb', val: customer.total_connecting || 0 },
             { key: 'expired',     label: 'Expired',       color: '#dc2626', val: customer.total_expired },
             { key: 'suspended',   label: 'Suspend',       color: '#ea7c00', val: customer.total_suspended },
             { key: 'disconnected',label: 'Disconnected',  color: '#6b7280', val: customer.total_disconnected },
@@ -616,10 +634,11 @@
             const rev = d.revenue;
 
             // ── Main stat cards ──────────────────────────────────────
-            setText('val-total-all', c.total_all.toLocaleString('id-ID'));
-            setText('val-active',    c.total_active.toLocaleString('id-ID'));
-            setText('val-revenue',   fmtRupiah(rev.this_month));
-            setText('val-register',  reg.total.toLocaleString('id-ID'));
+            setText('val-total-all',  c.total_all.toLocaleString('id-ID'));
+            setText('val-active',     c.total_active.toLocaleString('id-ID'));
+            setText('val-connecting', (c.total_connecting || 0).toLocaleString('id-ID'));
+            setText('val-revenue',    fmtRupiah(rev.this_month));
+            setText('val-register',   reg.total.toLocaleString('id-ID'));
 
             // Sub badges
             const newEl = document.getElementById('val-new-month');

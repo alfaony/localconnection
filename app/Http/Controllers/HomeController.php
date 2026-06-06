@@ -204,7 +204,8 @@ class HomeController extends Controller
 
         // ── Customer Stats ──────────────────────────────────────────
         $totalAll        = $baseQuery()->count();
-        $totalActive     = $baseQuery()->whereIn('status', [ParamSchema::ACTIVE, ParamSchema::REACTIVATED])->count();
+        $totalActive     = $baseQuery()->where('status', ParamSchema::ACTIVE)->count();
+        $totalConnecting = $baseQuery()->where('status', ParamSchema::REACTIVATED)->count();
         $totalExpired    = $baseQuery()->where('status', ParamSchema::EXPIRED)->count();
         $totalSuspended  = $baseQuery()->where('status', ParamSchema::SUSPENDED)->count();
         $totalDisconn    = $baseQuery()->where('status', ParamSchema::DISCONNECTED)->count();
@@ -306,6 +307,7 @@ class HomeController extends Controller
                 'customer' => [
                     'total_all'               => $totalAll,
                     'total_active'            => $totalActive,
+                    'total_connecting'        => $totalConnecting,
                     'total_expired'           => $totalExpired,
                     'total_suspended'         => $totalSuspended,
                     'total_disconnected'      => $totalDisconn,

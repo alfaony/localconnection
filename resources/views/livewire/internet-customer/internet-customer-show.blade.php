@@ -575,7 +575,7 @@
                                 <span id="summary-amount-before-tax">Rp 0</span>
                             </div>
                             <div class="summary-row text-muted" id="tax-row">
-                                <span>PPN (<span id="summary-tax-rate">11</span>%):</span>
+                                <span>PPN (<span id="summary-tax-rate">0</span>%):</span>
                                 <span id="summary-tax-amount">Rp 0</span>
                             </div>
                             <hr class="my-2">
@@ -1014,7 +1014,7 @@ document.addEventListener('livewire:load', function() {
         const amountBeforeTax = Math.round(subtotal - discountAmount);
         
         // Always calculate PPN (11%)
-        const taxRate = 11;
+        const taxRate = 0;
         const taxAmount = Math.round((amountBeforeTax * taxRate) / 100);
         const total = Math.round(amountBeforeTax + taxAmount);
 

@@ -14,7 +14,6 @@ class DatabaseSeeder extends Seeder
      */
     public function run()
     {
-        // $this->call(UserSeeder::class);
         $this->call(FieldSettingCompaniesSeeder::class);
         $this->call(PermissionForProductTillSettingCompanySeeder::class);
         $this->call(AllUserIsAdminSeeder::class);
@@ -33,6 +32,7 @@ class DatabaseSeeder extends Seeder
         $this->call(PermissionForMenuMasterGroupSeeder::class);
         $this->call(PermissionForMenuWilayahSeeder::class);
         $this->call(PermissionForMenuInternetSeeder::class);
+        $this->call(PermissionForMenuInternetCustomerUserRegionSeeder::class);
         $this->call(ClearPermissionSeeder::class);
         // $this->call(PermissionForProductPriceQuoteAndWorkOrderSeeder::class);
         // $this->call(PermissionForDeleteDetailReportSeeder::class);
@@ -139,7 +139,6 @@ class DatabaseSeeder extends Seeder
         // $this->call(PermissionForMenuEventSeeder::class);
         // $this->call(PermissionForMenuMasterGroupSeeder::class);
         // $this->call(PermissionForMenuUserBlackListSeeder::class);
-        // $this->call(PermissionForMenuInternetCustomerUserRegionSeeder::class);
         // $this->call(PermissionForHomeDashboardSeeder::class);
 
 

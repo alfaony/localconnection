@@ -54,7 +54,7 @@ class InternetCustomerShow extends Component
     public $discountPercentage = 0;
     public $discountAmount = 0;
     public $amountBeforeTax = 0;
-    public $taxRate = 11; // Default PPN 11%
+    public $taxRate = 0; // Default PPN 11%
     public $taxAmount = 0;
     public $totalAmount = 0;
 
