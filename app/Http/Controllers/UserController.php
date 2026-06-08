@@ -14,10 +14,7 @@ use Illuminate\Support\Facades\Storage;
 use App\Models\User;
 use App\Models\Role;
 use App\Models\Company;
-use App\Models\Division;
 use App\Models\UserStatus;
-use App\Models\DayoffType;
-use App\Models\DayoffQuota;
 
 use App\Helpers\Access;
 use App\Schemas\ParamSchema;
@@ -37,9 +34,7 @@ class UserController extends Controller
         $company = Company::orderBy('name','asc')->get();
         $companyAccess = false;
         $roleAccess = false;
-        $divisions = Division::byCompany(Auth::user()->company_id)->get();
         $dayofweek = config('custom.daysOfWeek');
-        $dayoffTypes = DayoffType::all();
         
         if(Auth::user()->role->name == RoleSchema::ROOT)
         {
@@ -73,7 +68,11 @@ class UserController extends Controller
             $totalUser = User::byCompany(Auth::user()->company_id)->where('delete_able',1)->count();
         }
 
-        return view('user.index',compact('user','totalUser','role','company', 'companyAccess', 'roleAccess','users', 'divisions', 'dayofweek', 'dayoffTypes'));
+        $userQuotas = [];
+        $weeklyRequired = [];
+        $primaryDivisionId = null;
+
+        return view('user.index',compact('user','totalUser','role','company', 'companyAccess', 'roleAccess','users', 'dayofweek', 'userQuotas', 'weeklyRequired', 'primaryDivisionId'));
     }
 
     /**
@@ -87,84 +86,12 @@ class UserController extends Controller
         $user = new User();
         $user->name = $request->post('name');
         $user->email = $request->post('email');
-        $user->email_gmail = $request->post('email_gmail');
-        $user->phone = $request->post('phone');
         $user->role_id = $request->post('role') ?? Auth::user()->role_id;
         $user->company_id = $request->post('company') ?? Auth::user()->company_id;
         $user->password = bcrypt($request->post('password'));
-        $user->approvement_user_id = $request->post('approvement_user_id') ?? NULL;
-
-        $user->use_ip_restriction = $request->post('use_ip_restriction', 0);
-        $user->ip_addresses = $request->has('ip_addresses') ? $request->ip_addresses : NULL;
-        // Checkin
-        $isCheckin = $request->post('is_checkin');
-        $user->is_shift_attendance = in_array($isCheckin, [ParamSchema::SHIFT, ParamSchema::WFO_SHIFT]);
-        $user->is_checkin = $isCheckin == ParamSchema::WFH ? true : false;
-        $user->wfo_check_in = in_array($isCheckin, [ParamSchema::WFO, ParamSchema::WFO_SHIFT]);
-        $user->manual_checkin = $request->post('manual_checkin', 0);
-        $user->requires_photo = $request->post('requires_photo', 0);
-        $user->requires_location = $request->post('requires_location', 0);
-        $user->start_time = $request->post('start_time');
-        $user->end_time = $request->post('end_time');
-        $user->rest_time = $request->post('rest_time');
-        $user->end_rest_time = $request->post('end_rest_time');
-
-        if ($request->has('custom_rest_times'))
-        {
-            $user->custom_rest_times = $request->custom_rest_times;
-        }
-
-        if ($isCheckin == ParamSchema::WFO) {
-            $wfoWorkingDays = [];
-            foreach (config('custom.daysOfWeek') as $dayName => $dayValue) {
-                $wfoWorkingDays[$dayValue] = $request->has("wfo_working_days.$dayValue");
-            }
-            $user->wfo_working_days = $wfoWorkingDays;
-        }
 
         $user->save();
-        
-        if($request->quotas)
-        {
-            $user->dayoff_active = $request->dayoff_active ? true : false;
 
-            foreach ($request->quotas as $typeId => $jumlah) 
-            {
-                $type = DayoffType::find($typeId);            
-                DayoffQuota::updateOrCreate(
-                    ['user_id' => $user->id, 'dayoff_type_id' => $typeId],
-                    ['quota' => $jumlah]
-                );
-            }
-
-            $user->save();
-        }
-
-        // $divisions = $request->input('divisions');
-        // if ($divisions) {
-        //     $user->divisions()->attach($divisions);
-        // }
-        $divisionIds = $request->input('divisions', []);
-
-        // Ambil divisi yang dicentang sebagai wajib laporan
-        $weeklyRequired = $request->input('weekly_report_required', []);
-        $primaryDivisionId = $request->input('primary_division_id');
-
-        // Siapkan data pivot
-        $syncData = [];
-        foreach ($divisionIds as $divisionId) {
-            $syncData[$divisionId] = [
-                'weekly_report_required' => isset($weeklyRequired[$divisionId]),
-                'is_primary' => $divisionId === $primaryDivisionId,
-            ];
-        }
-
-        // Simpan ke pivot division_user
-        $user->divisions()->sync($syncData);
-
-        if (!empty($request->company_access)) {
-            $user->accessibleCompanies()->sync($request->company_access);
-        }
         return redirect()->back()->with('store',true);
     }
 
@@ -178,22 +105,10 @@ class UserController extends Controller
     {
         $userEdit = User::where('slug', $slug)->firstOrFail();
         $company = Company::orderBy('name','asc')->get();
-        $divisions = Division::byCompany(Auth::user()->company_id)->get();
-        $divisionsUser = $userEdit->divisions ? $userEdit->divisions->pluck('id')->toArray() : NULL ;
-        $weeklyRequired = $userEdit->divisions->filter(function ($d) {
-            return $d->pivot->weekly_report_required;
-        })->pluck('id')->toArray() ?? [];
-
-        $primaryDivisionId = optional($userEdit->divisions->firstWhere('pivot.is_primary', true))->id;
         $dayofweek = config('custom.daysOfWeek');
-        $dayoffTypes = DayoffType::all();
-        $userQuotas = $userEdit->dayoffQuotas->pluck('quota', 'dayoff_type_id')->toArray() ?? [];
-
-
 
         $companyAccess = false;
         $roleAccess = false;
-
 
         if(Auth::user()->role->name == RoleSchema::ROOT)
         {
@@ -202,24 +117,22 @@ class UserController extends Controller
 
             $role = Role::get();
             $user = User::OrderBy('name','asc')->paginate(10);
-            $users = User:: get();
+            $users = User::get();
 
             $totalUser = User::where('delete_able',1)->count();
-        }else
-        {
+        } else {
             $roleAccess = true;
 
             $role = Role::where('name','!=',RoleSchema::ROOT)->get();
             $user = User::where('delete_able',1)
-            ->byCompany(Auth::user()->company_id)
-            ->OrderBy('name','asc')->paginate(10);
+                ->byCompany(Auth::user()->company_id)
+                ->OrderBy('name','asc')->paginate(10);
             $users = User::byCompany(Auth::user()->company_id)->get();
 
             $totalUser = User::byCompany(Auth::user()->company_id)->where('delete_able',1)->count();
         }
 
-
-        return view('user.index', compact('userEdit','user','totalUser','role', 'company', 'companyAccess', 'roleAccess','users', 'divisions','divisionsUser', 'dayofweek','dayoffTypes','userQuotas', 'weeklyRequired', 'primaryDivisionId'));
+        return view('user.index', compact('userEdit','user','totalUser','role', 'company', 'companyAccess', 'roleAccess','users', 'dayofweek'));
     }
 
     /**

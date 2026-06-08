@@ -324,4 +324,9 @@ class User extends Authenticatable implements MustVerifyEmail
 
         return $query;
     }
+
+    public function remainingDayoffQuotas(): array
+    {
+        return [];
+    }
 }

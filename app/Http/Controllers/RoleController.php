@@ -422,7 +422,9 @@ class RoleController extends Controller
             // 'task_assigns', 'tasks', 'tickets', 'trainings',
 
             // u
-            // 'used_items', 'used_laptops', 'users','user_blacklists',
+            // 'used_items', 'used_laptops', 
+            'users',
+            // 'user_blacklists',
 
             // v
             // 'vehicles', 'visions',
