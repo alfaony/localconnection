@@ -83,7 +83,7 @@ class Promo extends Model
     {
         $companyIds = auth()->user()->accessibleCompanies->pluck('id')->push($companyId)->unique();
 
-        if($companyIds && Auth::user()->role->name != RoleSchema::ROOT)
+        if($companyIds)
         {
             return $query->whereIn("company_id",$companyIds);
         }

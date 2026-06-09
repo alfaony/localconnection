@@ -316,7 +316,7 @@ class InternetCustomer extends Model
 
     public function scopeByCompany($query,$companyId)
     {
-        if($companyId && Auth::user()->role->name != RoleSchema::ROOT)
+        if($companyId && Auth::user()->role->name != RoleSchema::SUPER_ADMIN)
         {
             $companyIds = auth()->user()->accessibleCompanies->pluck('id')->push($companyId)->unique();
             return $query->whereIn("company_id",$companyIds);

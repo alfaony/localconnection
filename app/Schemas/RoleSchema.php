@@ -6,6 +6,7 @@ namespace App\Schemas;
 
 class RoleSchema
 {
+    const SUPER_ADMIN = 'Super Admin'; // all access to all company
     const ROOT = 'Root'; // all access
     const ADMIN = 'Administrator'; // all except role & permission (his company only)
     const FINANCE = 'Staff Finance';

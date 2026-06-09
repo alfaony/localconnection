@@ -223,7 +223,7 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         $companyIds = auth()->user()->accessibleCompanies->pluck('id')->push($companyId)->unique();
 
-        if($companyIds && Auth::user()->role->name != RoleSchema::ROOT)
+        if($companyIds && Auth::user()->role->name != RoleSchema::SUPER_ADMIN)
         {
             return $query->whereIn("company_id",$companyIds);
         }

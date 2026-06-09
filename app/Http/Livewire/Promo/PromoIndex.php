@@ -65,6 +65,7 @@ class PromoIndex extends Component
         $promos = Promo::withCount('packageInternets')
             ->where('name', 'like', '%' . $this->search . '%')
             ->orWhere('type', 'like', '%' . $this->search . '%')
+            ->byCompany(Auth::user()->company_id)
             ->latest()
             ->paginate(10);
 

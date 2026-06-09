@@ -15,6 +15,8 @@ class ImportWilayahFromCSV extends Command
     protected $signature = 'import:wilayah-csv
         {--province= : Province name, example: --province="JAWA TENGAH"}
         {--city= : City name}
+        {--district= : District name}
+        {--subdistrict= : Subdistrict name}
     ';
     protected $description = 'Import or update wilayah Indonesia from CSV files';
 
@@ -29,17 +31,19 @@ class ImportWilayahFromCSV extends Command
 
         $province = $this->option('province');
         $city = $this->option('city');
+        $district = $this->option('district');
+        $subdistrict = $this->option('subdistrict');
 
         $countryName = 'Indonesia';
         $country = Country::firstOrCreate(['name' => $countryName]);
 
         $this->info('Inserting Provinces...');
-        $this->importProvinces($country, $province, $city);
+        $this->importProvinces($country, $province, $city, $district, $subdistrict);
 
         $this->info("Import completed successfully!");
     }
 
-    private function importProvinces($country, $province = null, $city = null)
+    private function importProvinces($country, $province = null, $city = null, $district = null, $subdistrict = null)
     {
         $provinceFilePath = storage_path('wilayah/province.csv');
         $provinceData = $this->readCSV($provinceFilePath);
@@ -56,14 +60,14 @@ class ImportWilayahFromCSV extends Command
             );
 
             $this->info("Inserting Cities for Province: {$province->name}");
-            $this->importCities($province, $provinceRow['prov_id'], $city);
+            $this->importCities($province, $provinceRow['prov_id'], $city, $district, $subdistrict);
 
             $number++;
         }
     }
 
 
-    private function importCities($province, $provinceId, $city = null)
+    private function importCities($province, $provinceId, $city = null, $district = null, $subdistrict = null)
     {
         $cityFilePath = storage_path('wilayah/city.csv');
         $cityData = $this->readCSV($cityFilePath);
@@ -82,14 +86,14 @@ class ImportWilayahFromCSV extends Command
                 );
                 
                 $this->info("Inserting Districts for City: {$city->name}");
-                $this->importDistricts($city, $cityRow['city_id']);
+                $this->importDistricts($city, $cityRow['city_id'], $district, $subdistrict);
 
                 $number++;
             }
         }
     }
 
-    private function importDistricts($city, $cityId)
+    private function importDistricts($city, $cityId, $district = null, $subdistrict = null)
     {
         $districtFilePath = storage_path('wilayah/district.csv');
         $districtData = $this->readCSV($districtFilePath);
@@ -97,6 +101,9 @@ class ImportWilayahFromCSV extends Command
         $number = 0;
         foreach ($districtData as $districtRow) {
             if ($districtRow['city_id'] === $cityId) {
+                if ($district) {
+                    if ($districtRow['dis_name'] !== $district) continue;
+                }
                 $district = District::updateOrCreate(
                     ['name' => $districtRow['dis_name']],
                     ['city_id' => $city->id],
@@ -104,20 +111,23 @@ class ImportWilayahFromCSV extends Command
                 );
 
                 $this->info("Inserting Subdistricts for District: {$district->name}");
-                $this->importSubdistricts($district, $districtRow['dis_id']);
+                $this->importSubdistricts($district, $districtRow['dis_id'], $subdistrict);
 
                 $number++;
             }
         }
     }
 
-    private function importSubdistricts($district, $districtId)
+    private function importSubdistricts($district, $districtId, $subdistrict = null)
     {
         $subdistrictFilePath = storage_path('wilayah/subdistrict.csv');
         $subdistrictData = $this->readCSV($subdistrictFilePath);
 
         foreach ($subdistrictData as $subdistrictRow) {
             if ($subdistrictRow['dis_id'] === $districtId) {
+                if ($subdistrict) {
+                    if ($subdistrictRow['subdis_name'] !== $subdistrict) continue;
+                }
                 $subdistrict = Subdistrict::updateOrCreate(
                     ['name' => $subdistrictRow['subdis_name']],
                     ['district_id' => $district->id]
