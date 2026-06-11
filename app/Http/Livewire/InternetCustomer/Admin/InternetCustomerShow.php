@@ -819,6 +819,13 @@ class InternetCustomerShow extends Component
                 GenerateBillingJob::dispatch($this->customer->userCustomer);
             }
 
+            // Reactivate if SUSPENDED and admin extended end_billing_date to the future
+            if ($this->customer->status === ParamSchema::SUSPENDED &&
+                Carbon::parse($this->end_billing_date)->gt(Carbon::now())) {
+                $this->customer->update(['status' => ParamSchema::REACTIVATED]);
+                dispatch(new ProvisionCustomerJob($this->customer->id));
+            }
+
             if ($this->customer->userCustomer && $this->status_active) {   
                 if($this->customer->userCustomer->start_billing_date != $this->start_billing_date && 
                 $this->start_billing_date == Carbon::now()->format('Y-m-d')) 
@@ -919,13 +926,18 @@ class InternetCustomerShow extends Component
 
         DB::beginTransaction();
         try {
+            $isSuspended = $this->customer->status === ParamSchema::SUSPENDED;
+
             $updateData = [
-                'status'       => ParamSchema::REACTIVATED,
                 'local_address' => $this->local_address,
                 'username'      => $this->username,
                 'pass_hash'     => $this->pass_hash,
             ];
+            if (!$isSuspended) {
+                $updateData['status'] = ParamSchema::REACTIVATED;
+            }
 
+            
             if ($isHotspot) {
                 $updateData['hotspot_server_id'] = $this->hotspot_server_id ?: null;
                 $updateData['ip_binding_type']   = $this->ip_binding_type ?: null;
@@ -1166,10 +1178,11 @@ class InternetCustomerShow extends Component
         try {
             $oldPackage = $this->customer->internetPackage;
             $newPackage = InternetPackage::find($this->new_package_id);
-            
+            $wasSuspended = $this->customer->status === ParamSchema::SUSPENDED;
+            $satatus = $wasSuspended ? ParamSchema::SUSPENDED : ($this->customer->installation ? ParamSchema::REACTIVATED : ParamSchema::PROCESS_INSTALLATION);
             // Update customer package
             $this->customer->update([
-                'status' => $this->customer->installation ? ParamSchema::REACTIVATED : ParamSchema::PROCESS_INSTALLATION,
+                'status' => $status,
                 'access_type' => $newPackage->access_type,
                 'internet_package_id' => $this->new_package_id,
             ]);
@@ -1184,7 +1197,7 @@ class InternetCustomerShow extends Component
             ]);
             
             // Dispatch provisioning job untuk update di router
-            if ($this->customer->router_id && ($this->customer->status === ParamSchema::ACTIVE || $this->customer->status === ParamSchema::REACTIVATED)) 
+            if ($this->customer->router_id && ($this->customer->status === ParamSchema::ACTIVE || $this->customer->status === ParamSchema::REACTIVATED || $wasSuspended)) 
             {
                 dispatch(new ProvisionCustomerJob($this->customer->id));
                 \App\Jobs\SyncInstalledCustomersJob::dispatch([$this->customer->id]);

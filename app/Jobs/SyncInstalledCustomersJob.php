@@ -151,9 +151,13 @@ class SyncInstalledCustomersJob implements ShouldQueue
             'last_seen'    => now()->toIso8601String(),
         ];
 
+         $newStatus = $customer->status === ParamSchema::SUSPENDED
+            ? ParamSchema::SUSPENDED
+            : ParamSchema::ACTIVE;
+
         return [
             'id'          => $customer->id,
-            'status'      => ParamSchema::ACTIVE,
+            'status'      => $newStatus,
             'ip_address'  => $session->framedipaddress ?: $customer->ip_address,
             'mac_address' => $session->callingstationid ?: $customer->mac_address,
             'meta'        => json_encode($meta),
@@ -208,9 +212,13 @@ class SyncInstalledCustomersJob implements ShouldQueue
                                 'service'   => $active['service'] ?? null,
                                 'last_seen' => now()->toIso8601String(),
                             ];
+
+                             $newStatus = $customer->status === ParamSchema::SUSPENDED
+                                        ? ParamSchema::SUSPENDED
+                                        : ParamSchema::ACTIVE;
                             $updates[] = [
                                 'id'          => $customer->id,
-                                'status'      => ParamSchema::ACTIVE,
+                                'status'      => $newStatus,
                                 'ip_address'  => $active['address'] ?? $customer->ip_address,
                                 'mac_address' => $active['caller-id'] ?? $customer->mac_address,
                                 'meta'        => json_encode($meta),
