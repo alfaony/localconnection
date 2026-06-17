@@ -55,7 +55,6 @@
             "App\\Helpers\\": "app/Helpers/"
         },
         "files": [
-            "app/Helpers/datatables/index.php",
             "app/Helpers/Helper.php"
         ]
     },
