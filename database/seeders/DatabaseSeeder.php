@@ -33,7 +33,7 @@ class DatabaseSeeder extends Seeder
         $this->call(PermissionForMenuWilayahSeeder::class);
         $this->call(PermissionForMenuInternetSeeder::class);
         $this->call(PermissionForMenuInternetCustomerUserRegionSeeder::class);
-        $tthis->call(PermissionForMenuInternetAssetSeeder::class); //PermissionForMenuInternetAssetSeeder
+        $this->call(PermissionForMenuInternetAssetSeeder::class); //PermissionForMenuInternetAssetSeeder
         $this->call(ClearPermissionSeeder::class);
         // $this->call(PermissionForProductPriceQuoteAndWorkOrderSeeder::class);
         // $this->call(PermissionForDeleteDetailReportSeeder::class);
