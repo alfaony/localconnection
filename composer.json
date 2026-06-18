@@ -55,7 +55,8 @@
             "App\\Helpers\\": "app/Helpers/"
         },
         "files": [
-            "app/Helpers/Helper.php"
+            "app/Helpers/Helper.php",
+            "app/Helpers/datatable/index.php"
         ]
     },
     "autoload-dev": {
