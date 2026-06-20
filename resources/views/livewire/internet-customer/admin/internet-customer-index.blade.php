@@ -246,6 +246,23 @@
                         @error('import_odp_id')<div class="invalid-feedback">{{ $message }}</div>@enderror
                         <small class="form-text text-muted">Berlaku untuk semua baris dalam file CSV.</small>
                     </div>
+                    <div class="col-md-4 mb-3">
+                        <label class="ic-label">
+                            Grouping
+                            <span class="badge badge-secondary ml-1" style="font-size:.65rem;padding:2px 6px;border-radius:4px">Opsional</span>
+                        </label>
+                        <select wire:model="import_group_id"
+                                class="form-control form-control-sm ic-select">
+                            <option value="">— Tanpa Grouping / Dari CSV —</option>
+                            @foreach($raaGroups as $grp)
+                                <option value="{{ $grp->id }}">{{ $grp->name }}</option>
+                            @endforeach
+                        </select>
+                        <small class="form-text text-muted">
+                            <i class="fas fa-magic mr-1"></i>
+                            Jika dipilih, nomor grouping otomatis urut untuk setiap baris (kolom <code>grouping</code> di CSV diabaikan).
+                        </small>
+                    </div>
                     <div class="col-md-5 mb-3">
                         <label class="ic-label">File CSV <span class="text-danger">*</span></label>
                         <input type="file"

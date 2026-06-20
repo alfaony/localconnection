@@ -23,7 +23,7 @@ class RoleController extends Controller
     public function index()
     {
         $user = Auth::user();
-        $isSuperAdmin = in_array($user->role->name, [RoleSchema::ROOT, RoleSchema::SUPER_ADMIN]);
+        $isSuperAdmin = in_array($user->role->name, [RoleSchema::SUPER_ADMIN]);
 
         $query = Role::with('company')->orderBy('created_at', 'desc');
 

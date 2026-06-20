@@ -41,7 +41,7 @@ class UserController extends Controller
             $companyAccess = true;
             $roleAccess = true;
 
-            $role = Role::get();
+            $role = Role::where('company_id', Auth::user()->company_id)->get();
             $user = User::where(function($query) use ($request) {
                         $query->where('email', 'like', '%' . $request->get('email') . '%')
                               ->orWhere('name', 'like', '%' . $request->get('email') . '%');
@@ -55,7 +55,8 @@ class UserController extends Controller
         {
             $roleAccess = true;
 
-            $role = Role::where('name','!=',RoleSchema::ROOT)->get();
+            $role = Role::where('company_id', Auth::user()->company_id)
+                ->where('name','!=',RoleSchema::ROOT)->get();
             $user = User::where('delete_able',1)
             ->byCompany(Auth::user()->company_id)
             ->where(function($query) use ($request) {
@@ -115,7 +116,7 @@ class UserController extends Controller
             $companyAccess = true;
             $roleAccess = true;
 
-            $role = Role::get();
+            $role = Role::where('company_id', Auth::user()->company_id)->get();
             $user = User::OrderBy('name','asc')->paginate(10);
             $users = User::get();
 
@@ -123,7 +124,8 @@ class UserController extends Controller
         } else {
             $roleAccess = true;
 
-            $role = Role::where('name','!=',RoleSchema::ROOT)->get();
+            $role = Role::where('company_id', Auth::user()->company_id)
+                ->where('name','!=',RoleSchema::ROOT)->get();
             $user = User::where('delete_able',1)
                 ->byCompany(Auth::user()->company_id)
                 ->OrderBy('name','asc')->paginate(10);
