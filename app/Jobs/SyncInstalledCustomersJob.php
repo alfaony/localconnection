@@ -278,7 +278,7 @@ class SyncInstalledCustomersJob implements ShouldQueue
     protected function getCustomers(): array
     {
         $query = DB::table('internet_customers')
-            ->select(['id', 'router_id', 'username', 'ip_address', 'mac_address', 'meta', 'access_type'])
+            ->select(['id', 'router_id', 'username', 'ip_address', 'mac_address', 'status', 'meta', 'access_type'])
             ->whereIn('status', [ParamSchema::INSTALLED, ParamSchema::REACTIVATED])
             ->whereNotNull('router_id')
             ->whereNotNull('username');
