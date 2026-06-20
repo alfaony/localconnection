@@ -400,7 +400,7 @@ class SyncRouterInventoryJob implements ShouldQueue
             $map = PackageRouterProfile::where('router_id',$router->id)
                     ->where('package_id',$pkg->id)->first();
 
-            $profile = $map->ros_profile ?: ('PKG_'.$pkg->id);
+            $profile = $map?->ros_profile ?: ('PKG_'.$pkg->id);
 
             // ✅ pastikan profile ada (buat/update kalau perlu)
             $this->ensureProfileExists($c, $pkg, $profile);

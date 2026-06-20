@@ -45,7 +45,7 @@ class ProvisionCustomerJob implements ShouldQueue
             $map = PackageRouterProfile::where('router_id', $router->id)
                   ->where('package_id', $pkg->id)->first();
 
-            $groupName = $map->ros_profile ?? ('PKG_' . $pkg->id);
+            $groupName = $map?->ros_profile ?? ('PKG_' . $pkg->id);
 
             // ==========================================
             // Route berdasarkan access_type

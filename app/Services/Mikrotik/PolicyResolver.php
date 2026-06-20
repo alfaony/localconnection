@@ -12,7 +12,7 @@ class PolicyResolver
         $map = PackageRouterProfile::where('router_id', $routerId)
             ->where('package_id', $pkg->id)->first();
 
-        $profile   = $map->ros_profile ?? ('PKG_'.$pkg->id);
+        $profile   = $map?->ros_profile ?? ('PKG_'.$pkg->id);
         $fup       = data_get($map, 'meta.ros_profile_fup') ?? ($profile.'_FUP');
         $down      = $pkg->rate_down_mbps ?? $pkg->bandwidth;
         $up        = $pkg->rate_up_mbps   ?? max(1, (int)ceil(($pkg->bandwidth ?? 1)*0.2));

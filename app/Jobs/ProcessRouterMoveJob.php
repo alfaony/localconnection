@@ -98,7 +98,7 @@ class ProcessRouterMoveJob implements ShouldQueue
         $pkg = $customer->internetPackage;
         $map = PackageRouterProfile::where('router_id', $this->newRouterId)
               ->where('package_id', $pkg->id)->first();
-        $groupName = $map->ros_profile ?? ('PKG_' . $pkg->id);
+        $groupName = $map?->ros_profile ?? ('PKG_' . $pkg->id);
 
         // DIRECT API: Ensure PPP profile di router baru
         $this->ensureProfileOnNewRouter($customer, $pkg, $groupName);
