@@ -119,6 +119,7 @@ class InternetCustomerIndex extends Component
     public bool $isImporting     = false;
     public bool $showImportSection = false;
     public ?string $import_odp_id  = null;
+    public ?string $import_group_id = null;
     public array $importAvailableOdps = [];
 
     // ── Import Daftar & Aktifkan properties ───────────────────────────────
@@ -634,7 +635,7 @@ class InternetCustomerIndex extends Component
     {
         $this->reset([
             'csvFile', 'importBatchId', 'importProgress',
-            'isImporting', 'isFileReady', 'uploadingFile', 'import_odp_id',
+            'isImporting', 'isFileReady', 'uploadingFile', 'import_odp_id', 'import_group_id',
         ]);
         $this->resetValidation(['csvFile', 'import_odp_id']);
     }
@@ -728,7 +729,8 @@ class InternetCustomerIndex extends Component
                 Auth::id(),
                 Auth::user()->company_id,
                 $this->importBatchId,
-                $this->import_odp_id
+                $this->import_odp_id,
+                $this->import_group_id
             );
 
             // Inisialisasi progress agar blade langsung tampil tanpa menunggu poll pertama

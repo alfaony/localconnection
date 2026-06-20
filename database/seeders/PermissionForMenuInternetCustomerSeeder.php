@@ -91,6 +91,7 @@ class PermissionForMenuInternetCustomerSeeder extends Seeder
                 if (in_array($method, ['as_technician','complete','closed','editInstalasi','moveRouter','editPackage'])) 
                 {
                     PermissionRole::create(['role_id' => $tecknicianRole->id, 'permission_id' => $permission->id]);
+                    PermissionRole::create(['role_id' => $root->id, 'permission_id' => $permission->id]);
                     continue;
                 }
     

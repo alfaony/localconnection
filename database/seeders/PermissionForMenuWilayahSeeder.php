@@ -19,7 +19,20 @@ class PermissionForMenuWilayahSeeder extends Seeder
      */
     public function run()
     {
-        $menu = ['index','edit', 'create', 'update', 'show', 'destroy', 'store', 'downloadPdf', 'select2','dataTableJson'];
+        $menu = ['index','downloadPdf', 'select2','dataTableJson'];
+        $deleted = ['edit', 'create', 'update', 'show', 'destroy', 'store'];
+
+        $tables = ['wilayahs', 'provinces', 'cities', 'districts', 'subdistricts', 'postal_codes'];
+
+        foreach ($tables as $table) {
+            Permission::where('table', $table)
+                ->whereIn('method', $deleted)
+                ->each(function ($permission) {
+                    DB::table('permission_role')->where('permission_id', $permission->id)->delete();
+                    $permission->delete();
+                });
+        }
+
         $wilayahOnly = ['select2'];
 
         $root = Role::where('name',RoleSchema::ROOT)->first();
@@ -36,6 +49,7 @@ class PermissionForMenuWilayahSeeder extends Seeder
                 'model' => 'Wilayah',
                 'guard_name' => 'web'
             ]);
+
 
             //assign role & permission
             PermissionRole::create(['role_id' => $root->id, 'permission_id' => $permission->id]);
@@ -130,6 +144,8 @@ class PermissionForMenuWilayahSeeder extends Seeder
             PermissionRole::create(['role_id' => $root->id, 'permission_id' => $permission->id]);
             PermissionRole::create(['role_id' => $admin->id, 'permission_id' => $permission->id]);
         }
+
+        $this->call(ClearPermissionSeeder::class);
         
     }
 }

@@ -39,6 +39,7 @@ class ProcessRouterMoveJob implements ShouldQueue
     protected $newUsername;
     protected $newLocalAddress;
     protected $newPoolId;
+    protected bool $skipOldRouterOps;
 
     public function __construct(
         $customerId,
@@ -46,14 +47,16 @@ class ProcessRouterMoveJob implements ShouldQueue
         $newRouterId,
         $newUsername = null,
         $newLocalAddress = null,
-        $newPoolId = null
+        $newPoolId = null,
+        bool $skipOldRouterOps = false
     ) {
-        $this->customerId = $customerId;
-        $this->oldRouterId = $oldRouterId;
-        $this->newRouterId = $newRouterId;
-        $this->newUsername = $newUsername;
-        $this->newLocalAddress = $newLocalAddress;
-        $this->newPoolId = $newPoolId;
+        $this->customerId       = $customerId;
+        $this->oldRouterId      = $oldRouterId;
+        $this->newRouterId      = $newRouterId;
+        $this->newUsername      = $newUsername;
+        $this->newLocalAddress  = $newLocalAddress;
+        $this->newPoolId        = $newPoolId;
+        $this->skipOldRouterOps = $skipOldRouterOps;
     }
 
     public function handle(RadiusService $radius)
@@ -68,11 +71,15 @@ class ProcessRouterMoveJob implements ShouldQueue
             'new_router' => $this->newRouterId,
         ]);
 
-        // 1. DIRECT API: Disconnect dari router lama
-        $this->disconnectFromOldRouter($customer);
-
-        // 2. DIRECT API: Hapus secret dari router lama
-        $this->removeSecretFromOldRouter($customer);
+        // 1 & 2: Operasi ke router lama — dilewati jika router diketahui mati/rusak
+        if ($this->skipOldRouterOps) {
+            Log::info('[RouterMove] Skipping old router ops (router marked as failed)', [
+                'old_router' => $this->oldRouterId,
+            ]);
+        } else {
+            $this->disconnectFromOldRouter($customer);
+            $this->removeSecretFromOldRouter($customer);
+        }
 
         // 3. Update customer data di DB
         $customer->update([

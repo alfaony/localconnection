@@ -20,6 +20,10 @@
                         <form id="roleNameForm">
                             @csrf
                             <div class="form-group">
+                                <label>Company</label>
+                                <input type="text" class="form-control" value="{{ $role->company?->name ?? '-' }}" disabled>
+                            </div>
+                            <div class="form-group">
                                 <label>Role Name</label>
                                 @if(@$is_editable)
                                 <div class="input-group">
@@ -39,6 +43,20 @@
                         {{-- CREATE MODE: Standard form submit --}}
                         <form action="{{ route('role.store') }}" method="POST">
                             @csrf
+                            <div class="form-group">
+                                <label>Company <span class="text-danger">*</span></label>
+                                @if(@$isSuperAdmin)
+                                    <select name="company_id" class="form-control" required>
+                                        <option value="">-- Pilih Company --</option>
+                                        @foreach($companies as $c)
+                                            <option value="{{ $c->id }}">{{ $c->name }}</option>
+                                        @endforeach
+                                    </select>
+                                @else
+                                    <input type="text" class="form-control" value="{{ $companies->first()?->name }}" disabled>
+                                    <input type="hidden" name="company_id" value="{{ $companies->first()?->id }}">
+                                @endif
+                            </div>
                             <div class="form-group">
                                 <label>Role Name <span class="text-danger">*</span></label>
                                 <input type="text" name="name" class="form-control" placeholder="Enter role name" required>

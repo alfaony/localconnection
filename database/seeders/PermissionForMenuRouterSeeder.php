@@ -32,7 +32,7 @@ class PermissionForMenuRouterSeeder extends Seeder
 
         DB::beginTransaction();
         try {
-            $routerRole = ['index','edit', 'create', 'update', 'show', 'destroy', 'store', 'select2','mapping'];
+            $routerRole = ['index','edit', 'create', 'update', 'show', 'destroy', 'store', 'select2','mapping','mass-move'];
             
             
              foreach ($routerRole as $method) 

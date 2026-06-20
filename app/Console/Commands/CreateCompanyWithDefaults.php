@@ -3,12 +3,14 @@
 namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use App\Models\Company;
 use App\Models\User;
 use App\Models\Role;
 use App\Models\SettingCompany;
 use App\Schemas\RoleSchema;
+use Ramsey\Uuid\Uuid;
 
 class CreateCompanyWithDefaults extends Command
 {
@@ -34,10 +36,16 @@ class CreateCompanyWithDefaults extends Command
         $district    = $this->option('district');
         $subdistrict = $this->option('subdistrict');
 
-        // 1. Validasi role ROOT ada
-        $rootRole = Role::where('name', RoleSchema::ROOT)->first();
+        // 1. Validasi template roles ada (company_id = null)
+        $templateRoles = Role::whereNull('company_id')->with('permissions')->get();
+        if ($templateRoles->isEmpty()) {
+            $this->error('Tidak ada template role (company_id = null). Jalankan seeder terlebih dahulu.');
+            return Command::FAILURE;
+        }
+
+        $rootRole = $templateRoles->firstWhere('name', RoleSchema::ROOT);
         if (!$rootRole) {
-            $this->error('Role "Root" tidak ditemukan. Jalankan seeder terlebih dahulu.');
+            $this->error('Role "Root" tidak ditemukan di template. Jalankan seeder terlebih dahulu.');
             return Command::FAILURE;
         }
 
@@ -60,19 +68,51 @@ class CreateCompanyWithDefaults extends Command
 
         $this->info("✓ Company dibuat: {$company->name} (slug: {$company->slug})");
 
-        // 5. Buat User Root
+        // 5. Copy semua template roles ke company baru
+        $copiedRoles = collect(); // map: template role id => new role id
+        foreach ($templateRoles as $template) {
+            $newRole = new Role();
+            $newRole->name       = $template->name;
+            $newRole->desc       = $template->desc;
+            $newRole->guard_name = $template->guard_name;
+            $newRole->company_id = $company->id;
+            $newRole->save(); // slug di-generate otomatis di setNameAttribute
+
+            // Copy permissions
+            $permissionIds = $template->permissions->pluck('id');
+            if ($permissionIds->isNotEmpty()) {
+                $insertData = $permissionIds->map(fn ($pid) => [
+                    'id'            => Uuid::uuid4()->toString(),
+                    'role_id'       => $newRole->id,
+                    'permission_id' => $pid,
+                    'created_at'    => now(),
+                    'updated_at'    => now(),
+                ])->all();
+
+                foreach (array_chunk($insertData, 500) as $chunk) {
+                    DB::table('permission_role')->insert($chunk);
+                }
+            }
+
+            $copiedRoles[$template->id] = $newRole;
+        }
+
+        $companyRootRole = $copiedRoles[$rootRole->id];
+        $this->info("✓ Role di-copy: {$templateRoles->count()} role ke company baru.");
+
+        // 6. Buat User Root dengan role milik company baru
         $user = new User();
         $user->name       = 'Root ' . $namaCompany;
         $user->email      = $email;
         $user->password   = Hash::make($password);
-        $user->role_id    = $rootRole->id;
+        $user->role_id    = $companyRootRole->id;
         $user->company_id = $company->id;
         $user->delete_able = 0;
         $user->save();
 
         $this->info("✓ User Root dibuat: {$user->email} (slug: {$user->slug})");
 
-        // 6. Buat SettingCompany default (profile)
+        // 7. Buat SettingCompany default (profile)
         $profileFields = [
             'name'          => $namaCompany,
             'director'      => '',
@@ -97,7 +137,7 @@ class CreateCompanyWithDefaults extends Command
 
         $this->info('✓ SettingCompany (profile) dibuat: ' . count($profileFields) . ' field.');
 
-        // 7. Buat SettingCompany default (internet_customer_setting)
+        // 8. Buat SettingCompany default (internet_customer_setting)
         $internetFields = [
             'internet_icon'                    => '',
             'internet_company_name'            => $namaCompany,

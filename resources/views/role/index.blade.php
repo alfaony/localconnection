@@ -51,6 +51,9 @@
                             <tr>
                                 <th width="50">No</th>
                                 <th>Name</th>
+                                @if($isSuperAdmin)
+                                <th>Company</th>
+                                @endif
                                 <th width="220">Action</th>
                             </tr>
                         </thead>
@@ -59,6 +62,9 @@
                             <tr>
                                 <td>{{ $no++ }}</td>
                                 <td>{{ $a->name }}</td>
+                                @if($isSuperAdmin)
+                                <td>{{ $a->company?->name ?? '-' }}</td>
+                                @endif
                                 <td>
                                     <a class="btn btn-xs btn-default text-teal mx-1 shadow" href="{{ route('role.show', $a) }}" title="Lihat">
                                         <i class="fa fa-lg fa-fw fa-eye"></i>

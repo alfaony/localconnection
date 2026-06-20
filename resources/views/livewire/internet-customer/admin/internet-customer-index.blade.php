@@ -246,6 +246,23 @@
                         @error('import_odp_id')<div class="invalid-feedback">{{ $message }}</div>@enderror
                         <small class="form-text text-muted">Berlaku untuk semua baris dalam file CSV.</small>
                     </div>
+                    <div class="col-md-4 mb-3">
+                        <label class="ic-label">
+                            Grouping
+                            <span class="badge badge-secondary ml-1" style="font-size:.65rem;padding:2px 6px;border-radius:4px">Opsional</span>
+                        </label>
+                        <select wire:model="import_group_id"
+                                class="form-control form-control-sm ic-select">
+                            <option value="">— Tanpa Grouping / Dari CSV —</option>
+                            @foreach($raaGroups as $grp)
+                                <option value="{{ $grp->id }}">{{ $grp->name }}</option>
+                            @endforeach
+                        </select>
+                        <small class="form-text text-muted">
+                            <i class="fas fa-magic mr-1"></i>
+                            Jika dipilih, nomor grouping otomatis urut untuk setiap baris (kolom <code>grouping</code> di CSV diabaikan).
+                        </small>
+                    </div>
                     <div class="col-md-5 mb-3">
                         <label class="ic-label">File CSV <span class="text-danger">*</span></label>
                         <input type="file"
@@ -516,11 +533,18 @@
                         </div>
                     </div>
                 </div>
-                <div class="text-center mb-2">
+                <div class="d-flex justify-content-between align-items-center mb-2">
                     <small class="text-muted">
                         <i class="fas fa-clock mr-1"></i>
                         Update terakhir: {{ \Carbon\Carbon::parse($raaProgress['updated_at'])->format('d/m/Y H:i:s') }}
                     </small>
+                    @if(($raaProgress['status'] ?? '') !== 'completed')
+                    <button type="button" class="btn btn-sm btn-outline-danger py-0 px-2"
+                            onclick="window.cancelRaaImport()"
+                            title="Batalkan dan reset import">
+                        <i class="fas fa-times mr-1"></i>Batalkan
+                    </button>
+                    @endif
                 </div>
                 @if(!empty($raaProgress['errors']) && count($raaProgress['errors']) > 0)
                 <div class="alert alert-warning py-2">
@@ -1957,7 +1981,26 @@ input[type="radio"].d-none:checked + .ic-radio-btn {
         });
 
         // ── IMPORT DAFTAR & AKTIFKAN ──────────────────────────────────────────
-        let raaProgressInterval = null;
+        window.raaProgressInterval = null;
+        window.raaStuckTimeout = null;
+
+        window.cancelRaaImport = function() {
+            if (window.raaProgressInterval) { clearInterval(window.raaProgressInterval); window.raaProgressInterval = null; }
+            if (window.raaStuckTimeout) { clearTimeout(window.raaStuckTimeout); window.raaStuckTimeout = null; }
+            @this.call('resetRaa');
+        };
+
+        // Handle file upload error agar loading spinner tidak nyangkut selamanya
+        window.addEventListener('livewire-upload-error', event => {
+            // Hanya handle error untuk raaCsvFile
+            if (event.detail && event.detail.id && !String(event.detail.id).includes('raaCsvFile')) return;
+            Swal.fire({
+                icon: 'error',
+                title: 'Upload Gagal',
+                text: 'Gagal mengupload file CSV. Pastikan ukuran file tidak melebihi 10MB dan format file adalah CSV.',
+                confirmButtonText: 'OK'
+            });
+        });
 
         window.addEventListener('raa-import-started', event => {
             Swal.mixin({ toast: true, position: 'top-end', showConfirmButton: false, timer: 2000 })
@@ -1965,12 +2008,30 @@ input[type="radio"].d-none:checked + .ic-radio-btn {
         });
 
         window.addEventListener('start-raa-progress-check', event => {
-            if (raaProgressInterval) clearInterval(raaProgressInterval);
-            raaProgressInterval = setInterval(() => { @this.call('checkRaaProgress'); }, 1000);
+            if (window.raaProgressInterval) clearInterval(window.raaProgressInterval);
+            if (window.raaStuckTimeout) clearTimeout(window.raaStuckTimeout);
+
+            window.raaProgressInterval = setInterval(() => { @this.call('checkRaaProgress'); }, 3000);
+
+            // Timeout 10 menit: jika import tidak selesai, tampilkan warning
+            window.raaStuckTimeout = setTimeout(() => {
+                if (window.raaProgressInterval) {
+                    clearInterval(window.raaProgressInterval);
+                    window.raaProgressInterval = null;
+                }
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Import Terlalu Lama',
+                    text: 'Proses import memakan waktu terlalu lama. Queue worker mungkin tidak berjalan. Silakan periksa konfigurasi queue atau hubungi administrator.',
+                    confirmButtonText: 'Reset',
+                    allowOutsideClick: false,
+                }).then(() => { @this.call('resetRaa'); });
+            }, 10 * 60 * 1000);
         });
 
         window.addEventListener('raa-import-completed', event => {
-            if (raaProgressInterval) { clearInterval(raaProgressInterval); raaProgressInterval = null; }
+            if (window.raaProgressInterval) { clearInterval(window.raaProgressInterval); window.raaProgressInterval = null; }
+            if (window.raaStuckTimeout) { clearTimeout(window.raaStuckTimeout); window.raaStuckTimeout = null; }
             const progress = event.detail.progress;
             const failed = (progress.errors || []).length;
             Swal.fire({
@@ -1998,7 +2059,8 @@ input[type="radio"].d-none:checked + .ic-radio-btn {
         });
 
         window.addEventListener('beforeunload', () => {
-            if (raaProgressInterval) clearInterval(raaProgressInterval);
+            if (window.raaProgressInterval) clearInterval(window.raaProgressInterval);
+            if (window.raaStuckTimeout) clearTimeout(window.raaStuckTimeout);
         });
     });
 </script>

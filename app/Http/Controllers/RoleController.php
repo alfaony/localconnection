@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Ramsey\Uuid\Uuid;
 
 use App\Models\Role;
+use App\Models\Company;
 use App\Models\Permission;
 use App\Helpers\Access;
 use App\Schemas\RoleSchema;
@@ -21,8 +22,17 @@ class RoleController extends Controller
 {
     public function index()
     {
-        $role = Role::orderBy('id','desc')->get();
-        return view('role.index',compact('role'));
+        $user = Auth::user();
+        $isSuperAdmin = in_array($user->role->name, [RoleSchema::SUPER_ADMIN]);
+
+        $query = Role::with('company')->orderBy('created_at', 'desc');
+
+        if (!$isSuperAdmin) {
+            $query->where('company_id', $user->company_id);
+        }
+
+        $role = $query->get();
+        return view('role.index', compact('role', 'isSuperAdmin'));
     }
 
     public function create()
@@ -34,19 +44,29 @@ class RoleController extends Controller
         $mainMenus = $this->getMainMenus();
         $checked = array_merge($mainMenus);
 
-        return view('role.createOrEdit',compact('permission','is_editable','dataPermission','mainMenus','checked'));
+        $user = Auth::user();
+        $isSuperAdmin = in_array($user->role->name, [RoleSchema::ROOT, RoleSchema::SUPER_ADMIN]);
+        $companies = $isSuperAdmin ? Company::orderBy('name')->get() : collect([$user->company]);
+
+        return view('role.createOrEdit', compact('permission', 'is_editable', 'dataPermission', 'mainMenus', 'checked', 'companies', 'isSuperAdmin'));
     }
 
     public function store(Request $request)
     {
+        $user = Auth::user();
+        $isSuperAdmin = in_array($user->role->name, [RoleSchema::ROOT, RoleSchema::SUPER_ADMIN]);
+        $companyId = $isSuperAdmin ? $request->company_id : $user->company_id;
+
         $this->validate($request, [
-            'name' => 'required|unique:roles,name',
+            'name'       => 'required|unique:roles,name',
+            'company_id' => $isSuperAdmin ? 'required|exists:companies,id' : 'nullable',
         ]);
-        
+
         DB::beginTransaction();
         try {
             $role = new Role();
             $role->name = $request->name;
+            $role->company_id = $companyId;
             $role->save();
             
             DB::commit();
@@ -66,7 +86,7 @@ class RoleController extends Controller
     public function show(Role $role)
     {
         $is_editable = false;
-        $role = Role::find($role->id);
+        $role = Role::with('company')->find($role->id);
         $permission = Permission::orderBy('table')->get();
         $dataPermission = $permission->groupBy('table')->toArray();
 
@@ -74,17 +94,21 @@ class RoleController extends Controller
             ->where("permission_role.role_id", $role->id)
             ->pluck('permission_role.permission_id','permission_role.permission_id')
             ->all();
-        
+
         $mainMenus = $this->getMainMenus();
         $checked = array_merge($mainMenus);
 
-        return view('role.createOrEdit',compact('role','permission','rolePermissions','dataPermission','is_editable','mainMenus','checked'));
+        $user = Auth::user();
+        $isSuperAdmin = in_array($user->role->name, [RoleSchema::ROOT, RoleSchema::SUPER_ADMIN]);
+        $companies = $isSuperAdmin ? Company::orderBy('name')->get() : collect([$user->company]);
+
+        return view('role.createOrEdit', compact('role', 'permission', 'rolePermissions', 'dataPermission', 'is_editable', 'mainMenus', 'checked', 'companies', 'isSuperAdmin'));
     }
 
     public function edit(Role $role)
     {
         $is_editable = true;
-        $role = Role::find($role->id);
+        $role = Role::with('company')->find($role->id);
         $permission = Permission::orderBy('table')->get();
         $dataPermission = $permission->groupBy('table')->toArray();
 
@@ -92,11 +116,15 @@ class RoleController extends Controller
             ->where("permission_role.role_id", $role->id)
             ->pluck('permission_role.permission_id','permission_role.permission_id')
             ->all();
-        
+
         $mainMenus = $this->getMainMenus();
         $checked = array_merge($mainMenus);
 
-        return view('role.createOrEdit',compact('role','permission','rolePermissions','dataPermission','is_editable','mainMenus','checked'));
+        $user = Auth::user();
+        $isSuperAdmin = in_array($user->role->name, [RoleSchema::ROOT, RoleSchema::SUPER_ADMIN]);
+        $companies = $isSuperAdmin ? Company::orderBy('name')->get() : collect([$user->company]);
+
+        return view('role.createOrEdit', compact('role', 'permission', 'rolePermissions', 'dataPermission', 'is_editable', 'mainMenus', 'checked', 'companies', 'isSuperAdmin'));
     }
 
     /**
