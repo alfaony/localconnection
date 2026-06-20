@@ -134,6 +134,7 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
     // ========================================================================
     Route::get('router', RouterIndex::class)->name('router.index');
     Route::get('router/create', RouterForm::class)->name('router.create');
+    Route::get('router/mass-move', \App\Http\Livewire\Router\RouterMassMove::class)->name('router.mass-move');
     Route::get('router/edit/{mikrotik}', RouterForm::class)->name('router.edit');
     Route::get('router/show/{routerId}', RouterInventory::class)->name('router.show');
     Route::get('router/mapping/{routerId}', PackageProfileMapping::class)->name('router.mapping');

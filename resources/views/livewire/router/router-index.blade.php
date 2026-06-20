@@ -5,11 +5,18 @@
     <div class="card card-primary card-outline mt-5">
         <div class="card-header">
             <h3 class="card-title">Daftar Router - Mikrotik</h3>
-            @canAccess('create','routers')
-            <div class="card-tools">
-                <a href="{{ route('router.create') }}" class="btn btn-primary"><i class="fas fa-plus"></i></a>
+            <div class="card-tools d-flex gap-2">
+                @canAccess('mass-move','routers')
+                <a href="{{ route('router.mass-move') }}" class="btn btn-warning btn-sm mr-1" title="Pindah Pelanggan Massal">
+                    <i class="fas fa-exchange-alt mr-1"></i> Pindah Massal
+                </a>
+                @endcanAccess
+                @canAccess('create','routers')
+                <a href="{{ route('router.create') }}" class="btn btn-primary btn-sm">
+                    <i class="fas fa-plus mr-1"></i> Tambah Router
+                </a>
+                @endcanAccess
             </div>
-            @endcanAccess
         </div>
         <div class="card-body">
             @if (session()->has('message'))

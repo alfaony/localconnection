@@ -14,7 +14,7 @@ class DatabaseSeeder extends Seeder
      */
     public function run()
     {
-        $this->call(FieldSettingCompaniesSeeder::class);
+        // $this->call(FieldSettingCompaniesSeeder::class);
         $this->call(PermissionForProductTillSettingCompanySeeder::class);
         $this->call(AllUserIsAdminSeeder::class);
         $this->call(PermissionForMenuDataCenter::class);

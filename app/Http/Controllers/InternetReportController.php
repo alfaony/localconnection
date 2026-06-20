@@ -167,6 +167,42 @@ class InternetReportController extends Controller
             ")
             ->first();
 
+        // ── Grouping ID breakdown ────────────────────────────────────
+        $byGroupingBase = InternetCustomer::byCompany($companyId)
+            ->selectRaw("
+                COALESCE(grouping_id, '') as grouping_key,
+                COUNT(*) as total,
+                SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as active_count,
+                SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as connecting_count
+            ", [ParamSchema::ACTIVE, ParamSchema::REACTIVATED])
+            ->groupByRaw("COALESCE(grouping_id, '')")
+            ->get()
+            ->sortBy(fn($r) => [$r->grouping_key === '' ? 1 : 0, -$r->total])
+            ->values();
+
+        $revenueByGrouping = InternetCustomerPurchase::whereHas('customer', fn($q) => $q->whereIn('company_id', $companyIds))
+            ->whereNotNull('confirmation_finance_at')
+            ->whereBetween('confirmation_finance_at', [$from, $to])
+            ->join('internet_customers as ic', 'internet_customer_purchases.internet_customer_id', '=', 'ic.id')
+            ->selectRaw("COALESCE(ic.grouping_id, '') as grouping_key, SUM(internet_customer_purchases.amount_paid) as revenue, COUNT(*) as tx_count")
+            ->groupByRaw("COALESCE(ic.grouping_id, '')")
+            ->get()
+            ->keyBy('grouping_key');
+
+        $byGrouping = $byGroupingBase->map(function ($r) use ($revenueByGrouping) {
+            $key = $r->grouping_key;
+            $rev = $revenueByGrouping->get($key);
+            return [
+                'grouping_id' => $key ?: null,
+                'label'       => $key ?: 'Tanpa Grouping',
+                'total'       => (int) $r->total,
+                'active'      => (int) $r->active_count,
+                'connecting'  => (int) $r->connecting_count,
+                'revenue'     => (float) ($rev->revenue ?? 0),
+                'tx_count'    => (int) ($rev->tx_count ?? 0),
+            ];
+        });
+
         // ── Expenses ─────────────────────────────────────────────────
         // Hitung jumlah bulan dalam periode yang dipilih
         $periodMonths = max(1, (int) round($from->diffInDays($to) / 30));
@@ -228,6 +264,7 @@ class InternetReportController extends Controller
                     'total_connecting_now' => $totalConnectingNow,
                     'mrr_history'       => $mrrHistory,
                     'monthly_recurring' => (float) $monthlyRecurring,
+                    'by_grouping'       => $byGrouping->values(),
                 ],
                 'asset' => [
                     'total_value'     => (float) $totalAssetValue,

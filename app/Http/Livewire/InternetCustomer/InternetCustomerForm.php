@@ -25,6 +25,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
+use App\Jobs\SendNewCustomerRegistrationWaJob;
 // use App\Helpers\InboxHelper;
 use App\Services\XenditService;
 use App\Services\MidtransService;
@@ -860,10 +861,16 @@ class InternetCustomerForm extends Component
 
             $this->internet_customer_id = $internetCustomer->id;
             DB::commit();
+
+            SendNewCustomerRegistrationWaJob::dispatch(
+                $internetCustomer->id,
+                $this->purchase_id,
+            );
+
             $this->step = 4;
 
         } catch (\Throwable $th) {
-            dd($th);
+            // dd($th);
             DB::rollBack();
             Log::error('Registration form submission failed', [
                 'error' => $th->getMessage(),

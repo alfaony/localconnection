@@ -50,10 +50,17 @@ class Role extends Model
         return 'slug';
     }
 
-    // public function users()
-    // {
-    //     return $this->hasMany(User::class);
-    // }
+    public function company()
+    {
+        return $this->belongsTo(Company::class)->withTrashed();
+    }
+
+    public function scopeByCompany($query, $companyId)
+    {
+        if ($companyId) {
+            return $query->where('company_id', $companyId);
+        }
+    }
 
     public function getIsMandatoryReportAttribute(): bool
     {

@@ -250,6 +250,23 @@
         </div>
     </div>
 </div>
+{{-- ── Section: Grouping ID ── --}}
+<div class="section-head">Pelanggan per Grouping ID</div>
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex align-items-center justify-content-between">
+                <h5><i class="fas fa-layer-group text-primary"></i> Breakdown per Grouping ID</h5>
+                <small class="text-muted">Total pelanggan & pendapatan dalam periode terpilih</small>
+            </div>
+            <div id="grouping-table-wrap">
+                <div class="p-4 text-center text-muted" style="font-size:.8rem">
+                    <i class="fas fa-circle-notch fa-spin fa-2x d-block mb-2 text-primary"></i>Memuat…
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 @stop
 
 @section('js')
@@ -456,6 +473,73 @@ function renderAssetSummary(asset) {
     setHtml('asset-summary-list', h || '<div class="text-muted text-center" style="font-size:.8rem">Belum ada data aset</div>');
 }
 
+function renderGroupingTable(rows) {
+    if (!rows || !rows.length) {
+        setHtml('grouping-table-wrap', '<div class="p-3 text-muted text-center" style="font-size:.8rem">Tidak ada data grouping</div>');
+        return;
+    }
+    const totalRevenue = rows.reduce((s, r) => s + r.revenue, 0);
+    let tbody = '';
+    rows.forEach((r, i) => {
+        const isNoGroup = !r.grouping_id;
+        const pct = totalRevenue > 0 ? Math.round(r.revenue / totalRevenue * 100) : 0;
+        tbody += `<tr${isNoGroup ? ' style="opacity:.65"' : ''}>
+            <td>
+                ${isNoGroup
+                    ? `<span class="text-muted" style="font-style:italic"><i class="fas fa-minus-circle mr-1" style="color:#94a3b8"></i>Tanpa Grouping</span>`
+                    : `<span class="badge" style="background:#eff6ff;color:#1d4ed8;font-size:.78rem;padding:4px 10px;border-radius:20px;font-weight:600">
+                            <i class="fas fa-tag mr-1"></i>${r.label}
+                        </span>`
+                }
+            </td>
+            <td class="text-center"><strong>${r.total.toLocaleString('id-ID')}</strong></td>
+            <td class="text-center">
+                <span style="color:#16a34a;font-weight:600">${r.active.toLocaleString('id-ID')}</span>
+            </td>
+            <td class="text-center">
+                <span style="color:#2563eb;font-weight:600">${r.connecting.toLocaleString('id-ID')}</span>
+            </td>
+            <td class="text-right">
+                <div style="font-size:.85rem;font-weight:700;color:#1e293b">${fmtFull(r.revenue)}</div>
+                <div class="progress mt-1" style="height:4px">
+                    <div class="progress-bar" style="width:${pct}%;background:#2563eb"></div>
+                </div>
+                <div style="font-size:.7rem;color:#94a3b8">${pct}% dari total • ${r.tx_count} tx</div>
+            </td>
+        </tr>`;
+    });
+
+    const grandTotal = rows.reduce((s, r) => ({
+        total: s.total + r.total, active: s.active + r.active,
+        connecting: s.connecting + r.connecting, revenue: s.revenue + r.revenue,
+        tx_count: s.tx_count + r.tx_count
+    }), {total:0, active:0, connecting:0, revenue:0, tx_count:0});
+
+    setHtml('grouping-table-wrap', `
+        <div class="table-responsive">
+        <table class="table rpt-table mb-0">
+            <thead>
+                <tr>
+                    <th style="width:30%">Grouping ID</th>
+                    <th class="text-center">Total Pelanggan</th>
+                    <th class="text-center"><i class="fas fa-check-circle text-success mr-1"></i>Aktif</th>
+                    <th class="text-center"><i class="fas fa-sync-alt text-primary mr-1"></i>Connecting</th>
+                    <th class="text-right">Pendapatan (Periode)</th>
+                </tr>
+            </thead>
+            <tbody>${tbody}</tbody>
+            <tfoot>
+                <tr style="background:#f8fafc;font-weight:700">
+                    <td>Total</td>
+                    <td class="text-center">${grandTotal.total.toLocaleString('id-ID')}</td>
+                    <td class="text-center" style="color:#16a34a">${grandTotal.active.toLocaleString('id-ID')}</td>
+                    <td class="text-center" style="color:#2563eb">${grandTotal.connecting.toLocaleString('id-ID')}</td>
+                    <td class="text-right">${fmtFull(grandTotal.revenue)} <small class="text-muted font-weight-normal">${grandTotal.tx_count} tx</small></td>
+                </tr>
+            </tfoot>
+        </table></div>`);
+}
+
 function renderExpenseList(items, nameKey, costKey, containerId) {
     if (!items || !items.length) {
         setHtml(containerId, '<div class="text-muted text-center" style="font-size:.8rem">Belum ada data</div>');
@@ -559,6 +643,9 @@ function loadReport() {
 
         renderExpenseList(expense.data_centers, 'name', 'cost_per_month', 'expense-datacenter-list');
         renderExpenseList(expense.pops,         'name', 'monthly_cost',   'expense-pop-list');
+
+        // Grouping ID breakdown
+        renderGroupingTable(customer.by_grouping || []);
     })
     .catch(err=>console.error('Report error:', err));
 }
