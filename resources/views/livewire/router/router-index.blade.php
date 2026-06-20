@@ -69,6 +69,20 @@
                             @endif
                         </td>
                         <td>
+                            <button
+                                wire:click="refreshStatus({{ $mikrotik->id }})"
+                                wire:loading.attr="disabled"
+                                wire:target="refreshStatus({{ $mikrotik->id }})"
+                                class="btn btn-info btn-sm mb-1"
+                                title="Refresh status koneksi router">
+                                <span wire:loading.remove wire:target="refreshStatus({{ $mikrotik->id }})">
+                                    <i class="fas fa-sync-alt"></i>
+                                </span>
+                                <span wire:loading wire:target="refreshStatus({{ $mikrotik->id }})">
+                                    <i class="fas fa-spinner fa-spin"></i>
+                                </span>
+                            </button>
+
                             @canAccess('mapping','routers')
                             <a href="{{ route('router.mapping', $mikrotik) }}" class="btn btn-secondary btn-sm mb-1" title="Mapping Paket Profile"><i class="fas fa-sitemap"></i></a>
                             @endcanAccess
