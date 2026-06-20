@@ -184,97 +184,97 @@ class Kernel extends ConsoleKernel
         // Send billing reminder untuk customer yang end_billing_date = today (jam 17:00)
         $schedule->command('billing:send-reminder')->timezone('Asia/Jakarta')->dailyAt('18:00');
 
-        $schedule->command('project:set-status-sent-time')->timezone('Asia/Jakarta')->dailyAt('00:00');
-        $schedule->command('challenge:check-completed')->timezone('Asia/Jakarta')->hourly();
-        // Setiap Senin pukul 00:00 — generate occurrence event routine 2 minggu ke depan
-        $schedule->command('event:generate-occurrences --weeks=2')->timezone('Asia/Jakarta')->weeklyOn(1, '00:00');
-        $schedule->command('tasks:process-recurring')->timezone('Asia/Jakarta')->dailyAt('00:30');
-        $schedule->command('recurring:generate')->timezone('Asia/Jakarta')->dailyAt('01:00');
-        $schedule->command('recurring:generate-meetings')->timezone('Asia/Jakarta')->dailyAt('01:10');
-        $schedule->command('media:cleanup-temporary')->timezone('Asia/Jakarta')->dailyAt('00:00');
-        $schedule->command('dayoff:reset-quota')->timezone('Asia/Jakarta')->yearlyOn(1, 1, '02:00');
-        $schedule->command('weekly:check-compliance')->timezone('Asia/Jakarta')->mondays()->at('3:00');
-        $schedule->command('dailytask:check-status')->timezone('Asia/Jakarta')->dailyAt('00:00');
-        $schedule->command('dailytask:complete-inreview')->timezone('Asia/Jakarta')->dailyAt('00:00');
-        // Run Scheduler
-        $schedule->command('schedule:employee-checkin')->dailyAt('04:00');
+        // $schedule->command('project:set-status-sent-time')->timezone('Asia/Jakarta')->dailyAt('00:00');
+        // $schedule->command('challenge:check-completed')->timezone('Asia/Jakarta')->hourly();
+        // // Setiap Senin pukul 00:00 — generate occurrence event routine 2 minggu ke depan
+        // $schedule->command('event:generate-occurrences --weeks=2')->timezone('Asia/Jakarta')->weeklyOn(1, '00:00');
+        // $schedule->command('tasks:process-recurring')->timezone('Asia/Jakarta')->dailyAt('00:30');
+        // $schedule->command('recurring:generate')->timezone('Asia/Jakarta')->dailyAt('01:00');
+        // $schedule->command('recurring:generate-meetings')->timezone('Asia/Jakarta')->dailyAt('01:10');
+        // $schedule->command('media:cleanup-temporary')->timezone('Asia/Jakarta')->dailyAt('00:00');
+        // $schedule->command('dayoff:reset-quota')->timezone('Asia/Jakarta')->yearlyOn(1, 1, '02:00');
+        // $schedule->command('weekly:check-compliance')->timezone('Asia/Jakarta')->mondays()->at('3:00');
+        // $schedule->command('dailytask:check-status')->timezone('Asia/Jakarta')->dailyAt('00:00');
+        // $schedule->command('dailytask:complete-inreview')->timezone('Asia/Jakarta')->dailyAt('00:00');
+        // // Run Scheduler
+        // $schedule->command('schedule:employee-checkin')->dailyAt('04:00');
         
-        $company = Company::all();
-        foreach ($company as $a) 
-        {
-            $schedule->command("validity:userOfCompany --id={$a->id} --type=wfo")->timezone('Asia/Jakarta')
-            ->dailyAt('23:00');
+        // $company = Company::all();
+        // foreach ($company as $a) 
+        // {
+        //     $schedule->command("validity:userOfCompany --id={$a->id} --type=wfo")->timezone('Asia/Jakarta')
+        //     ->dailyAt('23:00');
 
-            $schedule->command("validity:userOfCompany --id={$a->id} --type=wfo_shifting")->timezone('Asia/Jakarta')
-            ->dailyAt('23:00');
+        //     $schedule->command("validity:userOfCompany --id={$a->id} --type=wfo_shifting")->timezone('Asia/Jakarta')
+        //     ->dailyAt('23:00');
 
             
 
-            $settingCompany = SettingCompany::byCompany($a->id)->get()->pluck('field_value','field_title');
+        //     $settingCompany = SettingCompany::byCompany($a->id)->get()->pluck('field_value','field_title');
             
-            $rangeEndDate = $settingCompany['range_end_date'] ?? NULL;
-            if($rangeEndDate != "")
-            {
-                $dateRun = Carbon::now()->startOfMonth()->setDay($rangeEndDate);
+        //     $rangeEndDate = $settingCompany['range_end_date'] ?? NULL;
+        //     if($rangeEndDate != "")
+        //     {
+        //         $dateRun = Carbon::now()->startOfMonth()->setDay($rangeEndDate);
 
-                // Jika hari ini adalah $dateRun, jadwalkan command pada pukul 23:00
-                if (Carbon::now('Asia/Jakarta')->isSameDay($dateRun)) {
-                    $schedule->command("validity:userOfCompany --id={$a->id} --type=wfh")
-                        ->timezone('Asia/Jakarta')
-                        // ->dailyAt('14:36')
-                        ->dailyAt('23:00')
-                        ;
-                }
-            }
+        //         // Jika hari ini adalah $dateRun, jadwalkan command pada pukul 23:00
+        //         if (Carbon::now('Asia/Jakarta')->isSameDay($dateRun)) {
+        //             $schedule->command("validity:userOfCompany --id={$a->id} --type=wfh")
+        //                 ->timezone('Asia/Jakarta')
+        //                 // ->dailyAt('14:36')
+        //                 ->dailyAt('23:00')
+        //                 ;
+        //         }
+        //     }
 
-            $sentTime = $settingCompany['sent_time'] ?? NULL;
-            if($sentTime != "")
-            {
-                $schedule->command('project:send-expiration-notifications')->timezone('Asia/Jakarta')->dailyAt($sentTime);
-            }
+        //     $sentTime = $settingCompany['sent_time'] ?? NULL;
+        //     if($sentTime != "")
+        //     {
+        //         $schedule->command('project:send-expiration-notifications')->timezone('Asia/Jakarta')->dailyAt($sentTime);
+        //     }
 
-            $schedule->command('quota:ensure-locks --company_id=' . $a->id)
-            ->timezone('Asia/Jakarta')
-            ->dailyAt('01:00')
-            ->withoutOverlapping(10)
-            ->runInBackground(); // Optional: prevent blocking
-        }
+        //     $schedule->command('quota:ensure-locks --company_id=' . $a->id)
+        //     ->timezone('Asia/Jakarta')
+        //     ->dailyAt('01:00')
+        //     ->withoutOverlapping(10)
+        //     ->runInBackground(); // Optional: prevent blocking
+        // }
 
-        $employeeCheckings = EmployeeChecking::where('is_active', true)
-            ->where('is_dayoff', false)
-            ->whereDate('scheduled_time', Carbon::today()) // Filter today's check-ins
-            ->whereBetween('scheduled_time', [
-                Carbon::now('Asia/Jakarta')->format('Y-m-d H:i'),
-                Carbon::now('Asia/Jakarta')->addMinute(2)->format('Y-m-d H:i')
-            ])
-            ->get();
+        // $employeeCheckings = EmployeeChecking::where('is_active', true)
+        //     ->where('is_dayoff', false)
+        //     ->whereDate('scheduled_time', Carbon::today()) // Filter today's check-ins
+        //     ->whereBetween('scheduled_time', [
+        //         Carbon::now('Asia/Jakarta')->format('Y-m-d H:i'),
+        //         Carbon::now('Asia/Jakarta')->addMinute(2)->format('Y-m-d H:i')
+        //     ])
+        //     ->get();
         
 
-        foreach ($employeeCheckings as $checking) 
-        {
-            // Calculate the notification time (1 minute before scheduled time)
-            $checkinNotificationTime = Carbon::parse($checking->scheduled_time);
-            // $checkinDeactivateTime = Carbon::parse($checking->scheduled_timeout);
+        // foreach ($employeeCheckings as $checking) 
+        // {
+        //     // Calculate the notification time (1 minute before scheduled time)
+        //     $checkinNotificationTime = Carbon::parse($checking->scheduled_time);
+        //     // $checkinDeactivateTime = Carbon::parse($checking->scheduled_timeout);
         
-            $schedule->command("checkin:active --id={$checking->id}")->timezone('Asia/Jakarta')->dailyAt($checkinNotificationTime->format('H:i'));
-            // $schedule->command("checkin:deactivate --id={$checking->id}")->timezone('Asia/Jakarta')->dailyAt($checkinDeactivateTime->format('H:i'));
-        }
+        //     $schedule->command("checkin:active --id={$checking->id}")->timezone('Asia/Jakarta')->dailyAt($checkinNotificationTime->format('H:i'));
+        //     // $schedule->command("checkin:deactivate --id={$checking->id}")->timezone('Asia/Jakarta')->dailyAt($checkinDeactivateTime->format('H:i'));
+        // }
 
-        $employeeCheckingDeactives = EmployeeChecking::where('is_active', true)
-            ->where('is_dayoff', false)
-            ->whereDate('scheduled_timeout', Carbon::today()) // Filter today's check-ins
-            ->whereBetween('scheduled_timeout', [
-                Carbon::now('Asia/Jakarta')->format('Y-m-d H:i'),
-                Carbon::now('Asia/Jakarta')->addMinute(2)->format('Y-m-d H:i')
-            ])
-            ->get();
+        // $employeeCheckingDeactives = EmployeeChecking::where('is_active', true)
+        //     ->where('is_dayoff', false)
+        //     ->whereDate('scheduled_timeout', Carbon::today()) // Filter today's check-ins
+        //     ->whereBetween('scheduled_timeout', [
+        //         Carbon::now('Asia/Jakarta')->format('Y-m-d H:i'),
+        //         Carbon::now('Asia/Jakarta')->addMinute(2)->format('Y-m-d H:i')
+        //     ])
+        //     ->get();
 
-        foreach ($employeeCheckingDeactives as $checking) 
-        {
-            // Calculate the notification time (1 minute before scheduled time)
-            $checkinDeactivateTime = Carbon::parse($checking->scheduled_timeout);
-            $schedule->command("checkin:deactivate --id={$checking->id}")->timezone('Asia/Jakarta')->dailyAt($checkinDeactivateTime->format('H:i'));
-        }
+        // foreach ($employeeCheckingDeactives as $checking) 
+        // {
+        //     // Calculate the notification time (1 minute before scheduled time)
+        //     $checkinDeactivateTime = Carbon::parse($checking->scheduled_timeout);
+        //     $schedule->command("checkin:deactivate --id={$checking->id}")->timezone('Asia/Jakarta')->dailyAt($checkinDeactivateTime->format('H:i'));
+        // }
 
         // foreach ($employeeCheckings as $checking) 
         // {
