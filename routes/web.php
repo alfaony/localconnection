@@ -191,6 +191,7 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
     // INTERNET REPORT
     // ========================================================================
     Route::get('internet-report', [\App\Http\Controllers\InternetReportController::class, 'index'])->name('internet-report.index');
+    Route::get('internet-report/groupings', [\App\Http\Controllers\InternetReportController::class, 'groupings'])->name('internet-report.groupings');
     Route::get('internet-report/data', [\App\Http\Controllers\InternetReportController::class, 'data'])->name('internet-report.data');
 });
 

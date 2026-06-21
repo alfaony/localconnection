@@ -20,6 +20,14 @@
     <input type="date" id="rpt-from" class="form-control" value="{{ now()->startOfMonth()->format('Y-m-d') }}">
     <label>Sampai:</label>
     <input type="date" id="rpt-to"   class="form-control" value="{{ now()->endOfMonth()->format('Y-m-d') }}">
+
+    {{-- Grouping filter --}}
+    <label class="ml-2">Grouping:</label>
+    <select id="rpt-grouping" class="form-control" style="max-width:200px">
+        <option value="all">Semua Grouping</option>
+        <option value="none">— Tanpa Grouping</option>
+    </select>
+
     <button class="btn-load" onclick="loadReport()">
         <i class="fas fa-search mr-1"></i> Tampilkan
     </button>
@@ -251,7 +259,7 @@
     </div>
 </div>
 {{-- ── Section: Grouping ID ── --}}
-<div class="section-head">Pelanggan per Grouping ID</div>
+<div class="section-head" id="section-grouping-head">Pelanggan per Grouping ID</div>
 <div class="row mb-4">
     <div class="col-12">
         <div class="card">
@@ -267,6 +275,69 @@
         </div>
     </div>
 </div>
+{{-- ── Section: Payment Bulan Ini ── --}}
+<div class="section-head" id="section-payment-head">Status Payment Bulan Ini</div>
+
+{{-- Summary banner --}}
+<div class="row mb-3" id="payment-summary-row">
+    <div class="col-md-6 mb-3">
+        <div class="kpi-card" style="border-left-color:#16a34a">
+            <div style="font-size:.72rem;color:#64748b;text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px">
+                <i class="fas fa-check-circle mr-1 text-success"></i>Sudah Payment
+                <span id="payment-month-label" class="text-muted font-weight-normal ml-1"></span>
+            </div>
+            <div class="kpi-val" id="paid-count"><div class="skeleton" style="width:40%"></div></div>
+            <div class="kpi-lbl" id="paid-total">pelanggan unik &nbsp;•&nbsp; total: –</div>
+        </div>
+    </div>
+    <div class="col-md-6 mb-3">
+        <div class="kpi-card" style="border-left-color:#dc2626">
+            <div style="font-size:.72rem;color:#64748b;text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px">
+                <i class="fas fa-times-circle mr-1 text-danger"></i>Belum Payment
+                <span class="text-muted font-weight-normal ml-1">(aktif &amp; connecting)</span>
+            </div>
+            <div class="kpi-val" id="unpaid-count"><div class="skeleton" style="width:40%"></div></div>
+            <div class="kpi-lbl">pelanggan aktif belum ada pembayaran bulan ini</div>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    {{-- Sudah Payment --}}
+    <div class="col-lg-6 mb-3">
+        <div class="card h-100">
+            <div class="card-header d-flex align-items-center justify-content-between">
+                <h5 class="mb-0">
+                    <i class="fas fa-check-circle text-success mr-1"></i>
+                    Sudah Payment <span class="badge badge-success ml-1" id="paid-badge">0</span>
+                </h5>
+                <input type="text" id="search-paid" class="form-control form-control-sm"
+                       style="width:160px" placeholder="Cari...">
+            </div>
+            <div id="paid-table-wrap" style="max-height:420px;overflow-y:auto">
+                <div class="p-4 text-center text-muted"><i class="fas fa-circle-notch fa-spin fa-2x d-block mb-2 text-success"></i>Memuat…</div>
+            </div>
+        </div>
+    </div>
+
+    {{-- Belum Payment --}}
+    <div class="col-lg-6 mb-3">
+        <div class="card h-100">
+            <div class="card-header d-flex align-items-center justify-content-between">
+                <h5 class="mb-0">
+                    <i class="fas fa-times-circle text-danger mr-1"></i>
+                    Belum Payment <span class="badge badge-danger ml-1" id="unpaid-badge">0</span>
+                </h5>
+                <input type="text" id="search-unpaid" class="form-control form-control-sm"
+                       style="width:160px" placeholder="Cari...">
+            </div>
+            <div id="unpaid-table-wrap" style="max-height:420px;overflow-y:auto">
+                <div class="p-4 text-center text-muted"><i class="fas fa-circle-notch fa-spin fa-2x d-block mb-2 text-danger"></i>Memuat…</div>
+            </div>
+        </div>
+    </div>
+</div>
+
 @stop
 
 @section('js')
@@ -275,7 +346,8 @@
 (function(){
 'use strict';
 
-const API  = '{{ route("internet-report.data") }}';
+const API          = '{{ route("internet-report.data") }}';
+const API_GROUPINGS = '{{ route("internet-report.groupings") }}';
 const CSRF = document.querySelector('meta[name="csrf-token"]').content;
 
 let incomeChartInst = null, mrrChartInst = null, assetChartInst = null;
@@ -557,10 +629,111 @@ function renderExpenseList(items, nameKey, costKey, containerId) {
     setHtml(containerId, h);
 }
 
+// ── Payment tables ────────────────────────────────────────────────
+let paidData = [], unpaidData = [];
+
+function methodLabel(m) {
+    const map={manual_transfer:'Transfer Manual',xendit:'Xendit',midtrans:'Midtrans',transfer:'Transfer Manual'};
+    return map[m]||m||'Lainnya';
+}
+
+function groupBadge(g) {
+    return g
+        ? `<span style="background:#eff6ff;color:#1d4ed8;font-size:.68rem;padding:2px 7px;border-radius:20px;font-weight:600">${g}</span>`
+        : `<span style="color:#94a3b8;font-size:.72rem;font-style:italic">–</span>`;
+}
+
+function renderPaidTable(rows) {
+    if (!rows.length) {
+        setHtml('paid-table-wrap','<div class="p-3 text-center text-muted" style="font-size:.8rem">Tidak ada pembayaran bulan ini</div>');
+        return;
+    }
+    const body = rows.map(r => `<tr>
+        <td>
+            <div style="font-size:.8rem;font-weight:600;color:#1e293b">${r.name}</div>
+            <div style="font-size:.7rem;color:#94a3b8">${r.code}</div>
+        </td>
+        <td style="font-size:.75rem">${r.package}</td>
+        <td>${groupBadge(r.grouping_id)}</td>
+        <td style="font-size:.8rem;font-weight:700;color:#16a34a">${fmtFull(r.amount)}</td>
+        <td style="font-size:.72rem;color:#64748b">${r.paid_at ?? '–'}</td>
+    </tr>`).join('');
+    setHtml('paid-table-wrap',`<table class="table table-sm rpt-table mb-0">
+        <thead><tr><th>Pelanggan</th><th>Paket</th><th>Grouping</th><th>Jumlah</th><th>Tgl Bayar</th></tr></thead>
+        <tbody>${body}</tbody>
+    </table>`);
+}
+
+function renderUnpaidTable(rows) {
+    if (!rows.length) {
+        setHtml('unpaid-table-wrap','<div class="p-3 text-center text-muted" style="font-size:.8rem">Semua pelanggan aktif sudah membayar 🎉</div>');
+        return;
+    }
+    const body = rows.map(r => {
+        const st = r.status === 'reactivated'
+            ? `<span class="badge badge-primary" style="font-size:.68rem">Connecting</span>`
+            : `<span class="badge badge-success" style="font-size:.68rem">Aktif</span>`;
+        return `<tr>
+            <td>
+                <div style="font-size:.8rem;font-weight:600;color:#1e293b">${r.name}</div>
+                <div style="font-size:.7rem;color:#94a3b8">${r.code}</div>
+            </td>
+            <td style="font-size:.75rem;font-family:monospace;color:#475569">${r.username}</td>
+            <td style="font-size:.75rem">${r.package}</td>
+            <td>${groupBadge(r.grouping_id)}</td>
+            <td>${st}</td>
+        </tr>`;
+    }).join('');
+    setHtml('unpaid-table-wrap',`<table class="table table-sm rpt-table mb-0">
+        <thead><tr><th>Pelanggan</th><th>Username</th><th>Paket</th><th>Grouping</th><th>Status</th></tr></thead>
+        <tbody>${body}</tbody>
+    </table>`);
+}
+
+// Client-side search for payment tables
+function initPaymentSearch() {
+    document.getElementById('search-paid').addEventListener('input', function() {
+        const q = this.value.toLowerCase();
+        const filtered = q ? paidData.filter(r =>
+            r.name.toLowerCase().includes(q) ||
+            r.code.toLowerCase().includes(q) ||
+            (r.username||'').toLowerCase().includes(q) ||
+            (r.grouping_id||'').toLowerCase().includes(q)
+        ) : paidData;
+        renderPaidTable(filtered);
+    });
+    document.getElementById('search-unpaid').addEventListener('input', function() {
+        const q = this.value.toLowerCase();
+        const filtered = q ? unpaidData.filter(r =>
+            r.name.toLowerCase().includes(q) ||
+            r.code.toLowerCase().includes(q) ||
+            (r.username||'').toLowerCase().includes(q) ||
+            (r.grouping_id||'').toLowerCase().includes(q)
+        ) : unpaidData;
+        renderUnpaidTable(filtered);
+    });
+}
+
+// ── Load grouping options ─────────────────────────────────────────
+function loadGroupings() {
+    fetch(API_GROUPINGS, { headers: { 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' } })
+        .then(r => r.json())
+        .then(json => {
+            if (!json.success) return;
+            const sel = document.getElementById('rpt-grouping');
+            json.groupings.forEach(g => {
+                const opt = document.createElement('option');
+                opt.value = g; opt.textContent = g;
+                sel.appendChild(opt);
+            });
+        });
+}
+
 // ── Main load ─────────────────────────────────────────────────────
 function loadReport() {
-    const from = document.getElementById('rpt-from').value;
-    const to   = document.getElementById('rpt-to').value;
+    const from      = document.getElementById('rpt-from').value;
+    const to        = document.getElementById('rpt-to').value;
+    const grouping  = document.getElementById('rpt-grouping').value;
     if (!from || !to) return;
 
     // Reset skeleton
@@ -568,14 +741,14 @@ function loadReport() {
         setHtml(id,'<div class="skeleton" style="width:60%"></div>');
     });
 
-    fetch(`${API}?from=${from}&to=${to}`, {
+    fetch(`${API}?from=${from}&to=${to}&grouping_id=${grouping}`, {
         headers:{'X-CSRF-TOKEN':CSRF,'Accept':'application/json'}
     })
     .then(r=>r.json())
     .then(json=>{
         if (!json.success) return;
         const d = json.data;
-        const {income, customer, asset, roi, expense} = d;
+        const {income, customer, asset, roi, expense, payment} = d;
 
         // KPIs
         setText('kpi-income', fmtFull(income.total));
@@ -646,13 +819,40 @@ function loadReport() {
 
         // Grouping ID breakdown
         renderGroupingTable(customer.by_grouping || []);
+
+        // Payment bulan ini
+        if (payment) {
+            const lbl = document.getElementById('payment-month-label');
+            if (lbl) lbl.textContent = payment.month_label;
+
+            setText('paid-count',  payment.paid_count.toLocaleString('id-ID') + ' pelanggan');
+            setText('paid-total',  'Total: ' + fmtFull(payment.paid_total));
+            setText('unpaid-count', payment.unpaid_count.toLocaleString('id-ID') + ' pelanggan');
+            setText('paid-badge',   payment.paid_count);
+            setText('unpaid-badge', payment.unpaid_count);
+
+            paidData   = payment.paid_list   || [];
+            unpaidData = payment.unpaid_list || [];
+            renderPaidTable(paidData);
+            renderUnpaidTable(unpaidData);
+
+            // Reset search inputs
+            const sp = document.getElementById('search-paid');
+            const su = document.getElementById('search-unpaid');
+            if (sp) sp.value = '';
+            if (su) su.value = '';
+        }
     })
     .catch(err=>console.error('Report error:', err));
 }
 window.loadReport = loadReport;
 
 // ── Init ──────────────────────────────────────────────────────────
-document.addEventListener('DOMContentLoaded', () => loadReport());
+document.addEventListener('DOMContentLoaded', () => {
+    loadGroupings();
+    loadReport();
+    initPaymentSearch();
+});
 })();
 </script>
 @stop
