@@ -1179,7 +1179,7 @@ class InternetCustomerShow extends Component
             $oldPackage = $this->customer->internetPackage;
             $newPackage = InternetPackage::find($this->new_package_id);
             $wasSuspended = $this->customer->status === ParamSchema::SUSPENDED;
-            $satatus = $wasSuspended ? ParamSchema::SUSPENDED : ($this->customer->installation ? ParamSchema::REACTIVATED : ParamSchema::PROCESS_INSTALLATION);
+            $status = $wasSuspended ? ParamSchema::SUSPENDED : ($this->customer->installation ? ParamSchema::REACTIVATED : ParamSchema::PROCESS_INSTALLATION);
             // Update customer package
             $this->customer->update([
                 'status' => $status,

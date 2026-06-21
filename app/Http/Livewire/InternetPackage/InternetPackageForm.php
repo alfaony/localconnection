@@ -315,6 +315,7 @@ class InternetPackageForm extends Component
             'name'                    => $this->name,
             'bandwidth'               => $this->bandwidth,
             'type'                    => $this->type,
+            'customer_type'           => $this->customer_type,
             'price'                   => $this->price,
             'price_nett'              => $this->price_nett,
             'description'             => $this->description,
@@ -323,7 +324,7 @@ class InternetPackageForm extends Component
             'rate_down_mbps'          => $this->rate_down_mbps,
             'rate_up_mbps'            => $this->rate_up_mbps,
             'fup_rate_down_mbps'      => $this->fup_rate_down_mbps,
-            'fup_rate_up_mbps'        => 0,
+            'fup_rate_up_mbps'        => $this->fup_rate_up_mbps,
             'quota_bytes'             => $isHotspot ? $this->quota_bytes : 0,
             'session_timeout_seconds' => $isHotspot ? $this->session_timeout_seconds : null,
         ];

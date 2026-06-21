@@ -8,6 +8,7 @@ use App\Models\CoverageService;
 use App\Models\District;
 use App\Models\ImportProgress;
 use App\Models\InternetCustomer;
+use App\Models\InternetCustomerGroup;
 use App\Models\InternetCustomerInstallation;
 use App\Models\InternetPackage;
 use App\Models\JobsProvisioning;
@@ -65,6 +66,28 @@ class ImportRegisterAndActivateJob implements ShouldQueue
         $imported  = 0;
         $errors    = [];
 
+        // ── PREPARE AUTO GROUPING jika group dipilih dari form ────────────────
+        $groupModel      = null;
+        $groupPrefix     = null;
+        $groupingCounter = 0;
+
+        if ($this->groupId) {
+            $groupModel = InternetCustomerGroup::find($this->groupId);
+            if ($groupModel) {
+                $groupPrefix = $groupModel->grouping_prefix;
+                $lastNumber  = (int) $groupModel->last_number;
+                if ($lastNumber === 0) {
+                    $lastNumber = (int) InternetCustomer::where('group_id', $groupModel->id)
+                        ->whereNotNull('grouping_id')
+                        ->get('grouping_id')
+                        ->pluck('grouping_id')
+                        ->map(fn($gid) => InternetCustomerGroup::parseSequence(substr($gid, strlen($groupPrefix))))
+                        ->max();
+                }
+                $groupingCounter = $lastNumber;
+            }
+        }
+
         $this->updateProgress($processed, $total, $imported, $errors);
 
         foreach ($this->csvData as $index => $row) {
@@ -94,6 +117,12 @@ class ImportRegisterAndActivateJob implements ShouldQueue
             $poolName         = trim($row[15] ?? '') ?: null;
             $grouping         = trim($row[16] ?? '') ?: null;
 
+            // Auto-assign grouping_id jika group dipilih dan kolom CSV kosong
+            if ($groupModel && $groupPrefix && empty($grouping)) {
+                $groupingCounter++;
+                $grouping = $groupPrefix . InternetCustomerGroup::formatSequence($groupingCounter);
+            }
+
             $identifier = $email ?: ($phone ?: ($name ?: 'Row ' . ($index + 1)));
 
             try {
@@ -113,6 +142,11 @@ class ImportRegisterAndActivateJob implements ShouldQueue
             } catch (\Exception $e) {
                 DB::rollBack();
 
+                // Rollback grouping counter jika row gagal
+                if ($groupModel && $groupPrefix && empty(trim($row[16] ?? ''))) {
+                    $groupingCounter--;
+                }
+
                 $errors[] = [
                     'row'     => $index + 1,
                     'message' => $e->getMessage(),
@@ -127,6 +161,11 @@ class ImportRegisterAndActivateJob implements ShouldQueue
 
             $processed++;
             $this->updateProgress($processed, $total, $imported, $errors);
+        }
+
+        // Update last_number pada group jika ada auto-assign yang berhasil
+        if ($groupModel && $groupingCounter > (int) $groupModel->last_number) {
+            $groupModel->update(['last_number' => $groupingCounter]);
         }
 
         $this->updateProgress($processed, $total, $imported, $errors);
