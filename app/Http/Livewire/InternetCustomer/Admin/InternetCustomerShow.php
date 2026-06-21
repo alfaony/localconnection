@@ -36,8 +36,10 @@ use App\Jobs\GenerateBillingJob;
 use App\Schemas\ParamSchema;
 use Carbon\Carbon;
 
+use App\Models\SettingCompany;
+use App\Services\Weblas\WablasClient;
+use App\Services\Weblas\Message as WablasMessage;
 use App\Helpers\Access;
-use App\Helpers\InboxHelper;
 
 class InternetCustomerShow extends Component
 {
@@ -1026,10 +1028,7 @@ class InternetCustomerShow extends Component
 
                 if(count($userTechnical) > 0) {
                     $message = "Pembayaran Langganan Internet Untuk Kode ".$internetPurchase->customer->code." Telah di Setujui Oleh Finance Silahkan segera lakukan Pemasangan";
-                    $directUrl = route('internet-customer.show',$internetPurchase->customer->id);
-                    foreach($userTechnical as $tech) {
-                        $this->sentInbox($tech,$message, $directUrl);
-                    }
+                    $this->sentWaToOffice($internetPurchase->customer->company_id, $message);
                     $internetPurchase->customer->update($post);
                 }
             } else {
@@ -1179,7 +1178,7 @@ class InternetCustomerShow extends Component
             $oldPackage = $this->customer->internetPackage;
             $newPackage = InternetPackage::find($this->new_package_id);
             $wasSuspended = $this->customer->status === ParamSchema::SUSPENDED;
-            $satatus = $wasSuspended ? ParamSchema::SUSPENDED : ($this->customer->installation ? ParamSchema::REACTIVATED : ParamSchema::PROCESS_INSTALLATION);
+            $status = $wasSuspended ? ParamSchema::SUSPENDED : ($this->customer->installation ? ParamSchema::REACTIVATED : ParamSchema::PROCESS_INSTALLATION);
             // Update customer package
             $this->customer->update([
                 'status' => $status,
@@ -1383,10 +1382,7 @@ class InternetCustomerShow extends Component
 
                 if (!empty($userTechnical)) {
                     $msg = "Pembayaran pelanggan {$internetCustomer->code} telah dikonfirmasi. Silakan segera lakukan pemasangan.";
-                    $url = route('internet-customer.show', $internetCustomer->id);
-                    foreach ($userTechnical as $tech) {
-                        $this->sentInbox($tech, $msg, $url);
-                    }
+                    $this->sentWaToOffice($internetCustomer->company_id, $msg);
                 }
             } else {
                 $post['status'] = ParamSchema::REACTIVATED;
@@ -1437,11 +1433,39 @@ class InternetCustomerShow extends Component
         }
     }
 
-    private function sentInbox($to,$message,$directUrl)
+    private function sentWaToOffice(int $companyId, string $message): void
     {
-        $inboxHelper = new InboxHelper();
-        $inboxHelper->sent($to, Auth::user()->id, $message, $directUrl);
-        return true;
+        try {
+            $wablasSetting = SettingCompany::byCompany($companyId)
+                ->where('menu', 'wablas')
+                ->get()
+                ->pluck('field_value', 'field_title');
+
+            if (empty($wablasSetting['server_wablas']) || empty($wablasSetting['token_wablas'])) {
+                return;
+            }
+
+            $internetSetting = SettingCompany::byCompany($companyId)
+                ->where('menu', 'internet_customer_setting')
+                ->get()
+                ->pluck('field_value', 'field_title');
+
+            $officePhone = $internetSetting['internet_phone'] ?? null;
+
+            if (!$officePhone) {
+                return;
+            }
+
+            $client = new WablasClient(
+                $wablasSetting['server_wablas'],
+                $wablasSetting['token_wablas'],
+                $wablasSetting['webhook_key_wablas'] ?? null
+            );
+
+            (new WablasMessage($client))->single_text($officePhone, $message);
+        } catch (\Throwable $e) {
+            Log::warning('[sentWaToOffice] Gagal kirim WA ke kantor: ' . $e->getMessage());
+        }
     }
 
     private function createMonth($purchase, $userCustomer, $months)

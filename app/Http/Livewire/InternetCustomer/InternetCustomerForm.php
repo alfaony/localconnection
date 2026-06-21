@@ -15,7 +15,6 @@ use App\Models\Company;
 use App\Models\UserCustomer;
 use App\Models\Role;
 use App\Models\SettingCompany;
-use App\Models\User;
 use App\Models\InternetCustomerPurchase;
 
 use App\Schemas\RoleSchema;
@@ -26,7 +25,8 @@ use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 use App\Jobs\SendNewCustomerRegistrationWaJob;
-// use App\Helpers\InboxHelper;
+use App\Services\Weblas\WablasClient;
+use App\Services\Weblas\Message as WablasMessage;
 use App\Services\XenditService;
 use App\Services\MidtransService;
 use Illuminate\Support\Facades\Log;
@@ -1004,64 +1004,49 @@ class InternetCustomerForm extends Component
 
     protected function notifyFinanceTeam($internetCustomer)
     {
-        $userFinance = User::whereHas('role.permissions', function ($q) {
-            $q->where('method', 'as_finance')
-              ->where('table', 'internet_customers');
-        })
-        ->where(function ($q) use ($internetCustomer) {
-            $q->where('company_id', $internetCustomer->company_id)
-              ->orWhereHas('accessibleCompanies', function ($sub) use ($internetCustomer) {
-                  $sub->where('companies.id', $internetCustomer->company_id);
-              });
-        })->get();
-
-        if($userFinance->isNotEmpty()) {
-            $from = User::where('company_id', $internetCustomer->company_id)
-                ->whereHas('role', function ($q) {
-                    $q->whereIn('name', [RoleSchema::ROOT, RoleSchema::ADMIN]);
-                })
-                ->first();
-            
-            $message = "Pelanggan dengan kode ".$internetCustomer->code." telah berhasil mendaftar untuk {$this->payment_months} bulan ). Silakan periksa detail pendaftaran.";
-            $directUrl = route('internet-customer.show', $internetCustomer->id);
-            
-            foreach($userFinance as $finance) {
-                $this->sentInbox($finance->id, $from->id, $message, $directUrl);
-            }   
-        }
+        $message = "Pelanggan dengan kode {$internetCustomer->code} telah berhasil mendaftar untuk {$this->payment_months} bulan. Silakan periksa detail pendaftaran.";
+        $this->sentWaToOffice($internetCustomer->company_id, $message);
     }
 
     protected function notifyMarketingTeamSuccess($internetCustomer)
     {
-        $userFinance = User::byCompanyPublic($internetCustomer->company_id)->whereHas('role', function ($q) {
-        $q->whereIn('name', [RoleSchema::SYSTEM_ADMIN, RoleSchema::ROOT, RoleSchema::SALES]);
-        })->get();
-
-        if($userFinance->isNotEmpty()) {
-            // dd($userFinance->pluck('id'),$this->freeMonthsDetails);
-            $userFinance = $this->freeMonthsDetails->user_id ? $userFinance->pluck('id')->push($this->freeMonthsDetails->user_id)->unique() : $userFinance->pluck('id')->unique();
-
-            $from = User::where('company_id', $internetCustomer->company_id)
-                ->whereHas('role', function ($q) {
-                    $q->whereIn('name', [RoleSchema::SYSTEM_BOS, RoleSchema::ROOT, RoleSchema::ADMIN]);
-                })
-                ->first();
-            
-            $message = "Pelanggan dengan kode ".$internetCustomer->code." telah berhasil mendaftar, Silahkan ditindaklanjuti.";
-            $directUrl = route('internet-customer.show', $internetCustomer->id);
-            
-            foreach($userFinance as $finance) {
-                $this->sentInbox($finance, $from->id, $message, $directUrl);
-            }   
-        }
+        $message = "Pelanggan dengan kode {$internetCustomer->code} telah berhasil mendaftar, Silahkan ditindaklanjuti.";
+        $this->sentWaToOffice($internetCustomer->company_id, $message);
     }
 
-    private function sentInbox($to,$from, $message,$directUrl)
+    private function sentWaToOffice(int $companyId, string $message): void
     {
-        // $inboxHelper = new InboxHelper();
-        // $inboxHelper->sent($to, $from, $message, $directUrl);
-        
-        return true;
+        try {
+            $wablasSetting = SettingCompany::byCompany($companyId)
+                ->where('menu', 'wablas')
+                ->get()
+                ->pluck('field_value', 'field_title');
+
+            if (empty($wablasSetting['server_wablas']) || empty($wablasSetting['token_wablas'])) {
+                return;
+            }
+
+            $internetSetting = SettingCompany::byCompany($companyId)
+                ->where('menu', 'internet_customer_setting')
+                ->get()
+                ->pluck('field_value', 'field_title');
+
+            $officePhone = $internetSetting['internet_phone'] ?? null;
+
+            if (!$officePhone) {
+                return;
+            }
+
+            $client = new WablasClient(
+                $wablasSetting['server_wablas'],
+                $wablasSetting['token_wablas'],
+                $wablasSetting['webhook_key_wablas'] ?? null
+            );
+
+            (new WablasMessage($client))->single_text($officePhone, $message);
+        } catch (\Throwable $e) {
+            Log::warning('[sentWaToOffice] Gagal kirim WA ke kantor: ' . $e->getMessage());
+        }
     }
 
     private function checkPromo()
@@ -1110,25 +1095,9 @@ class InternetCustomerForm extends Component
             $customer->update([
                 'status' => ParamSchema::PROCESS_INSTALLATION,
             ]);
-            
-            $userTechnical = optional($customer->subdistrict?->coverageService?->coverageServiceOds)
-                ->pluck('ods.user_assign_id')
-                ->unique()
-                ->all();
-            
-            $from = User::where('company_id', $customer->company_id)
-                    ->whereHas('role', function ($q) {
-                        $q->whereIn('name', [RoleSchema::ROOT, RoleSchema::ADMIN]);
-                    })
-                    ->first();
 
-            if(count($userTechnical) > 0) {
-                $message = "Pembayaran Langganan Internet Untuk Kode ".$customer->code." Telah di Setujui. Silahkan segera lakukan Pemasangan";
-                $directUrl = route('internet-customer.show',$customer->id);
-                foreach($userTechnical as $tech) {
-                    $this->sentInbox($tech,$from->id, $message, $directUrl);
-                }
-            }
+            $message = "Pembayaran Langganan Internet Untuk Kode {$customer->code} Telah di Setujui. Silahkan segera lakukan Pemasangan";
+            $this->sentWaToOffice($customer->company_id, $message);
         } catch (\Throwable $th) {
             throw $th;
         }
