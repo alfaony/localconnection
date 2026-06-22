@@ -400,6 +400,7 @@ class RoleController extends Controller
 
             // i
             // 'inboxes', 
+            'internet_reports',
             'internet_customers', 'internet_packages', 
             // 'invoices', 'ip_rights',
             // 'item_purchases', 'item_requests','internet_customer_groups',

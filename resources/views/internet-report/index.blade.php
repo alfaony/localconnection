@@ -259,12 +259,12 @@
     </div>
 </div>
 {{-- ── Section: Grouping ID ── --}}
-<div class="section-head" id="section-grouping-head">Pelanggan per Grouping ID</div>
+<div class="section-head" id="section-grouping-head">Pelanggan per Group</div>
 <div class="row mb-4">
     <div class="col-12">
         <div class="card">
             <div class="card-header d-flex align-items-center justify-content-between">
-                <h5><i class="fas fa-layer-group text-primary"></i> Breakdown per Grouping ID</h5>
+                <h5><i class="fas fa-users-cog text-primary"></i> Breakdown per Group Pelanggan</h5>
                 <small class="text-muted">Total pelanggan & pendapatan dalam periode terpilih</small>
             </div>
             <div id="grouping-table-wrap">
@@ -553,14 +553,14 @@ function renderGroupingTable(rows) {
     const totalRevenue = rows.reduce((s, r) => s + r.revenue, 0);
     let tbody = '';
     rows.forEach((r, i) => {
-        const isNoGroup = !r.grouping_id;
+        const isNoGroup = !r.group_id;
         const pct = totalRevenue > 0 ? Math.round(r.revenue / totalRevenue * 100) : 0;
         tbody += `<tr${isNoGroup ? ' style="opacity:.65"' : ''}>
             <td>
                 ${isNoGroup
-                    ? `<span class="text-muted" style="font-style:italic"><i class="fas fa-minus-circle mr-1" style="color:#94a3b8"></i>Tanpa Grouping</span>`
+                    ? `<span class="text-muted" style="font-style:italic"><i class="fas fa-minus-circle mr-1" style="color:#94a3b8"></i>Tanpa Group</span>`
                     : `<span class="badge" style="background:#eff6ff;color:#1d4ed8;font-size:.78rem;padding:4px 10px;border-radius:20px;font-weight:600">
-                            <i class="fas fa-tag mr-1"></i>${r.label}
+                            <i class="fas fa-users mr-1"></i>${r.label}
                         </span>`
                 }
             </td>
@@ -592,7 +592,7 @@ function renderGroupingTable(rows) {
         <table class="table rpt-table mb-0">
             <thead>
                 <tr>
-                    <th style="width:30%">Grouping ID</th>
+                    <th style="width:30%">Group Pelanggan</th>
                     <th class="text-center">Total Pelanggan</th>
                     <th class="text-center"><i class="fas fa-check-circle text-success mr-1"></i>Aktif</th>
                     <th class="text-center"><i class="fas fa-sync-alt text-primary mr-1"></i>Connecting</th>
@@ -639,8 +639,8 @@ function methodLabel(m) {
 
 function groupBadge(g) {
     return g
-        ? `<span style="background:#eff6ff;color:#1d4ed8;font-size:.68rem;padding:2px 7px;border-radius:20px;font-weight:600">${g}</span>`
-        : `<span style="color:#94a3b8;font-size:.72rem;font-style:italic">–</span>`;
+        ? `<span style="background:#f0fdf4;color:#15803d;font-size:.68rem;padding:2px 7px;border-radius:20px;font-weight:600"><i class="fas fa-users" style="font-size:.6rem;margin-right:3px"></i>${g}</span>`
+        : `<span style="color:#94a3b8;font-size:.72rem;font-style:italic">Tanpa Group</span>`;
 }
 
 function renderPaidTable(rows) {
@@ -654,7 +654,7 @@ function renderPaidTable(rows) {
             <div style="font-size:.7rem;color:#94a3b8">${r.code}</div>
         </td>
         <td style="font-size:.75rem">${r.package}</td>
-        <td>${groupBadge(r.grouping_id)}</td>
+        <td>${groupBadge(r.group_name)}</td>
         <td style="font-size:.8rem;font-weight:700;color:#16a34a">${fmtFull(r.amount)}</td>
         <td style="font-size:.72rem;color:#64748b">${r.paid_at ?? '–'}</td>
     </tr>`).join('');
@@ -680,7 +680,7 @@ function renderUnpaidTable(rows) {
             </td>
             <td style="font-size:.75rem;font-family:monospace;color:#475569">${r.username}</td>
             <td style="font-size:.75rem">${r.package}</td>
-            <td>${groupBadge(r.grouping_id)}</td>
+            <td>${groupBadge(r.group_name)}</td>
             <td>${st}</td>
         </tr>`;
     }).join('');
@@ -698,7 +698,7 @@ function initPaymentSearch() {
             r.name.toLowerCase().includes(q) ||
             r.code.toLowerCase().includes(q) ||
             (r.username||'').toLowerCase().includes(q) ||
-            (r.grouping_id||'').toLowerCase().includes(q)
+            (r.group_name||'').toLowerCase().includes(q)
         ) : paidData;
         renderPaidTable(filtered);
     });
@@ -708,13 +708,13 @@ function initPaymentSearch() {
             r.name.toLowerCase().includes(q) ||
             r.code.toLowerCase().includes(q) ||
             (r.username||'').toLowerCase().includes(q) ||
-            (r.grouping_id||'').toLowerCase().includes(q)
+            (r.group_name||'').toLowerCase().includes(q)
         ) : unpaidData;
         renderUnpaidTable(filtered);
     });
 }
 
-// ── Load grouping options ─────────────────────────────────────────
+// ── Load grouping options (dari master InternetCustomerGroup) ─────
 function loadGroupings() {
     fetch(API_GROUPINGS, { headers: { 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' } })
         .then(r => r.json())
@@ -723,7 +723,8 @@ function loadGroupings() {
             const sel = document.getElementById('rpt-grouping');
             json.groupings.forEach(g => {
                 const opt = document.createElement('option');
-                opt.value = g; opt.textContent = g;
+                opt.value = g.id;           // UUID group_id
+                opt.textContent = g.name;   // nama group
                 sel.appendChild(opt);
             });
         });

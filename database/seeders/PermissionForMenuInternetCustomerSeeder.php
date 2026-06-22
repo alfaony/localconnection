@@ -147,7 +147,7 @@ class PermissionForMenuInternetCustomerSeeder extends Seeder
                 }
 
             // Report
-            $reportInternetCustomer = ['index','data'];
+            $reportInternetCustomer = ['index','data','groupings'];
             foreach ($reportInternetCustomer as $method) 
             {
                 // create permision
