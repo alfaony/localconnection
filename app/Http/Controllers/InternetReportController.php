@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\DataCenter;
 use App\Models\InternetAsset;
 use App\Models\InternetCustomer;
+use App\Models\InternetCustomerGroup;
 use App\Models\InternetCustomerPurchase;
 use App\Models\InternetPackage;
 use App\Models\Pop;
@@ -29,13 +30,9 @@ class InternetReportController extends Controller
     public function groupings()
     {
         $companyId = Auth::user()->company_id;
-        $list = InternetCustomer::byCompany($companyId)
-            ->whereNotNull('grouping_id')
-            ->where('grouping_id', '!=', '')
-            ->orderBy('grouping_id')
-            ->pluck('grouping_id')
-            ->unique()
-            ->values();
+        $list = InternetCustomerGroup::byCompany($companyId)
+            ->orderBy('name')
+            ->get(['id', 'name']);
 
         return response()->json(['success' => true, 'groupings' => $list]);
     }
@@ -49,14 +46,15 @@ class InternetReportController extends Controller
         $companyIds = auth()->user()->accessibleCompanies->pluck('id')->push($companyId)->unique();
 
         // ── Grouping filter ──────────────────────────────────────────
-        $groupingId = $request->input('grouping_id', 'all'); // 'all' | 'none' | 'GRP-001' etc.
+        $groupingId = $request->input('grouping_id', 'all'); // 'all' | 'none' | UUID group_id
 
-        // Applied to InternetCustomer queries directly
+        // Applied to InternetCustomer queries directly (filter by group_id FK)
+        // Use fully-qualified column name to avoid ambiguity when JOINs are present
         $gFilter = function ($q) use ($groupingId) {
             if ($groupingId === 'none') {
-                $q->where(fn($q2) => $q2->whereNull('grouping_id')->orWhere('grouping_id', ''));
+                $q->whereNull('internet_customers.group_id');
             } elseif ($groupingId !== 'all') {
-                $q->where('grouping_id', $groupingId);
+                $q->where('internet_customers.group_id', $groupingId);
             }
         };
 
@@ -201,40 +199,44 @@ class InternetReportController extends Controller
             ")
             ->first();
 
-        // ── Grouping ID breakdown ────────────────────────────────────
-        $byGroupingBase = InternetCustomer::byCompany($companyId)
+        // ── Group breakdown (by group_id FK → InternetCustomerGroup) ─
+        $byGroupingBase = InternetCustomer::query()
+            ->whereNull('internet_customers.deleted_at')
+            ->where('internet_customers.company_id', $companyId)
             ->tap($gFilter)
+            ->leftJoin('internet_customer_groups as icg', 'internet_customers.group_id', '=', 'icg.id')
             ->selectRaw("
-                COALESCE(grouping_id, '') as grouping_key,
+                internet_customers.group_id,
+                MAX(icg.name) as group_name,
                 COUNT(*) as total,
-                SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as active_count,
-                SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as connecting_count
+                SUM(CASE WHEN internet_customers.status = ? THEN 1 ELSE 0 END) as active_count,
+                SUM(CASE WHEN internet_customers.status = ? THEN 1 ELSE 0 END) as connecting_count
             ", [ParamSchema::ACTIVE, ParamSchema::REACTIVATED])
-            ->groupByRaw("COALESCE(grouping_id, '')")
+            ->groupBy('internet_customers.group_id')
             ->get()
-            ->sortBy(fn($r) => [$r->grouping_key === '' ? 1 : 0, -$r->total])
+            ->sortBy(fn($r) => [is_null($r->group_id) ? 1 : 0, -$r->total])
             ->values();
 
         $revenueByGrouping = InternetCustomerPurchase::whereHas('customer', $custFilter)
             ->whereNotNull('confirmation_finance_at')
             ->whereBetween('confirmation_finance_at', [$from, $to])
             ->join('internet_customers as ic', 'internet_customer_purchases.internet_customer_id', '=', 'ic.id')
-            ->selectRaw("COALESCE(ic.grouping_id, '') as grouping_key, SUM(internet_customer_purchases.amount_paid) as revenue, COUNT(*) as tx_count")
-            ->groupByRaw("COALESCE(ic.grouping_id, '')")
+            ->selectRaw("ic.group_id, SUM(internet_customer_purchases.amount_paid) as revenue, COUNT(*) as tx_count")
+            ->groupBy('ic.group_id')
             ->get()
-            ->keyBy('grouping_key');
+            ->keyBy('group_id');
 
         $byGrouping = $byGroupingBase->map(function ($r) use ($revenueByGrouping) {
-            $key = $r->grouping_key;
+            $key = $r->group_id;
             $rev = $revenueByGrouping->get($key);
             return [
-                'grouping_id' => $key ?: null,
-                'label'       => $key ?: 'Tanpa Grouping',
-                'total'       => (int) $r->total,
-                'active'      => (int) $r->active_count,
-                'connecting'  => (int) $r->connecting_count,
-                'revenue'     => (float) ($rev->revenue ?? 0),
-                'tx_count'    => (int) ($rev->tx_count ?? 0),
+                'group_id'   => $key,
+                'label'      => $r->group_name ?? 'Tanpa Group',
+                'total'      => (int) $r->total,
+                'active'     => (int) $r->active_count,
+                'connecting' => (int) $r->connecting_count,
+                'revenue'    => (float) ($rev->revenue ?? 0),
+                'tx_count'   => (int) ($rev->tx_count ?? 0),
             ];
         });
 
@@ -256,7 +258,7 @@ class InternetReportController extends Controller
             'code'           => $p->customer->code ?? '–',
             'username'       => $p->customer->username ?? '–',
             'package'        => $p->customer->internetPackage->name ?? '–',
-            'grouping_id'    => $p->customer->grouping_id,
+            'group_name'     => $p->customer->group->name ?? null,
             'amount'         => (float) $p->amount_paid,
             'payment_method' => $p->payment_method,
             'paid_at'        => optional($p->confirmation_finance_at)->format('d M Y H:i'),
@@ -266,16 +268,16 @@ class InternetReportController extends Controller
             ->tap($gFilter)
             ->whereIn('status', [ParamSchema::ACTIVE, ParamSchema::REACTIVATED])
             ->whereNotIn('id', $paidCustomerIds->toArray())
-            ->with('internetPackage')
+            ->with('internetPackage', 'group')
             ->orderBy('name')
             ->get()
             ->map(fn($c) => [
-                'name'        => $c->name,
-                'code'        => $c->code,
-                'username'    => $c->username,
-                'package'     => $c->internetPackage->name ?? '–',
-                'status'      => $c->status,
-                'grouping_id' => $c->grouping_id,
+                'name'       => $c->name,
+                'code'       => $c->code,
+                'username'   => $c->username,
+                'package'    => $c->internetPackage->name ?? '–',
+                'status'     => $c->status,
+                'group_name' => $c->group->name ?? null,
             ]);
 
         // ── Expenses ─────────────────────────────────────────────────
