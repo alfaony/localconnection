@@ -41,7 +41,9 @@ class SentMessageToCustomer implements ShouldQueue
     public function handle()
     {
         try {
-            $settingCompany = SettingCompany::byCompany($this->itemRequest->company_id)->where('menu','wablas')->get()->pluck('field_value','field_title');
+            $settingCompany = SettingCompany::byCompany($this->itemRequest->company_id)
+            // ->where('menu','wablas')
+            ->get()->pluck('field_value','field_title');
             $client = new WablasClient($settingCompany['server_wablas'], $settingCompany['token_wablas'], $settingCompany['webhook_key_wablas']);
             if($client->status())
             {

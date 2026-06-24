@@ -175,41 +175,83 @@
                     </div>
                 </div>
 
-                @if($customer->installation)
+                {{-- ===== INSTALASI SECTION ===== --}}
+                @php
+                    $isProcessInstallation = $customer->status === \App\Schemas\ParamSchema::PROCESS_INSTALLATION;
+                    $hasInstallation       = (bool) $customer->installation;
+                @endphp
+
+                @if($hasInstallation)
+                {{-- Sudah terinstal: tampilkan data --}}
                 <div class="row mt-4">
                     <div class="col-md-12">
-                        <h4 class="text-primary mb-3">
-                            <i class="fas fa-cogs mr-2"></i>Data Instalasi
-                        </h4>
-                        <div class="table-responsive">
-                            <table class="table table-bordered table-striped">
-                                <tbody>
-                                    <tr>
-                                        <th width="25%">Tanggal Instalasi</th>
-                                        <td>{{ \Carbon\Carbon::parse($customer->installation->installed_at)->format('d F Y H:i') }}</td>
-                                    </tr>
-                                    <tr>
-                                        <th>Serial Number Perangkat</th>
-                                        <td>{{ $customer->installation->device_serial_number }}</td>
-                                    </tr>
-                                    <tr>
-                                        <th>Catatan Instalasi</th>
-                                        <td>{{ $customer->installation->notes ?? '-' }}</td>
-                                    </tr>
-                                    <tr>
-                                        <th>Foto Instalasi</th>
-                                        <td>
-                                            @if(!empty($installationPhotos))
-                                                <button wire:click="viewInstallationPhotos" class="btn btn-sm btn-info">
-                                                    <i class="fas fa-images mr-1"></i>Lihat Foto Instalasi
-                                                </button>
-                                            @else
-                                                -
-                                            @endif
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
+                        <div class="card shadow-sm border-0">
+                            <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-check-circle mr-2"></i>Data Instalasi
+                                </h5>
+                                <button wire:click="toggleInstallationForm"
+                                        class="btn btn-sm btn-outline-light">
+                                    <i class="fas fa-{{ $showInstallationForm ? 'times' : 'edit' }} mr-1"></i>
+                                    {{ $showInstallationForm ? 'Tutup Form' : 'Perbarui Data' }}
+                                </button>
+                            </div>
+                            <div class="card-body p-0">
+                                <div class="table-responsive">
+                                    <table class="table table-bordered table-striped mb-0">
+                                        <tbody>
+                                            <tr>
+                                                <th width="30%">Tanggal Instalasi</th>
+                                                <td>{{ \Carbon\Carbon::parse($customer->installation->installed_at)->format('d F Y H:i') }}</td>
+                                            </tr>
+                                            <tr>
+                                                <th>Serial Number Perangkat</th>
+                                                <td>{{ $customer->installation->device_serial_number ?: '-' }}</td>
+                                            </tr>
+                                            <tr>
+                                                <th>Username</th>
+                                                <td>{{ $customer->username ?: '-' }}</td>
+                                            </tr>
+                                            <tr>
+                                                <th>Catatan</th>
+                                                <td>{{ $customer->installation->notes ?? '-' }}</td>
+                                            </tr>
+                                            {{-- Foto instalasi dinonaktifkan sementara (soon: tersedia untuk paket premium) --}}
+                                            {{-- <tr>
+                                                <th>Foto Instalasi</th>
+                                                <td>-</td>
+                                            </tr> --}}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                            @if($showInstallationForm)
+                            <div class="card-footer bg-light border-top">
+                                @include('livewire.internet-customer._installation-form')
+                            </div>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+
+                @elseif($isProcessInstallation)
+                {{-- Belum terinstal & status process_installation: tampilkan form --}}
+                <div class="row mt-4">
+                    <div class="col-md-12">
+                        <div class="card shadow border-0" style="border-left: 4px solid #007bff !important;">
+                            <div class="card-header bg-primary text-white">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-tools mr-2"></i>Lengkapi Data Instalasi
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="alert alert-info mb-4">
+                                    <i class="fas fa-info-circle mr-2"></i>
+                                    Pembayaran Anda telah dikonfirmasi. Silakan lengkapi data di bawah ini untuk mempercepat proses instalasi.
+                                </div>
+                                @include('livewire.internet-customer._installation-form')
+                            </div>
                         </div>
                     </div>
                 </div>

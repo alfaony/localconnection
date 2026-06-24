@@ -62,7 +62,7 @@ class InternetCustomerIndex extends Component
     public $sortDirection = 'desc';
     public $selectedCompany = '';
     public $selectedPackage = '';
-    public $statusFilter = ParamSchema::PENDING;
+    public $statusFilter = '';
     public $customerTypeFilter = '';
     public $dateFrom = '';
     public $dateTo = '';

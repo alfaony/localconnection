@@ -18,6 +18,9 @@ use App\Schemas\ParamSchema;
 use App\Jobs\ProvisionCustomerJob;
 use App\Services\XenditService;
 use App\Services\MidtransService;
+use App\Services\Weblas\WablasClient;
+use App\Services\Weblas\Message as WablasMessage;
+use App\Models\InternetCustomerInstallation;
 
 class InternetCustomerShow extends Component
 {
@@ -29,6 +32,13 @@ class InternetCustomerShow extends Component
     public $installationPhotos = [];
     public $code;
     public $statusMessage;
+
+    // Installation form (customer self-submit)
+    public $cust_device_serial_number;
+    public $cust_username;
+    public $cust_pass_hash;
+    public $cust_local_address;
+    public $showInstallationForm = false;
 
     public $payment_proof;
     public $purchase_id;
@@ -701,31 +711,11 @@ class InternetCustomerShow extends Component
 
     protected function notifyFinanceTeam($internetCustomer)
     {
-        $userFinance = User::whereHas('role.permissions', function ($q) {
-            $q->where('method', 'as_finance')
-              ->where('table', 'internet_customers');
-        })
-        ->where(function ($q) use ($internetCustomer) {
-            $q->where('company_id', $internetCustomer->company_id)
-              ->orWhereHas('accessibleCompanies', function ($sub) use ($internetCustomer) {
-                  $sub->where('companies.id', $internetCustomer->company_id);
-              });
-        })->get();
+        $message = "💳 *Verifikasi Pembayaran*\n\n"
+            . "Pelanggan dengan kode *{$internetCustomer->code}* telah mengirimkan bukti pembayaran untuk *{$this->payment_months} bulan*.\n\n"
+            . "Mohon segera lakukan verifikasi pembayaran tersebut. Terima kasih. 🙏";
 
-        if($userFinance->isNotEmpty()) {
-            $from = User::where('company_id', $internetCustomer->company_id)
-                ->whereHas('role', function ($q) {
-                    $q->whereIn('name', [RoleSchema::ROOT, RoleSchema::ADMIN]);
-                })
-                ->first();
-            
-            $message = "Pelanggan dengan kode ".$internetCustomer->code." telah mengirim bukti pembayaran untuk {$this->payment_months} bulan. Silakan verifikasi.";
-            $directUrl = route('internet-customer.show', $internetCustomer->id);
-            
-            foreach($userFinance as $finance) {
-                $this->sentInbox($finance->id, $from->id, $message, $directUrl);
-            }   
-        }
+        $this->sentWaToOffice($internetCustomer->company_id, $message);
     }
 
     public function viewPaymentProof($purchaseId)
@@ -767,12 +757,80 @@ class InternetCustomerShow extends Component
         ]);
     }
 
+    public function toggleInstallationForm()
+    {
+        $this->showInstallationForm = !$this->showInstallationForm;
+
+        if ($this->showInstallationForm && $this->customer->installation) {
+            $this->cust_device_serial_number = $this->customer->installation->device_serial_number;
+            $this->cust_username             = $this->customer->username;
+            $this->cust_pass_hash            = $this->customer->pass_hash;
+            $this->cust_local_address        = $this->customer->local_address;
+        }
+    }
+
+    public function submitInstallationData()
+    {
+        $this->validate([
+            'cust_username'             => 'required|string|max:255',
+            'cust_pass_hash'            => 'required|string|max:255',
+            'cust_local_address'        => 'nullable|ip',
+            'cust_device_serial_number' => 'nullable|string|max:255',
+        ], [
+            'cust_username.required'  => 'Username wajib diisi.',
+            'cust_pass_hash.required' => 'Password wajib diisi.',
+            'cust_local_address.ip'   => 'Format IP address tidak valid.',
+        ]);
+
+        try {
+            $this->customer->update([
+                'username'      => $this->cust_username,
+                'pass_hash'     => $this->cust_pass_hash,
+                'local_address' => $this->cust_local_address ?: null,
+            ]);
+
+            if ($this->customer->installation) {
+                $this->customer->installation->update([
+                    'device_serial_number' => $this->cust_device_serial_number,
+                ]);
+            } else {
+                InternetCustomerInstallation::create([
+                    'internet_customer_id' => $this->customer->id,
+                    'device_serial_number' => $this->cust_device_serial_number,
+                    'installed_at'         => now(),
+                ]);
+            }
+
+            $this->notifyInstallationSubmit();
+
+            $this->showInstallationForm = false;
+            $this->reset(['cust_device_serial_number', 'cust_username', 'cust_pass_hash', 'cust_local_address']);
+
+            return redirect()->back()->with('success', 'Data instalasi berhasil dikirim. Tim kami akan segera menghubungi Anda.');
+        } catch (\Exception $e) {
+            Log::error('Error submitting installation data', [
+                'customer_id' => $this->customer->id,
+                'error'       => $e->getMessage(),
+            ]);
+            session()->flash('error', 'Terjadi kesalahan: ' . $e->getMessage());
+        }
+    }
+
+    protected function notifyInstallationSubmit()
+    {
+        $message = "🔧 *Data Instalasi Baru*\n\n"
+            . "Pelanggan dengan kode *{$this->customer->code}* (*{$this->customer->name}*) telah mengisi data instalasi.\n\n"
+            . "Silakan periksa dan lakukan verifikasi. Terima kasih. 🙏";
+
+        $this->sentWaToOffice($this->customer->company_id, $message);
+    }
+
     public function render()
     {
         $purchases = $this->customer->purchases()
             ->orderBy('created_at', 'desc')
             ->paginate(5);
-            
+
         return view('livewire.internet-customer.internet-customer-show', compact('purchases'))
             ->extends('layouts.app_customer');
     }
@@ -786,36 +844,38 @@ class InternetCustomerShow extends Component
 
     protected function afterPayment($internetPurchase)
     {
-        if(!$internetPurchase->customer->installation)
-        {
-            $post['status'] = ParamSchema::PROCESS_INSTALLATION;
-            
-            $userTechnical = optional($internetPurchase->customer->subdistrict?->coverageService?->coverageServiceOds)
-            ->pluck('ods.user_assign_id')
-            ->unique()
-            ->all();
-    
-            if(count($userTechnical) > 0)
-            {
-                $message = "Pembayaran Langganan Internet Untuk Kode ".$internetPurchase->customer->code." Telah di Setujui Oleh Finance Silahkan segera lakukan Pemasangan";
-                $directUrl = route('internet-customer.show',$internetPurchase->customer->id);
-                $from = User::whereHas('role', function ($query) {
-                    $query->whereIn('name', [RoleSchema::SYSTEM_BOS,RoleSchema::ROOT,RoleSchema::FINANCE]);
-                })->first();
+        if (!$internetPurchase->customer->installation) {
+            $internetPurchase->customer->update(['status' => ParamSchema::PROCESS_INSTALLATION]);
 
-                foreach($userTechnical as $tech)
-                {
-                    $this->sentInbox($tech,$from->id,$message, $directUrl);
-                }
-            }
-        }else
-        {
-            $post['status'] = ParamSchema::REACTIVATED;
-            $internetPurchase->customer->update($post);
-            
+            $message = "🔧 *Notifikasi Pemasangan*\n\n"
+                . "Pelanggan dengan kode *{$internetPurchase->customer->code}* telah berhasil melakukan pembayaran dan siap untuk proses pemasangan.\n\n"
+                . "Mohon segera dijadwalkan untuk instalasi. Terima kasih. 🙏";
+
+            $this->sentWaToOffice($internetPurchase->customer->company_id, $message);
+        } else {
+            $internetPurchase->customer->update(['status' => ParamSchema::REACTIVATED]);
+
             dispatch(new ProvisionCustomerJob($internetPurchase->customer->id));
             \App\Jobs\SyncInstalledCustomersJob::dispatch([$internetPurchase->customer->id]);
         }
+    }
 
+    private function sentWaToOffice(int $companyId, string $message): void
+    {
+        try {
+            $settings = SettingCompany::byCompany($companyId)->get()->pluck('field_value', 'field_title');
+
+            $officePhone = $settings['internet_phone'] ?? null;
+            if (!$officePhone) return;
+
+            $serverWablas = $settings['server_wablas'] ?? null;
+            $tokenWablas  = $settings['token_wablas'] ?? null;
+            if (!$serverWablas || !$tokenWablas) return;
+
+            $client = new WablasClient($serverWablas, $tokenWablas, $settings['webhook_key_wablas'] ?? null);
+            (new WablasMessage($client))->single_text($officePhone, $message);
+        } catch (\Throwable $e) {
+            Log::warning('[InternetCustomerShow::sentWaToOffice] Gagal kirim WA ke kantor: ' . $e->getMessage());
+        }
     }
 }

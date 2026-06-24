@@ -47,6 +47,74 @@
                     
                     <div class="row mt-4">
                         <div class="col-md-12">
+                            @if($customer->status === 'pending')
+                            {{-- ===== APPROVAL OVERLAY CARD ===== --}}
+                            <div class="card shadow border-0" style="border-left: 4px solid #ffc107 !important;">
+                                <div class="card-header bg-warning text-dark d-flex justify-content-between align-items-center">
+                                    <h5 class="mb-0">
+                                        <i class="fas fa-user-circle mr-2"></i>Data Pribadi
+                                        <span class="badge badge-dark ml-2" style="font-size:0.75rem;">Menunggu Persetujuan</span>
+                                    </h5>
+                                </div>
+                                <div class="card-body" style="min-height: 220px; position: relative;">
+                                    {{-- Data di-blur sebagai preview --}}
+                                    <div style="filter: blur(5px); pointer-events: none; opacity: 0.35; user-select:none;">
+                                        <table class="table table-sm table-bordered mb-0">
+                                            <tbody>
+                                                <tr><th width="30%">Nama Lengkap</th><td>{{ $customer->name }}</td></tr>
+                                                <tr><th>Email</th><td>{{ $customer->userCustomer->email ?? '-' }}</td></tr>
+                                                <tr><th>Nomor Telepon</th><td>{{ $customer->userCustomer->phone_number ?? '-' }}</td></tr>
+                                                <tr><th>Alamat</th><td>{{ $customer->address }}</td></tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    {{-- Tombol Approve / Tolak di tengah --}}
+                                    <div class="d-flex flex-column align-items-center justify-content-center"
+                                         style="position:absolute; inset:0; z-index:10;">
+                                        <div class="text-center bg-white rounded shadow p-4" style="max-width:380px;">
+                                            <i class="fas fa-user-check fa-3x text-warning mb-3"></i>
+                                            <h5 class="font-weight-bold mb-1">Pelanggan Baru</h5>
+                                            <p class="text-muted small mb-3">
+                                                Tinjau data pelanggan lalu pilih aksi persetujuan.
+                                            </p>
+                                            @canAccess('edit', 'internet_customers')
+                                            <div class="d-flex justify-content-center" style="gap:.75rem;">
+                                                {{-- Setujui --}}
+                                                <button type="button"
+                                                        wire:loading.attr="disabled"
+                                                        wire:target="approveCustomer,rejectCustomer"
+                                                        onclick="confirmApproveCustomer()"
+                                                        class="btn btn-success px-4 shadow-sm">
+                                                    <span wire:loading.remove wire:target="approveCustomer">
+                                                        <i class="fas fa-check-circle mr-1"></i>Setujui
+                                                    </span>
+                                                    <span wire:loading wire:target="approveCustomer">
+                                                        <i class="fas fa-spinner fa-spin mr-1"></i>Memproses...
+                                                    </span>
+                                                </button>
+                                                {{-- Tolak --}}
+                                                <button type="button"
+                                                        wire:loading.attr="disabled"
+                                                        wire:target="approveCustomer,rejectCustomer"
+                                                        onclick="confirmRejectCustomer()"
+                                                        class="btn btn-danger px-4 shadow-sm">
+                                                    <span wire:loading.remove wire:target="rejectCustomer">
+                                                        <i class="fas fa-times-circle mr-1"></i>Tolak
+                                                    </span>
+                                                    <span wire:loading wire:target="rejectCustomer">
+                                                        <i class="fas fa-spinner fa-spin mr-1"></i>Memproses...
+                                                    </span>
+                                                </button>
+                                            </div>
+                                            @endcanAccess
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>{{-- /card --}}
+                        </div>{{-- /col-md-12 --}}
+                    </div>{{-- /row --}}
+                            @else
+                            {{-- ===== NORMAL DATA PRIBADI ===== --}}
                             <h4 class="text-primary mb-3">
                                 <i class="fas fa-user-circle mr-2"></i>Data Pribadi
                             </h4>
@@ -200,6 +268,8 @@
                             </div>
                         </div>
                     </div>
+                            @endif
+                            {{-- end pending/approve check --}}
 
                     <div class="row mt-4">
                         <div class="col-md-12">
@@ -259,28 +329,31 @@
                         </div>
                     </div>
 
-                    @if($customer->installation)
+                    {{-- ===== DATA INSTALASI ===== --}}
+                    @php
+                        $adminHasInstallation   = (bool) $customer->installation;
+                        $adminIsProcessInstall  = $customer->status === \App\Schemas\ParamSchema::PROCESS_INSTALLATION;
+                    @endphp
                     <div class="row mt-4">
                         <div class="col-md-12">
+
+                            @if($adminHasInstallation)
+                            {{-- ===== NORMAL INSTALASI DATA ===== --}}
                             <h4 class="text-primary mb-3">
                                 <i class="fas fa-cogs mr-2"></i>Data Instalasi
                             </h4>
-                            
-                            {{-- ✅ Action Buttons --}}
                             <div class="btn-group mb-2" role="group">
                                 @canAccess('editInstalasi','internet_customers')
                                 <button onclick="openEditInstalasiModal()" class="btn btn-sm btn-warning mr-2 mb-2">
                                     <i class="fas fa-edit mr-1"></i>Edit Data Instalasi
                                 </button>
                                 @endcanAccess
-                                
                                 @canAccess('moveRouter','internet_customers')
                                 <button wire:click="openMoveRouterModal" class="btn btn-sm btn-info mb-2">
                                     <i class="fas fa-exchange-alt mr-1"></i>Pindah Router
                                 </button>
                                 @endcanAccess
                             </div>
-                            
                             <div class="table-responsive">
                                 <table class="table table-bordered table-striped">
                                     <tbody>
@@ -288,56 +361,49 @@
                                             <th width="25%">Tanggal Instalasi</th>
                                             <td>{{ \Carbon\Carbon::parse($customer->installation->installed_at)->format('d F Y H:i') }}</td>
                                         </tr>
-                                        {{-- ✅ NEW: Show current router --}}
                                         <tr>
                                             <th>Router Saat Ini</th>
                                             <td>
-                                            <div class="d-flex flex-column">
-                                                <span class="badge bg-primary mb-1">
-                                                    <i class="fas fa-server me-1"></i>
-                                                    {{ $customer->router->name ?? '-' }}
-                                                </span>
-
-                                                @if($customer->last_updated_router)
-                                                <small class="text-muted">
-                                                    <i class="fas fa-clock me-1"></i>
-                                                    Terakhir connect:
-                                                    {{ $customer->last_updated_router ? \Carbon\Carbon::parse($customer->last_updated_router)->locale('id')->translatedFormat('d F Y H:i') : '-' }}
-                                                </small>
-                                                @endif
-                                            </div>
+                                                <div class="d-flex flex-column">
+                                                    <span class="badge bg-primary mb-1">
+                                                        <i class="fas fa-server me-1"></i>{{ $customer->router->name ?? '-' }}
+                                                    </span>
+                                                    @if($customer->last_updated_router)
+                                                    <small class="text-muted">
+                                                        <i class="fas fa-clock me-1"></i>
+                                                        Terakhir connect: {{ \Carbon\Carbon::parse($customer->last_updated_router)->locale('id')->translatedFormat('d F Y H:i') }}
+                                                    </small>
+                                                    @endif
+                                                </div>
                                             </td>
                                         </tr>
                                         <tr>
-                                            <th>ODP (Optical Distribution Point)</th>
+                                            <th>ODP</th>
                                             <td>
-                                            <div class="d-flex flex-column">
-                                                <span class="badge bg-secondary mb-1">
-                                                    <i class="fas fa-server me-1"></i>
-                                                    {{ $customer->odp ? $customer->odp->name : '-' }}
+                                                <span class="badge bg-secondary">
+                                                    <i class="fas fa-server me-1"></i>{{ $customer->odp ? $customer->odp->name : '-' }}
                                                 </span>
-                                            </div>
                                             </td>
                                         </tr>
                                         <tr>
                                             <th>Serial Number Perangkat</th>
-                                            <td>{{ $customer->installation->device_serial_number }}</td>
+                                            <td>{{ $customer->installation->device_serial_number ?: '-' }}</td>
                                         </tr>
                                         <tr>
                                             <th>IP Address</th>
-                                            <td>{{ $customer->ip_address }}</td>
+                                            <td>{{ $customer->ip_address ?: '-' }}</td>
                                         </tr>
                                         <tr>
                                             <th>MAC Address</th>
-                                            <td>{{ $customer->mac_address }}</td>
+                                            <td>{{ $customer->mac_address ?: '-' }}</td>
                                         </tr>
                                         <tr>
                                             <th>Local Address</th>
-                                            <td>{{ $customer->local_address }}</td>
+                                            <td>{{ $customer->local_address ?: '-' }}</td>
                                         </tr>
                                         <tr>
                                             <th>Username</th>
-                                            <td>{{ $customer->username }}</td>
+                                            <td>{{ $customer->username ?: '-' }}</td>
                                         </tr>
                                         <tr>
                                             <th>Catatan Instalasi</th>
@@ -348,19 +414,78 @@
                                             <td>
                                                 @if(!empty($installationPhotos))
                                                     <button wire:click="viewInstallationPhotos" class="btn btn-sm btn-info">
-                                                        <i class="fas fa-images mr-1"></i>Lihat Foto Instalasi
+                                                        <i class="fas fa-images mr-1"></i>Lihat Foto
                                                     </button>
                                                 @else
-                                                    -
+                                                    <span class="text-muted">-</span>
                                                 @endif
                                             </td>
                                         </tr>
                                     </tbody>
                                 </table>
                             </div>
+
+                            @else
+                            {{-- ===== INSTALL BUTTON OVERLAY ===== --}}
+                            <div class="card shadow border-0" style="border-left: 4px solid #17a2b8 !important;">
+                                <div class="card-header bg-info text-white d-flex justify-content-between align-items-center">
+                                    <h5 class="mb-0">
+                                        <i class="fas fa-tools mr-2"></i>Data Instalasi
+                                        @if($adminIsProcessInstall)
+                                            <span class="badge badge-warning ml-2" style="font-size:0.75rem;">Menunggu Instalasi</span>
+                                        @else
+                                            <span class="badge badge-secondary ml-2" style="font-size:0.75rem;">Belum Terinstal</span>
+                                        @endif
+                                    </h5>
+                                </div>
+                                <div class="card-body" style="min-height: 200px; position: relative;">
+                                    {{-- Preview blur fields --}}
+                                    <div style="filter: blur(5px); pointer-events: none; opacity: 0.3; user-select:none;">
+                                        <table class="table table-sm table-bordered mb-0">
+                                            <tbody>
+                                                <tr><th width="30%">Username</th><td>—</td></tr>
+                                                <tr><th>Password</th><td>—</td></tr>
+                                                <tr><th>Local Address</th><td>—</td></tr>
+                                                <tr><th>Serial Number</th><td>—</td></tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    {{-- Install button centered --}}
+                                    @if(!$customer->installation()->exists() && $customer->status == \App\Schemas\ParamSchema::PROCESS_INSTALLATION)
+                                    <div class="d-flex flex-column align-items-center justify-content-center"
+                                         style="position:absolute; inset:0; z-index:10;">
+                                        <div class="text-center bg-white rounded shadow p-4" style="max-width:340px;">
+                                            <i class="fas fa-tools fa-3x text-info mb-3"></i>
+                                            <h5 class="font-weight-bold mb-1">
+                                                @if($adminIsProcessInstall)
+                                                    Siap Instalasi
+                                                @else
+                                                    Belum Ada Data Instalasi
+                                                @endif
+                                            </h5>
+                                            <p class="text-muted small mb-3">
+                                                @if($adminIsProcessInstall)
+                                                    Pembayaran telah dikonfirmasi. Klik tombol di bawah untuk mengisi data instalasi pelanggan.
+                                                @else
+                                                    Isi data instalasi untuk mengaktifkan koneksi pelanggan ini.
+                                                @endif
+                                            </p>
+                                            @canAccess('editInstalasi','internet_customers')
+                                            <button onclick="openEditInstalasiModal()"
+                                                    class="btn btn-info btn-lg px-4 shadow-sm">
+                                                <i class="fas fa-network-wired mr-2"></i>Input Data Instalasi
+                                            </button>
+                                            @endcanAccess
+                                        </div>
+                                    </div>
+                                    @endif
+                                </div>
+                            </div>
+                            @endif
+
                         </div>
                     </div>
-                    @endif
+                    {{-- end instalasi section --}}
 
                     {{-- ✅ NEW: Modal Move Router - ADD THIS BEFORE @push('js') --}}
                     <div class="modal fade" id="moveRouterModal" tabindex="-1" wire:ignore.self>
@@ -989,7 +1114,7 @@
             <div class="modal-content">
                 <div class="modal-header bg-primary text-white">
                     <h5 class="modal-title">
-                        <i class="fas fa-network-wired mr-2"></i>Edit Data Instalasi
+                        <i class="fas fa-tools mr-2"></i>Edit Data Instalasi
                     </h5>
                     <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true">&times;</span>
@@ -997,63 +1122,156 @@
                 </div>
                 <div class="modal-body">
                     <form id="formEditInstalasi">
+                        @include('components.alert')
+
+                        {{-- Serial Number --}}
+                        <div class="form-group">
+                            <label class="font-weight-bold">Serial Number Perangkat</label>
+                            <input type="text" class="form-control @error('device_serial_number') is-invalid @enderror"
+                                   id="instal_serial_number_input"
+                                   value="{{ $device_serial_number }}"
+                                   oninput="@this.set('device_serial_number', this.value)"
+                                   placeholder="Contoh: SN-123456">
+                            @error('device_serial_number') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                        </div>
+
+                        {{-- ODP --}}
+                        <div class="form-group">
+                            <label class="font-weight-bold">ODP (Optical Distribution Point) <span class="text-danger">*</span></label>
+                            <select class="form-control @error('instal_odp_id') is-invalid @enderror"
+                                    id="instal_odp_select"
+                                    onchange="@this.set('instal_odp_id', this.value); onInstalasiOdpChange(this.value)">
+                                <option value="">— Pilih ODP —</option>
+                            </select>
+                            @error('instal_odp_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                            <small class="text-muted">Pilih ODP sesuai lokasi pemasangan pelanggan.</small>
+                        </div>
+
+                        {{-- Group (cascade dari ODP, hanya tampil jika belum punya group) --}}
+                        @if(!$customer->group_id)
+                        <div class="form-group">
+                            <label class="font-weight-bold">Group</label>
+                            <select class="form-control" id="instal_group_select"
+                                    onchange="@this.set('instal_group_id', this.value); onInstalasiGroupChange(this.value)"
+                                    disabled>
+                                <option value="">— Pilih ODP dulu —</option>
+                            </select>
+                            <small class="text-muted">Group difilter otomatis dari ODP yang dipilih.</small>
+                        </div>
+                        @endif
+
+                        {{-- Grouping ID --}}
+                        <div class="form-group">
+                            <label class="font-weight-bold">
+                                Grouping ID
+                                <small class="text-muted font-weight-normal">(bisa diubah jika perlu)</small>
+                            </label>
+                            <div class="input-group">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text"><i class="fas fa-tag"></i></span>
+                                </div>
+                                <input type="text" class="form-control font-weight-bold @error('instal_grouping_id') is-invalid @enderror"
+                                       id="instal_grouping_id_input"
+                                       value="{{ $instal_grouping_id }}"
+                                       oninput="@this.set('instal_grouping_id', this.value)"
+                                       placeholder="{{ ($customer->group->grouping_prefix ?? '') . 'XXXX' }}">
+                                <div class="input-group-append">
+                                    <button type="button" class="btn btn-outline-primary btn-sm"
+                                            id="instal_pakai_btn"
+                                            title="Gunakan Grouping ID sebagai Username dan Password">
+                                        <i class="fas fa-arrow-right mr-1"></i>Pakai sbg User &amp; Pass
+                                    </button>
+                                </div>
+                                @error('instal_grouping_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                            </div>
+                            <div id="instal_grouping_id_feedback" class="mt-1" style="display:none;font-size:.82em;"></div>
+                            <small class="text-muted">Saran otomatis saat group dipilih — klik <strong>Pakai sbg User &amp; Pass</strong> untuk mengisi username &amp; password sekaligus.</small>
+                        </div>
+
+                        <hr>
+
+                        {{-- Router --}}
+                        <div class="form-group">
+                            <label class="font-weight-bold">Router</label>
+                            <select class="form-control @error('instal_router_id') is-invalid @enderror"
+                                    id="instal_router_select"
+                                    onchange="@this.set('instal_router_id', this.value)">
+                                <option value="">— Pilih Router —</option>
+                            </select>
+                            @error('instal_router_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                            <small class="text-muted">Untuk pindah router ke yang berbeda, gunakan tombol <strong>Pindah Router</strong> setelah simpan.</small>
+                        </div>
+
                         <div class="row">
-                            @include('components.alert')
                             <div class="col-md-6">
                                 <div class="form-group">
-                                    <label for="local_address">Local Address</label>
-                                    <input type="text" class="form-control" id="local_address" wire:model="local_address">
-                                    @error('local_address') <span class="text-danger">{{ $message }}</span> @enderror
+                                    <label class="font-weight-bold">Local Address</label>
+                                    <input type="text" class="form-control @error('local_address') is-invalid @enderror"
+                                           id="instal_local_address_input"
+                                           value="{{ $local_address }}"
+                                           oninput="@this.set('local_address', this.value)"
+                                           placeholder="192.168.1.1">
+                                    @error('local_address') <div class="invalid-feedback">{{ $message }}</div> @enderror
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="form-group">
-                                    <label for="username">Username</label>
-                                    <input type="text" class="form-control" id="username" wire:model="username" required>
-                                    @error('username') <span class="text-danger">{{ $message }}</span> @enderror
+                                    <label class="font-weight-bold">Username <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control @error('username') is-invalid @enderror"
+                                           id="instal_username_input"
+                                           value="{{ $username }}"
+                                           oninput="@this.set('username', this.value)"
+                                           placeholder="username_pppoe">
+                                    @error('username') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                                    <div id="instal_username_feedback" class="mt-1" style="display:none;font-size:.82em;"></div>
                                 </div>
                             </div>
                         </div>
-                        
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label for="pass_hash">Password</label>
-                                    <div class="input-group">
-                                        <input type="password" class="form-control" id="pass_hash" wire:model="pass_hash" required>
-                                        <div class="input-group-append">
-                                            <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('pass_hash')">
-                                                <i class="fas fa-eye"></i>
-                                            </button>
-                                        </div>
-                                    </div>
-                                    @error('pass_hash') <span class="text-danger">{{ $message }}</span> @enderror
+
+                        <div class="form-group">
+                            <label class="font-weight-bold">Password <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <input type="password" class="form-control @error('pass_hash') is-invalid @enderror"
+                                       id="instal_pass_hash"
+                                       value="{{ $pass_hash }}"
+                                       oninput="@this.set('pass_hash', this.value)">
+                                <div class="input-group-append">
+                                    <button class="btn btn-outline-secondary" type="button"
+                                            onclick="toggleInstalPassword()">
+                                        <i class="fas fa-eye" id="instal-pass-eye"></i>
+                                    </button>
                                 </div>
                             </div>
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label for="device_serial_number">Serial Number Perangkat</label>
-                                    <input type="text" class="form-control" id="device_serial_number" wire:model="device_serial_number">
-                                    @error('device_serial_number') <span class="text-danger">{{ $message }}</span> @enderror
-                                </div>
-                            </div>
+                            @error('pass_hash') <span class="text-danger small">{{ $message }}</span> @enderror
+                        </div>
+
+                        {{-- Foto Instalasi — disembunyikan sementara --}}
+                        {{-- <div class="form-group">...</div> --}}
+
+                        {{-- Catatan Instalasi --}}
+                        <div class="form-group">
+                            <label class="font-weight-bold">Catatan Instalasi</label>
+                            <textarea class="form-control" id="instal_notes_input" rows="3"
+                                      oninput="@this.set('instal_notes', this.value)"
+                                      placeholder="Catatan tambahan mengenai proses instalasi...">{{ $instal_notes }}</textarea>
+                            @error('instal_notes') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
                         </div>
 
                         {{-- Hotspot Fields (hanya tampil jika access_type = hotspot) --}}
                         @if($customer->access_type === 'hotspot')
                         <hr>
-                        <h6 class="text-primary"><i class="fas fa-wifi"></i> Konfigurasi Hotspot</h6>
+                        <h6 class="text-primary"><i class="fas fa-wifi mr-1"></i>Konfigurasi Hotspot</h6>
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="form-group">
                                     <label>Hotspot Server</label>
-                                    <select wire:model="hotspot_server_id" class="form-control" id="hotspot_server_id_select">
+                                    <select wire:model="hotspot_server_id" class="form-control">
                                         <option value="">-- Tidak ada --</option>
                                         @foreach ($availableHotspotServers as $hs)
                                             <option value="{{ $hs['id'] }}" @selected($hotspot_server_id == $hs['id'])>{{ $hs['name'] }}</option>
                                         @endforeach
                                     </select>
-                                    @error('hotspot_server_id') <span class="text-danger">{{ $message }}</span> @enderror
+                                    @error('hotspot_server_id') <span class="text-danger small">{{ $message }}</span> @enderror
                                 </div>
                             </div>
                             <div class="col-md-3">
@@ -1069,7 +1287,8 @@
                             <div class="col-md-3">
                                 <div class="form-group">
                                     <label>Binding Mode</label>
-                                    <select wire:model="ip_binding_mode" class="form-control" @if($ip_binding_type !== 'direct') disabled @endif>
+                                    <select wire:model="ip_binding_mode" class="form-control"
+                                            @if($ip_binding_type !== 'direct') disabled @endif>
                                         <option value="">-- Tidak ada --</option>
                                         <option value="regular">Regular (login, IP fixed)</option>
                                         <option value="bypassed">Bypassed (tanpa login)</option>
@@ -1079,15 +1298,15 @@
                             <div class="col-md-6">
                                 <div class="form-group">
                                     <label>IP Address <small class="text-muted">(untuk binding)</small></label>
-                                    <input type="text" wire:model="ip_address" id="ip_address" class="form-control" placeholder="192.168.1.100">
-                                    @error('ip_address') <span class="text-danger">{{ $message }}</span> @enderror
+                                    <input type="text" wire:model="ip_address" class="form-control" placeholder="192.168.1.100">
+                                    @error('ip_address') <span class="text-danger small">{{ $message }}</span> @enderror
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="form-group">
                                     <label>MAC Address <small class="text-muted">(untuk binding)</small></label>
-                                    <input type="text" wire:model="mac_address" id="mac_address" class="form-control" placeholder="AA:BB:CC:DD:EE:FF">
-                                    @error('mac_address') <span class="text-danger">{{ $message }}</span> @enderror
+                                    <input type="text" wire:model="mac_address" class="form-control" placeholder="AA:BB:CC:DD:EE:FF">
+                                    @error('mac_address') <span class="text-danger small">{{ $message }}</span> @enderror
                                 </div>
                             </div>
                         </div>
@@ -1096,7 +1315,15 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-dismiss="modal" id="formEditInstalasiClose">Batal</button>
-                    <button type="button" id="submitInstalasi" class="btn btn-primary">Simpan Perubahan</button>
+                    <button type="button" id="submitInstalasi" class="btn btn-primary"
+                            wire:loading.attr="disabled" wire:target="saveInstalasi">
+                        <span wire:loading.remove wire:target="saveInstalasi">
+                            <i class="fas fa-save mr-1"></i>Simpan Perubahan
+                        </span>
+                        <span wire:loading wire:target="saveInstalasi">
+                            <i class="fas fa-spinner fa-spin mr-1"></i>Menyimpan...
+                        </span>
+                    </button>
                 </div>
             </div>
         </div>
@@ -1262,6 +1489,42 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
+        // Konfirmasi Setujui pelanggan pending
+        function confirmApproveCustomer() {
+            Swal.fire({
+                title: 'Setujui Pendaftaran?',
+                html: 'Pelanggan akan dipindah ke status <strong>Proses Instalasi</strong>.',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#28a745',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: '<i class="fas fa-check-circle mr-1"></i>Ya, Setujui',
+                cancelButtonText: 'Batal',
+            }).then(function(result) {
+                if (result.isConfirmed) {
+                    @this.call('approveCustomer');
+                }
+            });
+        }
+
+        // Konfirmasi Tolak pelanggan pending
+        function confirmRejectCustomer() {
+            Swal.fire({
+                title: 'Tolak Pendaftaran?',
+                html: 'Pendaftaran akan ditutup dan tidak dapat dibuka kembali.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#dc3545',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: '<i class="fas fa-times-circle mr-1"></i>Ya, Tolak',
+                cancelButtonText: 'Batal',
+            }).then(function(result) {
+                if (result.isConfirmed) {
+                    @this.call('rejectCustomer');
+                }
+            });
+        }
+
         // Fungsi untuk membuka modal edit data pribadi
         function openEditPribadiModal() {
             @this.call('openEditPribadiModal');
@@ -1272,11 +1535,11 @@
             @this.call('openEditInstalasiModal');
         }
 
-        // Toggle password visibility
+        // Toggle password visibility (generic)
         function togglePassword(inputId) {
             const input = document.getElementById(inputId);
             const icon = input.parentNode.querySelector('i');
-            
+
             if (input.type === 'password') {
                 input.type = 'text';
                 icon.classList.remove('fa-eye');
@@ -1285,6 +1548,20 @@
                 input.type = 'password';
                 icon.classList.remove('fa-eye-slash');
                 icon.classList.add('fa-eye');
+            }
+        }
+
+        // Toggle password di modal edit instalasi
+        function toggleInstalPassword() {
+            const input = document.getElementById('instal_pass_hash');
+            const icon  = document.getElementById('instal-pass-eye');
+            if (!input) return;
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.classList.replace('fa-eye', 'fa-eye-slash');
+            } else {
+                input.type = 'password';
+                icon.classList.replace('fa-eye-slash', 'fa-eye');
             }
         }
 
@@ -1492,6 +1769,36 @@
         };
 
         document.addEventListener('livewire:load', function () {
+
+            // ── State availability form instalasi ─────────────────────────────────
+            var _instalasiUsernameOk = true;
+            var _instalasiGroupingOk = true;
+
+            function clearInstalasiErrors() {
+                document.querySelectorAll('#editInstalasiModal .js-instal-error').forEach(function(el) { el.remove(); });
+                document.querySelectorAll('#editInstalasiModal .is-invalid').forEach(function(el) {
+                    el.classList.remove('is-invalid');
+                });
+            }
+            function markInstalasiError(el, msg) {
+                if (!el) return;
+                el.classList.add('is-invalid');
+                var parent = el.closest('.input-group') || el.parentElement;
+                var fb = parent.querySelector('.js-instal-error');
+                if (!fb) {
+                    fb = document.createElement('div');
+                    fb.className = 'invalid-feedback d-block js-instal-error';
+                    parent.appendChild(fb);
+                }
+                fb.textContent = msg;
+            }
+
+            window.addEventListener('instalasiUsernameCheckComplete', function(e) {
+                _instalasiUsernameOk = !!e.detail.available;
+            });
+            window.addEventListener('instalasiGroupingIdCheckComplete', function(e) {
+                _instalasiGroupingOk = !!e.detail.available;
+            });
 
             // Show / hide admin manual payment modal
             window.addEventListener('show-admin-manual-payment-modal', function() {
@@ -1898,45 +2205,244 @@
 
             // Event untuk menampilkan modal edit data instalasi
             window.addEventListener('showEditInstalasiModal', function(e) {
-                // Isi nilai-nilai form dari data Livewire
-                $("#formEditInstalasiClose").click();
+                var d = e.detail;
 
-                document.getElementById('local_address').value = e.detail.local_address || '';
-                document.getElementById('username').value = e.detail.install.username || '';
-                document.getElementById('pass_hash').value = e.detail.install.pass_hash || '';
-                document.getElementById('device_serial_number').value = e.detail.device_serial_number || '';
-
-                var ip_addressEdit = document.getElementById('ip_address');
-                if(ip_addressEdit){
-                    document.getElementById('ip_address').value = e.detail.install.ip_address || '';
+                // Populate ODP select
+                var odpSel = document.getElementById('instal_odp_select');
+                if (odpSel) {
+                    odpSel.innerHTML = '<option value="">— Pilih ODP —</option>';
+                    (d.odps || []).forEach(function(odp) {
+                        var o = document.createElement('option');
+                        o.value = odp.id;
+                        o.textContent = odp.label;
+                        if (odp.id == d.selected_odp) o.selected = true;
+                        odpSel.appendChild(o);
+                    });
                 }
 
-                var mac_addressEdit = document.getElementById('mac_address')
-                if(mac_addressEdit){
-                    document.getElementById('mac_address').value = e.detail.install.mac_address || '';
+                // Populate Router select
+                var rSel = document.getElementById('instal_router_select');
+                if (rSel) {
+                    rSel.innerHTML = '<option value="">— Pilih Router —</option>';
+                    (d.routers || []).forEach(function(r) {
+                        var o = document.createElement('option');
+                        o.value = r.id;
+                        o.textContent = r.name;
+                        if (r.id == d.selected_router) o.selected = true;
+                        rSel.appendChild(o);
+                    });
                 }
 
-                // Hotspot fields — set via JS sebagai safety net
-                var hsSelect = document.getElementById('hotspot_server_id_select');
-                if (hsSelect) {
-                    hsSelect.value = e.detail.hotspot_server_id || '';
-                }
-                var ipBindingType = document.querySelector('select[wire\\:model="ip_binding_type"]');
-                if (ipBindingType) {
-                    ipBindingType.value = e.detail.ip_binding_type || '';
-                }
-                var ipBindingMode = document.querySelector('select[wire\\:model="ip_binding_mode"]');
-                if (ipBindingMode) {
-                    ipBindingMode.value = e.detail.ip_binding_mode || '';
+                // Populate Group select
+                var gSel = document.getElementById('instal_group_select');
+                if (gSel) {
+                    gSel.innerHTML = '<option value="">— Pilih Group —</option>';
+                    (d.groups || []).forEach(function(g) {
+                        var o = document.createElement('option');
+                        o.value = g.id;
+                        o.textContent = g.name;
+                        if (g.id == d.selected_group) o.selected = true;
+                        gSel.appendChild(o);
+                    });
+                    gSel.disabled = (d.groups || []).length === 0;
                 }
 
-                // Tampilkan modal
-                new bootstrap.Modal(document.getElementById('editInstalasiModal')).show();
+                // Isi text inputs dari payload (wire:model tidak reliabel di dalam Bootstrap modal)
+                var setVal = function(id, val) {
+                    var el = document.getElementById(id);
+                    if (el) el.value = val || '';
+                };
+                setVal('instal_username_input', d.username);
+                setVal('instal_pass_hash', d.pass_hash);
+                setVal('instal_local_address_input', d.local_address);
+                setVal('instal_grouping_id_input', d.grouping_id);
+                setVal('instal_serial_number_input', d.serial_number);
+                // textarea
+                var notesEl = document.getElementById('instal_notes_input');
+                if (notesEl) notesEl.value = d.notes || '';
+
+                // Reset feedback lama, lalu cek ketersediaan username jika sudah ada
+                resetInstalasiUsernameFeedback();
+                resetInstalasiGroupingIdState();
+                if (d.username && d.username.length >= 3) {
+                    @this.call('checkInstalasiUsernameAvailability', d.username);
+                }
+                if (d.grouping_id && d.grouping_id.length >= 2) {
+                    @this.call('checkInstalasiGroupingIdAvailability', d.grouping_id);
+                }
+
+                // Reset availability flags dan error saat modal buka
+                _instalasiUsernameOk = true;
+                _instalasiGroupingOk = true;
+                clearInstalasiErrors();
+
+                $('#editInstalasiModal').modal('show');
+            });
+
+            // ── ODP / Group / Grouping ID cascade ──────────────────────────────────
+
+            // Harus pakai window.* agar bisa dipanggil dari attribute onchange HTML
+            window.onInstalasiOdpChange = function(odpId) {
+                var gSel = document.getElementById('instal_group_select');
+                if (gSel) {
+                    gSel.innerHTML = '<option value="">— Memuat group... —</option>';
+                    gSel.disabled = true;
+                }
+                @this.set('instal_group_id', null);
+                @this.set('instal_grouping_id', null);
+                var inp = document.getElementById('instal_grouping_id_input');
+                if (inp) inp.value = '';
+                resetInstalasiGroupingIdState();
+                if (odpId) {
+                    @this.call('changeInstalasiOdp', odpId);
+                }
+            };
+
+            // Setelah server memuat group baru (cascade ODP), perbarui select group
+            window.addEventListener('instalasiGroupsLoaded', function(e) {
+                var gSel = document.getElementById('instal_group_select');
+                if (!gSel) return;
+                var groups = e.detail.groups || [];
+                gSel.innerHTML = '<option value="">' + (groups.length ? '— Pilih Group —' : '— Tidak ada group —') + '</option>';
+                groups.forEach(function(g) {
+                    var o = document.createElement('option');
+                    o.value = g.id;
+                    o.textContent = g.name;
+                    gSel.appendChild(o);
+                });
+                gSel.disabled = groups.length === 0;
+            });
+
+            // Saat user pilih Group → auto-generate Grouping ID
+            window.onInstalasiGroupChange = function(groupId) {
+                resetInstalasiGroupingIdState();
+                if (groupId) {
+                    @this.call('previewInstalasiGroupingId', groupId);
+                } else {
+                    var inp = document.getElementById('instal_grouping_id_input');
+                    if (inp) inp.value = '';
+                    @this.set('instal_grouping_id', null);
+                }
+            };
+
+            // Terima preview Grouping ID dari server → isi field + cek ketersediaan
+            window.addEventListener('instalasi-grouping-id-preview', function(e) {
+                var preview = e.detail.preview;
+                var input = document.getElementById('instal_grouping_id_input');
+                if (!input) return;
+                if (preview) {
+                    input.value = preview;
+                    @this.set('instal_grouping_id', preview);
+                    @this.call('checkInstalasiGroupingIdAvailability', preview);
+                } else {
+                    input.value = '';
+                    @this.set('instal_grouping_id', null);
+                    resetInstalasiGroupingIdState();
+                }
+            });
+
+            // Tombol "Pakai sbg User & Pass"
+            // Langsung set DOM dulu agar user langsung melihat nilai,
+            // lalu panggil SATU method PHP yang set username+pass+cek available dalam satu round-trip
+            document.addEventListener('click', function(e) {
+                if (!e.target.closest('#instal_pakai_btn')) return;
+                var groupingId = (document.getElementById('instal_grouping_id_input')?.value || '').trim();
+                if (!groupingId) return;
+
+                // Set DOM langsung — user langsung lihat nilainya
+                var usrInput  = document.getElementById('instal_username_input');
+                var passInput = document.getElementById('instal_pass_hash');
+                if (usrInput)  usrInput.value  = groupingId;
+                if (passInput) passInput.value = groupingId;
+
+                resetInstalasiUsernameFeedback();
+
+                // Satu round-trip: set username+pass di server lalu cek availability
+                @this.call('useGroupingIdAsCredentials', groupingId);
+            });
+
+            // ── Uniqueness check: Username ──────────────────────────────────────────
+
+            function resetInstalasiUsernameFeedback() {
+                var fb = document.getElementById('instal_username_feedback');
+                var inp = document.getElementById('instal_username_input');
+                if (fb) { fb.style.display = 'none'; fb.innerHTML = ''; }
+                if (inp) { inp.classList.remove('is-valid','is-invalid'); }
+            }
+
+            window.addEventListener('instalasiUsernameCheckComplete', function(e) {
+                var data = e.detail;
+                var inp  = document.getElementById('instal_username_input');
+                var fb   = document.getElementById('instal_username_feedback');
+                if (!inp || !fb) return;
+                if (data.available) {
+                    inp.classList.remove('is-invalid'); inp.classList.add('is-valid');
+                    fb.innerHTML = '<span class="text-success"><i class="fas fa-check-circle mr-1"></i>Username tersedia</span>';
+                    fb.style.display = 'block';
+                } else {
+                    inp.classList.remove('is-valid'); inp.classList.add('is-invalid');
+                    fb.innerHTML = '<span class="text-danger"><i class="fas fa-times-circle mr-1"></i>Sudah dipakai oleh: <strong>' + data.existing.code + ' - ' + data.existing.name + '</strong></span>';
+                    fb.style.display = 'block';
+                }
+            });
+
+            var _instalasiUsernameTimer = null;
+            document.addEventListener('input', function(e) {
+                if (!e.target || e.target.id !== 'instal_username_input') return;
+                resetInstalasiUsernameFeedback();
+                clearTimeout(_instalasiUsernameTimer);
+                var val = e.target.value.trim();
+                if (val.length < 3) return;
+                _instalasiUsernameTimer = setTimeout(function() {
+                    @this.call('checkInstalasiUsernameAvailability', val);
+                }, 450);
+            });
+
+            // ── Uniqueness check: Grouping ID ───────────────────────────────────────
+
+            function resetInstalasiGroupingIdState() {
+                var fb  = document.getElementById('instal_grouping_id_feedback');
+                var inp = document.getElementById('instal_grouping_id_input');
+                if (fb)  { fb.style.display = 'none'; fb.innerHTML = ''; }
+                if (inp) { inp.classList.remove('is-valid','is-invalid'); }
+            }
+
+            window.addEventListener('instalasiGroupingIdCheckComplete', function(e) {
+                var data = e.detail;
+                var inp  = document.getElementById('instal_grouping_id_input');
+                var fb   = document.getElementById('instal_grouping_id_feedback');
+                if (!inp || !fb) return;
+                if (data.available) {
+                    inp.classList.remove('is-invalid'); inp.classList.add('is-valid');
+                    fb.innerHTML = '<span class="text-success"><i class="fas fa-check-circle mr-1"></i>Grouping ID tersedia</span>';
+                    fb.style.display = 'block';
+                } else {
+                    inp.classList.remove('is-valid'); inp.classList.add('is-invalid');
+                    fb.innerHTML = '<span class="text-danger"><i class="fas fa-times-circle mr-1"></i>Sudah dipakai oleh: <strong>' + data.existing.code + ' - ' + data.existing.name + '</strong></span>';
+                    fb.style.display = 'block';
+                }
+            });
+
+            var _instalasiGroupingTimer = null;
+            document.addEventListener('input', function(e) {
+                if (!e.target || e.target.id !== 'instal_grouping_id_input') return;
+                resetInstalasiGroupingIdState();
+                clearTimeout(_instalasiGroupingTimer);
+                var val = e.target.value.trim();
+                if (val.length < 2) return;
+                _instalasiGroupingTimer = setTimeout(function() {
+                    @this.call('checkInstalasiGroupingIdAvailability', val);
+                }, 450);
             });
 
             // Event untuk menyembunyikan modal edit data instalasi
             window.addEventListener('hideEditInstalasiModal', function() {
-                new bootstrap.Modal(document.getElementById('editInstalasiModal')).hide();
+                var closeBtn = document.getElementById('formEditInstalasiClose');
+                if (closeBtn) {
+                    closeBtn.click();
+                } else {
+                    $('#editInstalasiModal').modal('hide');
+                }
             });
 
             // Event listener untuk submit data pribadi
@@ -2001,48 +2507,57 @@
                 });
             });
 
-            // Event listener untuk submit data instalasi (PPPoE + Hotspot)
+            // ── Submit dengan validasi JS terlebih dahulu ─────────────────────────
             document.getElementById('submitInstalasi').addEventListener('click', function() {
-                // Kumpulkan data umum (PPPoE & Hotspot)
-                const local_address = document.getElementById('local_address').value;
-                const username = document.getElementById('username').value;
-                const pass_hash = document.getElementById('pass_hash').value;
-                const device_serial_number = document.getElementById('device_serial_number').value;
+                clearInstalasiErrors();
 
-                // Set nilai umum ke Livewire
-                @this.set('local_address', local_address);
-                @this.set('username', username);
-                @this.set('pass_hash', pass_hash);
-                @this.set('device_serial_number', device_serial_number);
+                var errors = [];
 
-                // Kumpulkan field Hotspot jika elemen ada di DOM
-                const hsSelect = document.getElementById('hotspot_server_id_select');
-                if (hsSelect) {
-                    @this.set('hotspot_server_id', hsSelect.value || null);
+                var odpVal      = document.getElementById('instal_odp_select')?.value || '';
+                var routerVal   = document.getElementById('instal_router_select')?.value || '';
+                var groupingVal = (document.getElementById('instal_grouping_id_input')?.value || '').trim();
+                var usernameVal = (document.getElementById('instal_username_input')?.value || '').trim();
+                var passVal     = (document.getElementById('instal_pass_hash')?.value || '').trim();
+                var groupSel    = document.getElementById('instal_group_select');
+
+                if (!odpVal) {
+                    markInstalasiError(document.getElementById('instal_odp_select'), 'ODP wajib dipilih.');
+                    errors.push('odp');
+                }
+                if (groupSel && !groupSel.disabled && !groupSel.value) {
+                    markInstalasiError(groupSel, 'Group wajib dipilih.');
+                    errors.push('group');
+                }
+                if (!groupingVal) {
+                    markInstalasiError(document.getElementById('instal_grouping_id_input'), 'Grouping ID wajib diisi.');
+                    errors.push('grouping');
+                } else if (!_instalasiGroupingOk) {
+                    markInstalasiError(document.getElementById('instal_grouping_id_input'), 'Grouping ID sudah dipakai, gunakan nilai lain.');
+                    errors.push('grouping_taken');
+                }
+                if (!routerVal) {
+                    markInstalasiError(document.getElementById('instal_router_select'), 'Router wajib dipilih.');
+                    errors.push('router');
+                }
+                if (!usernameVal) {
+                    markInstalasiError(document.getElementById('instal_username_input'), 'Username wajib diisi.');
+                    errors.push('username');
+                } else if (!_instalasiUsernameOk) {
+                    markInstalasiError(document.getElementById('instal_username_input'), 'Username sudah dipakai, gunakan username lain.');
+                    errors.push('username_taken');
+                }
+                if (passVal.length < 3) {
+                    markInstalasiError(document.getElementById('instal_pass_hash'), passVal ? 'Password minimal 3 karakter.' : 'Password wajib diisi.');
+                    errors.push('pass');
                 }
 
-                const ipBindingTypeEl = document.querySelector('select[wire\\:model="ip_binding_type"]');
-                if (ipBindingTypeEl) {
-                    @this.set('ip_binding_type', ipBindingTypeEl.value || null);
+                if (errors.length > 0) {
+                    // Scroll ke error pertama
+                    var firstErr = document.querySelector('#editInstalasiModal .is-invalid');
+                    if (firstErr) firstErr.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    return;
                 }
 
-                const ipBindingModeEl = document.querySelector('select[wire\\:model="ip_binding_mode"]');
-                if (ipBindingModeEl) {
-                    @this.set('ip_binding_mode', ipBindingModeEl.value || null);
-                }
-
-                const ipAddressEl = document.getElementById('ip_address');
-                if (ipAddressEl) {
-                    @this.set('ip_address', ipAddressEl.value || null);
-                }
-
-                const macAddressEl = document.getElementById('mac_address');
-                if (macAddressEl) {
-                    @this.set('mac_address', macAddressEl.value || null);
-                }
-
-                // Tutup modal, lalu panggil method save di Livewire
-                $("#formEditInstalasiClose").click();
                 @this.call('saveInstalasi');
             });
 

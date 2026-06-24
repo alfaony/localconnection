@@ -20,6 +20,10 @@ use Illuminate\Support\Facades\Storage;
 use App\Models\InternetCustomer;
 use App\Models\InternetCustomerGroup;
 use App\Models\InternetCustomerPurchase;
+use App\Models\InternetCustomerInstallation;
+use App\Models\InternetInstallationPhoto;
+use App\Models\OpticalDistribution;
+use App\Models\CoverageServiceDistribution;
 use App\Models\Router;
 use App\Models\AddressPool;
 use App\Models\HotspotServer;
@@ -34,6 +38,8 @@ use App\Services\RadiusService;
 use App\Services\MikrotikService;
 use App\Jobs\GenerateBillingJob;
 use App\Schemas\ParamSchema;
+use App\Schemas\RoleSchema;
+use App\Models\User;
 use Carbon\Carbon;
 
 use App\Models\SettingCompany;
@@ -74,6 +80,15 @@ class InternetCustomerShow extends Component
     
     // Properties untuk edit data instalasi
     public $local_address, $username, $pass_hash, $device_serial_number;
+    public $instal_notes;
+    public $instal_photos = [];
+    public $instal_odp_id        = null;
+    public $instal_group_id      = null;
+    public $instal_grouping_id   = null;
+    public $instal_router_id     = null;
+    public array $availableOdpsForInstalasi    = [];
+    public array $availableGroupsForInstalasi  = [];
+    public array $availableRoutersForInstalasi = [];
 
     // Hotspot fields
     public $hotspot_server_id = null;
@@ -872,49 +887,319 @@ class InternetCustomerShow extends Component
 
     public function openEditInstalasiModal()
     {
-        $this->local_address = $this->customer->local_address ?? '';
-        $this->username      = $this->customer->username ?? '';
-        $this->pass_hash     = $this->customer->pass_hash ?? '';
-        $this->device_serial_number = $this->customer->installation->device_serial_number ?? '';
+        // Fresh-load dengan relasi nested yang dibutuhkan
+        // (Livewire serialize/deserialize $this->customer antar request, relasi nested hilang)
+        $cust = InternetCustomer::with([
+            'subdistrict.coverageService.coverageServiceOds.ods.pops.routers',
+            'router',
+            'installation',
+            'group',
+        ])->findOrFail($this->customer->id);
+
+        // Pre-fill field utama
+        $this->local_address        = $cust->local_address ?? '';
+        $this->username             = $cust->username ?? '';
+        $this->pass_hash            = $cust->pass_hash ?? '';
+        $this->device_serial_number = $cust->installation->device_serial_number ?? '';
+        $this->instal_notes         = $cust->installation->notes ?? '';
+        $this->instal_photos        = [];
+        $this->instal_odp_id        = $cust->optical_distribution_id;
+        $this->instal_grouping_id   = $cust->grouping_id;
+        $this->instal_group_id      = $cust->group_id;
+        $this->instal_router_id     = $cust->router_id;
 
         // Hotspot fields
-        $this->hotspot_server_id = $this->customer->hotspot_server_id;
-        $this->ip_binding_type   = $this->customer->ip_binding_type;
-        $this->ip_binding_mode   = $this->customer->ip_binding_mode;
-        $this->ip_address        = $this->customer->ip_address;
-        $this->mac_address       = $this->customer->mac_address;
+        $this->hotspot_server_id = $cust->hotspot_server_id;
+        $this->ip_binding_type   = $cust->ip_binding_type;
+        $this->ip_binding_mode   = $cust->ip_binding_mode;
+        $this->ip_address        = $cust->ip_address;
+        $this->mac_address       = $cust->mac_address;
 
-        // Load hotspot servers untuk router yang sama
-        $this->availableHotspotServers = $this->customer->router_id
-            ? HotspotServer::where('router_id', $this->customer->router_id)->get(['id', 'name'])->toArray()
+        // Load hotspot servers
+        $this->availableHotspotServers = $cust->router_id
+            ? HotspotServer::where('router_id', $cust->router_id)->get(['id', 'name'])->toArray()
             : [];
-        $install = [
-            'username'             => $this->customer->username ?? '',
-            'pass_hash'            => $this->customer->pass_hash ?? '',
-            'ip_address'           => $this->customer->ip_address ?? '',
-            'mac_address'          => $this->customer->mac_address ?? '',
-        ];
+
+        // ── Load Routers ── sama seperti Index: filter dari coverage service, fallback semua
+        $routerIds = collect($cust->subdistrict?->coverageService?->coverageServiceOds ?? [])
+            ->flatMap(fn($csod) => collect($csod->opticalDistribution?->pops ?? [])
+                ->flatMap(fn($pop) => collect($pop->routers ?? [])->pluck('id')))
+            ->unique()->values();
+
+        if ($routerIds->isNotEmpty()) {
+            $this->availableRoutersForInstalasi = Router::whereIn('id', $routerIds)
+                ->whereHas('pppoeServers')
+                ->orderBy('name')
+                ->get(['id', 'name'])
+                ->map(fn($r) => ['id' => $r->id, 'name' => $r->name])
+                ->toArray();
+        }
+
+        // Fallback: semua router yang punya PPPoE server
+        if (empty($this->availableRoutersForInstalasi)) {
+            $this->availableRoutersForInstalasi = Router::whereHas('pppoeServers')
+                ->orderBy('name')
+                ->get(['id', 'name'])
+                ->map(fn($r) => ['id' => $r->id, 'name' => $r->name])
+                ->toArray();
+        }
+
+        // ── Load ODPs ── dari coverage service, fallback ke semua ODP perusahaan (byCompany)
+        $coverageService = $cust->subdistrict?->coverageService;
+        if ($coverageService) {
+            $this->availableOdpsForInstalasi = CoverageServiceDistribution::where('coverage_service_id', $coverageService->id)
+                ->with('ods:id,name')
+                ->get()
+                ->pluck('ods')
+                ->filter()
+                ->map(fn($odp) => ['id' => $odp->id, 'label' => $odp->name])
+                ->unique('id')
+                ->values()
+                ->toArray();
+        }
+
+        // Fallback: semua ODP perusahaan — WAJIB pakai byCompany (bukan where langsung)
+        if (empty($this->availableOdpsForInstalasi)) {
+            $this->availableOdpsForInstalasi = OpticalDistribution::byCompany(Auth::user()->company_id)
+                ->orderBy('name')
+                ->get(['id', 'name'])
+                ->map(fn($o) => ['id' => $o->id, 'label' => $o->name])
+                ->toArray();
+        }
+
+        // Pre-load groups untuk ODP yang sudah dipilih
+        if ($this->instal_odp_id) {
+            $this->loadGroupsForInstalasi($this->instal_odp_id);
+        }
 
         $this->dispatchBrowserEvent('showEditInstalasiModal', [
-            'local_address'        => $this->customer->local_address ?? '',
-            'device_serial_number' => $this->customer->installation->device_serial_number ?? '',
-            'hotspot_server_id'    => $this->customer->hotspot_server_id ?? '',
-            'ip_binding_type'      => $this->customer->ip_binding_type ?? '',
-            'ip_binding_mode'      => $this->customer->ip_binding_mode ?? '',
-            'install'              => $install,
+            'odps'           => $this->availableOdpsForInstalasi,
+            'routers'        => $this->availableRoutersForInstalasi,
+            'groups'         => $this->availableGroupsForInstalasi,
+            'selected_odp'   => $this->instal_odp_id,
+            'selected_router'=> $this->instal_router_id,
+            'selected_group' => $this->instal_group_id,
+            'username'       => $this->username,
+            'pass_hash'      => $this->pass_hash,
+            'local_address'  => $this->local_address,
+            'grouping_id'    => $this->instal_grouping_id,
+            'serial_number'  => $this->device_serial_number,
+            'notes'          => $this->instal_notes,
         ]);
+    }
+
+    // Lifecycle hook — fires automatically when wire:model changes instal_odp_id
+    public function updatedInstalOdpId($value)
+    {
+        $this->changeInstalasiOdp($value);
+    }
+
+    // Public method — safe to call from JS via @this.call('changeInstalasiOdp', odpId)
+    public function changeInstalasiOdp($odpId)
+    {
+        $this->instal_group_id             = null;
+        $this->instal_grouping_id          = null;
+        $this->availableGroupsForInstalasi = [];
+
+        if ($odpId) {
+            $this->instal_odp_id = $odpId;
+            $this->loadGroupsForInstalasi($odpId);
+        }
+
+        $this->dispatchBrowserEvent('instalasiGroupsLoaded', [
+            'groups' => $this->availableGroupsForInstalasi,
+        ]);
+    }
+
+    protected function loadGroupsForInstalasi($odpId)
+    {
+        $this->availableGroupsForInstalasi = InternetCustomerGroup::byCompany(Auth::user()->company_id)
+            ->whereHas('odps', fn($q) => $q->where('optical_distributions.id', $odpId))
+            ->orderBy('name')
+            ->get(['id', 'name', 'description'])
+            ->map(fn($g) => ['id' => $g->id, 'name' => $g->name, 'description' => $g->description])
+            ->toArray();
+    }
+
+    // Dipanggil dari tombol "Pakai sbg User & Pass" — set username+pass dalam satu round-trip
+    public function useGroupingIdAsCredentials(string $value): void
+    {
+        $value = trim($value);
+        $this->username  = $value;
+        $this->pass_hash = $value;
+
+        $existing = InternetCustomer::where('username', $value)
+            ->where('id', '!=', $this->customer->id)
+            ->first(['id', 'code', 'name']);
+
+        $this->dispatchBrowserEvent('instalasiUsernameCheckComplete', $existing
+            ? ['available' => false, 'existing' => ['code' => $existing->code, 'name' => $existing->name]]
+            : ['available' => true]
+        );
+    }
+
+    public function checkInstalasiUsernameAvailability(?string $username): void
+    {
+        $username = trim($username ?? '');
+        if (strlen($username) < 3) {
+            $this->dispatchBrowserEvent('instalasiUsernameCheckComplete', ['available' => true]);
+            return;
+        }
+        $existing = InternetCustomer::where('username', $username)
+            ->where('id', '!=', $this->customer->id)
+            ->first(['id', 'code', 'name']);
+        if ($existing) {
+            $this->dispatchBrowserEvent('instalasiUsernameCheckComplete', [
+                'available' => false,
+                'existing'  => ['code' => $existing->code, 'name' => $existing->name],
+            ]);
+        } else {
+            $this->dispatchBrowserEvent('instalasiUsernameCheckComplete', ['available' => true]);
+        }
+    }
+
+    public function checkInstalasiGroupingIdAvailability(?string $value): void
+    {
+        $value = trim($value ?? '');
+        if (strlen($value) < 2) {
+            $this->dispatchBrowserEvent('instalasiGroupingIdCheckComplete', ['available' => true]);
+            return;
+        }
+        $existing = InternetCustomer::where('grouping_id', $value)
+            ->where('id', '!=', $this->customer->id)
+            ->first(['id', 'code', 'name']);
+        if ($existing) {
+            $this->dispatchBrowserEvent('instalasiGroupingIdCheckComplete', [
+                'available' => false,
+                'existing'  => ['code' => $existing->code, 'name' => $existing->name],
+            ]);
+        } else {
+            $this->dispatchBrowserEvent('instalasiGroupingIdCheckComplete', ['available' => true]);
+        }
+    }
+
+    public function previewInstalasiGroupingId(?string $groupId): void
+    {
+        if (!$groupId) {
+            $this->dispatchBrowserEvent('instalasi-grouping-id-preview', ['preview' => null]);
+            return;
+        }
+
+        $group = InternetCustomerGroup::find($groupId);
+        if (!$group) {
+            $this->dispatchBrowserEvent('instalasi-grouping-id-preview', ['preview' => null]);
+            return;
+        }
+
+        $prefix     = $group->grouping_prefix ?? '';
+        $lastNumber = (int) $group->last_number;
+
+        if ($lastNumber == 0) {
+            $lastNumber = (int) InternetCustomer::where('group_id', $group->id)
+                ->whereNotNull('grouping_id')
+                ->pluck('grouping_id')
+                ->map(fn($gid) => InternetCustomerGroup::parseSequence(substr($gid, strlen($prefix))))
+                ->max();
+        }
+
+        $preview = $prefix . InternetCustomerGroup::formatSequence($lastNumber + 1);
+        $this->dispatchBrowserEvent('instalasi-grouping-id-preview', ['preview' => $preview]);
+    }
+
+    public function approveCustomer()
+    {
+        if ($this->customer->status !== ParamSchema::PENDING) {
+            $this->dispatchBrowserEvent('showErrorAlert', ['message' => 'Customer tidak dalam status pending.']);
+            return;
+        }
+
+        DB::beginTransaction();
+        try {
+            $this->customer->update([
+                'status'         => ParamSchema::PROCESS_INSTALLATION,
+                'action_user_id' => Auth::id(),
+            ]);
+
+            // Kirim inbox ke teknisi yang bertanggung jawab pada ODP pelanggan
+            $userTechnical = optional($this->customer->subdistrict?->coverageService?->coverageServiceOds)
+                ->pluck('ods.user_assign_id')
+                ->unique()
+                ->filter()
+                ->all();
+
+            if (count($userTechnical) > 0) {
+                $message    = "Pembayaran Langganan Internet Untuk Kode {$this->customer->code} Telah di Setujui. Silahkan segera lakukan Pemasangan";
+                $directUrl  = route('internet-customer.show', $this->customer->id);
+                foreach ($userTechnical as $techId) {
+                    $this->sentInbox($techId, $message, $directUrl);
+                }
+            }
+
+            DB::commit();
+
+            $this->dispatchBrowserEvent('showSuccessAlert', ['message' => "Pendaftaran pelanggan {$this->customer->code} telah disetujui. Status: Proses Instalasi."]);
+            $this->mount($this->customer->id);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Failed to approve customer', ['customer_id' => $this->customer->id, 'error' => $e->getMessage()]);
+            $this->dispatchBrowserEvent('showErrorAlert', ['message' => 'Gagal menyetujui pelanggan: ' . $e->getMessage()]);
+        }
+    }
+
+    public function rejectCustomer()
+    {
+        if ($this->customer->status !== ParamSchema::PENDING) {
+            $this->dispatchBrowserEvent('showErrorAlert', ['message' => 'Customer tidak dalam status pending.']);
+            return;
+        }
+
+        DB::beginTransaction();
+        try {
+            $this->customer->update([
+                'status'         => ParamSchema::CLOSED,
+                'action_user_id' => Auth::id(),
+            ]);
+
+            DB::commit();
+
+            Log::info('Customer pending closed', ['customer_id' => $this->customer->id, 'closed_by' => Auth::id()]);
+            $this->dispatchBrowserEvent('showSuccessAlert', ['message' => "Pendaftaran pelanggan {$this->customer->code} telah ditolak/ditutup."]);
+            $this->mount($this->customer->id);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Failed to reject customer', ['customer_id' => $this->customer->id, 'error' => $e->getMessage()]);
+            $this->dispatchBrowserEvent('showErrorAlert', ['message' => 'Gagal menolak pelanggan: ' . $e->getMessage()]);
+        }
+    }
+
+    private function sentInbox($to, $message, $directUrl)
+    {
+        // Inbox helper (uncomment bila InboxHelper tersedia)
+        // (new \App\Helpers\InboxHelper)->sent($to, Auth::id(), $message, $directUrl);
+        return true;
     }
 
     public function saveInstalasi()
     {
         $isHotspot = $this->customer->access_type === 'hotspot';
 
+        $customerId = $this->customer->id;
+
         $rules = [
             'local_address'        => 'nullable|ip',
-            'username'             => 'required|string|max:255',
-            'pass_hash'            => 'required|string|max:255',
+            'username'             => "required|string|max:255|unique:internet_customers,username,{$customerId}",
+            'pass_hash'            => 'required|string|min:3|max:255',
             'device_serial_number' => 'nullable|string|max:255',
+            'instal_odp_id'        => 'required|exists:optical_distributions,id',
+            'instal_router_id'     => 'required|exists:routers,id',
+            'instal_grouping_id'   => "required|string|max:50|unique:internet_customers,grouping_id,{$customerId}",
+            'instal_notes'         => 'nullable|string|max:1000',
+            'instal_photos.*'      => 'nullable|file|mimes:jpg,jpeg,png|max:5120',
         ];
+
+        if (!$this->customer->group_id) {
+            $rules['instal_group_id'] = 'required|exists:internet_customer_groups,id';
+        }
 
         if ($isHotspot) {
             $rules['hotspot_server_id'] = 'nullable|exists:hotspot_servers,id';
@@ -928,18 +1213,31 @@ class InternetCustomerShow extends Component
 
         DB::beginTransaction();
         try {
-            $isSuspended = $this->customer->status === ParamSchema::SUSPENDED;
+            $isSuspended      = $this->customer->status === ParamSchema::SUSPENDED;
+            $isProcessInstall = $this->customer->status === ParamSchema::PROCESS_INSTALLATION;
 
             $updateData = [
-                'local_address' => $this->local_address,
-                'username'      => $this->username,
-                'pass_hash'     => $this->pass_hash,
+                'local_address'            => $this->local_address ?: null,
+                'username'                 => $this->username,
+                'pass_hash'                => $this->pass_hash,
+                'optical_distribution_id'  => $this->instal_odp_id ?: null,
+                'grouping_id'              => $this->instal_grouping_id ?: null,
             ];
+
+            // Update router jika dipilih
+            if ($this->instal_router_id) {
+                $updateData['router_id'] = $this->instal_router_id;
+            }
+
+            // Assign group jika belum punya dan dipilih
+            if ($this->instal_group_id && !$this->customer->group_id) {
+                $updateData['group_id'] = $this->instal_group_id;
+            }
+
             if (!$isSuspended) {
                 $updateData['status'] = ParamSchema::REACTIVATED;
             }
 
-            
             if ($isHotspot) {
                 $updateData['hotspot_server_id'] = $this->hotspot_server_id ?: null;
                 $updateData['ip_binding_type']   = $this->ip_binding_type ?: null;
@@ -953,16 +1251,41 @@ class InternetCustomerShow extends Component
             if ($this->customer->installation) {
                 $this->customer->installation->update([
                     'device_serial_number' => $this->device_serial_number,
+                    'notes'                => $this->instal_notes ?: null,
+                ]);
+                $installation = $this->customer->installation;
+            } else {
+                $installation = InternetCustomerInstallation::create([
+                    'internet_customer_id' => $this->customer->id,
+                    'technical_user_id'    => Auth::id(),
+                    'device_serial_number' => $this->device_serial_number,
+                    'notes'                => $this->instal_notes ?: null,
+                    'installed_at'         => now(),
                 ]);
             }
-            
+
+            // Simpan foto instalasi baru
+            if (!empty($this->instal_photos)) {
+                foreach ($this->instal_photos as $photo) {
+                    try {
+                        $path = $photo->store('installation-photos/' . $this->customer->code, 's3');
+                        InternetInstallationPhoto::create([
+                            'internet_installation_id' => $installation->id,
+                            'photo'                    => $path,
+                            'caption'                  => 'Installation Photo',
+                        ]);
+                    } catch (\Exception $photoErr) {
+                        Log::warning('Foto instalasi gagal disimpan', ['error' => $photoErr->getMessage()]);
+                    }
+                }
+            }
+
             DB::commit();
-            
+
             dispatch(new ProvisionCustomerJob($this->customer->id));
-            // \App\Jobs\SyncInstalledCustomersJob::dispatch([$this->customer->id]);
-            
+
             $this->dispatchBrowserEvent('hideEditInstalasiModal');
-            $this->dispatchBrowserEvent('showSuccessAlert', ['message' => 'Data instalasi berhasil diperbarui']);
+            $this->dispatchBrowserEvent('showSuccessAlert', ['message' => 'Data instalasi berhasil ' . ($isProcessInstall ? 'dibuat' : 'diperbarui')]);
             $this->mount($this->customer->id);
         } catch (\Exception $e) {
             DB::rollBack();
@@ -1018,19 +1341,14 @@ class InternetCustomerShow extends Component
     
             $post = ['is_paid' => true];
 
-            if(!$internetPurchase->customer->installation) {
+            if (!$internetPurchase->customer->installation) {
                 $post['status'] = ParamSchema::PROCESS_INSTALLATION;
 
-                $userTechnical = optional($internetPurchase->customer->subdistrict?->coverageService?->coverageServiceOds)
-                    ->pluck('ods.user_assign_id')
-                    ->unique()
-                    ->all();
+                $message = "🔧 *Notifikasi Pemasangan*\n\n"
+                    . "Pembayaran pelanggan *{$internetPurchase->customer->code}* telah dikonfirmasi oleh Finance.\n\n"
+                    . "Mohon segera dijadwalkan untuk proses pemasangan. Terima kasih. 🙏";
 
-                if(count($userTechnical) > 0) {
-                    $message = "Pembayaran Langganan Internet Untuk Kode ".$internetPurchase->customer->code." Telah di Setujui Oleh Finance Silahkan segera lakukan Pemasangan";
-                    $this->sentWaToOffice($internetPurchase->customer->company_id, $message);
-                    $internetPurchase->customer->update($post);
-                }
+                $this->sentWaToOffice($internetPurchase->customer->company_id, $message);
             } else {
                 $post['status'] = ParamSchema::REACTIVATED;
                 dispatch(new ProvisionCustomerJob($internetPurchase->internet_customer_id));
@@ -1375,15 +1693,11 @@ class InternetCustomerShow extends Component
             if (!$internetCustomer->installation) {
                 $post['status'] = ParamSchema::PROCESS_INSTALLATION;
 
-                $userTechnical = optional($internetCustomer->subdistrict?->coverageService?->coverageServiceOds)
-                    ->pluck('ods.user_assign_id')
-                    ->unique()
-                    ->all();
+                $msg = "🔧 *Notifikasi Pemasangan*\n\n"
+                    . "Pembayaran pelanggan *{$internetCustomer->code}* telah dikonfirmasi.\n\n"
+                    . "Mohon segera dijadwalkan untuk proses pemasangan. Terima kasih. 🙏";
 
-                if (!empty($userTechnical)) {
-                    $msg = "Pembayaran pelanggan {$internetCustomer->code} telah dikonfirmasi. Silakan segera lakukan pemasangan.";
-                    $this->sentWaToOffice($internetCustomer->company_id, $msg);
-                }
+                $this->sentWaToOffice($internetCustomer->company_id, $msg);
             } else {
                 $post['status'] = ParamSchema::REACTIVATED;
             }
