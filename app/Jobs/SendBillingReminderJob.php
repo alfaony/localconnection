@@ -65,7 +65,7 @@ class SendBillingReminderJob implements ShouldQueue
 
             // Get company settings untuk Wablas
             $settingCompany = SettingCompany::byCompany($internetCustomer->company_id)
-                ->where('menu', 'wablas')
+                // ->where('menu', 'wablas')
                 ->get()
                 ->pluck('field_value', 'field_title');
 

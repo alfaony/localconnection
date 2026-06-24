@@ -367,7 +367,8 @@ class InternetCustomerForm extends Component
         // Check Midtrans status
         try {
             $midtransService = new MidtransService($this->company_id);
-            $this->midtransActive = $midtransService->testConnection();
+            $this->midtransActive = $midtransService->testConnectionCheck()['success'] ?? false;
+
         } catch (\Exception $e) {
             $this->midtransActive = false;
             Log::warning('Midtrans not configured for company', [
@@ -914,10 +915,7 @@ class InternetCustomerForm extends Component
                     'customer_code' => $customer->code
                 ]);
 
-                // Redirect to Xendit payment page
-                $this->dispatchBrowserEvent('redirect-to-xendit', [
-                    'url' => $invoice['url_payment'].$result['token']
-                ]);
+                return $invoice['url_payment'] . $result['token'];
 
             } else {
                 throw new \Exception('Gagal membuat invoice pembayaran: ' . $result['message']);
@@ -929,9 +927,11 @@ class InternetCustomerForm extends Component
                 'error' => $e->getMessage(),
                 'purchase_id' => $purchase->id
             ]);
-            
+
             session()->flash('warning', 'Pembayaran digital tidak tersedia. Silakan gunakan transfer manual.');
         }
+
+        return null;
     }
 
     protected function processMidtransPayment($purchase, $customer)
@@ -1014,7 +1014,7 @@ class InternetCustomerForm extends Component
         $this->sentWaToOffice($internetCustomer->company_id, $message);
     }
 
-    private function sentWaToOffice(int $companyId, string $message): void
+    private function sentWaToOffice($companyId, string $message): void
     {
         try {
             $wablasSetting = SettingCompany::byCompany($companyId)
@@ -1042,7 +1042,7 @@ class InternetCustomerForm extends Component
                 $wablasSetting['token_wablas'],
                 $wablasSetting['webhook_key_wablas'] ?? null
             );
-
+            
             (new WablasMessage($client))->single_text($officePhone, $message);
         } catch (\Throwable $e) {
             Log::warning('[sentWaToOffice] Gagal kirim WA ke kantor: ' . $e->getMessage());

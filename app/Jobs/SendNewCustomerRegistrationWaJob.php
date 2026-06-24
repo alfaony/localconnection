@@ -120,6 +120,8 @@ class SendNewCustomerRegistrationWaJob implements ShouldQueue
         $customerType     = ucfirst($customer->customer_type ?? '-');
 
         $registeredAt = Carbon::now()->translatedFormat('d M Y, H:i') . ' WIB';
+        $url = route('internet-customer.show', $customer->id);
+
 
         $lines = [
             "🔔 *PENDAFTARAN PELANGGAN BARU*",
@@ -135,9 +137,13 @@ class SendNewCustomerRegistrationWaJob implements ShouldQueue
             "🏢 Tipe       : $customerType",
             "",
             "━━━━━━━━━━━━━━━━━━━━━━━",
+            " 👤 *INFORMASI AKUN*",
+            "👤 IDPEL       : $customer->code",
+            "🔗 Link        : $url",
+            "━━━━━━━━━━━━━━━━━━━━━━━",
             "📦 *INFORMASI PAKET*",
-            "📡 Paket      : $packageName",
-            "⚡ Bandwidth  : $packageBandwidth",
+            "📡 Paket       : $packageName",
+            "⚡ Bandwidth    : $packageBandwidth",
             "",
             "━━━━━━━━━━━━━━━━━━━━━━━",
         ];

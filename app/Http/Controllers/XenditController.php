@@ -20,6 +20,9 @@ use App\Helpers\InboxHelper;
 use App\Jobs\GenerateInternetPurchaseCouponJob;
 use App\Jobs\SendPaymentSuccessWaJob;
 use App\Schemas\RoleSchema;
+use App\Models\SettingCompany;
+use App\Services\Weblas\WablasClient;
+use App\Services\Weblas\Message as WablasMessage;
 
 use Carbon\Carbon;
 class XenditController extends Controller
@@ -497,36 +500,22 @@ class XenditController extends Controller
 
     public function afterPayment($internetPurchase, $internetCustomers)
     {
-        if(!$internetCustomers->installation)
-        {
+        if (!$internetCustomers->installation) {
             $post['status'] = ParamSchema::PROCESS_INSTALLATION;
-            
-            $userTechnical = optional($internetPurchase->customer->subdistrict?->coverageService?->coverageServiceOds)
-            ->pluck('ods.user_assign_id')
-            ->unique()
-            ->all();
-    
-            if(count($userTechnical) > 0)
-            {
-                $message = "Pembayaran Langganan Internet Untuk Kode ".$internetPurchase->customer->code." Telah di Setujui Oleh Finance Silahkan segera lakukan Pemasangan";
-                $directUrl = route('internet-customer.show',$internetPurchase->customer->id);
-                $from = User::whereHas('role', function ($query) {
-                    $query->whereIn('name', [RoleSchema::SYSTEM_BOS,RoleSchema::ROOT,RoleSchema::FINANCE]);
-                })->first();
+            $internetPurchase->customer->update($post);
 
-                foreach($userTechnical as $tech)
-                {
-                    $this->sentInbox($tech,$from->id,$message, $directUrl);
-                }
-            }
-        }else
-        {
+            $message = "🔧 *Notifikasi Pemasangan*\n\n"
+                . "Pelanggan dengan kode *{$internetPurchase->customer->code}* telah berhasil melakukan pembayaran dan siap untuk proses pemasangan.\n\n"
+                . "Mohon segera dijadwalkan untuk instalasi. Terima kasih. 🙏";
+
+            $this->sentWaToOffice($internetPurchase->customer->company_id, $message);
+        } else {
             $post['status'] = ParamSchema::REACTIVATED;
+            $internetPurchase->customer->update($post);
+
             dispatch(new ProvisionCustomerJob($internetCustomers->id));
             \App\Jobs\SyncInstalledCustomersJob::dispatch([$internetCustomers->id]);
         }
-
-        $internetPurchase->customer->update($post);
     }
 
     private function sentInbox($to,$from, $message,$directUrl)
@@ -534,6 +523,25 @@ class XenditController extends Controller
         $inboxHelper = new InboxHelper();
         $inboxHelper->sent($to, $from, $message, $directUrl);
         return true;
+    }
+
+    private function sentWaToOffice(int $companyId, string $message): void
+    {
+        try {
+            $settings = SettingCompany::byCompany($companyId)->get()->pluck('field_value', 'field_title');
+
+            $officePhone = $settings['internet_phone'] ?? null;
+            if (!$officePhone) return;
+
+            $serverWablas = $settings['server_wablas'] ?? null;
+            $tokenWablas  = $settings['token_wablas'] ?? null;
+            if (!$serverWablas || !$tokenWablas) return;
+
+            $client = new WablasClient($serverWablas, $tokenWablas, $settings['webhook_key_wablas'] ?? null);
+            (new WablasMessage($client))->single_text($officePhone, $message);
+        } catch (\Throwable $e) {
+            Log::warning('[XenditController::sentWaToOffice] Gagal kirim WA ke kantor: ' . $e->getMessage());
+        }
     }
 
     /**

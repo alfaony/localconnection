@@ -43,7 +43,7 @@ class GenerateIsolirJob implements ShouldQueue
 
             dispatch(new ProvisionCustomerJob($internetCustomer->id));
 
-            $settingCompany = SettingCompany::byCompany($internetCustomer->company_id)->where('menu','wablas')->get()->pluck('field_value','field_title');
+            $settingCompany = SettingCompany::byCompany($internetCustomer->company_id)->get()->pluck('field_value','field_title');
             if($settingCompany['server_wablas'] && $settingCompany['token_wablas'])
             {
                 $this->sentWa($settingCompany, $this->customer);
