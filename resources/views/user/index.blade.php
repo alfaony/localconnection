@@ -97,153 +97,10 @@ $totalUser = $totalUser + 1; // Get the total number of projects
             <label for="email">Email:</label>
             <input type="email" id="email" name="email" placeholder="Budiman@gmail.com" value="{{ old('email') ?? @$userEdit->email }}" required>
 
-            <label for="email">Email Gmail:</label>
-            <input type="email" id="email" name="email_gmail" placeholder="Budiman@gmail.com" value="{{ old('email_gmail') ?? @$userEdit->email_gmail }}">
-
             <label for="phone">Phone:</label>
             <input type="text" id="phone" name="phone" placeholder="08568989080" value="{{ old('phone') ?? @$userEdit->phone }}" oninput="this.value = this.value.replace(/[^0-9]/g, ''); this.value = this.value.replace(/^((0|62)[0-9]*)$/, '$1');" >
 
-            <div class="form-group mt-2">
-                <label>Gunakan IP Tertentu:</label>
-
-                <!-- Checkbox Enable IP Filtering -->
-                <div class="form-check">
-                    <input type="checkbox" class="form-check-input" id="use_ip_restriction" name="use_ip_restriction" value="1" {{ @$userEdit->use_ip_restriction ? 'checked' : '' }}>
-                    <label class="form-check-label" for="use_ip_restriction">Aktifkan Restriksi IP</label>
-                </div>
-
-                <!-- Container untuk Input IP -->
-                <div id="ipRestrictionContainer" class="mt-3" style="display: {{ @$userEdit->use_ip_restriction ? 'block' : 'none' }}">
-                    <button type="button" class="btn btn-success btn-sm mb-2" id="addIpBtn">➕ Tambah IP</button>
-                    <div id="ipInputs">
-                        @if(@$userEdit->ip_addresses)
-                            @foreach (@$userEdit->ip_addresses as $ip)
-                                <div class="input-group mb-2 ip-input-group">
-                                    <input type="text" class="form-control" name="ip_addresses[]" value="{{ $ip }}">
-                                    <button type="button" class="btn btn-danger remove-ip ml-2 btn-sm"><i class="fa fa-trash"></i></button>
-                                </div>
-                            @endforeach
-                        @endif
-                    </div>
-                </div>
-            </div>
-            <div class="form-group mt-2 mb-1">
-                <label for="is_checkin">Metode Absensi</label>
-                <!-- Check-In Setting -->
-                <div class="form-group">
-                    <select name="is_checkin" id="is_checkin" class="form-control">
-                        <option value="">-- Pilih Metode Check-In --</option>
-                        <option value="wfo" {{ @$userEdit->wfo_check_in && !@$userEdit->is_shift_attendance ? 'selected' : '' }}>WFO Check-In</option>
-                        <option value="wfh" {{ @$userEdit->is_checkin ? 'selected' : '' }}>WFH / Hybrid Check-In</option>
-                        <option value="shift" {{ @$userEdit->is_shift_attendance && !@$userEdit->wfo_check_in ? 'selected' : '' }}>Shift Kehadiran</option>
-                        <option value="wfo_shift" {{ @$userEdit->wfo_check_in && @$userEdit->is_shift_attendance ? 'selected' : '' }}>WFO Shifting</option>
-                    </select>
-                </div>
-
-                <!-- Additional Settings - Visible only if is_checkin is enabled -->
-                <div id="additionalSettings" style="display: none;">
-                    <!-- Manual Check-In -->
-                    <div class="form-check mt-2">
-                        <input type="checkbox" class="form-check-input" name="manual_checkin" id="manual_checkin" value="1" {{ @$userEdit->manual_checkin ? 'checked' : '' }}>
-                        <label class="form-check-label" for="manual_checkin">Check-In Manual</label>
-                    </div>
-
-                    <!-- Require Photo -->
-                    <div class="form-check mt-2">
-                        <input type="checkbox" class="form-check-input" name="requires_photo" id="requires_photo" value="1" {{ @$userEdit->requires_photo ? 'checked' : '' }}>
-                        <label class="form-check-label" for="requires_photo">Memerlukan Foto Check-In</label>
-                    </div>
-
-                    <!-- Require Location -->
-                    <div class="form-check mt-2">
-                        <input type="checkbox" class="form-check-input" name="requires_location" id="requires_location" value="1" {{ @$userEdit->requires_location ? 'checked' : '' }}>
-                        <label class="form-check-label" for="requires_location">Memerlukan Lokasi Check-In</label>
-                    </div>
-
-                    <!-- Time Settings -->
-                    <div class="form-group mt-3">
-                        <label for="start_time">Jam Kerja:</label>
-                        <div class="input-group">
-                            <span class="input-group-text">Mulai</span>
-                            <input type="time" class="form-control" name="start_time" id="start_time" value="{{ old('start_time') ?? @$userEdit->start_time }}">
-                            <span class="input-group-text">Selesai</span>
-                            <input type="time" class="form-control" name="end_time" id="end_time" value="{{ old('end_time') ?? @$userEdit->end_time }}">
-                        </div>
-                    </div>
-
-                    <!-- Rest Time -->
-                    <div class="form-group mt-2">
-                        <label for="rest_time">Waktu Istirahat:</label>
-                        <div class="input-group">
-                            <span class="input-group-text">Mulai</span>
-                            <input type="time" class="form-control" name="rest_time" id="rest_time" value="{{ old('rest_time') ?? @$userEdit->rest_time }}">
-                            <span class="input-group-text">Selesai</span>
-                            <input type="time" class="form-control" name="end_rest_time" id="end_rest_time" value="{{ old('end_rest_time') ?? @$userEdit->end_rest_time }}">
-                        </div>
-                    </div>
-                    <div class="form-group mt-4">
-                        <label>Custom Rest Times:</label>
-                        @foreach($dayofweek as $day => $value)
-                            <div class="input-group mt-2">
-                                <span class="input-group-text">{{ $day }}</span>
-                                <input type="time" class="form-control" name="custom_rest_times[{{ $value }}][start]" 
-                                    placeholder="Start" value="{{ old("custom_rest_times.$value.start") ?? @$userEdit->custom_rest_times[$value]['start'] }}">
-                                <span class="input-group-text">to</span>
-                                <input type="time" class="form-control" name="custom_rest_times[{{ $value }}][end]" 
-                                    placeholder="End" value="{{ old("custom_rest_times.$value.end") ?? @$userEdit->custom_rest_times[$value]['end'] }}">
-                            </div>
-                        @endforeach
-                    </div>                    
-                </div>
-
-                <div id="wfoSettings" style="display: none;">
-                    <div class="form-group mt-3">
-                        <label class="font-weight-bold">Hari Kerja WFO:</label>
-                        <div class="border p-3 rounded bg-light">
-                            @foreach(config('custom.daysOfWeek') as $dayName => $dayValue)
-                            <div class="form-check">
-                                <input 
-                                    class="form-check-input" 
-                                    type="checkbox" 
-                                    name="wfo_working_days[{{ $dayValue }}]" 
-                                    id="wfo-day-{{ $dayValue }}"
-                                    value="1"
-                                    {{ old("wfo_working_days.$dayValue", @$userEdit->wfo_working_days[$dayValue] ?? false) ? 'checked' : '' }}>
-                                <label class="form-check-label" for="wfo-day-{{ $dayValue }}">
-                                    {{ $dayName }}
-                                </label>
-                            </div>
-                            @endforeach
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="form-group mt-2 ">
-                <label for="dayoff_active">Setting Cuti</label>
-                <div class="form-check">
-                    <input type="checkbox" name="dayoff_active" id="dayoff_active" class="form-check-input"
-                        {{ old('dayoff_active', $userEdit->dayoff_active ?? false) ? 'checked' : '' }}>
-                    <label for="dayoff_active" class="form-check-label">Aktifkan cuti</label>
-                </div>
-
-                <div id="quota-section" class="{{ old('dayoff_active', $userEdit->dayoff_active ?? false) ? '' : 'd-none' }}">
-                    <h5 class="font-weight-bold mt-4">Kuota Cuti</h5>
-                    <div class="border p-3 rounded bg-light">
-                        @foreach($dayoffTypes as $type)
-                            @if($type->is_limited)
-                            <div class="form-group">
-                                <label>{{ $type->name }}</label>
-                                <input type="number"
-                                    name="quotas[{{ $type->id }}]"
-                                    class="form-control"
-                                    min="0"
-                                    value="{{ old('quotas.' . $type->id, $userQuotas[$type->id] ?? $type->default_quota) }}">
-                            </div>
-                            @endif
-                        @endforeach
-                    </div>
-                </div>
-            </div>
+            {{-- 
             <div class="form-group">
                 <label for="phone">Company Access Allow:</label>
                 <select name="company_access[]" multiple class="form-control select2">
@@ -255,20 +112,13 @@ $totalUser = $totalUser + 1; // Get the total number of projects
                     @endforeach
                 </select>
             </div>
+            --}}
             @if($roleAccess)
             <label for="phone">Role:</label>
             <select name="role" id="role-select" class="form-control mb-2 select2" required>
                 <option value="" selected disabled>Pilih</option>
                 @foreach($role as $a)
                 <option value="{{ $a->id }}" {{ @$userEdit->role_id == $a->id ? 'selected' : '' }} data-reportmandatory="{{  $a->is_mandatory_report}}"> {{ $a->name ?? '' }} </option>
-                @endforeach
-            </select>
-
-            <label for="phone">User Persetujuan:</label>
-            <select name="approvement_user_id" class="form-control mb-2 user-select2">
-                <option value="" selected disabled>Pilih</option>
-                @foreach($users as $a)
-                <option value="{{ $a->id }}" {{ @$userEdit->approvement_user_id == $a->id ? 'selected' : '' }}> {{ $a->name ?? '' ." ( ".  $a->company->name." )"}} </option>
                 @endforeach
             </select>
             @endif
@@ -363,9 +213,11 @@ $totalUser = $totalUser + 1; // Get the total number of projects
                         @canAccess('edit','users')
                         <a href="{{ route('user.edit',$a->slug) }}" class="btn btn-primary btn-sm mb-1"><i class="fa fa-edit"></i></a>
                         @endcanAccess
+                        @if($a->delete_able)
                         @canAccess('destroy','users')
                         <button onclick="return window.confirm('{{ __('Apakah Anda Yakin ? ') }}')" class="btn btn-danger btn-sm mb-1"><i class="fa fa-trash"></i></button>
                         @endcanAccess
+                        @endif
                     </form>
                 </td>
             </tr>

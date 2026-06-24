@@ -60,11 +60,11 @@ class GenerateIsolirJob implements ShouldQueue
     {
         try {
             $internetSetting = SettingCompany::byCompany($customer->internetCustomer->company_id)
-                ->where('menu', 'wablas')
+                // ->where('menu', 'wablas')
                 ->get()
                 ->pluck('field_value', 'field_title');
 
-            $template = trim($internetSetting['internet_remainder_billing_isolir'] ?? '');
+            $template = html_to_wa($internetSetting['internet_remainder_billing_isolir'] ?? '');
 
             if (empty($template)) {
                 \Log::info('[GenerateIsolirJob] Template isolir kosong, skip kirim WA', [

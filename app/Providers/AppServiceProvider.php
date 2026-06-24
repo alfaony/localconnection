@@ -199,7 +199,7 @@ class AppServiceProvider extends ServiceProvider
 
             $managementSettingMenu = [
                 // 'badges','xp_configs','partner_types',
-                'setting_companies','roles',
+                'users','setting_companies','roles',
                 // 'webhook_settings'
             ];
 
@@ -888,7 +888,7 @@ class AppServiceProvider extends ServiceProvider
                     'text' => 'Aset Internet',
                     'route' => 'internet-asset.index',
                     'icon' => 'fa fa-server',
-                ]
+                ],
             ];
 
             // foreach ($listMenu as $role) 

@@ -36,7 +36,7 @@ class UserController extends Controller
         $roleAccess = false;
         $dayofweek = config('custom.daysOfWeek');
         
-        if(Auth::user()->role->name == RoleSchema::ROOT)
+        if(Auth::user()->role->name == RoleSchema::SUPER_ADMIN)
         {
             $companyAccess = true;
             $roleAccess = true;
@@ -57,8 +57,7 @@ class UserController extends Controller
 
             $role = Role::where('company_id', Auth::user()->company_id)
                 ->where('name','!=',RoleSchema::ROOT)->get();
-            $user = User::where('delete_able',1)
-            ->byCompany(Auth::user()->company_id)
+            $user = User::byCompany(Auth::user()->company_id)
             ->where(function($query) use ($request) {
                 $query->where('email','like', '%' . $request->get('email') . '%')
                     ->orWhere('name','like', '%' . $request->get('email') . '%');
@@ -111,7 +110,7 @@ class UserController extends Controller
         $companyAccess = false;
         $roleAccess = false;
 
-        if(Auth::user()->role->name == RoleSchema::ROOT)
+        if(Auth::user()->role->name == RoleSchema::SUPER_ADMIN)
         {
             $companyAccess = true;
             $roleAccess = true;
@@ -125,9 +124,9 @@ class UserController extends Controller
             $roleAccess = true;
 
             $role = Role::where('company_id', Auth::user()->company_id)
-                ->where('name','!=',RoleSchema::ROOT)->get();
-            $user = User::where('delete_able',1)
-                ->byCompany(Auth::user()->company_id)
+                // ->where('name','!=',RoleSchema::ROOT)
+                ->get();
+            $user = User::byCompany(Auth::user()->company_id)
                 ->OrderBy('name','asc')->paginate(10);
             $users = User::byCompany(Auth::user()->company_id)->get();
 
@@ -148,7 +147,7 @@ class UserController extends Controller
     {        
         $user->name = $request->post('name');
         $user->email = $request->post('email');
-        $user->email_gmail = $request->post('email_gmail');
+        // $user->email_gmail = $request->post('email_gmail');
         $user->phone = $request->post('phone');
         $user->role_id = $request->post('role') ?? $user->role_id;
         $user->approvement_user_id = $request->post('approvement_user_id') ?? NULL;
@@ -160,76 +159,76 @@ class UserController extends Controller
 
         // $divisions = $request->input('divisions');
         // $user->divisions()->sync($divisions);
-        $divisionIds = $request->input('divisions', []);
+        // $divisionIds = $request->input('divisions', []);
 
-        // Ambil input divisi yang wajib isi laporan
-        $weeklyRequired = $request->input('weekly_report_required', []); // array key: division_id
-        $primaryDivisionId = $request->input('primary_division_id');
+        // // Ambil input divisi yang wajib isi laporan
+        // $weeklyRequired = $request->input('weekly_report_required', []); // array key: division_id
+        // $primaryDivisionId = $request->input('primary_division_id');
 
-        // Persiapkan data sinkronisasi pivot
-        $syncData = [];
-        foreach ($divisionIds as $divisionId) {
-            $syncData[$divisionId] = [
-                'weekly_report_required' => isset($weeklyRequired[$divisionId]), // true if checked
-                'is_primary' => $divisionId === $primaryDivisionId,
-            ];
-        }
+        // // Persiapkan data sinkronisasi pivot
+        // $syncData = [];
+        // foreach ($divisionIds as $divisionId) {
+        //     $syncData[$divisionId] = [
+        //         'weekly_report_required' => isset($weeklyRequired[$divisionId]), // true if checked
+        //         'is_primary' => $divisionId === $primaryDivisionId,
+        //     ];
+        // }
 
-        // Sync relasi many-to-many + pivot
-        $user->divisions()->sync($syncData);
+        // // Sync relasi many-to-many + pivot
+        // // $user->divisions()->sync($syncData);
 
-        $user->use_ip_restriction = $request->post('use_ip_restriction', 0);
-        $user->ip_addresses = $request->has('ip_addresses') ? $request->ip_addresses : NULL;
+        // // $user->use_ip_restriction = $request->post('use_ip_restriction', 0);
+        // // $user->ip_addresses = $request->has('ip_addresses') ? $request->ip_addresses : NULL;
 
-        //
-        $isCheckin = $request->post('is_checkin');
-        $user->is_shift_attendance = in_array($isCheckin, [ParamSchema::SHIFT, ParamSchema::WFO_SHIFT]);
-        $user->is_checkin = $isCheckin == ParamSchema::WFH ? true : false;
-        $user->wfo_check_in = in_array($isCheckin, [ParamSchema::WFO, ParamSchema::WFO_SHIFT]);
+        // //
+        // $isCheckin = $request->post('is_checkin');
+        // $user->is_shift_attendance = in_array($isCheckin, [ParamSchema::SHIFT, ParamSchema::WFO_SHIFT]);
+        // $user->is_checkin = $isCheckin == ParamSchema::WFH ? true : false;
+        // $user->wfo_check_in = in_array($isCheckin, [ParamSchema::WFO, ParamSchema::WFO_SHIFT]);
 
-        $user->manual_checkin = $isCheckin == ParamSchema::WFH ? $request->post('manual_checkin', 0) : false;
-        $user->requires_photo = $isCheckin == ParamSchema::WFH ? $request->post('requires_photo', 0) : false;
-        $user->requires_location = $isCheckin == ParamSchema::WFH ? $request->post('requires_location', 0) : false;
-        $user->start_time = $isCheckin == ParamSchema::WFH ? $request->post('start_time') : null;
-        $user->end_time = $isCheckin == ParamSchema::WFH ? $request->post('end_time') : null;
-        $user->rest_time = $isCheckin == ParamSchema::WFH ? $request->post('rest_time') : null;
-        $user->end_rest_time = $isCheckin == ParamSchema::WFH ? $request->post('end_rest_time') : null;
+        // $user->manual_checkin = $isCheckin == ParamSchema::WFH ? $request->post('manual_checkin', 0) : false;
+        // $user->requires_photo = $isCheckin == ParamSchema::WFH ? $request->post('requires_photo', 0) : false;
+        // $user->requires_location = $isCheckin == ParamSchema::WFH ? $request->post('requires_location', 0) : false;
+        // $user->start_time = $isCheckin == ParamSchema::WFH ? $request->post('start_time') : null;
+        // $user->end_time = $isCheckin == ParamSchema::WFH ? $request->post('end_time') : null;
+        // $user->rest_time = $isCheckin == ParamSchema::WFH ? $request->post('rest_time') : null;
+        // $user->end_rest_time = $isCheckin == ParamSchema::WFH ? $request->post('end_rest_time') : null;
 
-        if ($request->has('custom_rest_times'))
-        {
-            $user->custom_rest_times = $request->custom_rest_times;
-        }
+        // if ($request->has('custom_rest_times'))
+        // {
+        //     $user->custom_rest_times = $request->custom_rest_times;
+        // }
 
-        if ($isCheckin == ParamSchema::WFO) {
-            $wfoWorkingDays = [];
-            foreach (config('custom.daysOfWeek') as $dayName => $dayValue) {
-                $wfoWorkingDays[$dayValue] = $request->has("wfo_working_days.$dayValue");
-            }
-            $user->wfo_working_days = $wfoWorkingDays;
-        } else {
-            $user->wfo_working_days = null;
-        }
+        // if ($isCheckin == ParamSchema::WFO) {
+        //     $wfoWorkingDays = [];
+        //     foreach (config('custom.daysOfWeek') as $dayName => $dayValue) {
+        //         $wfoWorkingDays[$dayValue] = $request->has("wfo_working_days.$dayValue");
+        //     }
+        //     $user->wfo_working_days = $wfoWorkingDays;
+        // } else {
+        //     $user->wfo_working_days = null;
+        // }
 
-        $dayoffTypes = DayoffType::all();
+        // $dayoffTypes = DayoffType::all();
 
-        if($request->quotas)
-        {
-            $user->dayoff_active = $request->dayoff_active ? true : false;
+        // if($request->quotas)
+        // {
+        //     $user->dayoff_active = $request->dayoff_active ? true : false;
 
-            foreach ($request->quotas as $typeId => $jumlah) 
-            {
-                $type = DayoffType::find($typeId);            
-                DayoffQuota::updateOrCreate(
-                    ['user_id' => $user->id, 'dayoff_type_id' => $typeId],
-                    ['quota' => $jumlah]
-                );
-            }
-        }
+        //     foreach ($request->quotas as $typeId => $jumlah) 
+        //     {
+        //         $type = DayoffType::find($typeId);            
+        //         DayoffQuota::updateOrCreate(
+        //             ['user_id' => $user->id, 'dayoff_type_id' => $typeId],
+        //             ['quota' => $jumlah]
+        //         );
+        //     }
+        // }
 
         $user->save();
 
         // Update akses tambahan
-        $user->accessibleCompanies()->sync($request->company_access ?? []);
+        // $user->accessibleCompanies()->sync($request->company_access ?? []);
 
         return redirect()->to(route('user.index'))->with('update',true);
 

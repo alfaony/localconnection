@@ -55,7 +55,7 @@ class SendPaymentSuccessWaJob implements ShouldQueue
                 ->get()
                 ->pluck('field_value', 'field_title');
 
-            $template = trim($internetSetting['internet_message_success'] ?? '');
+            $template = html_to_wa($internetSetting['internet_message_success'] ?? '');
 
             if (empty($template)) {
                 Log::info('[SendPaymentSuccessWaJob] Template kosong, skip kirim WA', ['purchase_id' => $this->purchaseId]);

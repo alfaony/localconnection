@@ -1018,7 +1018,7 @@ class InternetCustomerForm extends Component
     {
         try {
             $wablasSetting = SettingCompany::byCompany($companyId)
-                ->where('menu', 'wablas')
+                // ->where('menu', 'wablas')
                 ->get()
                 ->pluck('field_value', 'field_title');
 
