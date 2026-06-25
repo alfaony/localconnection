@@ -105,7 +105,7 @@ class SendBillingReminderJob implements ShouldQueue
 
                 // Ambil pesan template dari setting
                 $internetSetting = SettingCompany::byCompany($customer->internetCustomer->company_id)
-                    ->where('menu', 'wablas')
+                    // ->where('menu', 'wablas')
                     ->get()
                     ->pluck('field_value', 'field_title');
 
@@ -115,9 +115,8 @@ class SendBillingReminderJob implements ShouldQueue
                     3 => 'internet_remainder_billing_3',
                     default => 'internet_remainder_billing_isolir',
                 };
-
-                $template = trim($internetSetting[$settingKey] ?? '');
-
+                $template = html_to_wa($internetSetting[$settingKey] ?? '');
+                
                 // Jika pesan kosong di setting, tidak perlu kirim
                 if (empty($template)) {
                     Log::info("Reminder template kosong untuk key={$settingKey}, skip kirim WA", [

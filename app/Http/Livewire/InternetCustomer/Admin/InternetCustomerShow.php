@@ -851,7 +851,7 @@ class InternetCustomerShow extends Component
                 }
                 if($this->end_billing_date == Carbon::now()->format('Y-m-d'))
                 {
-                    GenerateIsolirJob::dispatch($this->customer->userCustomer);
+                    // GenerateIsolirJob::dispatch($this->customer->userCustomer);
                 }
 
                 if ($this->grouping_id !== $this->customer->grouping_id) {
@@ -1751,7 +1751,7 @@ class InternetCustomerShow extends Component
     {
         try {
             $wablasSetting = SettingCompany::byCompany($companyId)
-                ->where('menu', 'wablas')
+                // ->where('menu', 'wablas')
                 ->get()
                 ->pluck('field_value', 'field_title');
 

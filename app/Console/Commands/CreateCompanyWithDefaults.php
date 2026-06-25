@@ -198,6 +198,17 @@ class CreateCompanyWithDefaults extends Command
 
         $this->info('✓ SettingCompany (wablas_internet_customer) dibuat: ' . count($wablasFields) . ' field.');
 
+        $rekeningFields = ['atas_nama' => null,'rekening_number' => null, 'nama_bank' => null,'cabang_bank' => null];
+
+        foreach ($rekeningFields as $key => $value) {
+            $setting = new SettingCompany();
+            $setting->user_id     = $user->id;
+            $setting->field_title = $key;
+            $setting->field_value = $value;
+            $setting->menu        = 'bank';
+            $setting->save();
+        }
+
         $this->newLine();
         $this->table(
             ['Field', 'Value'],

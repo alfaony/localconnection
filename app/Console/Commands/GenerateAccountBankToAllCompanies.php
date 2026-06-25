@@ -32,14 +32,14 @@ class GenerateAccountBankToAllCompanies extends Command
      */
     public function handle()
     {
-        $adminRole = Role::where('name', RoleSchema::ADMIN)->first();
-        $rootRole = Role::where('name', RoleSchema::ROOT)->first();
+        // $adminRole = Role::where('name', RoleSchema::ADMIN)->first();
+        // $rootRole = Role::where('name', RoleSchema::ROOT)->first();
         
         // Validasi jika role tidak ditemukan
-        if (!$adminRole || !$rootRole) {
-            $this->error("Admin or Root role not found.");
-            return Command::FAILURE;
-        }
+        // if (!$adminRole || !$rootRole) {
+        //     $this->error("Admin or Root role not found.");
+        //     return Command::FAILURE;
+        // }
         
         $companies = Company::all();
         $menu = 'bank';
@@ -49,9 +49,12 @@ class GenerateAccountBankToAllCompanies extends Command
         {
             // Mencari user dengan role admin atau root pada setiap perusahaan
             $user = User::where('company_id', $company->id)
-                ->where(function ($query) use ($rootRole, $adminRole) {
-                    $query->where('role_id', $rootRole->id)
-                          ->orWhere('role_id', $adminRole->id);
+                // ->where(function ($query) {
+                //     $query->where('role_id', $rootRole->id)
+                //           ->orWhere('role_id', $adminRole->id);
+                // })
+                ->whereHas('role', function ($query) {
+                    $query->where('name', RoleSchema::ADMIN)->orWhere('name', RoleSchema::ROOT);
                 })
                 ->first();
 

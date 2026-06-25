@@ -94,7 +94,7 @@ class GenerateBillingJob implements ShouldQueue
                 ->get()
                 ->pluck('field_value', 'field_title');
 
-            $template = trim($internetSetting['internet_remainder_billing'] ?? '');
+            $template = html_to_wa($internetSetting['internet_remainder_billing'] ?? '');
 
             if (empty($template)) {
                 \Log::info('[GenerateBillingJob] Template billing kosong, skip kirim WA', [

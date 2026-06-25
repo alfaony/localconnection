@@ -36,6 +36,28 @@ if (!function_exists('s3_exists')) {
     }
 }
 
+if (!function_exists('html_to_wa')) {
+    /**
+     * Konversi HTML dari Quill editor ke plain text untuk WhatsApp.
+     * Mengubah <p>, <br> menjadi newline dan strip semua tag HTML.
+     */
+    function html_to_wa(string $html): string
+    {
+        // <p> closing → newline
+        $text = preg_replace('/<\/p>/i', "\n", $html);
+        // <br> → newline
+        $text = preg_replace('/<br\s*\/?>/i', "\n", $text);
+        // Hapus opening <p> dan tag lainnya
+        $text = strip_tags($text);
+        // Decode HTML entities (&amp; &nbsp; dll)
+        $text = html_entity_decode($text, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+        // Bersihkan lebih dari 2 newline berturut-turut
+        $text = preg_replace('/\n{3,}/', "\n\n", $text);
+
+        return trim($text);
+    }
+}
+
 if (!function_exists('s3_to_base64')) {
     /**
      * Fetch a file from S3 and return it as a base64 data URI.

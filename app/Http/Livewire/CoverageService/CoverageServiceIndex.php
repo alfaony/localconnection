@@ -48,6 +48,7 @@ class CoverageServiceIndex extends Component
                     });
                 });
             })
+            ->byCompany(auth()->user()->company_id)
             ->paginate($this->perPage);
 
         return view('livewire.coverage-service.coverage-service-index', compact('coverageServices'))->extends('adminlte::page');
