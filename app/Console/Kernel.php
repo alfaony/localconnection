@@ -184,6 +184,15 @@ class Kernel extends ConsoleKernel
         // Send billing reminder untuk customer yang end_billing_date = today (jam 17:00)
         $schedule->command('billing:send-reminder')->timezone('Asia/Jakarta')->dailyAt('18:00');
 
+        // =============== CLEANUP PURCHASE MEDIA ===============
+        // Hapus payment_proof S3 untuk purchase yang updated_at > 2 bulan
+        $schedule->command('purchase:cleanup-media --months=2')
+            ->timezone('Asia/Jakarta')
+            ->monthlyOn(1, '02:00')
+            ->withoutOverlapping(10)
+            ->appendOutputTo(storage_path('logs/purchase-media-cleanup.log'));
+        // =============== END CLEANUP PURCHASE MEDIA ===============
+
         // $schedule->command('project:set-status-sent-time')->timezone('Asia/Jakarta')->dailyAt('00:00');
         // $schedule->command('challenge:check-completed')->timezone('Asia/Jakarta')->hourly();
         // // Setiap Senin pukul 00:00 — generate occurrence event routine 2 minggu ke depan

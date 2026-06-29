@@ -666,8 +666,11 @@ class InternetCustomerShow extends Component
             $periodEnd = $periodStart->copy()->addMonths($this->payment_months)->subDay();
             
             // Store the file
-            $path = $this->payment_proof->store('payment_proofs');
-            
+            // $path = $this->payment_proof->store('payment_proofs');
+            // dd($path);
+            $path = Storage::disk('s3')->putFile('payment_proofs', $this->payment_proof);
+
+            // dd($path, $this->payment_proof);
             // Update purchase record
             $purchase->update([
                 'payment_proof' => $path,
@@ -711,8 +714,11 @@ class InternetCustomerShow extends Component
 
     protected function notifyFinanceTeam($internetCustomer)
     {
+        $url = route('internet-customer.show', $internetCustomer->id);
+
         $message = "💳 *Verifikasi Pembayaran*\n\n"
             . "Pelanggan dengan kode *{$internetCustomer->code}* telah mengirimkan bukti pembayaran untuk *{$this->payment_months} bulan*.\n\n"
+            . "Silakan periksa detail pembayaran melalui link berikut: {$url}\n\n"
             . "Mohon segera lakukan verifikasi pembayaran tersebut. Terima kasih. 🙏";
 
         $this->sentWaToOffice($internetCustomer->company_id, $message);
@@ -860,11 +866,11 @@ class InternetCustomerShow extends Component
         }
     }
 
-    private function sentWaToOffice(int $companyId, string $message): void
+    private function sentWaToOffice($companyId, string $message): void
     {
         try {
             $settings = SettingCompany::byCompany($companyId)->get()->pluck('field_value', 'field_title');
-
+            
             $officePhone = $settings['internet_phone'] ?? null;
             if (!$officePhone) return;
 
@@ -873,6 +879,7 @@ class InternetCustomerShow extends Component
             if (!$serverWablas || !$tokenWablas) return;
 
             $client = new WablasClient($serverWablas, $tokenWablas, $settings['webhook_key_wablas'] ?? null);
+
             (new WablasMessage($client))->single_text($officePhone, $message);
         } catch (\Throwable $e) {
             Log::warning('[InternetCustomerShow::sentWaToOffice] Gagal kirim WA ke kantor: ' . $e->getMessage());
