@@ -58,16 +58,17 @@ class InternetCustomerForm extends Component
     public $isAvailableArea = false;
     
     // Step 2: Data Pribadi
-    public $ktp_input_mode = 'manual';  
+    public $ktp_input_mode = 'manual';
     public $ktpReadingStartedAt = null;
     public $isReadingKtp = false;
     public $tempKtpPath;
     public $name;
     public $phone_number;
-    public $email;
     public $password;
     public $password_confirmation;
     public $address;
+    public $latitude;
+    public $longitude;
     public $ktp_number;
     public $ktp_photo;
     public $npwp_number;
@@ -602,9 +603,10 @@ class InternetCustomerForm extends Component
     {
         $rules = [
             'name'         => 'required|min:3',
-            'email'        => ['required', 'email'],
             'phone_number' => ['required', 'string', 'regex:/^[0-9]+$/'],
             'address'      => 'required|min:10',
+            'latitude'     => ['nullable', 'numeric', 'between:-90,90'],
+            'longitude'    => ['nullable', 'numeric', 'between:-180,180'],
             'ktp_number'   => ['nullable', 'digits:16'],
             'ktp_photo'    => ['nullable', 'file', 'mimes:jpg,jpeg,png,pdf', 'max:20480'],
         ];
@@ -615,9 +617,6 @@ class InternetCustomerForm extends Component
         }
 
         $this->validate($rules, [
-            'email.unique' => 'Email ini sudah terdaftar. Silakan gunakan email lain atau hubungi admin jika ini adalah akun Anda.',
-            'email.required' => 'Email wajib diisi.',
-            'email.email' => 'Format email tidak valid.',
             'phone_number.required' => 'Nomor telepon wajib diisi.',
             'phone_number.regex' => 'Nomor telepon hanya boleh berisi angka, tanpa simbol.',
             'ktp_number.digits' => 'Nomor KTP harus 16 digit.',
@@ -780,6 +779,8 @@ class InternetCustomerForm extends Component
                 'access_type' => $this->selectedPackage->access_type ?? 'pppoe',
                 'name' => $this->name,
                 'address' => $this->address,
+                'latitude' => $this->latitude ?: null,
+                'longitude' => $this->longitude ?: null,
                 'ktp_number' => $this->ktp_number ?? null,
                 'ktp_photo'    => $ktpPath ?: null,
                 'npwp_number'  => $this->customer_type === 'bisnis' ? ($this->npwp_number ?: null) : null,
@@ -794,10 +795,8 @@ class InternetCustomerForm extends Component
             $this->code = $internetCustomer->code;
 
             $userCustomer = UserCustomer::create([
-                'start_billing_date' => $this->start_billing_date,
                 'name' => $this->name,
                 'phone_number' => $this->phone_number,
-                'email' => $this->email,
                 'company_id' => $this->company_id,
                 'role' => Role::where('name',RoleSchema::CUSTOMER_INTERNET)->first()->id,
                 'start_billing_date' => $this->start_billing_date,

@@ -241,19 +241,24 @@ class InternetCustomerIndex extends Component
         }
 
         // Ambil semua ODP yang terkait dengan coverage service ini
-        $this->availableOdps = CoverageServiceDistribution::query()
-            ->where('coverage_service_id', $coverageService->id)
-            ->with('ods:id,name') // eager load optical distribution
-            ->get()
-            ->pluck('ods')
-            ->filter() // remove null values
-            ->map(fn($odp) => [
-                'id' => $odp->id,
-                'label' => "{$odp->name}"
-            ])
-            ->unique('id')
-            ->values()
-            ->toArray();
+        // $this->availableOdps = CoverageServiceDistribution::query()
+        //     ->where('coverage_service_id', $coverageService->id)
+        //     ->with('ods:id,name') // eager load optical distribution
+        //     ->get()
+        //     ->pluck('ods')
+        //     ->filter() // remove null values
+        //     ->map(fn($odp) => [
+        //         'id' => $odp->id,
+        //         'label' => "{$odp->name}"
+        //     ])
+        //     ->unique('id')
+        //     ->values()
+        //     ->toArray();
+        $this->availableOdps = OpticalDistribution::byCompany(Auth::user()->company_id)
+                ->orderBy('name')
+                ->get(['id', 'name'])
+                ->map(fn($o) => ['id' => $o->id, 'label' => $o->name])
+                ->toArray();
     }
 
     // When ODP value changes via @this.set() from JS

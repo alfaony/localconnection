@@ -62,6 +62,7 @@ class InternetCustomerShow extends Component
     // Properties untuk edit data pribadi
     public $name, $email, $phone_number, $start_billing_date, $end_billing_date, $grouping_id;
     public $province_id, $city_id, $district_id, $subdistrict_id, $address;
+    public $latitude, $longitude;
     public $ktp_number;
     public ?string $edit_group_id = null;
     public array $availableGroupsForEdit = [];
@@ -606,7 +607,9 @@ class InternetCustomerShow extends Component
         $this->city_id = $this->customer->city_id;
         $this->district_id = $this->customer->district_id;
         $this->subdistrict_id = $this->customer->subdistrict_id;
-        $this->address = $this->customer->address;
+        $this->address   = $this->customer->address;
+        $this->latitude  = $this->customer->latitude;
+        $this->longitude = $this->customer->longitude;
 
         // Fetch option data for cascading selects
         $cities = $this->province_id
@@ -655,6 +658,8 @@ class InternetCustomerShow extends Component
             'edit_group_id'      => $this->edit_group_id,
             'ktp_number'         => $this->ktp_number,
             'npwp_number'        => $this->npwp_number,
+            'latitude'           => $this->latitude,
+            'longitude'          => $this->longitude,
         ]);
     }
 
@@ -799,6 +804,8 @@ class InternetCustomerShow extends Component
                 'city_id'        => $this->city_id,
                 'district_id'    => $this->district_id,
                 'subdistrict_id' => $this->subdistrict_id,
+                'latitude'       => $this->latitude ?: null,
+                'longitude'      => $this->longitude ?: null,
             ];
 
             if ($this->customer->customer_type === 'bisnis') {
@@ -946,26 +953,27 @@ class InternetCustomerShow extends Component
 
         // ── Load ODPs ── dari coverage service, fallback ke semua ODP perusahaan (byCompany)
         $coverageService = $cust->subdistrict?->coverageService;
-        if ($coverageService) {
-            $this->availableOdpsForInstalasi = CoverageServiceDistribution::where('coverage_service_id', $coverageService->id)
-                ->with('ods:id,name')
-                ->get()
-                ->pluck('ods')
-                ->filter()
-                ->map(fn($odp) => ['id' => $odp->id, 'label' => $odp->name])
-                ->unique('id')
-                ->values()
-                ->toArray();
-        }
+        // if ($coverageService) {
+        //     dd("here 1");
+        //     $this->availableOdpsForInstalasi = CoverageServiceDistribution::where('coverage_service_id', $coverageService->id)
+        //         ->with('ods:id,name')
+        //         ->get()
+        //         ->pluck('ods')
+        //         ->filter()
+        //         ->map(fn($odp) => ['id' => $odp->id, 'label' => $odp->name])
+        //         ->unique('id')
+        //         ->values()
+        //         ->toArray();
+        // }
 
-        // Fallback: semua ODP perusahaan — WAJIB pakai byCompany (bukan where langsung)
-        if (empty($this->availableOdpsForInstalasi)) {
+        // // Fallback: semua ODP perusahaan — WAJIB pakai byCompany (bukan where langsung)
+        // if (empty($this->availableOdpsForInstalasi)) {
             $this->availableOdpsForInstalasi = OpticalDistribution::byCompany(Auth::user()->company_id)
                 ->orderBy('name')
                 ->get(['id', 'name'])
                 ->map(fn($o) => ['id' => $o->id, 'label' => $o->name])
                 ->toArray();
-        }
+        // }
 
         // Pre-load groups untuk ODP yang sudah dipilih
         if ($this->instal_odp_id) {

@@ -6,23 +6,28 @@
         <input type="text" wire:model="name" class="form-control" @if($ktp_input_mode === 'auto' && $isReadingKtp) disabled @endif>
         @error('name') <small class="text-danger">{{ $message }}</small> @enderror
     </div>
-    
+
     <div class="col-md-6">
         <label class="form-label">Nomor Telepon <span class="text-danger">*</span></label>
         <input type="text" wire:model="phone_number" class="form-control" inputmode="numeric" pattern="[0-9]*" oninput="this.value=this.value.replace(/[^0-9]/g,'')">
         @error('phone_number') <small class="text-danger">{{ $message }}</small> @enderror
     </div>
-    
-    <div class="col-md-12">
-        <label class="form-label">Email <span class="text-danger">*</span></label>
-        <input type="email" wire:model="email" class="form-control">
-        @error('email') <small class="text-danger">{{ $message }}</small> @enderror
-    </div>
-    
+
     <div class="col-12">
         <label class="form-label">Alamat Lengkap <span class="text-danger">*</span></label>
         <textarea wire:model="address" rows="3" class="form-control" @if($ktp_input_mode === 'auto' && $isReadingKtp) disabled @endif></textarea>
         @error('address') <small class="text-danger">{{ $message }}</small> @enderror
+    </div>
+
+    {{-- Titik Koordinat --}}
+    <div class="col-12">
+        <label class="form-label">Titik Lokasi</label>
+        @include('partials.location-map-picker', [
+            'mapId'  => 'reg-location-map',
+            'height' => '260px',
+        ])
+        @error('latitude')  <small class="text-danger d-block">{{ $message }}</small> @enderror
+        @error('longitude') <small class="text-danger d-block">{{ $message }}</small> @enderror
     </div>
 
     @if($customer_type === 'bisnis')
@@ -33,10 +38,7 @@
     </div>
     <div class="col-md-6">
         <label class="form-label">Foto NPWP</label>
-        <input type="file"
-               wire:model="npwp_photo"
-               class="form-control"
-               accept="image/*,application/pdf">
+        <input type="file" wire:model="npwp_photo" class="form-control" accept="image/*,application/pdf">
         @if($npwp_photo)
             <small class="text-success d-block mt-1">
                 <i class="fas fa-check-circle me-1"></i>
@@ -58,10 +60,10 @@
 @endif
 
 <div class="d-flex justify-content-between mt-4">
-     <button wire:click="prevStep" class="btn btn-outline-secondary px-4">
+    <button wire:click="prevStep" class="btn btn-outline-secondary px-4">
         <i class="fas fa-arrow-left me-2"></i> Kembali
     </button>
-    
+
     <button
         wire:click="nextStep"
         wire:loading.attr="disabled"
@@ -78,11 +80,3 @@
         </span>
     </button>
 </div>
-
-@push('scripts')
-<script>
-window.addEventListener('ktp-autofill-success', () => {
-    alert('Data KTP berhasil dipindai & diisi otomatis. Silakan cek kembali.');
-});
-</script>
-@endpush

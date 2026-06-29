@@ -129,6 +129,8 @@ class InternetCustomer extends Model
         'ip_binding_mode',
         'npwp_number',
         'npwp_photo',
+        'latitude',
+        'longitude',
     ];
 
     // ✅ RELATIONS

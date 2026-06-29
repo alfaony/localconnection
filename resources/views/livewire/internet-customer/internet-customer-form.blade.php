@@ -349,6 +349,18 @@
                     }
                 });
 
+                // Init location map when step 2 appears
+                if (component.get('step') === 2) {
+                    setTimeout(function () {
+                        var lat = component.get('latitude');
+                        var lng = component.get('longitude');
+                        locMapInit('reg-location-map', lat || null, lng || null, function (rLat, rLng) {
+                            @this.set('latitude',  rLat);
+                            @this.set('longitude', rLng);
+                        }, { autoLocate: true });
+                    }, 150);
+                }
+
                 // FIX 2: Reinit signature pad pada step 3
                 if (component.get('step') === 3) {
                     setTimeout(() => {
