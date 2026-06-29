@@ -219,10 +219,32 @@
                                         <tr>
                                             <th>Lokasi</th>
                                             <td>
-                                                {{ $customer->subdistrict->name ?? '-' }}, 
-                                                {{ $customer->district->name ?? '-' }}, 
-                                                {{ $customer->city->name ?? '-' }}, 
+                                                {{ $customer->subdistrict->name ?? '-' }},
+                                                {{ $customer->district->name ?? '-' }},
+                                                {{ $customer->city->name ?? '-' }},
                                                 {{ $customer->province->name ?? '-' }}
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <th>Koordinat GPS</th>
+                                            <td>
+                                                @if($customer->latitude && $customer->longitude)
+                                                    <span class="badge badge-info mr-1">
+                                                        <i class="fas fa-map-marker-alt mr-1"></i>
+                                                        {{ $customer->latitude }}, {{ $customer->longitude }}
+                                                    </span>
+                                                    <button type="button" class="btn btn-xs btn-outline-info"
+                                                            onclick="toggleAdminCustomerMap()">
+                                                        <i class="fas fa-map mr-1"></i>Lihat Peta
+                                                    </button>
+                                                    <div id="admin-view-map-wrap" style="display:none; margin-top:.5rem;">
+                                                        <div wire:ignore>
+                                                            <div id="admin-view-map" style="height:220px; border-radius:6px; border:1px solid #dee2e6;"></div>
+                                                        </div>
+                                                    </div>
+                                                @else
+                                                    <span class="text-muted">— belum diisi</span>
+                                                @endif
                                             </td>
                                         </tr>
                                         {{-- 
@@ -1066,6 +1088,16 @@
                             @error('address') <span class="text-danger">{{ $message }}</span> @enderror
                         </div>
 
+                        {{-- Titik Koordinat --}}
+                        <div class="form-group">
+                            <label><i class="fas fa-map-marker-alt mr-1"></i>Titik Koordinat GPS</label>
+                            @include('partials.location-map-picker', [
+                                'mapId'    => 'admin-edit-map',
+                                'height'   => '240px',
+                                'btnClass' => 'btn btn-outline-primary btn-sm',
+                            ])
+                        </div>
+
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="form-group">
@@ -1488,7 +1520,29 @@
     @push('js')
     <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="{{ asset('js/location-map.js') }}"></script>
     <script>
+        // Toggle peta view (read-only) di tabel data pribadi
+        function toggleAdminCustomerMap() {
+            var wrap = document.getElementById('admin-view-map-wrap');
+            if (!wrap) return;
+            var hidden = wrap.style.display === 'none';
+            wrap.style.display = hidden ? 'block' : 'none';
+            if (hidden) {
+                var lat = {{ $customer->latitude ?? 'null' }};
+                var lng = {{ $customer->longitude ?? 'null' }};
+                if (!window._locMaps || !window._locMaps['admin-view-map']) {
+                    locMapInit('admin-view-map', lat, lng, null);
+                    // Read-only: disable click
+                    if (window._locMaps['admin-view-map']) {
+                        window._locMaps['admin-view-map'].map.off('click');
+                    }
+                } else {
+                    window._locMaps['admin-view-map'].map.invalidateSize();
+                }
+            }
+        }
         // Konfirmasi Setujui pelanggan pending
         function confirmApproveCustomer() {
             Swal.fire({
@@ -2109,10 +2163,19 @@
 
                 new bootstrap.Modal(document.getElementById('editPribadiModal')).show();
 
-                // Init Select2 after modal is visible (short delay for Bootstrap animation)
+                // Init Select2 + map after modal animation
                 setTimeout(function() {
                     initAddrSelect2({province_id:pid, city_id:cid, district_id:did, subdistrict_id:sid});
-                }, 200);
+
+                    // Init edit map (destroy old instance if modal was reopened)
+                    locMapDestroy('admin-edit-map');
+                    var eLat = e.detail.latitude  || null;
+                    var eLng = e.detail.longitude || null;
+                    locMapInit('admin-edit-map', eLat, eLng, function(rLat, rLng) {
+                        @this.set('latitude',  rLat);
+                        @this.set('longitude', rLng);
+                    });
+                }, 300);
             });
 
             // After user cascade change (province→city→district→subdistrict) → reinit Select2
@@ -2720,6 +2783,7 @@
     </script>
     @endpush
     @push('css')
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css">
     <style>
         .border-dashed { border-style: dashed !important; }
