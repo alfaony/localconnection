@@ -190,11 +190,13 @@
                                 <h5 class="mb-0">
                                     <i class="fas fa-check-circle mr-2"></i>Data Instalasi
                                 </h5>
+                                {{-- 
                                 <button wire:click="toggleInstallationForm"
                                         class="btn btn-sm btn-outline-light">
                                     <i class="fas fa-{{ $showInstallationForm ? 'times' : 'edit' }} mr-1"></i>
                                     {{ $showInstallationForm ? 'Tutup Form' : 'Perbarui Data' }}
                                 </button>
+                                --}}
                             </div>
                             <div class="card-body p-0">
                                 <div class="table-responsive">
@@ -258,7 +260,7 @@
                 @endif
 
                 @if($purchases->count() > 0)
-                <div class="row mt-4">
+                <div class="row mt-4" id="payment-section">
                     <div class="col-md-12">
                         <div class="card shadow">
                             <div class="card-header bg-light">
@@ -1003,6 +1005,28 @@
     }
 </script>
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+@php
+    $hasActivePendingPayment = $purchases->count() > 0 && in_array($customer->status, [
+        \App\Schemas\ParamSchema::WAITING_PAYMENT_SUBSCRIPTION,
+        \App\Schemas\ParamSchema::WAITING_PAYMENT_CONFIRMATION,
+        \App\Schemas\ParamSchema::SUSPENDED,
+        \App\Schemas\ParamSchema::ACTIVE,
+        \App\Schemas\ParamSchema::REACTIVATED,
+    ]) && $purchases->contains(fn($p) => !$p->isConfirmed());
+@endphp
+@if($hasActivePendingPayment)
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const paymentSection = document.getElementById('payment-section');
+    if (paymentSection) {
+        setTimeout(function() {
+            paymentSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 400);
+    }
+});
+</script>
+@endif
 
 <script>
 document.addEventListener('livewire:load', function() {
