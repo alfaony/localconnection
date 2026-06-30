@@ -60,7 +60,7 @@ class ProvisionCustomerJob implements ShouldQueue
             
             // ✅ Trigger sync check after 45 seconds to update status to ACTIVE
             // setelah disconnectIfActive, router butuh waktu reconnect
-            if (in_array($cust->status, [ParamSchema::REACTIVATED, ParamSchema::INSTALLED])) {
+            if (in_array($cust->status, [ParamSchema::REACTIVATED, ParamSchema::INSTALLED, ParamSchema::SUSPENDED])) {
                 dispatch(new SyncInstalledCustomersJob([$cust->id]))->delay(now()->addMinutes(1));
             }
 

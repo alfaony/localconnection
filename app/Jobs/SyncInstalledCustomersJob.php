@@ -117,6 +117,11 @@ class SyncInstalledCustomersJob implements ShouldQueue
             if (!empty($updates)) {
                 $this->batchUpdateCustomers($updates);
             }
+
+            // 6. Customer tidak ditemukan di router → DISCONNECTED
+            $activatedIds = array_column($updates, 'id');
+            $this->markNotFoundAsDisconnected($customers, $activatedIds);
+
         } catch (\Throwable $th) {
             //throw $th;
             Log::error('[SyncJob] Error', [
@@ -288,6 +293,47 @@ class SyncInstalledCustomersJob implements ShouldQueue
         }
 
         return $query->get()->all();
+    }
+
+    /**
+     * Customer yang tidak ditemukan di router setelah provision → set DISCONNECTED.
+     * Dipanggil di akhir handle() untuk semua customer yang tidak masuk $updates.
+     */
+    protected function markNotFoundAsDisconnected(array $customers, array $activatedIds): void
+    {
+        $activatedSet = array_flip($activatedIds);
+        $toDisconnect = [];
+
+        foreach ($customers as $customer) {
+            if (isset($activatedSet[$customer->id])) continue;
+
+            $meta = $customer->meta ? json_decode($customer->meta, true) : [];
+            $meta['disconnected_at'] = now()->toIso8601String();
+            $toDisconnect[] = [
+                'id'   => $customer->id,
+                'meta' => json_encode($meta),
+            ];
+        }
+
+        if (empty($toDisconnect)) return;
+
+        DB::transaction(function () use ($toDisconnect) {
+            foreach (array_chunk($toDisconnect, 100) as $chunk) {
+                foreach ($chunk as $data) {
+                    DB::table('internet_customers')
+                        ->where('id', $data['id'])
+                        ->update([
+                            'status'             => \App\Schemas\ParamSchema::DISCONNECTED,
+                            'meta'               => $data['meta'],
+                            'last_updated_router' => now(),
+                        ]);
+                }
+            }
+        });
+
+        Log::info('[SyncJob] Customers not found in router → set DISCONNECTED', [
+            'count' => count($toDisconnect),
+        ]);
     }
 
     /**
