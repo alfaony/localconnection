@@ -1554,6 +1554,69 @@ class InternetCustomerShow extends Component
     }
 
     /**
+     * Create billing manually without sending WA notification.
+     * Used for customers who have already paid before billing was generated.
+     */
+    public function createManualBilling()
+    {
+        $billingDate = $this->customer->userCustomer?->start_billing_date
+            ? Carbon::parse($this->customer->userCustomer->start_billing_date)
+            : Carbon::now();
+
+        // Block if a non-expired purchase already exists for that month
+        $existing = InternetCustomerPurchase::where('internet_customer_id', $this->customer->id)
+            ->whereYear('created_at', $billingDate->year)
+            ->whereMonth('created_at', $billingDate->month)
+            ->where(function ($q) {
+                $q->whereNull('payment_method')
+                  ->orWhere('payment_method', '!=', ParamSchema::EXPIRED);
+            })
+            ->first();
+
+        if ($existing) {
+            $this->dispatchBrowserEvent('show-notification', [
+                'type'    => 'warning',
+                'message' => 'Tagihan untuk periode ' . $billingDate->format('M Y') . ' sudah ada',
+            ]);
+            return;
+        }
+
+        DB::beginTransaction();
+        try {
+            InternetCustomerPurchase::create([
+                'internet_package_id'  => $this->customer->internet_package_id,
+                'amount_paid'          => $this->customer->internetPackage->price_nett ?? 0,
+                'internet_customer_id' => $this->customer->id,
+            ]);
+
+            $this->customer->update([
+                'is_paid' => false,
+                'status'  => ParamSchema::WAITING_PAYMENT_SUBSCRIPTION,
+            ]);
+
+            DB::commit();
+
+            $this->dispatchBrowserEvent('show-notification', [
+                'type'    => 'success',
+                'message' => 'Tagihan bulan ' . $billingDate->format('F Y') . ' berhasil dibuat',
+            ]);
+
+            $this->mount($this->customer->id);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Failed to create manual billing', [
+                'error'       => $e->getMessage(),
+                'customer_id' => $this->customer->id,
+            ]);
+
+            $this->dispatchBrowserEvent('show-notification', [
+                'type'    => 'error',
+                'message' => 'Gagal membuat tagihan: ' . $e->getMessage(),
+            ]);
+        }
+    }
+
+    /**
      * Mark payment as expired
      */
     public function expirePayment($purchaseId)
