@@ -59,12 +59,11 @@
                     <select wire:model="statusFilter" class="form-control form-control-sm ic-select">
                         <option value="">Semua Status</option>
                         <option value="pending">Pending</option>
-                        <option value="customer_existing">Pelanggan Lama</option>
                         <option value="waiting_payment_confirmation">Menunggu Konfirmasi Pembayaran</option>
                         <option value="waiting_payment_subscription">Menunggu Pembayaran Subscription</option>
                         <option value="process_installation">Proses Instalasi</option>
                         <option value="installed">Terpasang</option>
-                        <option value="reactivated">Reaktivasi</option>
+                        <option value="reactivated">Menghubungkan</option>
                         <option value="disconnected">Tidak Terhubung</option>
                         <option value="active">Aktif</option>
                         <option value="suspended">Dihentikan</option>
