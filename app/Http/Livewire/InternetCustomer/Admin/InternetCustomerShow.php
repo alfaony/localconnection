@@ -1583,13 +1583,14 @@ class InternetCustomerShow extends Component
 
         DB::beginTransaction();
         try {
-            InternetCustomerPurchase::create([
+            $purchase = new InternetCustomerPurchase([
                 'internet_package_id'  => $this->customer->internet_package_id,
                 'amount_paid'          => $this->customer->internetPackage->price_nett ?? 0,
                 'internet_customer_id' => $this->customer->id,
-                'created_at'           => $billingDate,
-                'updated_at'           => $billingDate,
             ]);
+            $purchase->created_at = $billingDate;
+            $purchase->updated_at = $billingDate;
+            $purchase->save();
 
             $this->customer->update([
                 'is_paid' => false,
