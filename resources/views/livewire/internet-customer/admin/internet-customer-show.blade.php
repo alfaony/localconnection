@@ -708,19 +708,45 @@
                         </div>
                     </div>
 
-                    @if($purchases->count() > 0)
+                    @php
+                        $latestPurchase = $purchases->first();
+                        $canCreateBilling = \App\Helpers\Access::can('as_finance', 'internet_customers')
+                            && $customer->userCustomer
+                            && (
+                                !$latestPurchase
+                                || $latestPurchase->payment_method == \App\Schemas\ParamSchema::EXPIRED
+                                || $latestPurchase->isConfirmed()
+                            );
+                        $billingMonthLabel = $customer->userCustomer && $customer->userCustomer->start_billing_date
+                            ? \Carbon\Carbon::parse($customer->userCustomer->start_billing_date)->format('F Y')
+                            : \Carbon\Carbon::now()->format('F Y');
+                    @endphp
                     <div class="row mt-4">
                         <div class="col-md-12">
                             <div class="card shadow">
-                                <div class="card-header bg-light">
-                                    <h4 class="text-primary mb-3">
+                                <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                                    <h4 class="text-primary mb-0">
                                         <i class="fas fa-credit-card mr-2"></i>Riwayat Pembayaran
                                     </h4>
+                                    @if($canCreateBilling)
+                                    <button wire:click="createManualBilling"
+                                            wire:loading.attr="disabled"
+                                            class="btn btn-sm btn-primary"
+                                            onclick="return confirm('Buat tagihan untuk bulan {{ $billingMonthLabel }}?')">
+                                        <span wire:loading.remove wire:target="createManualBilling">
+                                            <i class="fas fa-plus mr-1"></i>Buat Tagihan
+                                        </span>
+                                        <span wire:loading wire:target="createManualBilling">
+                                            <i class="fas fa-spinner fa-spin mr-1"></i>Memproses...
+                                        </span>
+                                    </button>
+                                    @endif
                                 </div>
-                                <div classa="card-body p-0">
+                                <div class="card-body p-0">
+                                    @if($purchases->count() > 0)
                                     <div class="table-responsive">
                                         <table class="table table-bordered table-striped">
-                                            <thead> {{-- Tambahkan header untuk tabel --}}
+                                            <thead>
                                                 <tr>
                                                     <th>Periode</th>
                                                     <th>Metode</th>
@@ -811,11 +837,16 @@
                                             {{ $purchases->links('pagination::bootstrap-4') }}
                                         </div>
                                     </div>
+                                    @else
+                                    <div class="text-center text-muted py-4">
+                                        <i class="fas fa-receipt fa-2x mb-2"></i>
+                                        <p class="mb-0">Belum ada riwayat pembayaran</p>
+                                    </div>
+                                    @endif
                                 </div>
                             </div>
                         </div>
                     </div>
-                    @endif
 
                     @if($wablasLogs->count() > 0)
                     <div class="row mt-4">
