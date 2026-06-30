@@ -1858,23 +1858,25 @@ class InternetCustomerShow extends Component
 
     private function createMonth($purchase, $userCustomer, $months)
     {
-        $monthCreate = Carbon::now()->month;
-        $year   = Carbon::now()->year;
-        $day    = Carbon::parse($userCustomer->start_billing_date)->day;
+        // Gunakan bulan dari purchase (bukan now()), supaya tagihan manual
+        // yang dibuat untuk bulan depan tetap menghitung next-billing dengan benar.
+        $reference   = Carbon::parse($purchase->created_at);
+        $monthCreate = $reference->month;
+        $year        = $reference->year;
+        $day         = Carbon::parse($userCustomer->start_billing_date)->day;
 
         $periodStart = Carbon::create($year, $monthCreate, $day);
-        $periodEnd = $periodStart->copy()->addMonths($months)->subDay();
+        $periodEnd   = $periodStart->copy()->addMonths($months)->subDay();
 
-        // ── Smart billing date (sama persis dengan confirmPayment) ────────
-        $gracePeriod    = config('services.internet_custom.end_billing_of_days', 5);
+        $gracePeriod      = config('services.internet_custom.end_billing_of_days', 5);
         $startBillingDate = $periodStart->copy()->addMonths($months);
-        $endBillingDate = $startBillingDate->copy()->addDays($gracePeriod);
+        $endBillingDate   = $startBillingDate->copy()->addDays($gracePeriod);
 
         return [
-            'periodStart' => $periodStart,
-            'periodEnd' => $periodEnd,
+            'periodStart'      => $periodStart,
+            'periodEnd'        => $periodEnd,
             'startBillingDate' => $startBillingDate,
-            'endBillingDate' => $endBillingDate,
+            'endBillingDate'   => $endBillingDate,
         ];
     }
 }
