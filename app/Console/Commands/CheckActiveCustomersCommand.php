@@ -94,24 +94,35 @@ class CheckActiveCustomersCommand extends Command
             }
         }
 
-        // 5. Bandingkan customer list vs cache — pisahkan yang tidak ditemukan
+        // 5. Bandingkan customer list vs cache — pisahkan aktif vs tidak ditemukan
         $toDisconnect = [];
+        $stillActiveIds = [];
+        $checkedAt = now();
 
         foreach ($customers as $customer) {
-            if (isset($allActiveSessions[$customer->username])) continue;
+            if (isset($allActiveSessions[$customer->username])) {
+                $stillActiveIds[] = $customer->id;
+            } else {
+                $meta = $customer->meta ? json_decode($customer->meta, true) : [];
+                $meta['disconnected_at'] = $checkedAt->toIso8601String();
 
-            $meta = $customer->meta ? json_decode($customer->meta, true) : [];
-            $meta['disconnected_at'] = now()->toIso8601String();
-
-            $toDisconnect[] = [
-                'id'   => $customer->id,
-                'meta' => json_encode($meta),
-            ];
+                $toDisconnect[] = [
+                    'id'   => $customer->id,
+                    'meta' => json_encode($meta),
+                ];
+            }
         }
 
-        // 6. Batch update ke DISCONNECTED
+        // 6. Update last_updated_router untuk yang masih aktif (tandai sudah diverifikasi)
+        if (!empty($stillActiveIds)) {
+            DB::table('internet_customers')
+                ->whereIn('id', $stillActiveIds)
+                ->update(['last_updated_router' => $checkedAt]);
+        }
+
+        // 7. Batch update ke DISCONNECTED
         if (!empty($toDisconnect)) {
-            DB::transaction(function () use ($toDisconnect) {
+            DB::transaction(function () use ($toDisconnect, $checkedAt) {
                 foreach (array_chunk($toDisconnect, 100) as $chunk) {
                     foreach ($chunk as $data) {
                         DB::table('internet_customers')
@@ -119,26 +130,26 @@ class CheckActiveCustomersCommand extends Command
                             ->update([
                                 'status'              => ParamSchema::DISCONNECTED,
                                 'meta'                => $data['meta'],
-                                'last_updated_router' => now(),
+                                'last_updated_router' => $checkedAt,
                             ]);
                     }
                 }
             });
-
-            $disconnected  = count($toDisconnect);
-            $stillActive   = $total - $disconnected;
-
-            $this->warn("Disconnected: {$disconnected} customers.");
-            $this->info("Still active: {$stillActive} customers.");
-            Log::info('[CheckActive] Completed', [
-                'total'        => $total,
-                'disconnected' => $disconnected,
-                'still_active' => $stillActive,
-            ]);
-        } else {
-            $this->info("All {$total} active customers are still connected.");
-            Log::info('[CheckActive] All customers still active', ['total' => $total]);
         }
+
+        $disconnected = count($toDisconnect);
+        $stillActive  = count($stillActiveIds);
+
+        $this->info("Still active: {$stillActive} customers.");
+        if ($disconnected > 0) {
+            $this->warn("Disconnected: {$disconnected} customers.");
+        }
+
+        Log::info('[CheckActive] Completed', [
+            'total'        => $total,
+            'still_active' => $stillActive,
+            'disconnected' => $disconnected,
+        ]);
 
         return 0;
     }

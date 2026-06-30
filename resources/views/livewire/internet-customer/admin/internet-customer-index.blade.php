@@ -840,6 +840,13 @@
                                     </span>
                                     @break
                                 @endswitch
+
+                                @if($customer->last_updated_router)
+                                <small class="text-muted">
+                                    <i class="fas fa-clock me-1"></i>
+                                    Terakhir connect: {{ \Carbon\Carbon::parse($customer->last_updated_router)->locale('id')->translatedFormat('d F Y H:i') }}
+                                </small>
+                                @endif
                             </td>
 
                             {{-- Tanggal Daftar --}}
