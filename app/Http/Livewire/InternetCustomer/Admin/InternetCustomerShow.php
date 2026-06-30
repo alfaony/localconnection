@@ -1587,6 +1587,8 @@ class InternetCustomerShow extends Component
                 'internet_package_id'  => $this->customer->internet_package_id,
                 'amount_paid'          => $this->customer->internetPackage->price_nett ?? 0,
                 'internet_customer_id' => $this->customer->id,
+                'created_at'           => $billingDate,
+                'updated_at'           => $billingDate,
             ]);
 
             $this->customer->update([
