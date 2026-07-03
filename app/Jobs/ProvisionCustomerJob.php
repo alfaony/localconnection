@@ -266,14 +266,16 @@ class ProvisionCustomerJob implements ShouldQueue
             $radius->ensureGroup($pkg, $groupName);
             $radius->reactivateUser($cust->username, $groupName);
 
-            // 🔌 Disconnect session ISOLIR agar reconnect dengan paket asal
+            // 🔌 Update PPP secret profile + disconnect agar reconnect dengan profile baru
             try {
                 $ros = app(RouterOSService::class);
                 $client = $ros->client($router);
+                // Update profile di PPP secret MikroTik supaya tidak "unknown" saat ganti paket
+                $ros->upsertPppSecret($client, $cust, $groupName, $cust->local_address);
                 $ros->disconnectIfActive($client, $cust->username);
-                Log::info('[ProvisionJob] Session disconnected for reactivation reconnect');
+                Log::info('[ProvisionJob] PPP secret updated + session disconnected for reactivation reconnect');
             } catch (\Throwable $dcErr) {
-                Log::warning('[ProvisionJob] Disconnect failed on reactivate (user will apply on next reconnect)', [
+                Log::warning('[ProvisionJob] PPP secret/disconnect failed on reactivate (user will apply on next reconnect)', [
                     'error' => $dcErr->getMessage(),
                 ]);
             }

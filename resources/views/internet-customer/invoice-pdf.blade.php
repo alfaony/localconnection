@@ -436,11 +436,9 @@
                         $subtotalAmount = $purchase->total_before_discount ?? ($purchase->customer->internetPackage->price * $purchase->payment_months);
                         $discountAmount = $purchase->discount_amount ?? 0;
                         $amountBeforeTax = $purchase->amount_before_tax ?? ($subtotalAmount - $discountAmount);
-                        $taxRate = $purchase->tax_rate ?? 11;
-                        $taxAmount = $purchase->tax_amount ?? (int)round(($amountBeforeTax * $taxRate) / 100);
-                        $totalAmount = $purchase->amount_paid ?? (int)($amountBeforeTax + $taxAmount);
+                        $totalAmount = $purchase->amount_paid ?? (int)$amountBeforeTax;
                     @endphp
-                    
+
                     <table class="summary-table" cellpadding="0" cellspacing="0">
                         <tr>
                             <td class="summary-label">Subtotal:</td>
@@ -452,14 +450,6 @@
                             <td class="summary-value text-success">- Rp {{ number_format($discountAmount, 0, ',', '.') }}</td>
                         </tr>
                         @endif
-                        <tr class="tax-row">
-                            <td class="summary-label">Harga Sebelum Pajak:</td>
-                            <td class="summary-value">Rp {{ number_format($amountBeforeTax, 0, ',', '.') }}</td>
-                        </tr>
-                        <tr class="tax-row">
-                            <td class="summary-label">PPN ({{ $taxRate }}%):</td>
-                            <td class="summary-value">Rp {{ number_format($taxAmount, 0, ',', '.') }}</td>
-                        </tr>
                         <tr class="total-row">
                             <td class="summary-label">TOTAL PEMBAYARAN:</td>
                             <td class="summary-value">Rp {{ number_format($totalAmount, 0, ',', '.') }}</td>
