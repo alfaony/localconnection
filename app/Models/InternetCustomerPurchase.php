@@ -213,7 +213,8 @@ class InternetCustomerPurchase extends Model
             return false;
         }
 
-        return now()->greaterThan($this->period_end);
+        // period_end adalah DATE dan tetap berlaku sampai akhir tanggal tersebut.
+        return today()->greaterThan($this->period_end);
     }
 
     /**

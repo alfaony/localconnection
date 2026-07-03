@@ -294,10 +294,10 @@
         <div class="kpi-card" style="border-left-color:#dc2626">
             <div style="font-size:.72rem;color:#64748b;text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px">
                 <i class="fas fa-times-circle mr-1 text-danger"></i>Belum Payment
-                <span class="text-muted font-weight-normal ml-1">(aktif &amp; connecting)</span>
+                <span class="text-muted font-weight-normal ml-1">(semua status, belum expired)</span>
             </div>
             <div class="kpi-val" id="unpaid-count"><div class="skeleton" style="width:40%"></div></div>
-            <div class="kpi-lbl">pelanggan aktif belum ada pembayaran bulan ini</div>
+            <div class="kpi-lbl">purchase bulan ini yang belum ada pembayaran</div>
         </div>
     </div>
 </div>
@@ -643,6 +643,26 @@ function groupBadge(g) {
         : `<span style="color:#94a3b8;font-size:.72rem;font-style:italic">Tanpa Group</span>`;
 }
 
+function customerStatusBadge(status) {
+    const statuses = {
+        active:                       ['Aktif', 'badge-success'],
+        reactivated:                  ['Connecting', 'badge-primary'],
+        pending:                      ['Pending', 'badge-secondary'],
+        waiting_payment_subscription: ['Menunggu Pembayaran', 'badge-warning'],
+        waiting_payment_confirmation: ['Menunggu Konfirmasi', 'badge-warning'],
+        process_installation:          ['Proses Instalasi', 'badge-info'],
+        installed:                     ['Terpasang', 'badge-info'],
+        cancelled:                     ['Dibatalkan', 'badge-danger'],
+        suspended:                     ['Ditangguhkan', 'badge-warning'],
+        disconnected:                  ['Terputus', 'badge-danger'],
+        inactive:                      ['Tidak Aktif', 'badge-secondary'],
+        expired:                       ['Expired', 'badge-danger'],
+    };
+    const [label, badgeClass] = statuses[status] || [status || 'Tidak diketahui', 'badge-secondary'];
+
+    return `<span class="badge ${badgeClass}" style="font-size:.68rem">${label}</span>`;
+}
+
 function renderPaidTable(rows) {
     if (!rows.length) {
         setHtml('paid-table-wrap','<div class="p-3 text-center text-muted" style="font-size:.8rem">Tidak ada pembayaran bulan ini</div>');
@@ -666,14 +686,10 @@ function renderPaidTable(rows) {
 
 function renderUnpaidTable(rows) {
     if (!rows.length) {
-        setHtml('unpaid-table-wrap','<div class="p-3 text-center text-muted" style="font-size:.8rem">Semua pelanggan aktif sudah membayar 🎉</div>');
+        setHtml('unpaid-table-wrap','<div class="p-3 text-center text-muted" style="font-size:.8rem">Tidak ada purchase belum bayar bulan ini</div>');
         return;
     }
-    const body = rows.map(r => {
-        const st = r.status === 'reactivated'
-            ? `<span class="badge badge-primary" style="font-size:.68rem">Connecting</span>`
-            : `<span class="badge badge-success" style="font-size:.68rem">Aktif</span>`;
-        return `<tr>
+    const body = rows.map(r => `<tr>
             <td>
                 <div style="font-size:.8rem;font-weight:600;color:#1e293b">${r.name}</div>
                 <div style="font-size:.7rem;color:#94a3b8">${r.code}</div>
@@ -681,9 +697,8 @@ function renderUnpaidTable(rows) {
             <td style="font-size:.75rem;font-family:monospace;color:#475569">${r.username}</td>
             <td style="font-size:.75rem">${r.package}</td>
             <td>${groupBadge(r.group_name)}</td>
-            <td>${st}</td>
-        </tr>`;
-    }).join('');
+            <td>${customerStatusBadge(r.status)}</td>
+        </tr>`).join('');
     setHtml('unpaid-table-wrap',`<table class="table table-sm rpt-table mb-0">
         <thead><tr><th>Pelanggan</th><th>Username</th><th>Paket</th><th>Grouping</th><th>Status</th></tr></thead>
         <tbody>${body}</tbody>
