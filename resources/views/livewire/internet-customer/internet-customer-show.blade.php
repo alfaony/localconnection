@@ -614,14 +614,6 @@
                                     - <span id="summary-discount">Rp 0</span>
                                 </span>
                             </div>
-                            <div class="summary-row" id="amount-before-tax-row">
-                                <span>Harga sebelum pajak:</span>
-                                <span id="summary-amount-before-tax">Rp 0</span>
-                            </div>
-                            <div class="summary-row text-muted" id="tax-row">
-                                <span>PPN (<span id="summary-tax-rate">0</span>%):</span>
-                                <span id="summary-tax-amount">Rp 0</span>
-                            </div>
                             <hr class="my-2">
                             <div class="summary-row summary-total">
                                 <span class="font-weight-bold">Total Pembayaran:</span>
@@ -1077,21 +1069,13 @@ document.addEventListener('livewire:load', function() {
         const subtotal = monthlyPrice * months;
         const discountPercent = getDiscountPercentage(months);
         const discountAmount = subtotal * (discountPercent / 100);
-        const amountBeforeTax = Math.round(subtotal - discountAmount);
-        
-        // Always calculate PPN (11%)
-        const taxRate = 0;
-        const taxAmount = Math.round((amountBeforeTax * taxRate) / 100);
-        const total = Math.round(amountBeforeTax + taxAmount);
+        const total = Math.round(subtotal - discountAmount);
 
         return {
             months: months,
             subtotal: subtotal,
             discountPercent: discountPercent,
             discountAmount: discountAmount,
-            amountBeforeTax: amountBeforeTax,
-            taxRate: taxRate,
-            taxAmount: taxAmount,
             total: total
         };
     }
@@ -1123,12 +1107,7 @@ document.addEventListener('livewire:load', function() {
         document.getElementById('summary-period').textContent = selectedMonths + ' Bulan';
         document.getElementById('summary-monthly').textContent = formatRupiah(monthlyPrice);
         document.getElementById('summary-subtotal').textContent = formatRupiah(calc.subtotal);
-        
-        // Display PPN breakdown
-        document.getElementById('summary-amount-before-tax').textContent = formatRupiah(calc.amountBeforeTax);
-        document.getElementById('summary-tax-rate').textContent = calc.taxRate;
-        document.getElementById('summary-tax-amount').textContent = formatRupiah(calc.taxAmount);
-        
+
         document.getElementById('summary-total').textContent = formatRupiah(calc.total);
         const modalAmount1 = document.getElementById('modal-amount');
         if (modalAmount1) modalAmount1.textContent = formatRupiah(calc.total);

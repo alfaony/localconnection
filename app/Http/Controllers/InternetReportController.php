@@ -241,15 +241,19 @@ class InternetReportController extends Controller
         });
 
         // ── Payment status bulan ini ─────────────────────────────────
+        // Semua InternetCustomerPurchase dengan period_start di bulan ini,
+        // dipecah menjadi lunas (confirmation_finance_at terisi) dan belum lunas.
         $pmStart = now()->startOfMonth()->startOfDay();
         $pmEnd   = now()->endOfMonth()->endOfDay();
 
-        $paidThisMonth = InternetCustomerPurchase::whereHas('customer', $custFilter)
-            ->whereNotNull('confirmation_finance_at')
-            ->whereBetween('confirmation_finance_at', [$pmStart, $pmEnd])
-            ->with(['customer' => fn($q) => $q->with('internetPackage')])
-            ->orderByDesc('confirmation_finance_at')
+        $purchasesThisMonth = InternetCustomerPurchase::whereHas('customer', $custFilter)
+            ->whereBetween('period_start', [$pmStart, $pmEnd])
+            ->with(['customer' => fn($q) => $q->with('internetPackage', 'group')])
+            ->orderByDesc('period_start')
             ->get();
+
+        $paidThisMonth   = $purchasesThisMonth->filter(fn($p) => $p->confirmation_finance_at !== null)->values();
+        $unpaidThisMonth = $purchasesThisMonth->filter(fn($p) => $p->confirmation_finance_at === null)->values();
 
         $paidCustomerIds = $paidThisMonth->pluck('internet_customer_id')->unique();
 
@@ -264,21 +268,14 @@ class InternetReportController extends Controller
             'paid_at'        => optional($p->confirmation_finance_at)->format('d M Y H:i'),
         ]);
 
-        $unpaidList = InternetCustomer::byCompany($companyId)
-            ->tap($gFilter)
-            ->whereIn('status', [ParamSchema::ACTIVE, ParamSchema::REACTIVATED])
-            ->whereNotIn('id', $paidCustomerIds->toArray())
-            ->with('internetPackage', 'group')
-            ->orderBy('name')
-            ->get()
-            ->map(fn($c) => [
-                'name'       => $c->name,
-                'code'       => $c->code,
-                'username'   => $c->username,
-                'package'    => $c->internetPackage->name ?? '–',
-                'status'     => $c->status,
-                'group_name' => $c->group->name ?? null,
-            ]);
+        $unpaidList = $unpaidThisMonth->map(fn($p) => [
+            'name'       => $p->customer->name ?? '–',
+            'code'       => $p->customer->code ?? '–',
+            'username'   => $p->customer->username ?? '–',
+            'package'    => $p->customer->internetPackage->name ?? '–',
+            'status'     => $p->customer->status ?? null,
+            'group_name' => $p->customer->group->name ?? null,
+        ]);
 
         // ── Expenses ─────────────────────────────────────────────────
         // Hitung jumlah bulan dalam periode yang dipilih

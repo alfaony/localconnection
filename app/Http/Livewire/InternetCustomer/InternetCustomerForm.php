@@ -378,21 +378,9 @@ class InternetCustomerForm extends Component
             ]);
         }
         
-        // Load tax rate from settings
-        $taxSetting = SettingCompany::byCompany($this->company_id)
-            ->where('menu', 'store')
-            ->where('field_title', 'default_tax')
-            ->first();
-        
-        $this->taxRate = $taxSetting && $taxSetting->field_value 
-            ? (float)$taxSetting->field_value 
-            : config('services.internet_custom.default_tax_rate', 11);
-            
-        Log::info('Tax rate loaded', [
-            'company_id' => $this->company_id,
-            'tax_rate' => $this->taxRate
-        ]);
-        
+        // PPN dihilangkan dari invoice — tax rate selalu 0
+        $this->taxRate = 0;
+
         // Load Xendit PPN setting
         $xenditPpnSetting = SettingCompany::byCompany($this->company_id)
             ->where('menu', 'xendit_internet_customer')
