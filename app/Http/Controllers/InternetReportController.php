@@ -241,8 +241,8 @@ class InternetReportController extends Controller
         });
 
         // ── Payment status bulan ini ─────────────────────────────────
-        // Semua InternetCustomerPurchase dengan period_start di bulan ini,
-        // dipecah menjadi lunas (confirmation_finance_at terisi) dan belum lunas.
+        // Semua InternetCustomerPurchase non-expired dengan period_start di bulan ini,
+        // tanpa membatasi status customer, lalu dipecah menjadi lunas dan belum lunas.
         $pmStart = now()->startOfMonth()->startOfDay();
         $pmEnd   = now()->endOfMonth()->endOfDay();
 
@@ -252,8 +252,12 @@ class InternetReportController extends Controller
             ->orderByDesc('period_start')
             ->get();
 
-        $paidThisMonth   = $purchasesThisMonth->filter(fn($p) => $p->confirmation_finance_at !== null)->values();
-        $unpaidThisMonth = $purchasesThisMonth->filter(fn($p) => $p->confirmation_finance_at === null)->values();
+        $reportablePurchases = $purchasesThisMonth
+            ->reject(fn($p) => $p->isExpired())
+            ->values();
+
+        $paidThisMonth   = $reportablePurchases->filter(fn($p) => $p->confirmation_finance_at !== null)->values();
+        $unpaidThisMonth = $reportablePurchases->filter(fn($p) => $p->confirmation_finance_at === null)->values();
 
         $paidCustomerIds = $paidThisMonth->pluck('internet_customer_id')->unique();
 
