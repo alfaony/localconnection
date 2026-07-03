@@ -66,20 +66,20 @@ class InternetReportController extends Controller
 
         // ── Income ──────────────────────────────────────────────────
         $totalIncome = InternetCustomerPurchase::whereHas('customer', $custFilter)
-            ->whereNotNull('confirmation_finance_at')
-            ->whereBetween('confirmation_finance_at', [$from, $to])
+            ->confirmed()
+            ->createdWithin($from, $to)
             ->sum('amount_paid');
 
         $totalTransactions = InternetCustomerPurchase::whereHas('customer', $custFilter)
-            ->whereNotNull('confirmation_finance_at')
-            ->whereBetween('confirmation_finance_at', [$from, $to])
+            ->confirmed()
+            ->createdWithin($from, $to)
             ->count();
 
         // Monthly income breakdown
         $monthlyIncome = InternetCustomerPurchase::whereHas('customer', $custFilter)
-            ->whereNotNull('confirmation_finance_at')
-            ->whereBetween('confirmation_finance_at', [$from, $to])
-            ->selectRaw("DATE_FORMAT(confirmation_finance_at, '%Y-%m') as month, SUM(amount_paid) as total, COUNT(*) as count")
+            ->confirmed()
+            ->createdWithin($from, $to)
+            ->selectRaw("DATE_FORMAT(internet_customer_purchases.created_at, '%Y-%m') as month, SUM(amount_paid) as total, COUNT(*) as count")
             ->groupBy('month')
             ->orderBy('month')
             ->get()
@@ -91,8 +91,8 @@ class InternetReportController extends Controller
 
         // Income by payment method
         $incomeByMethod = InternetCustomerPurchase::whereHas('customer', $custFilter)
-            ->whereNotNull('confirmation_finance_at')
-            ->whereBetween('confirmation_finance_at', [$from, $to])
+            ->confirmed()
+            ->createdWithin($from, $to)
             ->selectRaw('payment_method, SUM(amount_paid) as total, COUNT(*) as count')
             ->groupBy('payment_method')
             ->orderByDesc('total')
@@ -100,8 +100,8 @@ class InternetReportController extends Controller
 
         // Income by package (join — apply grouping on joined table)
         $incomeByPackage = InternetCustomerPurchase::whereHas('customer', $custFilter)
-            ->whereNotNull('confirmation_finance_at')
-            ->whereBetween('confirmation_finance_at', [$from, $to])
+            ->confirmed()
+            ->createdWithin($from, $to)
             ->join('internet_customers', 'internet_customer_purchases.internet_customer_id', '=', 'internet_customers.id')
             ->join('internet_packages', 'internet_customers.internet_package_id', '=', 'internet_packages.id')
             ->selectRaw('internet_packages.name as package_name, SUM(internet_customer_purchases.amount_paid) as total, COUNT(*) as count')
@@ -154,9 +154,8 @@ class InternetReportController extends Controller
         // Monthly recurring revenue (last full month confirmed)
         $lastMonth = now()->subMonth();
         $monthlyRecurring = InternetCustomerPurchase::whereHas('customer', $custFilter)
-            ->whereNotNull('confirmation_finance_at')
-            ->whereMonth('confirmation_finance_at', $lastMonth->month)
-            ->whereYear('confirmation_finance_at', $lastMonth->year)
+            ->confirmed()
+            ->createdInMonth($lastMonth)
             ->sum('amount_paid');
 
         $roiMonths = ($monthlyRecurring > 0 && $totalAssetValue > 0)
@@ -168,9 +167,8 @@ class InternetReportController extends Controller
         for ($i = 11; $i >= 0; $i--) {
             $m = now()->subMonths($i);
             $rev = InternetCustomerPurchase::whereHas('customer', $custFilter)
-                ->whereNotNull('confirmation_finance_at')
-                ->whereMonth('confirmation_finance_at', $m->month)
-                ->whereYear('confirmation_finance_at', $m->year)
+                ->confirmed()
+                ->createdInMonth($m)
                 ->sum('amount_paid');
             $mrrHistory[] = ['label' => $m->format('M Y'), 'value' => (float) $rev];
         }
@@ -218,8 +216,8 @@ class InternetReportController extends Controller
             ->values();
 
         $revenueByGrouping = InternetCustomerPurchase::whereHas('customer', $custFilter)
-            ->whereNotNull('confirmation_finance_at')
-            ->whereBetween('confirmation_finance_at', [$from, $to])
+            ->confirmed()
+            ->createdWithin($from, $to)
             ->join('internet_customers as ic', 'internet_customer_purchases.internet_customer_id', '=', 'ic.id')
             ->selectRaw("ic.group_id, SUM(internet_customer_purchases.amount_paid) as revenue, COUNT(*) as tx_count")
             ->groupBy('ic.group_id')
@@ -241,15 +239,12 @@ class InternetReportController extends Controller
         });
 
         // ── Payment status bulan ini ─────────────────────────────────
-        // Semua InternetCustomerPurchase non-expired dengan period_start di bulan ini,
+        // Semua InternetCustomerPurchase non-expired yang dibuat pada bulan ini,
         // tanpa membatasi status customer, lalu dipecah menjadi lunas dan belum lunas.
-        $pmStart = now()->startOfMonth()->startOfDay();
-        $pmEnd   = now()->endOfMonth()->endOfDay();
-
         $purchasesThisMonth = InternetCustomerPurchase::whereHas('customer', $custFilter)
-            ->whereBetween('period_start', [$pmStart, $pmEnd])
+            ->createdInMonth(now())
             ->with(['customer' => fn($q) => $q->with('internetPackage', 'group')])
-            ->orderByDesc('period_start')
+            ->orderByDesc('created_at')
             ->get();
 
         $reportablePurchases = $purchasesThisMonth

@@ -77,6 +77,25 @@ class InternetCustomerPurchase extends Model
         return $this->hasMany(InternetPurchaseCoupon::class,'internet_purchase_id');
     }
 
+    public function scopeConfirmed($query)
+    {
+        return $query->whereNotNull($this->qualifyColumn('confirmation_finance_at'));
+    }
+
+    public function scopeCreatedWithin($query, $from, $to)
+    {
+        return $query->whereBetween($this->qualifyColumn('created_at'), [$from, $to]);
+    }
+
+    public function scopeCreatedInMonth($query, Carbon $month)
+    {
+        return $this->scopeCreatedWithin(
+            $query,
+            $month->copy()->startOfMonth(),
+            $month->copy()->endOfMonth()
+        );
+    }
+
     /**
      * Get discount percentage based on payment months
      * Bisa disesuaikan dengan kebutuhan bisnis

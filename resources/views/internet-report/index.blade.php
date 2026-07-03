@@ -792,7 +792,7 @@ function loadReport() {
         if (incomeChartInst) incomeChartInst.destroy();
         incomeChartInst = makeBar('incomeChart',
             income.monthly.map(m=>m.month),
-            income.monthly.map(m=>m.value),
+            income.monthly.map(m=>m.total),
             '#2563eb'
         );
 
