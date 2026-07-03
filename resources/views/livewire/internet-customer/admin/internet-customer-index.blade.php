@@ -835,9 +835,17 @@
                                     @break
 
                                 @case(\App\Schemas\ParamSchema::CLOSED)
-                                    <span class="ic-action-status text-secondary">
-                                        <i class="fas fa-ban mr-1"></i>Ditutup
-                                    </span>
+                                    <div class="d-flex flex-column" style="gap:.3rem;">
+                                        <span class="ic-action-status text-secondary">
+                                            <i class="fas fa-ban mr-1"></i>Ditutup
+                                        </span>
+                                        @canAccess('destroy', 'internet_customers')
+                                        <button class="btn btn-xs ic-btn-action ic-btn-action-danger"
+                                                onclick="return confirm('Hapus customer {{ $customer->code }}? Data akan dipindahkan ke arsip.') ? @this.call('deleteCustomer', @js($customer->id)) : false">
+                                            <i class="fas fa-trash mr-1"></i>Hapus
+                                        </button>
+                                        @endcanAccess
+                                    </div>
                                     @break
                                 @endswitch
 

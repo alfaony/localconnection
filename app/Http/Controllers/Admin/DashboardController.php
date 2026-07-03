@@ -18,11 +18,10 @@ class DashboardController extends Controller
             'total_customers'    => InternetCustomer::where('company_id', $companyId)->count(),
             'active_customers'   => InternetCustomer::where('company_id', $companyId)->where('status', 'active')->count(),
             'isolir_customers'   => InternetCustomer::where('company_id', $companyId)->where('status', 'isolir')->count(),
-            'revenue_this_month' => InternetCustomerPurchase::whereHas('internetCustomer', fn($q) => $q->where('company_id', $companyId))
-                ->whereMonth('created_at', Carbon::now()->month)
-                ->whereYear('created_at', Carbon::now()->year)
-                ->where('status', 'paid')
-                ->sum('amount'),
+            'revenue_this_month' => InternetCustomerPurchase::whereHas('customer', fn($q) => $q->where('company_id', $companyId))
+                ->confirmed()
+                ->createdInMonth(Carbon::now())
+                ->sum('amount_paid'),
         ];
 
         $recentCustomers = InternetCustomer::with('internetPackage')

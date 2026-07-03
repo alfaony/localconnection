@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Ramsey\Uuid\Uuid;
 use Illuminate\Support\Facades\Auth;
 use App\Schemas\RoleSchema;
+use App\Schemas\ParamSchema;
 use App\Models\Radius\RadAcct;
 use App\Services\RouterOSService;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -314,6 +315,11 @@ class InternetCustomer extends Model
             default:
                 return '<span class="badge badge-light">Unknown</span>';
         }
+    }
+
+    public function canBeDeleted(): bool
+    {
+        return $this->status === ParamSchema::CLOSED;
     }
 
     public function scopeByCompany($query,$companyId)

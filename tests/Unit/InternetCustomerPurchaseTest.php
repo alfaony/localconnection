@@ -62,4 +62,23 @@ class InternetCustomerPurchaseTest extends TestCase
 
         $this->assertFalse($purchase->isExpired());
     }
+
+    /** @test */
+    public function monthly_revenue_scope_uses_purchase_created_at_and_confirmation_status(): void
+    {
+        $query = InternetCustomerPurchase::query()
+            ->confirmed()
+            ->createdInMonth(Carbon::parse('2026-07-15 12:00:00'));
+
+        $sql = $query->toSql();
+
+        $this->assertStringContainsString('confirmation_finance_at', $sql);
+        $this->assertStringContainsString('created_at', $sql);
+        $this->assertStringContainsString('between', $sql);
+        $this->assertStringNotContainsString('period_start', $sql);
+
+        [$from, $to] = $query->getBindings();
+        $this->assertSame('2026-07-01 00:00:00', $from->format('Y-m-d H:i:s'));
+        $this->assertSame('2026-07-31 23:59:59', $to->format('Y-m-d H:i:s'));
+    }
 }

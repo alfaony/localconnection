@@ -228,15 +228,13 @@ class HomeController extends Controller
         $companyIds = auth()->user()->accessibleCompanies->pluck('id')->push($companyId)->unique();
 
         $revThisMonth = InternetCustomerPurchase::whereHas('customer', fn($q) => $q->whereIn('company_id', $companyIds))
-            ->whereNotNull('confirmation_finance_at')
-            ->whereMonth('confirmation_finance_at', now()->month)
-            ->whereYear('confirmation_finance_at', now()->year)
+            ->confirmed()
+            ->createdInMonth(now())
             ->sum('amount_paid');
 
         $revLastMonth = InternetCustomerPurchase::whereHas('customer', fn($q) => $q->whereIn('company_id', $companyIds))
-            ->whereNotNull('confirmation_finance_at')
-            ->whereMonth('confirmation_finance_at', now()->subMonth()->month)
-            ->whereYear('confirmation_finance_at', now()->subMonth()->year)
+            ->confirmed()
+            ->createdInMonth(now()->subMonth())
             ->sum('amount_paid');
 
         $revGrowthPct = $revLastMonth > 0
@@ -248,9 +246,8 @@ class HomeController extends Controller
         for ($i = 5; $i >= 0; $i--) {
             $month = now()->subMonths($i);
             $rev = InternetCustomerPurchase::whereHas('customer', fn($q) => $q->whereIn('company_id', $companyIds))
-                ->whereNotNull('confirmation_finance_at')
-                ->whereMonth('confirmation_finance_at', $month->month)
-                ->whereYear('confirmation_finance_at', $month->year)
+                ->confirmed()
+                ->createdInMonth($month)
                 ->sum('amount_paid');
             $monthlyRevenue[] = [
                 'label' => $month->format('M Y'),

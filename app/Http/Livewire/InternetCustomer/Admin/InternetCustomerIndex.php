@@ -1670,6 +1670,37 @@ class InternetCustomerIndex extends Component
         }
     }
 
+    public function deleteCustomer(string $id): void
+    {
+        abort_unless(Access::can('destroy', 'internet_customers'), 403);
+
+        $customer = InternetCustomer::query()
+            ->byCompany(Auth::user()->company_id)
+            ->findOrFail($id);
+
+        if (!$customer->canBeDeleted()) {
+            $this->dispatchBrowserEvent('show-notification', [
+                'type' => 'error',
+                'message' => 'Customer hanya dapat dihapus jika statusnya closed',
+            ]);
+            return;
+        }
+
+        $customerCode = $customer->code;
+        $customer->delete();
+
+        Log::info('Closed internet customer deleted', [
+            'customer_id' => $id,
+            'customer_code' => $customerCode,
+            'deleted_by' => Auth::id(),
+        ]);
+
+        $this->dispatchBrowserEvent('show-notification', [
+            'type' => 'success',
+            'message' => "Customer {$customerCode} berhasil dihapus",
+        ]);
+    }
+
     // GANTI method yang ada dengan:
     protected function checkNewUsernameAvailability($username)
     {
