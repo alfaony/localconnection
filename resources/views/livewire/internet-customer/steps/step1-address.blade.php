@@ -92,7 +92,7 @@
         <option value="">Pilih Paket Internet</option>
         @foreach($internetPackages as $package)
             @php
-                $priceData = $package->getPriceForRegion($province_id, $city_id, $district_id);
+                $priceData = $package->getPriceForRegion($province_id, $city_id, $district_id, $subdistrict_id);
                 $displayPrice = $priceData['price_nett'];
                 $isRegionPrice = $priceData['region_type'] !== 'global';
             @endphp

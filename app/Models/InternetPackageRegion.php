@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use App\Models\Province;
 use App\Models\City;
 use App\Models\District;
+use App\Models\Subdistrict;
 
 class InternetPackageRegion extends Model
 {
@@ -13,7 +14,7 @@ class InternetPackageRegion extends Model
 
     protected $fillable = [
         'internet_package_id',
-        'region_type',   // 'province' | 'city' | 'district'
+        'region_type',   // 'province' | 'city' | 'district' | 'subdistrict'
         'region_id',
         'is_active',
     ];
@@ -38,10 +39,11 @@ class InternetPackageRegion extends Model
     public function getRegionNameAttribute(): string
     {
         return match ($this->region_type) {
-            'province' => Province::find($this->region_id)?->name ?? '-',
-            'city'     => City::find($this->region_id)?->name ?? '-',
-            'district' => District::find($this->region_id)?->name ?? '-',
-            default    => '-',
+            'province'    => Province::find($this->region_id)?->name ?? '-',
+            'city'        => City::find($this->region_id)?->name ?? '-',
+            'district'    => District::find($this->region_id)?->name ?? '-',
+            'subdistrict' => Subdistrict::find($this->region_id)?->name ?? '-',
+            default       => '-',
         };
     }
 
@@ -61,6 +63,10 @@ class InternetPackageRegion extends Model
                 $d = District::with('city.province')->find($this->region_id);
                 return $d ? "{$d->name} — {$d->city?->name} — {$d->city?->province?->name}" : '-';
             })(),
+            'subdistrict' => (function () {
+                $s = Subdistrict::with('district.city.province')->find($this->region_id);
+                return $s ? "{$s->name} — {$s->district?->name} — {$s->district?->city?->name} — {$s->district?->city?->province?->name}" : '-';
+            })(),
             default => '-',
         };
     }
@@ -71,10 +77,11 @@ class InternetPackageRegion extends Model
     public function getRegionTypeLabelAttribute(): string
     {
         return match ($this->region_type) {
-            'province' => 'Provinsi',
-            'city'     => 'Kabupaten/Kota',
-            'district' => 'Kecamatan',
-            default    => '-',
+            'province'    => 'Provinsi',
+            'city'        => 'Kabupaten/Kota',
+            'district'    => 'Kecamatan',
+            'subdistrict' => 'Kelurahan/Desa',
+            default       => '-',
         };
     }
 
@@ -84,10 +91,11 @@ class InternetPackageRegion extends Model
     public function getRegionTypeBadgeColorAttribute(): string
     {
         return match ($this->region_type) {
-            'province' => 'primary',
-            'city'     => 'info',
-            'district' => 'success',
-            default    => 'secondary',
+            'province'    => 'primary',
+            'city'        => 'info',
+            'district'    => 'success',
+            'subdistrict' => 'warning',
+            default       => 'secondary',
         };
     }
 }

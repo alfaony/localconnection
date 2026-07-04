@@ -7,6 +7,7 @@ use App\Models\InternetPackageRegion;
 use App\Models\Province;
 use App\Models\City;
 use App\Models\District;
+use App\Models\Subdistrict;
 use Livewire\Component;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -46,10 +47,12 @@ class InternetPackageForm extends Component
     public $region_province_id = null;
     public $region_city_id = null;
     public $region_district_id = null;
+    public $region_subdistrict_id = null;
 
     // Dropdown options (dinamis)
     public $regionCities = [];
     public $regionDistricts = [];
+    public $regionSubdistricts = [];
 
     protected function rules(): array
     {
@@ -70,10 +73,11 @@ class InternetPackageForm extends Component
             'session_timeout_seconds' => 'nullable|integer|min:0',
 
             // Region form
-            'region_type'        => 'required|in:province,city,district',
-            'region_province_id' => 'required_if:region_type,province,city,district|nullable|integer',
-            'region_city_id'     => 'required_if:region_type,city,district|nullable|integer',
-            'region_district_id' => 'required_if:region_type,district|nullable|integer',
+            'region_type'           => 'required|in:province,city,district,subdistrict',
+            'region_province_id'    => 'required_if:region_type,province,city,district,subdistrict|nullable|integer',
+            'region_city_id'        => 'required_if:region_type,city,district,subdistrict|nullable|integer',
+            'region_district_id'    => 'required_if:region_type,district,subdistrict|nullable|integer',
+            'region_subdistrict_id' => 'required_if:region_type,subdistrict|nullable|integer',
         ];
     }
 
@@ -194,22 +198,33 @@ class InternetPackageForm extends Component
 
     public function updatedRegionProvinceId($value)
     {
-        $this->region_city_id     = null;
-        $this->region_district_id = null;
-        $this->regionCities    = $value ? City::where('province_id', $value)->orderBy('name')->get(['id', 'name'])->toArray() : [];
-        $this->regionDistricts = [];
+        $this->region_city_id        = null;
+        $this->region_district_id    = null;
+        $this->region_subdistrict_id = null;
+        $this->regionCities       = $value ? City::where('province_id', $value)->orderBy('name')->get(['id', 'name'])->toArray() : [];
+        $this->regionDistricts    = [];
+        $this->regionSubdistricts = [];
     }
 
     public function updatedRegionCityId($value)
     {
-        $this->region_district_id = null;
-        $this->regionDistricts = $value ? District::where('city_id', $value)->orderBy('name')->get(['id', 'name'])->toArray() : [];
+        $this->region_district_id    = null;
+        $this->region_subdistrict_id = null;
+        $this->regionDistricts    = $value ? District::where('city_id', $value)->orderBy('name')->get(['id', 'name'])->toArray() : [];
+        $this->regionSubdistricts = [];
+    }
+
+    public function updatedRegionDistrictId($value)
+    {
+        $this->region_subdistrict_id = null;
+        $this->regionSubdistricts = $value ? Subdistrict::where('district_id', $value)->orderBy('name')->get(['id', 'name'])->toArray() : [];
     }
 
     public function updatedRegionType($value)
     {
-        $this->region_city_id     = null;
-        $this->region_district_id = null;
+        $this->region_city_id        = null;
+        $this->region_district_id    = null;
+        $this->region_subdistrict_id = null;
     }
 
     // ============= REGION CRUD =============
@@ -219,18 +234,22 @@ class InternetPackageForm extends Component
         $this->validateOnly('region_type');
         $this->validateOnly('region_province_id');
 
-        if ($this->region_type === 'city' || $this->region_type === 'district') {
+        if (in_array($this->region_type, ['city', 'district', 'subdistrict'])) {
             $this->validateOnly('region_city_id');
         }
-        if ($this->region_type === 'district') {
+        if (in_array($this->region_type, ['district', 'subdistrict'])) {
             $this->validateOnly('region_district_id');
+        }
+        if ($this->region_type === 'subdistrict') {
+            $this->validateOnly('region_subdistrict_id');
         }
 
         // Tentukan region_id sesuai tipe
         $regionId = match ($this->region_type) {
-            'province' => $this->region_province_id,
-            'city'     => $this->region_city_id,
-            'district' => $this->region_district_id,
+            'province'    => $this->region_province_id,
+            'city'        => $this->region_city_id,
+            'district'    => $this->region_district_id,
+            'subdistrict' => $this->region_subdistrict_id,
         };
 
         if (!$regionId) {
@@ -259,18 +278,24 @@ class InternetPackageForm extends Component
                 $d = District::with('city.province')->find($this->region_district_id);
                 return $d ? "{$d->name} — {$d->city?->name} — {$d->city?->province?->name}" : '-';
             })(),
+            'subdistrict' => (function () {
+                $s = Subdistrict::with('district.city.province')->find($this->region_subdistrict_id);
+                return $s ? "{$s->name} — {$s->district?->name} — {$s->district?->city?->name} — {$s->district?->city?->province?->name}" : '-';
+            })(),
         };
 
         $typeBadge = match ($this->region_type) {
-            'province' => 'primary',
-            'city'     => 'info',
-            'district' => 'success',
+            'province'    => 'primary',
+            'city'        => 'info',
+            'district'    => 'success',
+            'subdistrict' => 'warning',
         };
 
         $typeLabel = match ($this->region_type) {
-            'province' => 'Provinsi',
-            'city'     => 'Kabupaten/Kota',
-            'district' => 'Kecamatan',
+            'province'    => 'Provinsi',
+            'city'        => 'Kabupaten/Kota',
+            'district'    => 'Kecamatan',
+            'subdistrict' => 'Kelurahan/Desa',
         };
 
         $this->regions[] = [
@@ -284,11 +309,13 @@ class InternetPackageForm extends Component
         ];
 
         // Reset form
-        $this->region_province_id = null;
-        $this->region_city_id     = null;
-        $this->region_district_id = null;
+        $this->region_province_id    = null;
+        $this->region_city_id        = null;
+        $this->region_district_id    = null;
+        $this->region_subdistrict_id = null;
         $this->regionCities       = [];
         $this->regionDistricts    = [];
+        $this->regionSubdistricts = [];
     }
 
     public function removeRegion($index)

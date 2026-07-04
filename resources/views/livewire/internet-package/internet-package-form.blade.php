@@ -210,6 +210,7 @@
                                                     <option value="province">Provinsi</option>
                                                     <option value="city">Kabupaten/Kota</option>
                                                     <option value="district">Kecamatan</option>
+                                                    <option value="subdistrict">Kelurahan/Desa</option>
                                                 </select>
                                                 @error('region_type') <div class="text-danger small">{{ $message }}</div> @enderror
                                             </div>
@@ -230,7 +231,7 @@
                                         </div>
 
                                         {{-- Kabupaten --}}
-                                        @if(in_array($region_type, ['city', 'district']))
+                                        @if(in_array($region_type, ['city', 'district', 'subdistrict']))
                                         <div class="col-md-3">
                                             <div class="mb-3">
                                                 <label class="form-label small">Kabupaten/Kota <span class="text-danger">*</span></label>
@@ -246,7 +247,7 @@
                                         @endif
 
                                         {{-- Kecamatan --}}
-                                        @if($region_type === 'district')
+                                        @if(in_array($region_type, ['district', 'subdistrict']))
                                         <div class="col-md-3">
                                             <div class="mb-3">
                                                 <label class="form-label small">Kecamatan <span class="text-danger">*</span></label>
@@ -257,6 +258,22 @@
                                                     @endforeach
                                                 </select>
                                                 @error('region_district_id') <div class="text-danger small">{{ $message }}</div> @enderror
+                                            </div>
+                                        </div>
+                                        @endif
+
+                                        {{-- Kelurahan/Desa --}}
+                                        @if($region_type === 'subdistrict')
+                                        <div class="col-md-3">
+                                            <div class="mb-3">
+                                                <label class="form-label small">Kelurahan/Desa <span class="text-danger">*</span></label>
+                                                <select class="form-control form-control-sm" wire:model="region_subdistrict_id" id="region_subdistrict_id">
+                                                    <option value="">-- Pilih Kelurahan/Desa --</option>
+                                                    @foreach($regionSubdistricts as $sub)
+                                                        <option value="{{ $sub['id'] }}">{{ $sub['name'] }}</option>
+                                                    @endforeach
+                                                </select>
+                                                @error('region_subdistrict_id') <div class="text-danger small">{{ $message }}</div> @enderror
                                             </div>
                                         </div>
                                         @endif
