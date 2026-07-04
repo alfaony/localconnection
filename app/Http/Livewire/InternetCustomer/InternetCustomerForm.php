@@ -425,7 +425,7 @@ class InternetCustomerForm extends Component
                 ->where('is_active', true)
                 ->where('customer_type', $this->customer_type)
                 ->with('regions')
-                ->forRegion($this->province_id, $this->city_id, $this->district_id)
+                ->forRegion($this->province_id, $this->city_id, $this->district_id, $this->subdistrict_id)
                 ->get(),
         ])->extends('layouts.app_customer');
     }
@@ -442,7 +442,8 @@ class InternetCustomerForm extends Component
         $priceData = $this->selectedPackage->getPriceForRegion(
             $this->province_id,
             $this->city_id,
-            $this->district_id
+            $this->district_id,
+            $this->subdistrict_id
         );
         $basePrice = $priceData['price'];
 

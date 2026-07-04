@@ -95,6 +95,11 @@ class InternetPackage extends Model
         return $this->hasMany(InternetPackageRegion::class)->where('region_type', 'district');
     }
 
+    public function regionSubdistricts(): HasMany
+    {
+        return $this->hasMany(InternetPackageRegion::class)->where('region_type', 'subdistrict');
+    }
+
     public function hotspotVoucherBatches(): HasMany
     {
         return $this->hasMany(HotspotVoucherBatch::class, 'internet_package_id');
@@ -134,26 +139,34 @@ class InternetPackage extends Model
      * Logika:
      * - Paket GLOBAL (tanpa region aktif apapun) → selalu tampil
      * - Paket REGION-SPESIFIK → hanya tampil jika ada region aktif yang cocok
-     *   dengan district, city, atau province si customer
+     *   dengan subdistrict, district, city, atau province si customer
      *
-     * Prioritas: district > city > province > global
+     * Prioritas: subdistrict > district > city > province > global
      *
      * CATATAN: doesntHave('regions') diganti dengan subquery is_active=true
      * agar paket yang semua regionnya inactive tetap dianggap 'global'.
      */
-    public function scopeForRegion($query, $provinceId = null, $cityId = null, $districtId = null)
+    public function scopeForRegion($query, $provinceId = null, $cityId = null, $districtId = null, $subdistrictId = null)
     {
         // Cast ke int agar string '0' atau '' dari Select2 tidak dianggap valid
-        $provinceId  = (int) $provinceId  ?: null;
-        $cityId      = (int) $cityId      ?: null;
-        $districtId  = (int) $districtId  ?: null;
+        $provinceId    = (int) $provinceId    ?: null;
+        $cityId        = (int) $cityId        ?: null;
+        $districtId    = (int) $districtId    ?: null;
+        $subdistrictId = (int) $subdistrictId ?: null;
 
-        return $query->where(function ($q) use ($provinceId, $cityId, $districtId) {
+        return $query->where(function ($q) use ($provinceId, $cityId, $districtId, $subdistrictId) {
 
             // Paket global: tidak punya region aktif SAMA SEKALI
             $q->whereDoesntHave('regions', fn ($r) => $r->where('is_active', true));
 
             // Atau punya region aktif yang COCOK dengan wilayah customer
+            if ($subdistrictId) {
+                $q->orWhereHas('regions', fn ($r) =>
+                    $r->where('region_type', 'subdistrict')
+                      ->where('region_id', $subdistrictId)
+                      ->where('is_active', true)
+                );
+            }
             if ($districtId) {
                 $q->orWhereHas('regions', fn ($r) =>
                     $r->where('region_type', 'district')
@@ -188,18 +201,31 @@ class InternetPackage extends Model
      *
      * @return array ['price' => int, 'price_nett' => int, 'region_label' => string, 'region_type' => string]
      */
-    public function getPriceForRegion($provinceId = null, $cityId = null, $districtId = null): array
+    public function getPriceForRegion($provinceId = null, $cityId = null, $districtId = null, $subdistrictId = null): array
     {
         // Cast ke int agar '' dari Select2 tidak dianggap valid
-        $districtId = (int) $districtId ?: null;
-        $cityId     = (int) $cityId     ?: null;
-        $provinceId = (int) $provinceId ?: null;
+        $subdistrictId = (int) $subdistrictId ?: null;
+        $districtId    = (int) $districtId    ?: null;
+        $cityId        = (int) $cityId        ?: null;
+        $provinceId    = (int) $provinceId    ?: null;
 
         // Tentukan label wilayah (hanya untuk informasi)
         $regionType  = 'global';
         $regionLabel = 'Global';
 
-        if ($districtId) {
+        if ($subdistrictId) {
+            $region = $this->regions
+                ->where('region_type', 'subdistrict')
+                ->where('region_id', $subdistrictId)
+                ->where('is_active', true)
+                ->first();
+            if ($region) {
+                $regionType  = 'subdistrict';
+                $regionLabel = $region->region_label;
+            }
+        }
+
+        if ($regionType === 'global' && $districtId) {
             $region = $this->regions
                 ->where('region_type', 'district')
                 ->where('region_id', $districtId)
