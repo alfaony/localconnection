@@ -109,12 +109,18 @@ class XenditService
             // Extract options
             $paymentMonths = $options['payment_months'] ?? 1;
             
-            // Determine price based on PPN setting
+            // Determine price based on PPN setting (harga sesuai wilayah customer, fallback ke harga global paket)
             $xenditPayWithPpn = $options['xendit_pay_with_ppn'] ?? false;
-            $defaultPrice = $xenditPayWithPpn 
-                ? $customer->internetPackage->price      // PPN enabled: use gross price
-                : $customer->internetPackage->price_nett; // PPN disabled: use nett price
-            
+            $priceData = $customer->internetPackage->getPriceForRegion(
+                $customer->province_id,
+                $customer->city_id,
+                $customer->district_id,
+                $customer->subdistrict_id
+            );
+            $defaultPrice = $xenditPayWithPpn
+                ? $priceData['price']      // PPN enabled: use gross price
+                : $priceData['price_nett']; // PPN disabled: use nett price
+
             $totalAmount = $options['total_amount'] ?? $defaultPrice;
             $discountAmount = $options['discount_amount'] ?? 0;
             $subscriptionPeriod = $options['subscription_period'] ?? null;
@@ -151,9 +157,9 @@ class XenditService
                 $packageItemName .= " | {$subscriptionPeriod['start']->format('M Y')} - {$subscriptionPeriod['end']->format('M Y')}";
             }
 
-            $itemPrice = $xenditPayWithPpn 
-                ? $customer->internetPackage->price      // PPN enabled: use gross price
-                : $customer->internetPackage->price_nett; // PPN disabled: use nett price
+            $itemPrice = $xenditPayWithPpn
+                ? $priceData['price']      // PPN enabled: use gross price
+                : $priceData['price_nett']; // PPN disabled: use nett price
                 
             $items[] = 
             [
@@ -280,12 +286,18 @@ class XenditService
             // Extract options
             $paymentMonths = $options['payment_months'] ?? 1;
             
-            // Determine price based on PPN setting
+            // Determine price based on PPN setting (harga sesuai wilayah customer, fallback ke harga global paket)
             $xenditPayWithPpn = $options['xendit_pay_with_ppn'] ?? false;
-            $defaultPrice = $xenditPayWithPpn 
-                ? $customer->internetPackage->price      // PPN enabled: use gross price
-                : $customer->internetPackage->price_nett; // PPN disabled: use nett price
-            
+            $priceData = $customer->internetPackage->getPriceForRegion(
+                $customer->province_id,
+                $customer->city_id,
+                $customer->district_id,
+                $customer->subdistrict_id
+            );
+            $defaultPrice = $xenditPayWithPpn
+                ? $priceData['price']      // PPN enabled: use gross price
+                : $priceData['price_nett']; // PPN disabled: use nett price
+
             $totalAmount = $options['total_amount'] ?? $defaultPrice;
             $discountAmount = $options['discount_amount'] ?? 0;
             $subscriptionPeriod = $options['subscription_period'] ?? null;
@@ -322,9 +334,9 @@ class XenditService
                 $packageItemName .= " | {$subscriptionPeriod['start']->format('M Y')} - {$subscriptionPeriod['end']->format('M Y')}";
             }
 
-            $itemPrice = $xenditPayWithPpn 
-                ? $customer->internetPackage->price      // PPN enabled: use gross price
-                : $customer->internetPackage->price_nett; // PPN disabled: use nett price
+            $itemPrice = $xenditPayWithPpn
+                ? $priceData['price']      // PPN enabled: use gross price
+                : $priceData['price_nett']; // PPN disabled: use nett price
                 
             $items[] = new InvoiceItem([
                 'name' => $packageItemName,

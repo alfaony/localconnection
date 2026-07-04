@@ -101,12 +101,18 @@ class ReBlastBillingReminderJob implements ShouldQueue
             . ' ' . $endBillingDate->year;
 
         $url     = route('internet-customer.customer.show', $internetCustomer->code);
+        $priceData = $internetCustomer->internetPackage->getPriceForRegion(
+            $internetCustomer->province_id,
+            $internetCustomer->city_id,
+            $internetCustomer->district_id,
+            $internetCustomer->subdistrict_id
+        );
         $message = strtr($template, [
             '{{nama}}'        => $customer->name,
             '{{kode}}'        => $internetCustomer->code,
             '{{paket}}'       => $internetCustomer->internetPackage->name,
             '{{jatuh_tempo}}' => $dateJatuhTempo,
-            '{{tagihan}}'     => 'Rp. ' . number_format($internetCustomer->internetPackage->price_nett, 2, ',', '.'),
+            '{{tagihan}}'     => 'Rp. ' . number_format($priceData['price_nett'], 2, ',', '.'),
             '{{url}}'         => $url,
         ]);
 

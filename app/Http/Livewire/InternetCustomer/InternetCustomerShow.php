@@ -249,11 +249,12 @@ class InternetCustomerShow extends Component
             return;
         }
 
-        // Ambil harga sesuai wilayah customer: district > city > province > global
+        // Ambil harga sesuai wilayah customer: subdistrict > district > city > province > global
         $priceData = $package->getPriceForRegion(
             $this->customer->province_id,
             $this->customer->city_id,
-            $this->customer->district_id
+            $this->customer->district_id,
+            $this->customer->subdistrict_id
         );
         $this->monthlyPrice = $priceData['price'];
 

@@ -17,11 +17,15 @@ class InternetPackageRegion extends Model
         'region_type',   // 'province' | 'city' | 'district' | 'subdistrict'
         'region_id',
         'is_active',
+        'price',         // nullable — jika null, ikut harga default paket
+        'price_nett',    // nullable — jika null, ikut harga default paket
     ];
 
     protected $casts = [
         'is_active'  => 'boolean',
         'region_id'  => 'integer',
+        'price'      => 'decimal:2',
+        'price_nett' => 'decimal:2',
     ];
 
     // ==================== RELATIONS ====================
