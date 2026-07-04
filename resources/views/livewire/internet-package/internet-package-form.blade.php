@@ -157,6 +157,8 @@
                                             <tr>
                                                 <th>Tipe</th>
                                                 <th>Wilayah</th>
+                                                <th style="width:140px">Harga (Rp)</th>
+                                                <th style="width:140px">Harga Nett (Rp)</th>
                                                 <th class="text-center">Status</th>
                                                 <th class="text-center">Aksi</th>
                                             </tr>
@@ -170,6 +172,18 @@
                                                     </span>
                                                 </td>
                                                 <td>{{ $region['region_label'] }}</td>
+                                                <td>
+                                                    <input type="number" min="0" step="1"
+                                                        class="form-control form-control-sm"
+                                                        wire:model.lazy="regions.{{ $idx }}.price"
+                                                        placeholder="Default: {{ number_format($price ?: 0, 0, ',', '.') }}">
+                                                </td>
+                                                <td>
+                                                    <input type="number" min="0" step="1"
+                                                        class="form-control form-control-sm"
+                                                        wire:model.lazy="regions.{{ $idx }}.price_nett"
+                                                        placeholder="Default: {{ number_format($price_nett ?: 0, 0, ',', '.') }}">
+                                                </td>
                                                 <td class="text-center">
                                                     <button type="button"
                                                         wire:click="toggleRegionActive({{ $idx }})"
@@ -189,6 +203,10 @@
                                             @endforeach
                                         </tbody>
                                     </table>
+                                    <p class="text-muted small mt-1 mb-0">
+                                        <i class="fas fa-info-circle me-1"></i>
+                                        Kosongkan kolom harga untuk ikut <strong>harga global paket</strong>.
+                                    </p>
                                 </div>
                                 @else
                                 <div class="alert alert-light border text-muted small mb-3">
@@ -277,12 +295,31 @@
                                             </div>
                                         </div>
                                         @endif
+
+                                        {{-- Harga khusus wilayah (opsional) --}}
+                                        <div class="col-md-3">
+                                            <div class="mb-3">
+                                                <label class="form-label small">Harga Khusus (Rp)</label>
+                                                <input type="hidden" wire:model="region_price" id="region_price_hidden">
+                                                <input type="text" class="form-control form-control-sm" id="region_price_input" wire:ignore placeholder="Ikut harga global">
+                                                @error('region_price') <div class="text-danger small">{{ $message }}</div> @enderror
+                                            </div>
+                                        </div>
+
+                                        <div class="col-md-3">
+                                            <div class="mb-3">
+                                                <label class="form-label small">Harga Nett Khusus (Rp)</label>
+                                                <input type="hidden" wire:model="region_price_nett" id="region_price_nett_hidden">
+                                                <input type="text" class="form-control form-control-sm" id="region_price_nett_input" wire:ignore placeholder="Ikut harga global">
+                                                @error('region_price_nett') <div class="text-danger small">{{ $message }}</div> @enderror
+                                            </div>
+                                        </div>
                                     </div>
 
                                     {{-- Info harga --}}
                                     <div class="alert alert-info py-1 px-2 small mb-2">
                                         <i class="fas fa-info-circle me-1"></i>
-                                        Harga menggunakan <strong>harga utama paket</strong>. Untuk harga berbeda per wilayah, buat paket baru.
+                                        Kosongkan harga khusus untuk memakai <strong>harga global paket</strong>. Isi jika wilayah ini punya harga berbeda.
                                     </div>
 
                                     <button type="button" wire:click="addRegion" class="btn btn-success btn-sm">

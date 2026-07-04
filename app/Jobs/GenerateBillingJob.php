@@ -50,9 +50,16 @@ class GenerateBillingJob implements ShouldQueue
                     'status' => ParamSchema::WAITING_PAYMENT_SUBSCRIPTION
                 ]);
 
+                $priceData = $internetCustomer->internetPackage->getPriceForRegion(
+                    $internetCustomer->province_id,
+                    $internetCustomer->city_id,
+                    $internetCustomer->district_id,
+                    $internetCustomer->subdistrict_id
+                );
+
                 $purchase = InternetCustomerPurchase::create([
                     'internet_package_id' => $internetCustomer->internetPackage->id,
-                    'amount_paid' => $internetCustomer->internetPackage->price_nett ?? 0,
+                    'amount_paid' => $priceData['price_nett'] ?? 0,
                     'internet_customer_id' => $internetCustomer->id,
                 ]);
             }else
@@ -96,6 +103,14 @@ class GenerateBillingJob implements ShouldQueue
 
             $template = html_to_wa($internetSetting['internet_remainder_billing'] ?? '');
 
+            $internetCustomer = $customer->internetCustomer;
+            $priceData = $internetCustomer->internetPackage->getPriceForRegion(
+                $internetCustomer->province_id,
+                $internetCustomer->city_id,
+                $internetCustomer->district_id,
+                $internetCustomer->subdistrict_id
+            );
+
             if (empty($template)) {
                 \Log::info('[GenerateBillingJob] Template billing kosong, skip kirim WA', [
                     'customer_code' => $customer->internetCustomer->code,
@@ -117,7 +132,7 @@ class GenerateBillingJob implements ShouldQueue
                     '{{faktur}}'      => $customer->internetCustomer->purchases()->latest()->first()->code ?? '-',
                     '{{paket}}'       => $customer->internetCustomer->internetPackage->name,
                     '{{jatuh_tempo}}' => $dateJatuhTempo,
-                    '{{tagihan}}'     => 'Rp. ' . number_format($customer->internetCustomer->internetPackage->price_nett, 2, ',', '.'),
+                    '{{tagihan}}'     => 'Rp. ' . number_format($priceData['price_nett'], 2, ',', '.'),
                     '{{url}}'         => $url,
                     '{{tutorial}}'    => $tutorialPayment ?? '',
                 ]);

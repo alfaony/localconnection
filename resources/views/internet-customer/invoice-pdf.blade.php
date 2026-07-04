@@ -378,6 +378,18 @@
             </table>
         </div>
 
+        @php
+            // Harga per wilayah (dgn fallback harga global) hanya dipakai jika tidak ada
+            // snapshot historis di purchase (total_before_discount) — invoice yang sudah
+            // pernah dibuat tetap memakai angka yang tersimpan saat transaksi terjadi.
+            $unitPrice = $purchase->customer->internetPackage->getPriceForRegion(
+                $purchase->customer->province_id,
+                $purchase->customer->city_id,
+                $purchase->customer->district_id,
+                $purchase->customer->subdistrict_id
+            )['price'];
+        @endphp
+
         <!-- Items Table -->
         <table class="items-table" cellpadding="0" cellspacing="0">
             <thead>
@@ -392,8 +404,8 @@
                 <tr>
                     <td class="text-bold">{{ $purchase->customer->internetPackage->name }}</td>
                     <td class="text-center">{{ $purchase->payment_months }}</td>
-                    <td class="text-right">Rp {{ number_format($purchase->customer->internetPackage->price, 0, ',', '.') }}</td>
-                    <td class="text-right">Rp {{ number_format($purchase->total_before_discount ?? ($purchase->customer->internetPackage->price * $purchase->payment_months), 0, ',', '.') }}</td>
+                    <td class="text-right">Rp {{ number_format($unitPrice, 0, ',', '.') }}</td>
+                    <td class="text-right">Rp {{ number_format($purchase->total_before_discount ?? ($unitPrice * $purchase->payment_months), 0, ',', '.') }}</td>
                 </tr>
             </tbody>
         </table>
@@ -433,7 +445,7 @@
                 <td style="width: 4%;"></td>
                 <td style="width: 48%;">
                     @php
-                        $subtotalAmount = $purchase->total_before_discount ?? ($purchase->customer->internetPackage->price * $purchase->payment_months);
+                        $subtotalAmount = $purchase->total_before_discount ?? ($unitPrice * $purchase->payment_months);
                         $discountAmount = $purchase->discount_amount ?? 0;
                         $amountBeforeTax = $purchase->amount_before_tax ?? ($subtotalAmount - $discountAmount);
                         $totalAmount = $purchase->amount_paid ?? (int)$amountBeforeTax;

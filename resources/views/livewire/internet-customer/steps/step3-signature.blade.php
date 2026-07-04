@@ -11,7 +11,7 @@
             </div>
             <div class="col-md-6">
                 <p><strong>Paket Internet:</strong> {{ $selectedPackage->name ?? '-' }}</p>
-                <p><strong>Harga:</strong> Rp {{ number_format($selectedPackage->price_nett ?? 0, 0, ',', '.') }}</p>
+                <p><strong>Harga:</strong> Rp {{ number_format($monthlyPrice ?? 0, 0, ',', '.') }}</p>
             </div>
         </div>
     </div>

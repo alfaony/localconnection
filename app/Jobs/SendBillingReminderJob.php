@@ -125,12 +125,20 @@ class SendBillingReminderJob implements ShouldQueue
                     return;
                 }            
 
+                $internetCustomer = $customer->internetCustomer;
+                $priceData = $internetCustomer->internetPackage->getPriceForRegion(
+                    $internetCustomer->province_id,
+                    $internetCustomer->city_id,
+                    $internetCustomer->district_id,
+                    $internetCustomer->subdistrict_id
+                );
+
                 $message = strtr($template, [
                     '{{nama}}'       => $customer->name,
                     '{{kode}}'       => $customer->internetCustomer->code,
                     '{{paket}}'      => $customer->internetCustomer->internetPackage->name,
                     '{{jatuh_tempo}}' => $dateJatuhTempo,
-                    '{{tagihan}}'    => 'Rp. ' . number_format($customer->internetCustomer->internetPackage->price_nett, 2, ',', '.'),
+                    '{{tagihan}}'    => 'Rp. ' . number_format($priceData['price_nett'], 2, ',', '.'),
                     '{{url}}'        => $url,
                 ]);
 

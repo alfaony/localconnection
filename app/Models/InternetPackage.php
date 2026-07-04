@@ -194,12 +194,13 @@ class InternetPackage extends Model
     /**
      * Ambil harga paket untuk wilayah tertentu.
      *
-     * Konsep baru (simpel):
-     * - Wilayah hanya mengontrol apakah paket MUNCUL di area tersebut
-     * - Harga SELALU menggunakan harga paket itu sendiri (price / price_nett)
-     * - Kalau butuh harga berbeda per wilayah → buat paket baru
+     * Konsep:
+     * - Wilayah mengontrol apakah paket MUNCUL di area tersebut
+     * - Tiap wilayah BISA punya harga sendiri (price / price_nett di internet_package_regions)
+     * - Jika harga wilayah null → ikut harga default paket (price / price_nett)
+     * - Prioritas pencocokan wilayah: subdistrict > district > city > province > global
      *
-     * @return array ['price' => int, 'price_nett' => int, 'region_label' => string, 'region_type' => string]
+     * @return array ['price' => float, 'price_nett' => float, 'region_label' => string, 'region_type' => string]
      */
     public function getPriceForRegion($provinceId = null, $cityId = null, $districtId = null, $subdistrictId = null): array
     {
@@ -209,9 +210,9 @@ class InternetPackage extends Model
         $cityId        = (int) $cityId        ?: null;
         $provinceId    = (int) $provinceId    ?: null;
 
-        // Tentukan label wilayah (hanya untuk informasi)
-        $regionType  = 'global';
-        $regionLabel = 'Global';
+        $regionType    = 'global';
+        $regionLabel   = 'Global';
+        $matchedRegion = null;
 
         if ($subdistrictId) {
             $region = $this->regions
@@ -220,8 +221,9 @@ class InternetPackage extends Model
                 ->where('is_active', true)
                 ->first();
             if ($region) {
-                $regionType  = 'subdistrict';
-                $regionLabel = $region->region_label;
+                $regionType    = 'subdistrict';
+                $regionLabel   = $region->region_label;
+                $matchedRegion = $region;
             }
         }
 
@@ -232,8 +234,9 @@ class InternetPackage extends Model
                 ->where('is_active', true)
                 ->first();
             if ($region) {
-                $regionType  = 'district';
-                $regionLabel = $region->region_label;
+                $regionType    = 'district';
+                $regionLabel   = $region->region_label;
+                $matchedRegion = $region;
             }
         }
 
@@ -244,8 +247,9 @@ class InternetPackage extends Model
                 ->where('is_active', true)
                 ->first();
             if ($region) {
-                $regionType  = 'city';
-                $regionLabel = $region->region_label;
+                $regionType    = 'city';
+                $regionLabel   = $region->region_label;
+                $matchedRegion = $region;
             }
         }
 
@@ -256,17 +260,22 @@ class InternetPackage extends Model
                 ->where('is_active', true)
                 ->first();
             if ($region) {
-                $regionType  = 'province';
-                $regionLabel = $region->region_label;
+                $regionType    = 'province';
+                $regionLabel   = $region->region_label;
+                $matchedRegion = $region;
             }
         }
 
-        // Harga SELALU dari paket — tidak ada harga khusus per wilayah
+        // Harga wilayah dipakai jika di-set (tidak null), kalau tidak fallback ke harga default paket
+        $price     = $matchedRegion?->price     !== null ? (float) $matchedRegion->price     : (float) $this->price;
+        $priceNett = $matchedRegion?->price_nett !== null ? (float) $matchedRegion->price_nett : (float) $this->price_nett;
+
         return [
-            'price'        => $this->price,
-            'price_nett'   => $this->price_nett,
+            'price'        => $price,
+            'price_nett'   => $priceNett,
             'region_label' => $regionLabel,
             'region_type'  => $regionType,
+            'is_custom_price' => $matchedRegion !== null && ($matchedRegion->price !== null || $matchedRegion->price_nett !== null),
         ];
     }
 }

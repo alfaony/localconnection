@@ -1455,7 +1455,8 @@ class InternetCustomerShow extends Component
             ->forRegion(
                 $this->customer->province_id,
                 $this->customer->city_id,
-                $this->customer->district_id
+                $this->customer->district_id,
+                $this->customer->subdistrict_id
             )
             ->get();
 
@@ -1464,7 +1465,8 @@ class InternetCustomerShow extends Component
             $priceData = $pkg->getPriceForRegion(
                 $this->customer->province_id,
                 $this->customer->city_id,
-                $this->customer->district_id
+                $this->customer->district_id,
+                $this->customer->subdistrict_id
             );
             
             $label = $pkg->name . ' - Rp ' . number_format($priceData['price_nett'], 0, ',', '.') . '/bulan';
@@ -1581,11 +1583,20 @@ class InternetCustomerShow extends Component
             return;
         }
 
+        $priceData = $this->customer->internetPackage
+            ? $this->customer->internetPackage->getPriceForRegion(
+                $this->customer->province_id,
+                $this->customer->city_id,
+                $this->customer->district_id,
+                $this->customer->subdistrict_id
+            )
+            : null;
+
         DB::beginTransaction();
         try {
             $purchase = new InternetCustomerPurchase([
                 'internet_package_id'  => $this->customer->internet_package_id,
-                'amount_paid'          => $this->customer->internetPackage->price_nett ?? 0,
+                'amount_paid'          => $priceData['price_nett'] ?? 0,
                 'internet_customer_id' => $this->customer->id,
             ]);
             $purchase->created_at = $billingDate;
@@ -1735,7 +1746,15 @@ class InternetCustomerShow extends Component
             // ── Simpan file bukti ────────────────────────────────────────────
             $path = $this->admin_payment_proof->store('payment_proofs');
 
-            $price    = $internetCustomer->internetPackage->price_nett ?? 0;
+            $priceData = $internetCustomer->internetPackage
+                ? $internetCustomer->internetPackage->getPriceForRegion(
+                    $internetCustomer->province_id,
+                    $internetCustomer->city_id,
+                    $internetCustomer->district_id,
+                    $internetCustomer->subdistrict_id
+                )
+                : null;
+            $price    = $priceData['price_nett'] ?? 0;
             $subtotal = $price * $months;
 
             // ── Update purchase + auto-konfirmasi sekaligus ──────────────────
