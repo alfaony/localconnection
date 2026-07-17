@@ -3,6 +3,7 @@
 namespace App\Http\Livewire\InternetCustomer\Admin;
 
 use Livewire\Component;
+use Livewire\TemporaryUploadedFile;
 use Livewire\WithPagination;
 use Livewire\WithFileUploads;
 use Illuminate\Support\Facades\Hash;
@@ -648,16 +649,13 @@ class InternetCustomerIndex extends Component
     public function updatedCsvFile(): void
     {
         $this->resetValidation('csvFile');
-        // updatedCsvFile() is only called after Livewire has finished uploading
-        // the file to temp storage, so if $csvFile is set the file is already ready.
-        $this->isFileReady   = (bool) $this->csvFile;
-        $this->uploadingFile = false;
+        $this->prepareCsvUpload('csvFile', 'isFileReady', 'uploadingFile');
     }
 
     public function checkImportFileReady(): bool
     {
         try {
-            if ($this->csvFile && $this->csvFile->exists()) {
+            if ($this->isReadableTemporaryUpload($this->csvFile)) {
                 $content = $this->csvFile->get();
 
                 if (!empty($content)) {
@@ -674,8 +672,9 @@ class InternetCustomerIndex extends Component
             }
 
             return false;
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             Log::error('Import file check error', ['error' => $e->getMessage()]);
+            $this->rejectCsvUpload('csvFile', 'isFileReady', 'uploadingFile');
             return false;
         }
     }
@@ -684,12 +683,9 @@ class InternetCustomerIndex extends Component
     {
         $this->validate([
             'import_odp_id' => 'required|exists:optical_distributions,id',
-            'csvFile'       => 'required|file|max:10240',
         ], [
             'import_odp_id.required' => 'Pilih ODP terlebih dahulu sebelum import',
             'import_odp_id.exists'   => 'ODP tidak valid',
-            'csvFile.required'       => 'File CSV wajib diupload',
-            'csvFile.max'            => 'Ukuran file maksimal 10MB',
         ]);
 
         if (!$this->isFileReady || !$this->csvFile) {
@@ -697,11 +693,21 @@ class InternetCustomerIndex extends Component
             return;
         }
 
+        // Pastikan path menunjuk file sebelum rule `file|max` membaca ukurannya.
+        // Path upload yang rusak (mis. "livewire-tmp") menunjuk direktori dan
+        // memicu error Flysystem "Unable to retrieve the file_size".
+        if (!$this->isReadableTemporaryUpload($this->csvFile)) {
+            $this->rejectCsvUpload('csvFile', 'isFileReady', 'uploadingFile');
+            return;
+        }
+
         try {
-            if (!$this->csvFile->exists()) {
-                $this->addError('csvFile', 'File tidak ditemukan. Silakan upload ulang.');
-                return;
-            }
+            $this->validate([
+                'csvFile' => 'required|file|max:10240',
+            ], [
+                'csvFile.required' => 'File CSV wajib diupload',
+                'csvFile.max'      => 'Ukuran file maksimal 10MB',
+            ]);
 
             $fileContent = $this->csvFile->get();
 
@@ -761,14 +767,14 @@ class InternetCustomerIndex extends Component
 
             $this->dispatchBrowserEvent('start-progress-check');
 
-        } catch (\Exception $e) {
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
+        } catch (\Throwable $e) {
             Log::error('Import internet customer error', [
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
             ]);
-            $this->addError('csvFile', 'Terjadi kesalahan: ' . $e->getMessage());
-            $this->isFileReady   = false;
-            $this->uploadingFile = false;
+            $this->rejectCsvUpload('csvFile', 'isFileReady', 'uploadingFile');
         }
     }
 
