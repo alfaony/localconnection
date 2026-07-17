@@ -114,12 +114,18 @@ class MidtransService
             // Extract options
             $paymentMonths = $options['payment_months'] ?? 1;
             
-            // Determine price based on PPN setting
+            // Determine price based on PPN setting (harga sesuai wilayah customer, fallback ke harga global paket)
             $midtransPayWithPpn = $options['midtrans_pay_with_ppn'] ?? false;
-            $defaultPrice = $midtransPayWithPpn 
-                ? $customer->internetPackage->price      // PPN enabled: use gross price
-                : $customer->internetPackage->price_nett; // PPN disabled: use nett price
-            
+            $priceData = $customer->internetPackage->getPriceForRegion(
+                $customer->province_id,
+                $customer->city_id,
+                $customer->district_id,
+                $customer->subdistrict_id
+            );
+            $defaultPrice = $midtransPayWithPpn
+                ? $priceData['price']      // PPN enabled: use gross price
+                : $priceData['price_nett']; // PPN disabled: use nett price
+
             $totalAmount = $options['total_amount'] ?? $defaultPrice;
             $discountAmount = $options['discount_amount'] ?? 0;
             $periodStart = $options['period_start'] ?? null;
@@ -144,9 +150,9 @@ class MidtransService
                 $packageItemName .= " | " . $periodStart->format('M Y') . " - " . $periodEnd->format('M Y');
             }
 
-            $itemPrice = $midtransPayWithPpn 
-                ? $customer->internetPackage->price      // PPN enabled: use gross price
-                : $customer->internetPackage->price_nett; // PPN disabled: use nett price
+            $itemPrice = $midtransPayWithPpn
+                ? $priceData['price']      // PPN enabled: use gross price
+                : $priceData['price_nett']; // PPN disabled: use nett price
             
             // Round to integer to avoid decimal issues
             $itemPriceRounded = (int) round($itemPrice);

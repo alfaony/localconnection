@@ -362,9 +362,16 @@ class ImportInternetCustomer extends Command
 
     private function processPayment($internetCustomer, $internetPackage)
     {
+        $priceData = $internetPackage->getPriceForRegion(
+            $internetCustomer->province_id,
+            $internetCustomer->city_id,
+            $internetCustomer->district_id,
+            $internetCustomer->subdistrict_id
+        );
+
         $internetCustomerPurchase = InternetCustomerPurchase::create([
             'internet_package_id' => $internetPackage->id,
-            'amount_paid' => $internetPackage->price_nett,
+            'amount_paid' => $priceData['price_nett'],
             'internet_customer_id' => $internetCustomer->id,
             'payment_method' => "transfer",
         ]);

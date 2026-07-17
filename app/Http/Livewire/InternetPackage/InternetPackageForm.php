@@ -48,6 +48,8 @@ class InternetPackageForm extends Component
     public $region_city_id = null;
     public $region_district_id = null;
     public $region_subdistrict_id = null;
+    public $region_price = null;       // nullable — kosong = ikut harga global paket
+    public $region_price_nett = null;  // nullable — kosong = ikut harga global paket
 
     // Dropdown options (dinamis)
     public $regionCities = [];
@@ -78,6 +80,8 @@ class InternetPackageForm extends Component
             'region_city_id'        => 'required_if:region_type,city,district,subdistrict|nullable|integer',
             'region_district_id'    => 'required_if:region_type,district,subdistrict|nullable|integer',
             'region_subdistrict_id' => 'required_if:region_type,subdistrict|nullable|integer',
+            'region_price'          => 'nullable|numeric|min:0',
+            'region_price_nett'     => 'nullable|numeric|min:0',
         ];
     }
 
@@ -118,6 +122,8 @@ class InternetPackageForm extends Component
                     'region_label'      => $r->region_label,
                     'region_type_label' => $r->region_type_label,
                     'region_type_badge' => $r->region_type_badge_color,
+                    'price'             => $r->price      !== null ? (string) $r->price      : '',
+                    'price_nett'        => $r->price_nett !== null ? (string) $r->price_nett : '',
                 ];
             })->toArray();
         }
@@ -306,6 +312,8 @@ class InternetPackageForm extends Component
             'region_label'      => $regionLabel,
             'region_type_label' => $typeLabel,
             'region_type_badge' => $typeBadge,
+            'price'             => $this->region_price      !== null && $this->region_price      !== '' ? $this->region_price      : '',
+            'price_nett'        => $this->region_price_nett !== null && $this->region_price_nett !== '' ? $this->region_price_nett : '',
         ];
 
         // Reset form
@@ -313,6 +321,8 @@ class InternetPackageForm extends Component
         $this->region_city_id        = null;
         $this->region_district_id    = null;
         $this->region_subdistrict_id = null;
+        $this->region_price          = null;
+        $this->region_price_nett     = null;
         $this->regionCities       = [];
         $this->regionDistricts    = [];
         $this->regionSubdistricts = [];
@@ -389,7 +399,9 @@ class InternetPackageForm extends Component
                     'region_type'         => $r['region_type'],
                     'region_id'           => $r['region_id'],
                     'is_active'           => $r['is_active'] ?? true,
-                    // Tidak ada price — harga mengikuti paket
+                    // Kosong/null → ikut harga global paket
+                    'price'               => isset($r['price']) && $r['price'] !== '' ? $r['price'] : null,
+                    'price_nett'          => isset($r['price_nett']) && $r['price_nett'] !== '' ? $r['price_nett'] : null,
                 ]);
             }
         });

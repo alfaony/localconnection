@@ -161,7 +161,7 @@
                                     </tr>
                                     <tr>
                                         <th>Harga</th>
-                                        <td>Rp {{ number_format($customer->internetPackage->price_nett, 0, ',', '.') }}</td>
+                                        <td>Rp {{ number_format($customer->internetPackage?->getPriceForRegion($customer->province_id, $customer->city_id, $customer->district_id, $customer->subdistrict_id)['price_nett'] ?? 0, 0, ',', '.') }}</td>
                                     </tr>
                                     @if($customer->promo)
                                     <tr>
