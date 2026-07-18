@@ -11,6 +11,7 @@ use App\Models\Router;
 use App\Models\AddressPool;
 use App\Models\UserCustomer;
 use App\Schemas\ParamSchema;
+use App\Support\ImportGroupingNumber;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -66,16 +67,14 @@ class ImportInternetCustomerJob implements ShouldQueue
             $groupModel = InternetCustomerGroup::find($this->groupId);
             if ($groupModel) {
                 $groupPrefix  = $groupModel->grouping_prefix;
-                $lastNumber   = (int) $groupModel->last_number;
-                if ($lastNumber === 0) {
-                    $lastNumber = (int) InternetCustomer::where('group_id', $groupModel->id)
-                        ->whereNotNull('grouping_id')
-                        ->get('grouping_id')
-                        ->pluck('grouping_id')
-                        ->map(fn($gid) => InternetCustomerGroup::parseSequence(substr($gid, strlen($groupPrefix))))
-                        ->max();
-                }
-                $groupingCounter = $lastNumber; // mulai dari nomor terakhir
+                $existingGroupingIds = InternetCustomer::where('group_id', $groupModel->id)
+                    ->whereNotNull('grouping_id')
+                    ->pluck('grouping_id');
+                $groupingCounter = ImportGroupingNumber::startingSequence(
+                    $groupPrefix,
+                    (int) $groupModel->last_number,
+                    $existingGroupingIds
+                );
             }
         }
 
@@ -106,10 +105,10 @@ class ImportInternetCustomerJob implements ShouldQueue
                 $endBillingDate   = trim($row[10] ?? '');
                 $action           = strtoupper(trim($row[11] ?? ''));
 
-                // Auto-assign grouping_id jika group dipilih dan kolom CSV kosong
-                if ($groupModel && $groupPrefix && empty($grouping) && $action !== 'SYNC') {
+                // Pilihan group dari form selalu menang; nilai grouping CSV diabaikan.
+                if ($groupModel && $groupPrefix && $action !== 'SYNC') {
                     $groupingCounter++;
-                    $grouping = $groupPrefix . InternetCustomerGroup::formatSequence($groupingCounter);
+                    $grouping = ImportGroupingNumber::resolve($groupPrefix, $groupingCounter, $grouping);
                 }
 
                 $identifier = $code ?: ($email ?: ($phone ?: ($serialNumber ?: ($grouping ?: 'Unknown'))));
@@ -135,7 +134,7 @@ class ImportInternetCustomerJob implements ShouldQueue
                 DB::rollBack();
 
                 // Rollback grouping counter jika row gagal
-                if ($groupModel && $groupPrefix && empty(trim($row[5] ?? '')) && strtoupper(trim($row[11] ?? '')) !== 'SYNC') {
+                if ($groupModel && $groupPrefix && strtoupper(trim($row[11] ?? '')) !== 'SYNC') {
                     $groupingCounter--;
                 }
 

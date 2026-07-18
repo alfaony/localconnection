@@ -439,7 +439,7 @@
                         </select>
                         <small class="form-text text-muted">
                             <i class="fas fa-info-circle mr-1"></i>
-                            Semua pelanggan dalam CSV ini akan masuk ke grup ini.
+                            Semua pelanggan masuk ke grup ini dan mendapat nomor grouping otomatis berurutan; kolom <code>grouping</code> di CSV diabaikan.
                         </small>
                     </div>
 
