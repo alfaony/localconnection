@@ -884,20 +884,16 @@ class InternetCustomerIndex extends Component
     public function updatedRaaCsvFile(): void
     {
         $this->resetValidation('raaCsvFile');
-        $this->raaIsFileReady   = (bool) $this->raaCsvFile;
-        $this->raaUploadingFile = false;
+        $this->prepareCsvUpload('raaCsvFile', 'raaIsFileReady', 'raaUploadingFile');
     }
 
     public function importRegisterAndActivate(): void
     {
         $this->validate([
             'raa_odp_id' => 'required|exists:optical_distributions,id',
-            'raaCsvFile' => 'required|file|max:10240',
         ], [
             'raa_odp_id.required' => 'Pilih ODP terlebih dahulu sebelum import',
             'raa_odp_id.exists'   => 'ODP tidak valid',
-            'raaCsvFile.required' => 'File CSV wajib diupload',
-            'raaCsvFile.max'      => 'Ukuran file maksimal 10MB',
         ]);
 
         if (!$this->raaIsFileReady || !$this->raaCsvFile) {
@@ -905,11 +901,18 @@ class InternetCustomerIndex extends Component
             return;
         }
 
+        if (!$this->isReadableTemporaryUpload($this->raaCsvFile)) {
+            $this->rejectCsvUpload('raaCsvFile', 'raaIsFileReady', 'raaUploadingFile');
+            return;
+        }
+
         try {
-            if (!$this->raaCsvFile->exists()) {
-                $this->addError('raaCsvFile', 'File tidak ditemukan. Silakan upload ulang.');
-                return;
-            }
+            $this->validate([
+                'raaCsvFile' => 'required|file|max:10240',
+            ], [
+                'raaCsvFile.required' => 'File CSV wajib diupload',
+                'raaCsvFile.max'      => 'Ukuran file maksimal 10MB',
+            ]);
 
             $fileContent = $this->raaCsvFile->get();
 
@@ -969,15 +972,62 @@ class InternetCustomerIndex extends Component
 
             $this->dispatchBrowserEvent('start-raa-progress-check');
 
-        } catch (\Exception $e) {
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
+        } catch (\Throwable $e) {
             Log::error('ImportRegisterAndActivate error', [
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
             ]);
-            $this->addError('raaCsvFile', 'Terjadi kesalahan: ' . $e->getMessage());
-            $this->raaIsFileReady   = false;
-            $this->raaUploadingFile = false;
+            $this->rejectCsvUpload('raaCsvFile', 'raaIsFileReady', 'raaUploadingFile');
         }
+    }
+
+    /**
+     * Tandai upload siap hanya jika Livewire benar-benar membuat file lokal.
+     */
+    protected function prepareCsvUpload(string $fileProperty, string $readyProperty, string $uploadingProperty): void
+    {
+        $this->{$readyProperty} = false;
+        $this->{$uploadingProperty} = false;
+
+        if (!$this->{$fileProperty}) {
+            return;
+        }
+
+        if (!$this->isReadableTemporaryUpload($this->{$fileProperty})) {
+            $this->rejectCsvUpload($fileProperty, $readyProperty, $uploadingProperty);
+            return;
+        }
+
+        $this->{$readyProperty} = true;
+    }
+
+    protected function isReadableTemporaryUpload($file): bool
+    {
+        if (!$file instanceof TemporaryUploadedFile) {
+            return false;
+        }
+
+        try {
+            $realPath = $file->getRealPath();
+
+            return is_string($realPath) && is_file($realPath) && is_readable($realPath);
+        } catch (\Throwable $e) {
+            Log::warning('Invalid Livewire temporary upload', [
+                'error' => $e->getMessage(),
+            ]);
+
+            return false;
+        }
+    }
+
+    protected function rejectCsvUpload(string $fileProperty, string $readyProperty, string $uploadingProperty): void
+    {
+        $this->{$fileProperty} = null;
+        $this->{$readyProperty} = false;
+        $this->{$uploadingProperty} = false;
+        $this->addError($fileProperty, 'File upload sementara tidak valid. Silakan pilih ulang file CSV.');
     }
 
     public function checkRaaProgress(): void

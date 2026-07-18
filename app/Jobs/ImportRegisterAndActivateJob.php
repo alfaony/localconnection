@@ -19,6 +19,7 @@ use App\Models\Subdistrict;
 use App\Models\UserCustomer;
 use App\Schemas\ParamSchema;
 use App\Schemas\RoleSchema;
+use App\Support\ImportGroupingNumber;
 use Carbon\Carbon;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -75,16 +76,14 @@ class ImportRegisterAndActivateJob implements ShouldQueue
             $groupModel = InternetCustomerGroup::find($this->groupId);
             if ($groupModel) {
                 $groupPrefix = $groupModel->grouping_prefix;
-                $lastNumber  = (int) $groupModel->last_number;
-                if ($lastNumber === 0) {
-                    $lastNumber = (int) InternetCustomer::where('group_id', $groupModel->id)
-                        ->whereNotNull('grouping_id')
-                        ->get('grouping_id')
-                        ->pluck('grouping_id')
-                        ->map(fn($gid) => InternetCustomerGroup::parseSequence(substr($gid, strlen($groupPrefix))))
-                        ->max();
-                }
-                $groupingCounter = $lastNumber;
+                $existingGroupingIds = InternetCustomer::where('group_id', $groupModel->id)
+                    ->whereNotNull('grouping_id')
+                    ->pluck('grouping_id');
+                $groupingCounter = ImportGroupingNumber::startingSequence(
+                    $groupPrefix,
+                    (int) $groupModel->last_number,
+                    $existingGroupingIds
+                );
             }
         }
 
@@ -117,10 +116,10 @@ class ImportRegisterAndActivateJob implements ShouldQueue
             $poolName         = trim($row[15] ?? '') ?: null;
             $grouping         = trim($row[16] ?? '') ?: null;
 
-            // Auto-assign grouping_id jika group dipilih dan kolom CSV kosong
-            if ($groupModel && $groupPrefix && empty($grouping)) {
+            // Pilihan group dari form selalu menang; nilai grouping CSV diabaikan.
+            if ($groupModel && $groupPrefix) {
                 $groupingCounter++;
-                $grouping = $groupPrefix . InternetCustomerGroup::formatSequence($groupingCounter);
+                $grouping = ImportGroupingNumber::resolve($groupPrefix, $groupingCounter, $grouping);
             }
 
             $identifier = $email ?: ($phone ?: ($name ?: 'Row ' . ($index + 1)));
@@ -143,7 +142,7 @@ class ImportRegisterAndActivateJob implements ShouldQueue
                 DB::rollBack();
 
                 // Rollback grouping counter jika row gagal
-                if ($groupModel && $groupPrefix && empty(trim($row[16] ?? ''))) {
+                if ($groupModel && $groupPrefix) {
                     $groupingCounter--;
                 }
 
