@@ -197,8 +197,9 @@ class InternetPackage extends Model
      * Konsep:
      * - Wilayah mengontrol apakah paket MUNCUL di area tersebut
      * - Tiap wilayah BISA punya harga sendiri (price / price_nett di internet_package_regions)
-     * - Jika harga wilayah null → ikut harga default paket (price / price_nett)
-     * - Prioritas pencocokan wilayah: subdistrict > district > city > province > global
+     * - Jika harga di level paling spesifik null, lanjut cari harga di wilayah induknya
+     * - Jika semua harga wilayah null → ikut harga default paket (price / price_nett)
+     * - Prioritas harga: subdistrict > district > city > province > global
      *
      * @return array ['price' => float, 'price_nett' => float, 'region_label' => string, 'region_type' => string]
      */
@@ -210,72 +211,54 @@ class InternetPackage extends Model
         $cityId        = (int) $cityId        ?: null;
         $provinceId    = (int) $provinceId    ?: null;
 
-        $regionType    = 'global';
-        $regionLabel   = 'Global';
-        $matchedRegion = null;
+        $regionIds = [
+            'subdistrict' => $subdistrictId,
+            'district'    => $districtId,
+            'city'        => $cityId,
+            'province'    => $provinceId,
+        ];
 
-        if ($subdistrictId) {
-            $region = $this->regions
-                ->where('region_type', 'subdistrict')
-                ->where('region_id', $subdistrictId)
-                ->where('is_active', true)
-                ->first();
-            if ($region) {
-                $regionType    = 'subdistrict';
-                $regionLabel   = $region->region_label;
-                $matchedRegion = $region;
-            }
-        }
+        // Ambil seluruh wilayah yang cocok dalam urutan paling spesifik. Sebuah
+        // region tanpa harga tetap berguna untuk ketersediaan paket, tetapi tidak
+        // boleh menutup harga khusus yang telah diset pada wilayah induknya.
+        $matchedRegions = collect($regionIds)
+            ->filter()
+            ->map(function ($regionId, $regionType) {
+                return $this->regions
+                    ->where('region_type', $regionType)
+                    ->where('region_id', $regionId)
+                    ->where('is_active', true)
+                    ->first();
+            })
+            ->filter()
+            ->values();
 
-        if ($regionType === 'global' && $districtId) {
-            $region = $this->regions
-                ->where('region_type', 'district')
-                ->where('region_id', $districtId)
-                ->where('is_active', true)
-                ->first();
-            if ($region) {
-                $regionType    = 'district';
-                $regionLabel   = $region->region_label;
-                $matchedRegion = $region;
-            }
-        }
+        // price dan price_nett dapat diwariskan secara independen karena salah
+        // satunya boleh dikosongkan pada konfigurasi wilayah.
+        $priceRegion = $matchedRegions->first(
+            fn ($region) => $region->price !== null
+        );
+        $priceNettRegion = $matchedRegions->first(
+            fn ($region) => $region->price_nett !== null
+        );
 
-        if ($regionType === 'global' && $cityId) {
-            $region = $this->regions
-                ->where('region_type', 'city')
-                ->where('region_id', $cityId)
-                ->where('is_active', true)
-                ->first();
-            if ($region) {
-                $regionType    = 'city';
-                $regionLabel   = $region->region_label;
-                $matchedRegion = $region;
-            }
-        }
+        $price     = $priceRegion ? (float) $priceRegion->price : (float) $this->price;
+        $priceNett = $priceNettRegion ? (float) $priceNettRegion->price_nett : (float) $this->price_nett;
 
-        if ($regionType === 'global' && $provinceId) {
-            $region = $this->regions
-                ->where('region_type', 'province')
-                ->where('region_id', $provinceId)
-                ->where('is_active', true)
-                ->first();
-            if ($region) {
-                $regionType    = 'province';
-                $regionLabel   = $region->region_label;
-                $matchedRegion = $region;
-            }
-        }
-
-        // Harga wilayah dipakai jika di-set (tidak null), kalau tidak fallback ke harga default paket
-        $price     = $matchedRegion?->price     !== null ? (float) $matchedRegion->price     : (float) $this->price;
-        $priceNett = $matchedRegion?->price_nett !== null ? (float) $matchedRegion->price_nett : (float) $this->price_nett;
+        // Metadata utama mengikuti sumber harga nett karena nilai itulah yang
+        // digunakan saat tagihan bulanan otomatis dibuat.
+        $effectiveRegion = $priceNettRegion ?? $priceRegion ?? $matchedRegions->first();
+        $regionType      = $effectiveRegion?->region_type ?? 'global';
+        $regionLabel     = $effectiveRegion?->region_label ?? 'Global';
 
         return [
             'price'        => $price,
             'price_nett'   => $priceNett,
             'region_label' => $regionLabel,
             'region_type'  => $regionType,
-            'is_custom_price' => $matchedRegion !== null && ($matchedRegion->price !== null || $matchedRegion->price_nett !== null),
+            'is_custom_price'       => $priceRegion !== null || $priceNettRegion !== null,
+            'price_region_type'      => $priceRegion?->region_type ?? 'global',
+            'price_nett_region_type' => $priceNettRegion?->region_type ?? 'global',
         ];
     }
 }

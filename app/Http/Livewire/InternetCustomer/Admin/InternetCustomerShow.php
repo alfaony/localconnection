@@ -1597,6 +1597,12 @@ class InternetCustomerShow extends Component
             $purchase = new InternetCustomerPurchase([
                 'internet_package_id'  => $this->customer->internet_package_id,
                 'amount_paid'          => $priceData['price_nett'] ?? 0,
+                'payment_months'       => 1,
+                'total_before_discount' => $priceData['price_nett'] ?? 0,
+                'discount_amount'      => 0,
+                'amount_before_tax'    => $priceData['price_nett'] ?? 0,
+                'tax_rate'             => 0,
+                'tax_amount'           => 0,
                 'internet_customer_id' => $this->customer->id,
             ]);
             $purchase->created_at = $billingDate;
