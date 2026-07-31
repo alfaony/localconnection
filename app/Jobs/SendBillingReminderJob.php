@@ -132,13 +132,15 @@ class SendBillingReminderJob implements ShouldQueue
                     $internetCustomer->district_id,
                     $internetCustomer->subdistrict_id
                 );
+                $latestPurchase = $internetCustomer->purchases()->latest()->first();
+                $billingAmount = $latestPurchase?->amount_paid ?? $priceData['price_nett'];
 
                 $message = strtr($template, [
                     '{{nama}}'       => $customer->name,
                     '{{kode}}'       => $customer->internetCustomer->code,
                     '{{paket}}'      => $customer->internetCustomer->internetPackage->name,
                     '{{jatuh_tempo}}' => $dateJatuhTempo,
-                    '{{tagihan}}'    => 'Rp. ' . number_format($priceData['price_nett'], 2, ',', '.'),
+                    '{{tagihan}}'    => 'Rp. ' . number_format($billingAmount, 2, ',', '.'),
                     '{{url}}'        => $url,
                 ]);
 

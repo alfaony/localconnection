@@ -60,6 +60,12 @@ class GenerateBillingJob implements ShouldQueue
                 $purchase = InternetCustomerPurchase::create([
                     'internet_package_id' => $internetCustomer->internetPackage->id,
                     'amount_paid' => $priceData['price_nett'] ?? 0,
+                    'payment_months' => 1,
+                    'total_before_discount' => $priceData['price_nett'] ?? 0,
+                    'discount_amount' => 0,
+                    'amount_before_tax' => $priceData['price_nett'] ?? 0,
+                    'tax_rate' => 0,
+                    'tax_amount' => 0,
                     'internet_customer_id' => $internetCustomer->id,
                 ]);
             }else
@@ -110,6 +116,8 @@ class GenerateBillingJob implements ShouldQueue
                 $internetCustomer->district_id,
                 $internetCustomer->subdistrict_id
             );
+            $latestPurchase = $internetCustomer->purchases()->latest()->first();
+            $billingAmount = $latestPurchase?->amount_paid ?? $priceData['price_nett'];
 
             if (empty($template)) {
                 \Log::info('[GenerateBillingJob] Template billing kosong, skip kirim WA', [
@@ -132,7 +140,7 @@ class GenerateBillingJob implements ShouldQueue
                     '{{faktur}}'      => $customer->internetCustomer->purchases()->latest()->first()->code ?? '-',
                     '{{paket}}'       => $customer->internetCustomer->internetPackage->name,
                     '{{jatuh_tempo}}' => $dateJatuhTempo,
-                    '{{tagihan}}'     => 'Rp. ' . number_format($priceData['price_nett'], 2, ',', '.'),
+                    '{{tagihan}}'     => 'Rp. ' . number_format($billingAmount, 2, ',', '.'),
                     '{{url}}'         => $url,
                     '{{tutorial}}'    => $tutorialPayment ?? '',
                 ]);
