@@ -41,6 +41,11 @@ class Pop extends Model
         return $this->hasMany(Router::class, 'pop_id');
     }
 
+    public function olts()
+    {
+        return $this->hasMany(Olt::class, 'pop_id');
+    }
+
     public function company()
     {
         return $this->belongsTo(Company::class)->withTrashed();
@@ -68,4 +73,3 @@ class Pop extends Model
         return $query->whereIn('company_id', $companyIds);
     }
 }
-

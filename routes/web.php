@@ -43,6 +43,9 @@ use App\Http\Livewire\Router\RouterForm;
 use App\Http\Livewire\Router\RouterIndex;
 use App\Http\Livewire\Router\RouterInventory;
 use App\Http\Livewire\Router\PackageProfileMapping;
+use App\Http\Livewire\Olt\OltForm;
+use App\Http\Livewire\Olt\OltIndex;
+use App\Http\Livewire\Olt\OltShow;
 
 /*
 |--------------------------------------------------------------------------
@@ -138,6 +141,11 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
     Route::get('router/edit/{mikrotik}', RouterForm::class)->name('router.edit');
     Route::get('router/show/{routerId}', RouterInventory::class)->name('router.show');
     Route::get('router/mapping/{routerId}', PackageProfileMapping::class)->name('router.mapping');
+
+    Route::get('olt', OltIndex::class)->name('olt.index');
+    Route::get('olt/create', OltForm::class)->name('olt.create');
+    Route::get('olt/edit/{olt}', OltForm::class)->name('olt.edit');
+    Route::get('olt/{olt}', OltShow::class)->name('olt.show');
 
     Route::get('data-center', Index::class)->name('data-center.index');
     Route::get('data-center/create', Form::class)->name('data-center.create');

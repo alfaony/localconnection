@@ -10,6 +10,8 @@ use App\Helpers\Access;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\Auth;
+use App\Services\Olt\Contracts\SnmpClient;
+use App\Services\Olt\NetSnmpClient;
 
 
 class AppServiceProvider extends ServiceProvider
@@ -21,7 +23,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register()
     {
-        //
+        $this->app->bind(SnmpClient::class, NetSnmpClient::class);
     }
 
     /**
@@ -155,7 +157,7 @@ class AppServiceProvider extends ServiceProvider
                 
             $managementMasterInternetMenu = 
             [
-                'data_centers','pops','optical_distributions','coverage_services','routers','internet_assets'
+                'data_centers','pops','optical_distributions','coverage_services','routers','olts','internet_assets'
             ];
 
             $managementTokoOnlineMenu = [
@@ -701,6 +703,12 @@ class AppServiceProvider extends ServiceProvider
                     'text' => 'Router',
                     'route' => 'router.index',
                     'icon' => 'fa fa-wifi',
+                ],
+                'olts' =>
+                [
+                    'text' => 'Monitoring OLT',
+                    'route' => 'olt.index',
+                    'icon' => 'fas fa-project-diagram',
                 ],
                 'webhook_settings' => 
                 [

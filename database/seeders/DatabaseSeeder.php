@@ -29,6 +29,7 @@ class DatabaseSeeder extends Seeder
         // $this->call(PermissionForMenuInternetCustomer::class);
         $this->call(permissionForMenuPromoSeeder::class);
         $this->call(PermissionForMenuRouterSeeder::class);
+        $this->call(PermissionForMenuOltSeeder::class);
         $this->call(PermissionForMenuMasterGroupSeeder::class);
         $this->call(PermissionForMenuWilayahSeeder::class);
         $this->call(PermissionForMenuInternetSeeder::class);

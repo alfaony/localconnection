@@ -190,6 +190,11 @@ class InternetCustomer extends Model
         return $this->belongsTo(Router::class)->withTrashed();
     }
 
+    public function oltOnu()
+    {
+        return $this->hasOne(OltOnu::class, 'internet_customer_id');
+    }
+
     public function hotspotServer()
     {
         return $this->belongsTo(HotspotServer::class, 'hotspot_server_id');

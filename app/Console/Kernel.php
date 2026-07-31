@@ -112,6 +112,14 @@ class Kernel extends ConsoleKernel
             ->everySixHours()
             ->withoutOverlapping(5); // 5 min expiry
 
+        // =============== OLT MONITORING ===============
+        // The command only dispatches OLTs whose individual polling interval
+        // has elapsed. Network I/O runs in the dedicated queue.
+        $schedule->command('olts:poll --dispatch')
+            ->everyMinute()
+            ->withoutOverlapping(5)
+            ->onOneServer();
+
         // =============== ROUTER SYNC JOBS ===============
         // ✅ Run once per hour, dispatch sync jobs untuk online routers only
         // $schedule->call(function () {
