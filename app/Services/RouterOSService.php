@@ -422,4 +422,116 @@ private function addOrSetProfile(
 
     $c->query($q)->read();
 }
+
+/**
+ * Tambah/update Simple Queue untuk customer Static/IPoE.
+ * Target = IP address customer, limit dari rate_down_mbps/rate_up_mbps paket.
+ * Endpoint: /queue/simple
+ */
+public function upsertSimpleQueue(Client $c, InternetCustomer $cust, InternetPackage $pkg): void
+{
+    if (!$cust->ip_address) {
+        return; // tidak ada IP, tidak ada yang bisa di-limit
+    }
+
+    $down = (int) ($pkg->rate_down_mbps ?? $pkg->bandwidth ?? 0);
+    $up   = (int) ($pkg->rate_up_mbps ?? max(1, (int) ceil(($pkg->bandwidth ?? 1) * 0.2)));
+    $maxLimit = "{$up}M/{$down}M"; // MikroTik format: upload/download
+
+    $existing = $c->query(
+        (new Query('/queue/simple/print'))->where('comment', $cust->id)
+    )->read()[0] ?? null;
+
+    if ($existing) {
+        $q = (new Query('/queue/simple/set'))
+            ->equal('.id', $existing['.id'])
+            ->equal('target', $cust->ip_address . '/32')
+            ->equal('max-limit', $maxLimit)
+            ->equal('disabled', 'no');
+        $c->query($q)->read();
+    } else {
+        $q = (new Query('/queue/simple/add'))
+            ->equal('name', 'static-' . $cust->username)
+            ->equal('target', $cust->ip_address . '/32')
+            ->equal('max-limit', $maxLimit)
+            ->equal('comment', $cust->id);
+        $c->query($q)->read();
+    }
+}
+
+/**
+ * Disable (bukan hapus) simple queue customer — dipakai sebagai lapisan
+ * kedua pertahanan saat suspend, di luar address-list ISOLIR.
+ */
+public function disableSimpleQueue(Client $c, string $customerId): void
+{
+    $rows = $c->query((new Query('/queue/simple/print'))->where('comment', $customerId))->read();
+    foreach ($rows as $row) {
+        $c->query(
+            (new Query('/queue/simple/set'))
+                ->equal('.id', $row['.id'])
+                ->equal('disabled', 'yes')
+        )->read();
+    }
+}
+
+/**
+ * Hapus simple queue customer (dipakai saat customer di-nonaktifkan permanen).
+ */
+public function removeSimpleQueue(Client $c, string $customerId): void
+{
+    $rows = $c->query((new Query('/queue/simple/print'))->where('comment', $customerId))->read();
+    foreach ($rows as $row) {
+        $c->query((new Query('/queue/simple/remove'))->equal('.id', $row['.id']))->read();
+    }
+}
+
+/**
+ * Tambah IP ke address-list ISOLIR_STATIC di MikroTik.
+ *
+ * PENTING: Ini CUMA menambahkan IP ke list-nya. Aksi blokir/redirect-nya
+ * sendiri harus sudah dikonfigurasi SEKALI secara manual di MikroTik
+ * (firewall filter/mangle/NAT yang mencocokkan address-list ini) — persis
+ * seperti walled garden ISOLIR yang sudah ada untuk PPPoE. Lihat
+ * STATIC_IPOE_SETUP.md untuk contoh rule firewall-nya.
+ */
+public function addToIsolirAddressList(Client $c, string $ip, ?string $comment = null): void
+{
+    if (!$ip) return;
+
+    $existing = $c->query(
+        (new Query('/ip/firewall/address-list/print'))
+            ->where('list', 'ISOLIR_STATIC')
+            ->where('address', $ip)
+    )->read();
+
+    if (!empty($existing)) {
+        return; // sudah ada, tidak perlu duplikat
+    }
+
+    $q = (new Query('/ip/firewall/address-list/add'))
+        ->equal('list', 'ISOLIR_STATIC')
+        ->equal('address', $ip);
+    if ($comment) $q->equal('comment', $comment);
+
+    $c->query($q)->read();
+}
+
+/**
+ * Hapus IP dari address-list ISOLIR_STATIC (dipanggil saat reactivate).
+ */
+public function removeFromIsolirAddressList(Client $c, string $ip): void
+{
+    if (!$ip) return;
+
+    $rows = $c->query(
+        (new Query('/ip/firewall/address-list/print'))
+            ->where('list', 'ISOLIR_STATIC')
+            ->where('address', $ip)
+    )->read();
+
+    foreach ($rows as $row) {
+        $c->query((new Query('/ip/firewall/address-list/remove'))->equal('.id', $row['.id']))->read();
+    }
+}
 }

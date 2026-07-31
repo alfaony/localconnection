@@ -52,6 +52,8 @@ class ProvisionCustomerJob implements ShouldQueue
             // ==========================================
             if ($cust->access_type === 'hotspot') {
                 $this->handleHotspot($radius, $cust, $pkg, $groupName, $router);
+            } elseif ($cust->access_type === 'ipoe') {
+                $this->handleIpoe($cust, $pkg, $router);
             } else {
                 // Default: PPPoE flow (tidak berubah)
                 $this->handlePppoe($radius, $cust, $pkg, $groupName, $router);
@@ -92,6 +94,54 @@ class ProvisionCustomerJob implements ShouldQueue
                 'customer' => $cust->username, 'status' => $cust->status,
             ]);
             $this->handleDirectApiOnly($cust, $groupName, $router);
+        }
+    }
+
+    /**
+     * Static/IPoE flow — TIDAK ADA PPP session, TIDAK PAKAI RADIUS.
+     * Customer dapat internet langsung lewat IP address yang di-assign manual
+     * (kolom internet_customers.ip_address). Pembatasan kecepatan pakai
+     * MikroTik Simple Queue berdasarkan IP tsb, bukan PPP profile.
+     *
+     * Suspend: masukkan IP ke address-list ISOLIR_STATIC (walled garden di-handle
+     * firewall MikroTik yang sudah dikonfigurasi manual sekali, lihat
+     * STATIC_IPOE_SETUP.md) + disable simple queue sebagai lapis kedua.
+     * Reactivate/Install: keluarkan dari ISOLIR_STATIC + pasang/aktifkan queue.
+     */
+    protected function handleIpoe(InternetCustomer $cust, InternetPackage $pkg, Router $router): void
+    {
+        if (!$cust->ip_address) {
+            Log::warning('[ProvisionJob] IPoE/Static customer tanpa ip_address, skip provisioning', [
+                'customer' => $cust->username ?: $cust->id,
+            ]);
+            return;
+        }
+
+        try {
+            $ros    = app(RouterOSService::class);
+            $client = $ros->client($router);
+
+            if ($cust->status == ParamSchema::SUSPENDED) {
+                $ros->addToIsolirAddressList($client, $cust->ip_address, $cust->id);
+                $ros->disableSimpleQueue($client, $cust->id);
+
+                Log::info('[ProvisionJob] IPoE/Static SUSPENDED ✅', [
+                    'customer' => $cust->username, 'ip' => $cust->ip_address,
+                ]);
+            } else {
+                // INSTALLED atau REACTIVATED
+                $ros->removeFromIsolirAddressList($client, $cust->ip_address);
+                $ros->upsertSimpleQueue($client, $cust, $pkg);
+
+                Log::info('[ProvisionJob] IPoE/Static ' . strtoupper($cust->status) . ' ✅', [
+                    'customer' => $cust->username, 'ip' => $cust->ip_address,
+                ]);
+            }
+        } catch (\Throwable $e) {
+            Log::error('[ProvisionJob] IPoE/Static provisioning failed', [
+                'customer' => $cust->username ?: $cust->id,
+                'error'    => $e->getMessage(),
+            ]);
         }
     }
 

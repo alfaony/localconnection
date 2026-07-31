@@ -189,8 +189,9 @@ class SyncInstalledCustomersJob implements ShouldQueue
                 $client = $ros->client($router);
 
                 // Split customers by access_type
-                $pppoeCustomers   = $routerCustomers->filter(fn($c) => ($c->access_type ?? 'pppoe') !== 'hotspot');
+                $pppoeCustomers   = $routerCustomers->filter(fn($c) => ($c->access_type ?? 'pppoe') === 'pppoe');
                 $hotspotCustomers = $routerCustomers->filter(fn($c) => ($c->access_type ?? '') === 'hotspot');
+                $staticCustomers  = $routerCustomers->filter(fn($c) => ($c->access_type ?? '') === 'ipoe');
                 // --- PPPoE: /ppp/active/print ---
                 if (!empty($pppoeCustomers)) {
                     $allActive = $client->query(new Query('/ppp/active/print'))->read();
@@ -265,6 +266,66 @@ class SyncInstalledCustomersJob implements ShouldQueue
                                 'meta'        => json_encode($meta),
                             ];
                         }
+                    }
+                }
+
+                // --- Static/IPoE: cek ARP table, tidak ada PPP session ---
+                // Customer tanpa login (Static/IPoE) tidak punya PPP secret atau
+                // hotspot user — cara standar cek "device ini benar2 konek" adalah
+                // lewat ARP table router.
+                if (!empty($staticCustomers)) {
+                    $allArp = $client->query(new Query('/ip/arp/print'))->read();
+
+                    $arpByIp  = [];
+                    $arpByMac = [];
+                    foreach ($allArp as $arp) {
+                        if (!empty($arp['address']))     $arpByIp[$arp['address']] = $arp;
+                        if (!empty($arp['mac-address'])) $arpByMac[strtoupper($arp['mac-address'])] = $arp;
+                    }
+
+                    Log::info("[SyncJob] Mikrotik ARP table (untuk cek Static/IPoE)", [
+                        'router'    => $router->name,
+                        'router_id' => $routerId,
+                        'arp_count' => count($allArp),
+                    ]);
+
+                    foreach ($staticCustomers as $customer) {
+                        $arp = null;
+                        if ($customer->ip_address && isset($arpByIp[$customer->ip_address])) {
+                            $arp = $arpByIp[$customer->ip_address];
+                        } elseif ($customer->mac_address && isset($arpByMac[strtoupper($customer->mac_address)])) {
+                            $arp = $arpByMac[strtoupper($customer->mac_address)];
+                        }
+
+                        if ($arp) {
+                            $newStatus = $customer->status === ParamSchema::SUSPENDED
+                                ? ParamSchema::SUSPENDED
+                                : ParamSchema::ACTIVE;
+
+                            $meta = $customer->meta ? json_decode($customer->meta, true) : [];
+                            $meta['radius_session'] = [
+                                'source'    => 'mikrotik_api_arp',
+                                'address'   => $arp['address'] ?? null,
+                                'mac'       => $arp['mac-address'] ?? null,
+                                'last_seen' => now()->toIso8601String(),
+                            ];
+
+                            $updates[] = [
+                                'id'          => $customer->id,
+                                'status'      => $newStatus,
+                                'ip_address'  => $arp['address'] ?? $customer->ip_address,
+                                'mac_address' => $arp['mac-address'] ?? $customer->mac_address,
+                                'meta'        => json_encode($meta),
+                            ];
+                        }
+                        // Kalau tidak ketemu di ARP: tidak ditambahkan ke $updates,
+                        // akan kena logic "not found -> DISCONNECTED" di akhir handle().
+                        //
+                        // CATATAN KETERBATASAN: deteksi via ARP table bisa telat
+                        // detect disconnect beberapa menit (ARP cache timeout),
+                        // beda dengan PPPoE yang session-nya putus instan. Kalau
+                        // butuh lebih akurat, bisa upgrade ke cek traffic simple
+                        // queue atau DHCP lease (lihat catatan di dokumentasi).
                     }
                 }
             } catch (\Throwable $e) {
