@@ -344,13 +344,20 @@ class SyncInstalledCustomersJob implements ShouldQueue
     protected function getCustomers(): array
     {
         $query = DB::table('internet_customers')
-            ->select(['id', 'router_id', 'username', 'ip_address', 'mac_address', 'status', 'meta', 'access_type'])
-            ->whereIn('status', [ParamSchema::INSTALLED, ParamSchema::REACTIVATED])
-            ->whereNotNull('router_id')
-            ->whereNotNull('username');
+            ->leftJoin('user_customers', 'user_customers.id', '=', 'internet_customers.user_customer_id')
+            ->select([
+                'internet_customers.id', 'internet_customers.router_id', 'internet_customers.username',
+                'internet_customers.ip_address', 'internet_customers.mac_address', 'internet_customers.status',
+                'internet_customers.meta', 'internet_customers.access_type', 'internet_customers.name',
+                'internet_customers.code', 'internet_customers.company_id',
+                'user_customers.phone_number as phone',
+            ])
+            ->whereIn('internet_customers.status', [ParamSchema::INSTALLED, ParamSchema::REACTIVATED])
+            ->whereNotNull('internet_customers.router_id')
+            ->whereNotNull('internet_customers.username');
 
         if ($this->customerIds) {
-            $query->whereIn('id', $this->customerIds);
+            $query->whereIn('internet_customers.id', $this->customerIds);
         }
 
         return $query->get()->all();
@@ -364,6 +371,7 @@ class SyncInstalledCustomersJob implements ShouldQueue
     {
         $activatedSet = array_flip($activatedIds);
         $toDisconnect = [];
+        $downCustomers = [];
 
         foreach ($customers as $customer) {
             if (isset($activatedSet[$customer->id])) continue;
@@ -374,6 +382,7 @@ class SyncInstalledCustomersJob implements ShouldQueue
                 'id'   => $customer->id,
                 'meta' => json_encode($meta),
             ];
+            $downCustomers[] = $customer; // masih INSTALLED/REACTIVATED sebelum ini -> insiden nyata
         }
 
         if (empty($toDisconnect)) return;
@@ -395,6 +404,17 @@ class SyncInstalledCustomersJob implements ShouldQueue
         Log::info('[SyncJob] Customers not found in router → set DISCONNECTED', [
             'count' => count($toDisconnect),
         ]);
+
+        // Langsung kirim alert WA (NOC + customer), grouping otomatis per
+        // router kalau jumlahnya banyak sekaligus (lihat
+        // NetworkIncidentAlertService::MASS_OUTAGE_THRESHOLD)
+        try {
+            app(\App\Services\NetworkIncidentAlertService::class)->reportDown($downCustomers);
+        } catch (\Throwable $e) {
+            Log::error('[SyncJob] Gagal kirim network incident alert', [
+                'error' => $e->getMessage(),
+            ]);
+        }
     }
 
     /**
