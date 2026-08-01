@@ -67,7 +67,7 @@ class OltForm extends Component
                 Rule::exists('pops', 'id')->where('company_id', Auth::user()->company_id),
             ],
             'name' => ['required', 'string', 'max:191'],
-            'vendor' => ['required', Rule::in(['hioso', 'generic'])],
+            'vendor' => ['required', Rule::in(['hioso', 'hsgq', 'generic'])],
             'model' => ['nullable', 'string', 'max:191'],
             'host' => [
                 'required',

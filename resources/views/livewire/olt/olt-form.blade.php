@@ -30,6 +30,7 @@
                         <label>Vendor</label>
                         <select wire:model="vendor" class="form-control">
                             <option value="hioso">HiOSO</option>
+                            <option value="hsgq">HSGQ</option>
                             <option value="generic">Generic SNMP</option>
                         </select>
                     </div>
