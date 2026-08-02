@@ -201,7 +201,7 @@ class AppServiceProvider extends ServiceProvider
 
             $managementSettingMenu = [
                 // 'badges','xp_configs','partner_types',
-                'users','setting_companies','roles',
+                'users','setting_companies','roles','company_domain_settings',
                 // 'webhook_settings'
             ];
 
@@ -297,6 +297,11 @@ class AppServiceProvider extends ServiceProvider
                     'text'        => 'Company',
                     'route'         => 'company.index',
                     'icon' => 'fa fa-building',
+                ],
+                'company_domain_settings' => [
+                    'text' => 'Domain Company',
+                    'route' => 'company.domain-settings',
+                    'icon' => 'fa fa-globe',
                 ],
                 'roles' => [
                     'text'        => 'Role Akses',

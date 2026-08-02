@@ -29,7 +29,27 @@ class PppoeReconcileService
     public function discover(Router $router): array
     {
         $client = $this->ros->client($router);
-        $secrets = $client->query(new Query('/ppp/secret/print'))->read();
+
+        // Preflight: sama seperti StaticReconcileService, gagal cepat
+        // (10 detik) kalau router unreachable, jangan nunggu sampai
+        // max_execution_time global baru fatal error.
+        set_time_limit(10);
+        if (!$this->ros->quickPing($client)) {
+            throw new \RuntimeException(
+                "Router '{$router->name}' tidak merespon. Kemungkinan: router mati/unreachable, " .
+                "firewall MikroTik/server memblokir port API, atau service API di MikroTik nonaktif. " .
+                "Cek dulu koneksi manual (telnet {$router->host} {$router->port}) sebelum coba lagi."
+            );
+        }
+
+        set_time_limit(60);
+
+        // .proplist: sama seperti StaticReconcileService, cuma minta
+        // field yang dipakai (name, profile, service, disabled, comment)
+        // biar transfer + parsing lebih cepat kalau jumlah secret-nya banyak.
+        $secrets = $client->query(
+            (new Query('/ppp/secret/print'))->equal('.proplist', 'name,profile,service,disabled,comment')
+        )->read();
 
         $existingCustomers = InternetCustomer::where('router_id', $router->id)
             ->where('access_type', 'pppoe')

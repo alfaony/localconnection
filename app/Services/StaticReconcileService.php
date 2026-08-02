@@ -25,7 +25,32 @@ class StaticReconcileService
     public function discover(Router $router): array
     {
         $client = $this->ros->client($router);
-        $arpRows = $client->query(new Query('/ip/arp/print'))->read();
+
+        // Preflight: cek konektivitas dulu dengan query super ringan
+        // (/system/identity/print), time limit dipersempit jadi 10 detik
+        // biar gagal CEPAT kalau router unreachable/timeout, bukan nunggu
+        // sampai max_execution_time global (biasanya 30 detik) baru mati
+        // dengan fatal error yang jelek.
+        set_time_limit(10);
+        if (!$this->ros->quickPing($client)) {
+            throw new \RuntimeException(
+                "Router '{$router->name}' tidak merespon. Kemungkinan: router mati/unreachable, " .
+                "firewall MikroTik/server memblokir port API, atau service API di MikroTik nonaktif. " .
+                "Cek dulu koneksi manual (telnet {$router->host} {$router->port}) sebelum coba lagi."
+            );
+        }
+
+        // Ping berhasil, kasih waktu lebih longgar buat walk data yang
+        // bisa lebih berat (ratusan/ribuan ARP entry atau PPP secret)
+        set_time_limit(60);
+
+        // .proplist: cuma minta field yang beneran dipakai, bukan semua
+        // field default MikroTik (yang bisa jauh lebih banyak per row).
+        // Ini ngurangin ukuran data yang ditransfer + waktu proses di
+        // router-nya sendiri, penting kalau ARP table-nya besar.
+        $arpRows = $client->query(
+            (new Query('/ip/arp/print'))->equal('.proplist', 'address,mac-address,interface')
+        )->read();
 
         // Ambil semua customer static yang sudah terdaftar di router ini,
         // supaya matching di bawah tidak query per baris (N+1).
