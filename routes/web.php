@@ -46,6 +46,8 @@ use App\Http\Livewire\Router\PackageProfileMapping;
 use App\Http\Livewire\Olt\OltForm;
 use App\Http\Livewire\Olt\OltIndex;
 use App\Http\Livewire\Olt\OltShow;
+use App\Http\Livewire\StaticCustomer\StaticReconcileIndex;
+use App\Http\Livewire\PppoeCustomer\PppoeReconcileIndex;
 
 /*
 |--------------------------------------------------------------------------
@@ -163,6 +165,9 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
     Route::get('olt/create', OltForm::class)->name('olt.create');
     Route::get('olt/edit/{olt}', OltForm::class)->name('olt.edit');
     Route::get('olt/{olt}', OltShow::class)->name('olt.show');
+
+    Route::get('static-customer/reconcile', StaticReconcileIndex::class)->name('static-customer.reconcile');
+    Route::get('pppoe-customer/reconcile', PppoeReconcileIndex::class)->name('pppoe-customer.reconcile');
 
     Route::get('data-center', Index::class)->name('data-center.index');
     Route::get('data-center/create', Form::class)->name('data-center.create');
