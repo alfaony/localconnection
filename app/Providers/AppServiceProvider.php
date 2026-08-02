@@ -157,7 +157,7 @@ class AppServiceProvider extends ServiceProvider
                 
             $managementMasterInternetMenu = 
             [
-                'data_centers','pops','optical_distributions','coverage_services','routers','olts','internet_assets'
+                'data_centers','pops','optical_distributions','coverage_services','routers','olts','static_customer_reconciles','pppoe_customer_reconciles','internet_assets'
             ];
 
             $managementTokoOnlineMenu = [
@@ -709,6 +709,18 @@ class AppServiceProvider extends ServiceProvider
                     'text' => 'Monitoring OLT',
                     'route' => 'olt.index',
                     'icon' => 'fas fa-project-diagram',
+                ],
+                'static_customer_reconciles' =>
+                [
+                    'text' => 'Reconcile Static/IPoE',
+                    'route' => 'static-customer.reconcile',
+                    'icon' => 'fa fa-link',
+                ],
+                'pppoe_customer_reconciles' =>
+                [
+                    'text' => 'Reconcile PPPoE',
+                    'route' => 'pppoe-customer.reconcile',
+                    'icon' => 'fa fa-link',
                 ],
                 'webhook_settings' => 
                 [

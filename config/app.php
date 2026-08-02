@@ -19,6 +19,16 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Multi-Tenant Domain Configuration
+    |--------------------------------------------------------------------------
+    | Domain dasar untuk subdomain gratis tenant (mis: "oni.internetrt.com").
+    | Wajib set TENANT_BASE_DOMAIN di .env sebelum fitur subdomain aktif.
+    */
+    'tenant_base_domain' => env('TENANT_BASE_DOMAIN', 'internetrt.com'),
+    'tenant_cname_target' => env('TENANT_CNAME_TARGET', 'tenants.internetrt.com'),
+
+    /*
+    |--------------------------------------------------------------------------
     | Application Environment
     |--------------------------------------------------------------------------
     |

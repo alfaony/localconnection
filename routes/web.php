@@ -65,6 +65,22 @@ Route::get('internet-customer/invoice/{purchaseId}', [InternetCustomerController
 Route::get('internet-customer/registration/{companyId}', InternetCustomerForm::class)->name('internet-customer.create');
 Route::get('internet-customer/customer/{code}', CustomerShow::class)->name('internet-customer.customer.show');
 
+// ============================================================================
+// TENANT SUBDOMAIN — "{companyId}.internetrt.com" (companyId di sini = slug)
+// ============================================================================
+// Reuse component YANG SAMA dengan route path-based di atas — cuma beda cara
+// routingnya (domain, bukan path). Nama parameter 'companyId' SENGAJA
+// disamakan dengan yang di atas, karena InternetCustomerForm::mount($companyId)
+// resolve company lewat Company::resolveBySlug($companyId).
+//
+// Custom domain (mis: www.domainsaya.com) TIDAK bisa pakai Route::domain()
+// karena Laravel butuh pattern domain yang diketahui di awal (tidak bisa
+// wildcard ke domain arbitrary). Custom domain ditangani terpisah lewat
+// TenantCustomDomainController (fallback route, cek TENANT_CUSTOM_DOMAIN.md).
+Route::domain('{companyId}.' . config('app.tenant_base_domain', 'internetrt.com'))->group(function () {
+    Route::get('/', InternetCustomerForm::class)->name('tenant.registration');
+});
+
 // Internet Customer public registration API
 Route::get('/api/cities/{provinceId}', [InternetCustomerController::class, 'getCities'])->name('api.cities');
 Route::get('/api/districts/{cityId}', [InternetCustomerController::class, 'getDistricts'])->name('api.districts');
@@ -108,6 +124,7 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
     Route::resource('company', CompanyController::class)->except(['create', 'show']);
     Route::post('company/{company}/custom-slug', [CompanyController::class, 'storeCustomSlug'])->name('company.custom-slug.store');
     Route::delete('company/{company}/custom-slug/{customSlug}', [CompanyController::class, 'destroyCustomSlug'])->name('company.custom-slug.destroy');
+    Route::get('company/domain-settings', \App\Http\Livewire\Company\CustomDomainSettings::class)->name('company.domain-settings');
 
     Route::resource('setting-company', SettingCompanyController::class)->only('index', 'store');
 

@@ -75,3 +75,15 @@ if (!function_exists('s3_to_base64')) {
         }
     }
 }
+
+if (!function_exists('tenant')) {
+    /**
+     * Company yang ke-resolve dari hostname request saat ini (lewat
+     * middleware IdentifyTenant), atau null kalau request datang dari
+     * domain utama platform (bukan subdomain/custom domain tenant).
+     */
+    function tenant(): ?\App\Models\Company
+    {
+        return app()->bound('tenant') ? app('tenant') : null;
+    }
+}
