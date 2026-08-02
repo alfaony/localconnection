@@ -19,6 +19,13 @@ class Company extends Model
         'name',
         'slug',
         'xp_config_id',
+        'custom_domain',
+        'custom_domain_verification_token',
+        'custom_domain_verified_at',
+    ];
+
+    protected $casts = [
+        'custom_domain_verified_at' => 'datetime',
     ];
 
     protected static function boot()
@@ -98,6 +105,100 @@ class Company extends Model
         }
 
         return $company;
+    }
+
+    /**
+     * Resolve company dari hostname request (subdomain ATAU custom domain).
+     *
+     * @param string $host       Host dari request, mis: "oni.internetrt.com" atau "www.domainsaya.com"
+     * @param string $baseDomain Domain utama platform, mis: "internetrt.com"
+     */
+    public static function resolveByHost(string $host, string $baseDomain): ?self
+    {
+        $host = strtolower(trim($host));
+        $baseDomain = strtolower(trim($baseDomain));
+
+        // Kasus 1: subdomain gratis -> "{slug}.internetrt.com"
+        if (str_ends_with($host, ".{$baseDomain}")) {
+            $slug = substr($host, 0, -(strlen($baseDomain) + 1));
+
+            // Hindari salah tangkap subdomain sistem lain, mis "www.internetrt.com"
+            // atau "app.internetrt.com" -> bukan tenant, biarkan null.
+            if ($slug === '' || in_array($slug, self::RESERVED_SUBDOMAINS)) {
+                return null;
+            }
+
+            return static::resolveBySlug($slug);
+        }
+
+        // Kasus 2: domain utama platform sendiri (tanpa subdomain) -> bukan tenant
+        if ($host === $baseDomain) {
+            return null;
+        }
+
+        // Kasus 3: custom domain -> HARUS sudah terverifikasi sebelum dipakai
+        return static::where('custom_domain', $host)
+            ->whereNotNull('custom_domain_verified_at')
+            ->first();
+    }
+
+    /**
+     * Subdomain yang direservasi buat sistem sendiri, tidak boleh dipakai
+     * sebagai slug tenant (mis "www.internetrt.com" untuk landing page utama).
+     */
+    public const RESERVED_SUBDOMAINS = ['www', 'app', 'api', 'admin', 'mail', 'ftp', 'ns1', 'ns2'];
+
+    public function getPublicUrlAttribute(): string
+    {
+        if ($this->custom_domain && $this->custom_domain_verified_at) {
+            return 'https://' . $this->custom_domain;
+        }
+
+        return 'https://' . $this->public_slug . '.' . config('app.tenant_base_domain', 'internetrt.com');
+    }
+
+    /**
+     * Generate token verifikasi buat custom domain baru, simpan, dan
+     * kembalikan instruksi TXT record yang harus ditambahkan customer.
+     */
+    public function requestCustomDomain(string $domain): array
+    {
+        $domain = strtolower(trim($domain));
+        $token = 'keloola-verify-' . Str::random(32);
+
+        $this->update([
+            'custom_domain' => $domain,
+            'custom_domain_verification_token' => $token,
+            'custom_domain_verified_at' => null, // reset, wajib verifikasi ulang tiap ganti domain
+        ]);
+
+        return [
+            'domain' => $domain,
+            'txt_record_name' => "_keloola-verify.{$domain}",
+            'txt_record_value' => $token,
+            'cname_target' => config('app.tenant_cname_target', 'tenants.internetrt.com'),
+        ];
+    }
+
+    /**
+     * Cek TXT record via DNS query. Dipanggil dari tombol "Verify" di UI.
+     */
+    public function verifyCustomDomain(): bool
+    {
+        if (!$this->custom_domain || !$this->custom_domain_verification_token) {
+            return false;
+        }
+
+        $records = @dns_get_record("_keloola-verify.{$this->custom_domain}", DNS_TXT);
+
+        foreach ($records ?: [] as $record) {
+            if (($record['txt'] ?? null) === $this->custom_domain_verification_token) {
+                $this->update(['custom_domain_verified_at' => now()]);
+                return true;
+            }
+        }
+
+        return false;
     }
 
     public function user()
