@@ -762,6 +762,7 @@ class InternetCustomerShow extends Component
             'name'               => 'required|string|max:255',
             'email'              => 'nullable|email',
             'phone_number'       => ['nullable', 'string', 'regex:/^[0-9]+$/'],
+            'address'            => 'nullable|string|max:5000',
             'start_billing_date' => 'nullable|date',
             'end_billing_date'   => 'nullable|date|after:start_billing_date',
         ];

@@ -2669,22 +2669,22 @@
 
             // Reset form ketika modal ditutup
             $('#editPribadiModal, #editInstalasiModal').on('hidden.bs.modal', function () {
-                @this.set('name', '{{ $customer->name }}');
-                @this.set('email', '{{ $customer->userCustomer->email ?? '' }}');
-                @this.set('phone_number', '{{ $customer->userCustomer->phone_number ?? '' }}');
-                @this.set('start_billing_date', '{{ $customer->userCustomer->start_billing_date ?? '' }}');
-                @this.set('end_billing_date', '{{ $customer->userCustomer->end_billing_date ?? '' }}');
-                @this.set('province_id', '{{ $customer->province_id ?? '' }}' || null);
-                @this.set('city_id', '{{ $customer->city_id ?? '' }}' || null);
-                @this.set('district_id', '{{ $customer->district_id ?? '' }}' || null);
-                @this.set('subdistrict_id', '{{ $customer->subdistrict_id ?? '' }}' || null);
-                @this.set('address', '{{ $customer->address ?? '' }}');
-                @this.set('local_address', '{{ $customer->local_address ?? '' }}');
-                @this.set('username', '{{ $customer->username ?? '' }}');
-                @this.set('pass_hash', '{{ $customer->pass_hash ?? '' }}');
-                @this.set('device_serial_number', '{{ $customer->installation->device_serial_number ?? '' }}');
-                @this.set('ip_address', '{{ $customer->ip_address ?? '' }}');
-                @this.set('mac_address', '{{ $customer->mac_address ?? '' }}');
+                @this.set('name', @js($customer->name));
+                @this.set('email', @js($customer->userCustomer->email ?? ''));
+                @this.set('phone_number', @js($customer->userCustomer->phone_number ?? ''));
+                @this.set('start_billing_date', @js($customer->userCustomer->start_billing_date ?? ''));
+                @this.set('end_billing_date', @js($customer->userCustomer->end_billing_date ?? ''));
+                @this.set('province_id', @js($customer->province_id));
+                @this.set('city_id', @js($customer->city_id));
+                @this.set('district_id', @js($customer->district_id));
+                @this.set('subdistrict_id', @js($customer->subdistrict_id));
+                @this.set('address', @js($customer->address ?? ''));
+                @this.set('local_address', @js($customer->local_address ?? ''));
+                @this.set('username', @js($customer->username ?? ''));
+                @this.set('pass_hash', @js($customer->pass_hash ?? ''));
+                @this.set('device_serial_number', @js($customer->installation->device_serial_number ?? ''));
+                @this.set('ip_address', @js($customer->ip_address ?? ''));
+                @this.set('mac_address', @js($customer->mac_address ?? ''));
                 
 
                 // Reset error messages
