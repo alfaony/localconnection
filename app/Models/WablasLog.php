@@ -32,10 +32,16 @@ class WablasLog extends Model
         'type',
         'status',
         'response',
+        'event_key',
+        'effective_date',
+        'template_key',
+        'sent_at',
     ];
 
     protected $casts = [
-        'response' => 'array',
+        'response'       => 'array',
+        'effective_date' => 'date',
+        'sent_at'        => 'datetime',
     ];
 
     public function company()
@@ -69,17 +75,26 @@ class WablasLog extends Model
         string $message,
         array $response = [],
         string $type = 'text',
+        ?string $companyId = null,
+        ?string $eventKey = null,
+        ?string $effectiveDate = null,
+        ?string $templateKey = null,
     ): self {
         $status = (!empty($response['status']) && $response['status'] === true) ? 'success' : 'failed';
 
         return self::create([
+            'company_id' => $companyId,
             'source'     => $source,
             'source_id'  => $sourceId,
             'phone'      => $phone,
             'message'    => $message,
             'type'       => $type,
             'status'     => $status,
-            'response'   => $response
+            'response'   => $response,
+            'event_key'  => $eventKey,
+            'effective_date' => $effectiveDate,
+            'template_key' => $templateKey,
+            'sent_at'    => $status === 'success' ? now() : null,
         ]);
     }
 }
