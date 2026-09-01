@@ -1432,7 +1432,7 @@ class InternetCustomerShow extends Component
         $districts = $this->city_id ? District::where('city_id', $this->city_id)->whereHas('districtCoverages')->orderBy('name')->get() : collect();
         $subdistricts = $this->district_id ? Subdistrict::where('district_id', $this->district_id)->whereHas('subdistrictCoverages')->orderBy('name')->get() : collect();
 
-        $wablasLogs = WablasLog::where('source', 'internet_customer')
+        $wablasLogs = WablasLog::whereIn('source', ['internet_customer', 'billing_status_blast'])
             ->where('source_id', $this->customer->id)
             ->orderByDesc('created_at')
             ->paginate(5, ['*'], 'wablasPage');

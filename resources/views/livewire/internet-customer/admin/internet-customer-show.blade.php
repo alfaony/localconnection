@@ -865,6 +865,7 @@
                                                 <tr>
                                                     <th width="15%">Waktu</th>
                                                     <th width="10%">Tipe</th>
+                                                    <th width="15%">Event Billing</th>
                                                     <th width="15%">No. HP</th>
                                                     <th>Pesan</th>
                                                     <th width="10%" class="text-center">Status</th>
@@ -887,6 +888,17 @@
                                                             <span class="badge badge-primary"><i class="fas fa-video mr-1"></i>Video</span>
                                                         @else
                                                             <span class="badge badge-light border"><i class="fas fa-comment mr-1"></i>Text</span>
+                                                        @endif
+                                                    </td>
+                                                    <td>
+                                                        @if($log->event_key)
+                                                            <span class="badge badge-info text-uppercase">{{ str_replace('_', '-', $log->event_key) }}</span>
+                                                            @if($log->effective_date)
+                                                                <br>
+                                                                <small class="text-muted">{{ $log->effective_date->format('d-m-Y') }}</small>
+                                                            @endif
+                                                        @else
+                                                            <span class="text-muted">-</span>
                                                         @endif
                                                     </td>
                                                     <td><small>{{ $log->phone }}</small></td>
