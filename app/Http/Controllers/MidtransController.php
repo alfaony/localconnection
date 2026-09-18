@@ -22,6 +22,9 @@ use App\Schemas\RoleSchema;
 use App\Models\SettingCompany;
 use App\Services\Weblas\WablasClient;
 use App\Services\Weblas\Message as WablasMessage;
+use App\Models\PlatformInvoice;
+use App\Services\PlatformBilling\PlatformBillingMidtransService;
+use App\Services\PlatformBilling\PlatformInvoiceService;
 use Carbon\Carbon;
 
 class MidtransController extends Controller
@@ -54,6 +57,8 @@ class MidtransController extends Controller
 
             if ($subscriptionType === 'softwareSharing') {
                 return $this->processSoftwareSharingWebhook($identifier, $data, $user, $request);
+            } elseif ($subscriptionType === 'platformBilling') {
+                return $this->processPlatformBillingWebhook($identifier, $data, $request);
             } else {
                 return $this->processInternetCustomerWebhook($identifier, $data, $user, $request);
             }
@@ -171,6 +176,46 @@ class MidtransController extends Controller
                 'company_id' => $internetCustomer->company_id,
                 'purchase_id' => $purchase->id,
                 'status' => $transactionStatus
+            ]);
+        }
+
+        $this->logging($request, 200);
+        return response()->json(['status' => 'success']);
+    }
+
+    /**
+     * Process Platform Billing Webhook Logic (Keloola BOS -> Company).
+     * order_id format: "{platform_invoice_id}_platformBilling"
+     */
+    private function processPlatformBillingWebhook($invoiceId, $data, $request)
+    {
+        $midtransService = new PlatformBillingMidtransService();
+
+        if (!$midtransService->verifyNotification($data)) {
+            Log::error('Invalid signature for Platform Billing webhook', ['invoice_id' => $invoiceId]);
+            $this->logging($request, 403);
+            return response()->json(['message' => 'Invalid signature'], 200);
+        }
+
+        $invoice = PlatformInvoice::find($invoiceId);
+
+        if (!$invoice) {
+            Log::error('Platform invoice not found for webhook', ['invoice_id' => $invoiceId]);
+            $this->logging($request, 404);
+            return response()->json(['message' => 'Invoice not found'], 200);
+        }
+
+        $transactionStatus = $data['transaction_status'] ?? null;
+        $fraudStatus = $data['fraud_status'] ?? null;
+
+        if (in_array($transactionStatus, ['capture', 'settlement']) && $fraudStatus !== 'deny') {
+            app(PlatformInvoiceService::class)->markPaid($invoice);
+            Log::info('Platform invoice paid via Midtrans', ['invoice_id' => $invoice->id, 'period' => $invoice->period]);
+        } else {
+            Log::info('Platform Billing webhook received, no state change', [
+                'invoice_id' => $invoice->id,
+                'transaction_status' => $transactionStatus,
+                'fraud_status' => $fraudStatus,
             ]);
         }
 

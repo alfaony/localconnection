@@ -201,6 +201,29 @@ class Kernel extends ConsoleKernel
             ->appendOutputTo(storage_path('logs/purchase-media-cleanup.log'));
         // =============== END CLEANUP PURCHASE MEDIA ===============
 
+        // =============== PLATFORM BILLING (Keloola BOS -> Company) ===============
+        // Snapshot harian jumlah customer aktif tiap company, diambil menjelang akhir hari
+        $schedule->command('platform-billing:generate --type=snapshot')
+            ->timezone('Asia/Jakarta')
+            ->dailyAt('23:55')
+            ->withoutOverlapping(10)
+            ->appendOutputTo(storage_path('logs/platform-billing-snapshot.log'));
+
+        // Generate invoice bulanan (periode bulan sebelumnya) tiap tanggal 1
+        $schedule->command('platform-billing:generate --type=invoice')
+            ->timezone('Asia/Jakarta')
+            ->monthlyOn(1, '01:00')
+            ->withoutOverlapping(30)
+            ->appendOutputTo(storage_path('logs/platform-billing-invoice.log'));
+
+        // Cek invoice yang lewat jatuh tempo & suspend company yang menunggak
+        $schedule->command('platform-billing:generate --type=suspend')
+            ->timezone('Asia/Jakarta')
+            ->dailyAt('06:00')
+            ->withoutOverlapping(10)
+            ->appendOutputTo(storage_path('logs/platform-billing-suspend.log'));
+        // =============== END PLATFORM BILLING ===============
+
         // $schedule->command('project:set-status-sent-time')->timezone('Asia/Jakarta')->dailyAt('00:00');
         // $schedule->command('challenge:check-completed')->timezone('Asia/Jakarta')->hourly();
         // // Setiap Senin pukul 00:00 — generate occurrence event routine 2 minggu ke depan

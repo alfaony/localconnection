@@ -105,7 +105,7 @@ Route::get('/', [App\Http\Controllers\HomeController::class, 'index'])->name('ho
 Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
 Route::get('/home/internet-report', [App\Http\Controllers\HomeController::class, 'internetReport'])->name('home.internet-report')->middleware(['auth', 'ip.restriction']);
 
-Route::group(['middleware' => ['auth','role.permission','ip.restriction']], function() {
+Route::group(['middleware' => ['auth','role.permission','ip.restriction','billing.active']], function() {
 
     // ========================================================================
     // USER / ROLE / COMPANY
@@ -129,6 +129,12 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
     Route::get('company/domain-settings', \App\Http\Livewire\Company\CustomDomainSettings::class)->name('company.domain-settings');
 
     Route::resource('setting-company', SettingCompanyController::class)->only('index', 'store');
+
+    // ========================================================================
+    // PLATFORM BILLING (Keloola BOS -> Company, Rp1000/customer/bulan)
+    // ========================================================================
+    Route::get('billing', \App\Http\Livewire\Billing\BillingIndex::class)->name('billing.index');
+    Route::get('platform-billing', \App\Http\Livewire\Billing\PlatformBillingIndex::class)->name('platform-billing.index');
 
     // ========================================================================
     // REGION / WILAYAH (for internet customer addresses)

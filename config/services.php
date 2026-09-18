@@ -128,4 +128,14 @@ return [
     [
         'slot_reservation_hours' => env('SLOT_RESERVATION_HOURS', 2),
     ],
+
+    'platform_billing' => [
+        'rate_per_customer' => env('PLATFORM_BILLING_RATE', 1000),
+        'due_days' => env('PLATFORM_BILLING_DUE_DAYS', 7),
+        'midtrans' => [
+            'server_key' => env('PLATFORM_MIDTRANS_SERVER_KEY'),
+            'client_key' => env('PLATFORM_MIDTRANS_CLIENT_KEY'),
+            'is_production' => env('PLATFORM_MIDTRANS_IS_PRODUCTION', false),
+        ],
+    ],
 ];

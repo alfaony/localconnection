@@ -22,10 +22,12 @@ class Company extends Model
         'custom_domain',
         'custom_domain_verification_token',
         'custom_domain_verified_at',
+        'billing_suspended_at',
     ];
 
     protected $casts = [
         'custom_domain_verified_at' => 'datetime',
+        'billing_suspended_at' => 'datetime',
     ];
 
     protected static function boot()
@@ -71,6 +73,21 @@ class Company extends Model
     public function customSlugs()
     {
         return $this->hasMany(CompanyCustomSlug::class);
+    }
+
+    public function platformInvoices()
+    {
+        return $this->hasMany(PlatformInvoice::class);
+    }
+
+    public function customerSnapshots()
+    {
+        return $this->hasMany(CompanyCustomerSnapshot::class);
+    }
+
+    public function isBillingSuspended(): bool
+    {
+        return !is_null($this->billing_suspended_at);
     }
 
     /**

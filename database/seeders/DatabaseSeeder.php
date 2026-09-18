@@ -38,6 +38,8 @@ class DatabaseSeeder extends Seeder
         $this->call(PermissionForMenuInternetSeeder::class);
         $this->call(PermissionForMenuInternetCustomerUserRegionSeeder::class);
         $this->call(PermissionForMenuInternetAssetSeeder::class); //PermissionForMenuInternetAssetSeeder
+        $this->call(PermissionForMenuBillingSeeder::class);
+        $this->call(PermissionForMenuPlatformBillingSeeder::class);
         $this->call(ClearPermissionSeeder::class);
         // $this->call(PermissionForProductPriceQuoteAndWorkOrderSeeder::class);
         // $this->call(PermissionForDeleteDetailReportSeeder::class);

@@ -202,6 +202,7 @@ class AppServiceProvider extends ServiceProvider
             $managementSettingMenu = [
                 // 'badges','xp_configs','partner_types',
                 'users','setting_companies','roles','company_domain_settings',
+                'billing','platform_billing',
                 // 'webhook_settings'
             ];
 
@@ -302,6 +303,16 @@ class AppServiceProvider extends ServiceProvider
                     'text' => 'Domain Company',
                     'route' => 'company.domain-settings',
                     'icon' => 'fa fa-globe',
+                ],
+                'billing' => [
+                    'text' => 'Billing Platform',
+                    'route' => 'billing.index',
+                    'icon' => 'fa fa-file-invoice-dollar',
+                ],
+                'platform_billing' => [
+                    'text' => 'Platform Billing (Semua Company)',
+                    'route' => 'platform-billing.index',
+                    'icon' => 'fa fa-money-check-alt',
                 ],
                 'roles' => [
                     'text'        => 'Role Akses',

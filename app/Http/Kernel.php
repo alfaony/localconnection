@@ -70,5 +70,6 @@ class Kernel extends HttpKernel
         'verify.xero.signature' => \App\Http\Middleware\VerifyXeroWebhookSignature::class,
         'ip.restriction' => \App\Http\Middleware\IpRestriction::class,
         'validate.vendor.token' => \App\Http\Middleware\ValidateVendorToken::class,
+        'billing.active' => \App\Http\Middleware\EnsureCompanyNotSuspended::class,
     ];
 }
