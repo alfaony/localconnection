@@ -534,4 +534,163 @@ public function removeFromIsolirAddressList(Client $c, string $ip): void
         $c->query((new Query('/ip/firewall/address-list/remove'))->equal('.id', $row['.id']))->read();
     }
 }
+
+// ============================================================
+// CUSTOMER MONITORING PORTAL
+// ============================================================
+
+/**
+ * Cek status PPPoE active untuk username tertentu.
+ *
+ * @param  Router $router  Router tempat customer terhubung.
+ * @param  string $username Username PPPoE customer.
+ * @return array{connected: bool, ip: ?string, uptime: ?string, caller_id: ?string}
+ */
+public function getPppoeStatus(Router $router, string $username): array
+{
+    $c = $this->client($router);
+
+    $active = $c->query((new Query('/ppp/active/print'))->where('name', $username))->read()[0] ?? null;
+
+    if (!$active) {
+        return [
+            'connected' => false,
+            'ip'        => null,
+            'uptime'    => null,
+            'caller_id' => null,
+        ];
+    }
+
+    return [
+        'connected' => true,
+        'ip'        => $active['address'] ?? null,
+        'uptime'    => $active['uptime'] ?? null,
+        'caller_id' => $active['caller-id'] ?? null,
+    ];
+}
+
+/**
+ * Ambil traffic realtime (rate) & total byte PPPoE customer dari interface
+ * dinamis yang dibuat MikroTik saat sesi PPPoE aktif (`<pppoe-{username}>`).
+ *
+ * @param  Router $router  Router tempat customer terhubung.
+ * @param  string $username Username PPPoE customer.
+ * @return array{rx_rate: int, tx_rate: int, rx_bytes: int, tx_bytes: int}
+ */
+public function getPppoeTraffic(Router $router, string $username): array
+{
+    $c = $this->client($router);
+    $ifaceName = "<pppoe-{$username}>";
+
+    $result = ['rx_rate' => 0, 'tx_rate' => 0, 'rx_bytes' => 0, 'tx_bytes' => 0];
+
+    $iface = $c->query((new Query('/interface/print'))->where('name', $ifaceName))->read()[0] ?? null;
+    if ($iface) {
+        $result['rx_bytes'] = (int) ($iface['rx-byte'] ?? 0);
+        $result['tx_bytes'] = (int) ($iface['tx-byte'] ?? 0);
+    }
+
+    $monitor = $c->query(
+        (new Query('/interface/monitor-traffic'))
+            ->equal('interface', $ifaceName)
+            ->equal('once', '')
+    )->read()[0] ?? null;
+
+    if ($monitor) {
+        $result['rx_rate'] = (int) ($monitor['rx-bits-per-second'] ?? 0);
+        $result['tx_rate'] = (int) ($monitor['tx-bits-per-second'] ?? 0);
+    }
+
+    return $result;
+}
+
+/**
+ * Ping beberapa host dari router (mengukur latency dari sisi jaringan customer).
+ *
+ * @param  Router  $router Router yang akan menjalankan perintah ping.
+ * @param  array<int, string> $hosts Daftar hostname/IP tujuan.
+ * @return array<int, array{host: string, avg_rtt: ?float, loss: float}>
+ */
+public function pingHosts(Router $router, array $hosts): array
+{
+    $c = $this->client($router);
+    $results = [];
+
+    foreach ($hosts as $host) {
+        try {
+            $rows = $c->query(
+                (new Query('/ping'))
+                    ->equal('address', $host)
+                    ->equal('count', 3)
+            )->read();
+
+            $times = [];
+            foreach ($rows as $row) {
+                if (isset($row['time'])) {
+                    $times[] = (float) preg_replace('/[^0-9.]/', '', $row['time']);
+                }
+            }
+
+            $sent     = count($rows);
+            $received = count($times);
+            $loss     = $sent > 0 ? round((($sent - $received) / $sent) * 100, 2) : 100.0;
+            $avgRtt   = $received > 0 ? round(array_sum($times) / $received, 2) : null;
+
+            $results[] = ['host' => $host, 'avg_rtt' => $avgRtt, 'loss' => $loss];
+        } catch (\Throwable $e) {
+            $results[] = ['host' => $host, 'avg_rtt' => null, 'loss' => 100.0];
+        }
+    }
+
+    return $results;
+}
+
+/**
+ * Putuskan sesi PPPoE customer yang sedang aktif (dipakai untuk fitur "Restart PPPoE").
+ *
+ * @param  Router $router  Router tempat customer terhubung.
+ * @param  string $username Username PPPoE customer.
+ * @return bool True jika berhasil diproses (termasuk saat tidak ada sesi aktif).
+ */
+public function disconnectPppoe(Router $router, string $username): bool
+{
+    if (!$username) {
+        return false;
+    }
+
+    $c = $this->client($router);
+    $actives = $c->query((new Query('/ppp/active/print'))->where('name', $username))->read();
+
+    foreach ($actives as $active) {
+        $c->query((new Query('/ppp/active/remove'))->equal('.id', $active['.id']))->read();
+    }
+
+    return true;
+}
+
+/**
+ * Ping ke router itu sendiri untuk mengukur latency API MikroTik.
+ *
+ * @param  Router $router Router yang akan di-ping.
+ * @return array{latency_ms: ?float, status: 'online'|'offline'}
+ */
+public function pingRouter(Router $router): array
+{
+    $start = microtime(true);
+
+    try {
+        $c = $this->client($router);
+        $c->query(new Query('/system/identity/print'))->read();
+
+        return [
+            'latency_ms' => round((microtime(true) - $start) * 1000, 2),
+            'status'     => 'online',
+        ];
+    } catch (\Throwable $e) {
+        return [
+            'latency_ms' => null,
+            'status'     => 'offline',
+        ];
+    }
+}
 }

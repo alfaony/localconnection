@@ -375,6 +375,13 @@
                                     <i class="fas fa-exchange-alt mr-1"></i>Pindah Router
                                 </button>
                                 @endcanAccess
+                                @canAccess('monitor','internet_customers')
+                                @if($customer->access_type === 'pppoe' && $customer->router_id)
+                                <a href="{{ route('internet-customer.monitor', $customer->id) }}" class="btn btn-sm btn-success mb-2">
+                                    <i class="fas fa-broadcast-tower mr-1"></i>Monitor Koneksi
+                                </a>
+                                @endif
+                                @endcanAccess
                             </div>
                             <div class="table-responsive">
                                 <table class="table table-bordered table-striped">

@@ -16,6 +16,7 @@ use App\Http\Controllers\BroadcastAuthController;
 use App\Http\Controllers\XenditController;
 use App\Http\Controllers\MidtransController;
 use App\Http\Controllers\InternetCustomerController;
+use App\Http\Controllers\CustomerMonitorController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Admin\DashboardController;
 
@@ -212,6 +213,17 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction','billin
     Route::get('internet-customer/edit/{id}', InternetCustomerForm::class)->name('internet-customer.edit');
     Route::get('internet-customer/export/{format}', [InternetCustomerController::class, 'export'])->name('internet-customer.export');
     Route::get('internet-customer/{customerId}', InternetCustomerShow::class)->name('internet-customer.show');
+
+    // Customer Monitoring Portal — live PPPoE status/traffic/latency for one customer.
+    // Route names end in the exact permission `method` value (matches RolePermission
+    // middleware, which authorizes on the route name's last dot-segment).
+    Route::prefix('internet-customer/{customerId}/monitor')->group(function () {
+        Route::get('/', [CustomerMonitorController::class, 'index'])->name('internet-customer.monitor');
+        Route::get('/status', [CustomerMonitorController::class, 'status'])->name('internet-customer.monitor.status')->middleware('throttle:60,1');
+        Route::get('/traffic', [CustomerMonitorController::class, 'traffic'])->name('internet-customer.monitor.traffic')->middleware('throttle:60,1');
+        Route::get('/latency', [CustomerMonitorController::class, 'latency'])->name('internet-customer.monitor.latency')->middleware('throttle:60,1');
+        Route::post('/restart', [CustomerMonitorController::class, 'restart'])->name('internet-customer.monitor.restart');
+    });
 
     // Dashboard
     Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard.index');
