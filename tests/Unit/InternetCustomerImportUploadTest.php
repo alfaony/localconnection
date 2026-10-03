@@ -13,14 +13,14 @@ class InternetCustomerImportUploadTest extends TestCase
     {
         parent::setUp();
 
-        Storage::fake('local');
-        config()->set('livewire.temporary_file_upload.disk', 'local');
+        // Livewire memakai disk 'tmp-for-tests' saat runningUnitTests()
+        Storage::fake('tmp-for-tests');
     }
 
     /** @test */
     public function installation_import_rejects_a_temporary_upload_that_points_to_a_directory(): void
     {
-        Storage::disk('local')->makeDirectory('livewire-tmp/livewire-tmp');
+        Storage::disk('tmp-for-tests')->makeDirectory('livewire-tmp/livewire-tmp');
 
         $component = new InternetCustomerIndex();
         $component->csvFile = TemporaryUploadedFile::createFromLivewire('livewire-tmp');
@@ -36,7 +36,7 @@ class InternetCustomerImportUploadTest extends TestCase
     public function installation_import_accepts_a_readable_temporary_csv_file(): void
     {
         $filename = 'temporary-meta' . base64_encode('customers.csv') . '-.csv';
-        Storage::disk('local')->put('livewire-tmp/' . $filename, "email,code\nuser@example.com,IC-001\n");
+        Storage::disk('tmp-for-tests')->put('livewire-tmp/' . $filename, "email,code\nuser@example.com,IC-001\n");
 
         $component = new InternetCustomerIndex();
         $component->csvFile = TemporaryUploadedFile::createFromLivewire($filename);
