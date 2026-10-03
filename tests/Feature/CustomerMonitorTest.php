@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\City;
+use App\Models\Country;
 use App\Models\Company;
 use App\Models\District;
 use App\Models\InternetCustomer;
@@ -55,7 +56,30 @@ class CustomerMonitorTest extends TestCase
 
     private function makeCompany(): Company
     {
-        return InternetPackage::firstOrFail()->company;
+        return Company::create(['name' => 'Monitor Test ISP ' . Str::random(6)]);
+    }
+
+    /** @return array{province: Province, city: City, district: District, subdistrict: Subdistrict} */
+    private function makeRegion(): array
+    {
+        $country = Country::create(['name' => 'Testland ' . Str::random(4)]);
+        $province = Province::create(['country_id' => $country->id, 'name' => 'Prov Test']);
+        $city = City::create(['province_id' => $province->id, 'name' => 'City Test']);
+        $district = District::create(['city_id' => $city->id, 'name' => 'District Test']);
+        $subdistrict = Subdistrict::create(['district_id' => $district->id, 'name' => 'Subdistrict Test']);
+
+        return compact('province', 'city', 'district', 'subdistrict');
+    }
+
+    private function makePackage(Company $company): InternetPackage
+    {
+        return InternetPackage::create([
+            'company_id' => $company->id,
+            'name'       => 'Paket Test',
+            'bandwidth'  => 10,
+            'price'      => 100000,
+            'price_nett' => 100000,
+        ]);
     }
 
     private function makeUser(Role $role, Company $company): User
@@ -72,7 +96,14 @@ class CustomerMonitorTest extends TestCase
 
     private function makeRouter(Company $company, User $user): Router
     {
-        $pop = Pop::firstOrFail();
+        $pop = Pop::create([
+            'company_id'            => $company->id,
+            'user_created_id'       => $user->id,
+            'name'                  => 'POP Test',
+            'capacity_mb'           => 1000,
+            'monthly_cost'          => 0,
+            'lease_expiration_date' => now()->addYear()->toDateString(),
+        ]);
 
         return Router::create([
             'pop_id'     => $pop->id,
@@ -89,18 +120,15 @@ class CustomerMonitorTest extends TestCase
 
     private function makeCustomer(Company $company, ?Router $router = null): InternetCustomer
     {
-        $province = Province::firstOrFail();
-        $city = City::firstOrFail();
-        $district = District::firstOrFail();
-        $subdistrict = Subdistrict::firstOrFail();
-        $package = InternetPackage::firstOrFail();
+        $region = $this->makeRegion();
+        $package = $this->makePackage($company);
 
         return InternetCustomer::create([
             'company_id'           => $company->id,
-            'province_id'          => $province->id,
-            'city_id'              => $city->id,
-            'district_id'          => $district->id,
-            'subdistrict_id'       => $subdistrict->id,
+            'province_id'          => $region['province']->id,
+            'city_id'              => $region['city']->id,
+            'district_id'          => $region['district']->id,
+            'subdistrict_id'       => $region['subdistrict']->id,
             'internet_package_id'  => $package->id,
             'name'                 => 'Monitor Test Customer',
             'address'              => 'Jl. Testing No. 1',
