@@ -34,9 +34,9 @@ services:
     restart: unless-stopped
     environment:
       MYSQL_DATABASE: alfa_internetdesa
-      MYSQL_USER: devops
-      MYSQL_PASSWORD: Mojosari!@#456
-      MYSQL_ROOT_PASSWORD: Mojosari!@#456
+      MYSQL_USER: ${DOCKER_DB_USERNAME:-devops}
+      MYSQL_PASSWORD: ${DOCKER_DB_PASSWORD:?isi DOCKER_DB_PASSWORD di .env}
+      MYSQL_ROOT_PASSWORD: ${DOCKER_DB_ROOT_PASSWORD:?isi DOCKER_DB_ROOT_PASSWORD di .env}
     volumes:
       - internetdesa_db_data:/var/lib/mysql
     networks:
