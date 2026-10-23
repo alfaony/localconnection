@@ -137,10 +137,10 @@ class Kernel extends ConsoleKernel
         // $schedule->command('project:reccuring')->timezone('Asia/Jakarta')->dailyAt('00:00');
 
         // =============== BILLING & ISOLIR SCHEDULE ===============
-        // Generate billing untuk customer yang start_billing_date = today (jam 07:00 pagi)
+        // Generate billing + kirim WA tagihan (internet_remainder_billing) H-1 sebelum start_billing_date (jam 17:00)
         $schedule->command('billing-or-isolir:generate --type=billing')
             ->timezone('Asia/Jakarta')
-            ->dailyAt('07:00')
+            ->dailyAt('17:00')
             ->withoutOverlapping(10)
             ->appendOutputTo(storage_path('logs/billing.log'));
 
