@@ -270,7 +270,7 @@ class InternetCustomerForm extends Component
         
         // Validate immediately
         $this->validateOnly('payment_proof', [
-            'payment_proof' => 'required|file|mimes:jpg,jpeg,png,pdf|max:2048'
+            'payment_proof' => 'required|file|mimes:jpg,jpeg,png,pdf|max:10240'
         ]);
     }
     
@@ -647,7 +647,7 @@ class InternetCustomerForm extends Component
 
             if ($this->payment_method === 'manual_transfer') {
                 $this->validate([
-                    'payment_proof' => 'required|file|mimes:jpg,jpeg,png,pdf|max:2048',
+                    'payment_proof' => 'required|file|mimes:jpg,jpeg,png,pdf|max:10240',
                     'transfer_date' => 'required|date|before_or_equal:today',
                     'transfer_from_bank' => 'nullable|string|max:255',
                     'transfer_from_account_name' => 'nullable|string|max:255',
@@ -659,7 +659,7 @@ class InternetCustomerForm extends Component
                 ], [
                     'payment_proof.required' => 'Bukti pembayaran wajib diupload.',
                     'payment_proof.mimes' => 'Bukti pembayaran harus berupa JPG, PNG, atau PDF.',
-                    'payment_proof.max' => 'Ukuran file maksimal 2MB.',
+                    'payment_proof.max' => 'Ukuran file maksimal 10MB.',
                     'transfer_date.required' => 'Tanggal transfer wajib diisi.',
                     'transfer_date.date' => 'Format tanggal tidak valid.',
                     'transfer_date.before_or_equal' => 'Tanggal transfer tidak boleh lebih dari hari ini.',

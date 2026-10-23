@@ -38,13 +38,16 @@ class GenerateBillingJob implements ShouldQueue
 
             
             $check = InternetCustomerPurchase::where('internet_customer_id', $internetCustomer->id)
-            ->whereYear('created_at', Carbon::now()->year)
-            ->whereMonth('created_at', Carbon::now()->month)
+            // Tagihan terbit H-1 sebelum start_billing_date, jadi periode dihitung dari sehari sebelumnya
+            ->where('created_at', '>=', Carbon::parse($this->customer->start_billing_date)->subDay()->startOfDay())
             ->orderBy('created_at', 'desc')
             ->first();
 
+            $invoiceCreated = false;
+
             if (!$check || $check->payment_method == ParamSchema::EXPIRED) 
             {
+                $invoiceCreated = true;
                 $this->customer->internetCustomer->update([
                     'is_paid' => false,
                     'status' => ParamSchema::WAITING_PAYMENT_SUBSCRIPTION
@@ -88,7 +91,8 @@ class GenerateBillingJob implements ShouldQueue
             }
 
             $settingCompany = SettingCompany::byCompany($internetCustomer->company_id)->get()->pluck('field_value','field_title');
-            if($settingCompany['server_wablas'] && $settingCompany['token_wablas'])
+            // WA tagihan hanya dikirim sekali, saat invoice baru dibuat
+            if($invoiceCreated && $settingCompany['server_wablas'] && $settingCompany['token_wablas'])
             {
                 $this->sentWa($settingCompany, $this->customer);
             }

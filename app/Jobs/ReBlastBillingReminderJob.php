@@ -13,16 +13,22 @@ use Carbon\Carbon;
 use App\Models\SettingCompany;
 use App\Services\Weblas\Message;
 use App\Services\Weblas\WablasClient;
+use App\Services\Billing\BillingReminderMessage;
 
 class ReBlastBillingReminderJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     protected $customer;
+    protected array $siblingIds;
 
-    public function __construct(UserCustomer $customer)
+    /**
+     * @param array $siblingIds ID UserCustomer lain dengan nomor HP & hari sisa yang sama, digabung dalam 1 pesan
+     */
+    public function __construct(UserCustomer $customer, array $siblingIds = [])
     {
         $this->customer = $customer;
+        $this->siblingIds = $siblingIds;
     }
 
     public function handle()
@@ -95,40 +101,31 @@ class ReBlastBillingReminderJob implements ShouldQueue
             return;
         }
 
-        $endBillingDate = Carbon::parse($customer->end_billing_date);
-        $dateJatuhTempo = $endBillingDate->format('d')
-            . ' ' . $endBillingDate->locale('id')->monthName
-            . ' ' . $endBillingDate->year;
+        $customers = collect([$customer]);
+        if ($this->siblingIds) {
+            $customers = $customers->concat(
+                UserCustomer::whereIn('id', $this->siblingIds)
+                    ->with(['internetCustomer.internetPackage', 'internetCustomer.purchases'])
+                    ->get()
+                    ->filter(fn ($c) => $c->internetCustomer)
+            );
+        }
 
-        $url     = route('internet-customer.customer.show', $internetCustomer->code);
-        $priceData = $internetCustomer->internetPackage->getPriceForRegion(
-            $internetCustomer->province_id,
-            $internetCustomer->city_id,
-            $internetCustomer->district_id,
-            $internetCustomer->subdistrict_id
-        );
-        $latestPurchase = $internetCustomer->purchases()->latest()->first();
-        $billingAmount = $latestPurchase?->amount_paid ?? $priceData['price_nett'];
-        $message = strtr($template, [
-            '{{nama}}'        => $customer->name,
-            '{{kode}}'        => $internetCustomer->code,
-            '{{paket}}'       => $internetCustomer->internetPackage->name,
-            '{{jatuh_tempo}}' => $dateJatuhTempo,
-            '{{tagihan}}'     => 'Rp. ' . number_format($billingAmount, 2, ',', '.'),
-            '{{url}}'         => $url,
-        ]);
+        $message = BillingReminderMessage::build($customers, $template);
 
         $send     = new Message($client);
         $response = $send->single_text($customer->phone_number, $message);
 
-        \App\Models\WablasLog::record(
-            source:   'internet_customer',
-            sourceId: $internetCustomer->id,
-            phone:    $customer->phone_number,
-            message:  $message,
-            response: $response ?? [],
-            type:     'text'
-        );
+        foreach ($customers as $c) {
+            \App\Models\WablasLog::record(
+                source:   'internet_customer',
+                sourceId: $c->internetCustomer->id,
+                phone:    $c->phone_number,
+                message:  $message,
+                response: $response ?? [],
+                type:     'text'
+            );
+        }
     }
 
     public function tags()

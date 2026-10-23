@@ -69,7 +69,7 @@ class InternetCustomerShow extends Component
     public $totalAmount = 0;
 
     protected $rules = [
-        'payment_proof' => 'required|image|max:2048',
+        'payment_proof' => 'required|image|max:10240',
         'payment_months' => 'required|integer|min:1|max:12',
         'transfer_date' => 'required|date|before_or_equal:today',
         'transfer_from_bank' => 'nullable|string|max:255',
@@ -80,7 +80,7 @@ class InternetCustomerShow extends Component
     protected $messages = [
         'payment_proof.required' => 'Bukti pembayaran wajib diupload.',
         'payment_proof.image' => 'File harus berupa gambar.',
-        'payment_proof.max' => 'Ukuran file tidak boleh lebih dari 2MB.',
+        'payment_proof.max' => 'Ukuran file tidak boleh lebih dari 10MB.',
         'payment_months.required' => 'Jumlah bulan pembayaran harus dipilih.',
         'payment_months.min' => 'Minimal pembayaran adalah 1 bulan.',
         'payment_months.max' => 'Maksimal pembayaran adalah 12 bulan.',

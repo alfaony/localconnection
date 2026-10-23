@@ -33,9 +33,11 @@ class GenerateBilling extends Command
 
         // Process BILLING (start_billing_date)
         if (in_array($type, ['billing', 'all'])) {
-            $this->info("Processing BILLING for customers with start_billing_date <= {$today->toDateString()}...");
+            // Tagihan terbit H-1 sebelum start_billing_date (jalan jam 17:00)
+            $billingDate = $today->copy()->addDay();
+            $this->info("Processing BILLING for customers with start_billing_date <= {$billingDate->toDateString()}...");
 
-            $billingCustomers = UserCustomer::whereDate('start_billing_date', '<=', $today)
+            $billingCustomers = UserCustomer::whereDate('start_billing_date', '<=', $billingDate)
                 ->whereHas('internetCustomer', function ($query) {
                     $query->whereIn('status', [
                         ParamSchema::ACTIVE,
@@ -103,14 +105,20 @@ class GenerateBilling extends Command
                 ->with(['internetCustomer.internetPackage', 'internetCustomer.purchases'])
                 ->get();
 
+            // Satu nomor HP (per company & hari sisa) = 1 pesan, walau punya beberapa layanan
+            $groups = $reminderCustomers->groupBy(function ($customer) use ($today) {
+                $daysBeforeDue = max(0, (int) $today->diffInDays(Carbon::parse($customer->end_billing_date)->startOfDay(), false));
+
+                return "{$customer->company_id}|{$customer->phone_number}|{$daysBeforeDue}";
+            });
+
             $delayStep = 0;
-            foreach ($reminderCustomers as $customer) {
-                $dueDate       = Carbon::parse($customer->end_billing_date)->startOfDay();
-                $daysBeforeDue = (int) $today->diffInDays($dueDate, false);
-                $daysBeforeDue = max(0, $daysBeforeDue);
+            foreach ($groups as $key => $group) {
+                $daysBeforeDue = (int) substr($key, strrpos($key, '|') + 1);
 
                 $delayStep += 2;
-                SendBillingReminderJob::dispatch($customer, $daysBeforeDue)->delay(now()->addSeconds($delayStep));
+                SendBillingReminderJob::dispatch($group->first(), $daysBeforeDue, $group->skip(1)->pluck('id')->all())
+                    ->delay(now()->addSeconds($delayStep));
                 $reminderCount++;
             }
 

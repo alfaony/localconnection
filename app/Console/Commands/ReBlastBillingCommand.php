@@ -60,11 +60,19 @@ class ReBlastBillingCommand extends Command
         $successCount = 0;
         $delayStep    = 0;
 
-        foreach ($customers as $customer) {
+        // Satu nomor HP (per company & hari sisa) = 1 pesan, walau punya beberapa layanan
+        $groups = $customers->groupBy(function ($c) {
+            $days = max(0, (int) Carbon::today()->diffInDays(Carbon::parse($c->end_billing_date)->startOfDay(), false));
+
+            return "{$c->company_id}|{$c->phone_number}|{$days}";
+        });
+
+        foreach ($groups as $group) {
+            $customer = $group->first();
             try {
                 $delayStep += 2;
 
-                ReBlastBillingReminderJob::dispatch($customer)
+                ReBlastBillingReminderJob::dispatch($customer, $group->skip(1)->pluck('id')->all())
                     ->delay(now()->addSeconds($delayStep));
 
                 $successCount++;

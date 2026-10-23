@@ -64,12 +64,15 @@ class SendBillingReminder extends Command
         $progressBar = $this->output->createProgressBar($customers->count());
         $progressBar->start();
 
-        foreach ($customers as $customer) {
+        // Satu nomor HP (per company) = 1 pesan, walau punya beberapa layanan
+        foreach ($customers->groupBy(fn ($c) => "{$c->company_id}|{$c->phone_number}") as $group) {
+            $customer = $group->first();
             try {
-                $delayStep += 2; // 2 detik delay per customer untuk prevent rate limit
+                $delayStep += 2; // 2 detik delay per pesan untuk prevent rate limit
 
                 // Dispatch job dengan delay
-                SendBillingReminderJob::dispatch($customer, $daysBeforeDue)->delay(now()->addSeconds($delayStep));
+                SendBillingReminderJob::dispatch($customer, $daysBeforeDue, $group->skip(1)->pluck('id')->all())
+                    ->delay(now()->addSeconds($delayStep));
 
                 $successCount++;
                 $progressBar->advance();
