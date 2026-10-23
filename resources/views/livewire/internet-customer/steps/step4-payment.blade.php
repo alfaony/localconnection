@@ -300,7 +300,7 @@
                                         </small>
                                     @else
                                         <small class="text-muted d-block mt-1">
-                                            Format: JPG, PNG, PDF (maks. 2MB)
+                                            Format: JPG, PNG, PDF (maks. 10MB)
                                         </small>
                                     @endif
                                 </div>

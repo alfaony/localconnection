@@ -15,6 +15,7 @@ use App\Schemas\ParamSchema;
 use App\Models\SettingCompany;
 use App\Services\Weblas\Message;
 use App\Services\Weblas\WablasClient;
+use App\Services\Billing\BillingReminderMessage;
 
 class SendBillingReminderJob implements ShouldQueue
 {
@@ -22,16 +23,17 @@ class SendBillingReminderJob implements ShouldQueue
 
     protected $customer;
     protected $daysBeforeDue;
+    protected array $siblingIds;
 
     /**
-     * Create a new job instance.
-     *
      * @param UserCustomer $customer
+     * @param array $siblingIds ID UserCustomer lain dengan nomor HP yang sama, digabung dalam 1 pesan
      */
-    public function __construct(UserCustomer $customer, $daysBeforeDue)
+    public function __construct(UserCustomer $customer, $daysBeforeDue, array $siblingIds = [])
     {
         $this->customer = $customer;
         $this->daysBeforeDue = $daysBeforeDue;
+        $this->siblingIds = $siblingIds;
     }
 
     /**
@@ -41,27 +43,13 @@ class SendBillingReminderJob implements ShouldQueue
     public function handle()
     {
         try {
-            $internetCustomer = $this->customer->internetCustomer;
+            $customers = $this->eligibleCustomers();
 
-            // Skip jika customer tidak ada atau sudah tidak aktif
-            if (!$internetCustomer) {
-                Log::warning("Internet customer not found for UserCustomer ID: {$this->customer->id}");
+            if ($customers->isEmpty()) {
                 return;
             }
 
-            // Skip jika customer sudah bayar (is_paid = true)
-            if ($internetCustomer->is_paid) {
-                Log::info("Customer {$internetCustomer->code} sudah bayar, skip reminder");
-                return;
-            }
-
-            // Skip jika status bukan WAITING_PAYMENT
-            if (!in_array($internetCustomer->status, [
-                ParamSchema::WAITING_PAYMENT_SUBSCRIPTION,
-            ])) {
-                Log::info("Customer {$internetCustomer->code} status tidak waiting payment, skip reminder");
-                return;
-            }
+            $internetCustomer = $customers->first()->internetCustomer;
 
             // Get company settings untuk Wablas
             $settingCompany = SettingCompany::byCompany($internetCustomer->company_id)
@@ -70,7 +58,7 @@ class SendBillingReminderJob implements ShouldQueue
                 ->pluck('field_value', 'field_title');
 
             if ($settingCompany['server_wablas'] && $settingCompany['token_wablas']) {
-                $this->sentWaReminder($settingCompany, $this->customer, $this->daysBeforeDue);
+                $this->sentWaReminder($settingCompany, $customers, $this->daysBeforeDue);
                 Log::info("Billing reminder sent to customer: {$internetCustomer->code}");
             } else {
                 Log::warning("Wablas settings not configured for company: {$internetCustomer->company_id}");
@@ -87,8 +75,10 @@ class SendBillingReminderJob implements ShouldQueue
     /**
      * Send WhatsApp reminder message
      */
-    private function sentWaReminder($settingCompany, $customer, $daysBeforeDue)
+    private function sentWaReminder($settingCompany, $customers, $daysBeforeDue)
     {
+        $customer = $customers->first();
+
         try {
             $client = new WablasClient(
                 $settingCompany['server_wablas'],
@@ -97,68 +87,40 @@ class SendBillingReminderJob implements ShouldQueue
             );
 
             if ($client->status()) {
-                $url = route('internet-customer.customer.show', $customer->internetCustomer->code);
-                $dateJatuhTempo = Carbon::parse($customer->end_billing_date)->format('d')
-                    . ' ' . Carbon::parse($customer->end_billing_date)->locale('id')->monthName
-                    . ' ' . Carbon::parse($customer->end_billing_date)->year;
-                $tutorialPayment = config('services.internet_custom.tutorial_payment');
-
-                // Ambil pesan template dari setting
-                $internetSetting = SettingCompany::byCompany($customer->internetCustomer->company_id)
-                    // ->where('menu', 'wablas')
-                    ->get()
-                    ->pluck('field_value', 'field_title');
-
                 $settingKey = match((int)$daysBeforeDue) {
                     0 => 'internet_remainder_billing_0',
                     1 => 'internet_remainder_billing_1',
                     3 => 'internet_remainder_billing_3',
                     default => 'internet_remainder_billing_isolir',
                 };
-                $template = html_to_wa($internetSetting[$settingKey] ?? '');
-                
+                $template = html_to_wa($settingCompany[$settingKey] ?? '');
+
                 // Jika pesan kosong di setting, tidak perlu kirim
                 if (empty($template)) {
                     Log::info("Reminder template kosong untuk key={$settingKey}, skip kirim WA", [
                         'customer_code' => $customer->internetCustomer->code,
                     ]);
                     return;
-                }            
+                }
 
-                $internetCustomer = $customer->internetCustomer;
-                $priceData = $internetCustomer->internetPackage->getPriceForRegion(
-                    $internetCustomer->province_id,
-                    $internetCustomer->city_id,
-                    $internetCustomer->district_id,
-                    $internetCustomer->subdistrict_id
-                );
-                $latestPurchase = $internetCustomer->purchases()->latest()->first();
-                $billingAmount = $latestPurchase?->amount_paid ?? $priceData['price_nett'];
-
-                $message = strtr($template, [
-                    '{{nama}}'       => $customer->name,
-                    '{{kode}}'       => $customer->internetCustomer->code,
-                    '{{paket}}'      => $customer->internetCustomer->internetPackage->name,
-                    '{{jatuh_tempo}}' => $dateJatuhTempo,
-                    '{{tagihan}}'    => 'Rp. ' . number_format($billingAmount, 2, ',', '.'),
-                    '{{url}}'        => $url,
-                ]);
+                $message = BillingReminderMessage::build($customers, $template);
 
                 $response = $this->sendMessage($client, $customer->phone_number, $message);
 
-                \App\Models\WablasLog::record(
-                    source: 'internet_customer',
-                    sourceId: $customer->internetCustomer->id,
-                    phone: $customer->phone_number,
-                    message: $message,
-                    response: $response ?? [],
-                    type: 'text'
-                );
+                foreach ($customers as $c) {
+                    \App\Models\WablasLog::record(
+                        source: 'internet_customer',
+                        sourceId: $c->internetCustomer->id,
+                        phone: $c->phone_number,
+                        message: $message,
+                        response: $response ?? [],
+                        type: 'text'
+                    );
+                }
 
                 Log::info("WhatsApp reminder sent successfully", [
-                    'customer_code' => $customer->internetCustomer->code,
+                    'customer_codes' => $customers->map(fn ($c) => $c->internetCustomer->code)->all(),
                     'phone' => $customer->phone_number,
-                    'due_date' => $customer->end_billing_date
                 ]);
             } else {
                 Log::error("Wablas client status check failed");
@@ -170,6 +132,43 @@ class SendBillingReminderJob implements ShouldQueue
             ]);
             throw $th;
         }
+    }
+
+    /**
+     * Customer utama + sibling yang masih perlu diingatkan (belum bayar, status WAITING_PAYMENT).
+     */
+    private function eligibleCustomers()
+    {
+        $all = collect([$this->customer]);
+
+        if ($this->siblingIds) {
+            $all = $all->concat(
+                UserCustomer::whereIn('id', $this->siblingIds)
+                    ->with(['internetCustomer.internetPackage', 'internetCustomer.purchases'])
+                    ->get()
+            );
+        }
+
+        return $all->filter(function ($c) {
+            $internetCustomer = $c->internetCustomer;
+
+            if (!$internetCustomer) {
+                Log::warning("Internet customer not found for UserCustomer ID: {$c->id}");
+                return false;
+            }
+
+            if ($internetCustomer->is_paid) {
+                Log::info("Customer {$internetCustomer->code} sudah bayar, skip reminder");
+                return false;
+            }
+
+            if ($internetCustomer->status != ParamSchema::WAITING_PAYMENT_SUBSCRIPTION) {
+                Log::info("Customer {$internetCustomer->code} status tidak waiting payment, skip reminder");
+                return false;
+            }
+
+            return true;
+        })->values();
     }
 
     /**

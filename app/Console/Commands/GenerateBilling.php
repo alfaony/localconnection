@@ -103,14 +103,20 @@ class GenerateBilling extends Command
                 ->with(['internetCustomer.internetPackage', 'internetCustomer.purchases'])
                 ->get();
 
+            // Satu nomor HP (per company & hari sisa) = 1 pesan, walau punya beberapa layanan
+            $groups = $reminderCustomers->groupBy(function ($customer) use ($today) {
+                $daysBeforeDue = max(0, (int) $today->diffInDays(Carbon::parse($customer->end_billing_date)->startOfDay(), false));
+
+                return "{$customer->company_id}|{$customer->phone_number}|{$daysBeforeDue}";
+            });
+
             $delayStep = 0;
-            foreach ($reminderCustomers as $customer) {
-                $dueDate       = Carbon::parse($customer->end_billing_date)->startOfDay();
-                $daysBeforeDue = (int) $today->diffInDays($dueDate, false);
-                $daysBeforeDue = max(0, $daysBeforeDue);
+            foreach ($groups as $key => $group) {
+                $daysBeforeDue = (int) substr($key, strrpos($key, '|') + 1);
 
                 $delayStep += 2;
-                SendBillingReminderJob::dispatch($customer, $daysBeforeDue)->delay(now()->addSeconds($delayStep));
+                SendBillingReminderJob::dispatch($group->first(), $daysBeforeDue, $group->skip(1)->pluck('id')->all())
+                    ->delay(now()->addSeconds($delayStep));
                 $reminderCount++;
             }
 

@@ -806,7 +806,7 @@
                                                 <i class="fas fa-cloud-upload-alt fa-3x text-muted"></i>
                                             </div>
                                             <p class="mb-1 font-weight-bold">Klik untuk upload atau drag & drop</p>
-                                            <p class="text-muted small mb-0">PNG, JPG, GIF (Maksimal 2MB)</p>
+                                            <p class="text-muted small mb-0">PNG, JPG, GIF (Maksimal 10MB)</p>
                                             <input id="payment_proof" 
                                                    type="file" 
                                                    class="d-none"
@@ -1580,11 +1580,11 @@ document.addEventListener('livewire:load', function() {
         
         if (file) {
             if (file.type.match('image.*')) {
-                if (file.size > 2 * 1024 * 1024) {
+                if (file.size > 10 * 1024 * 1024) {
                     preview.innerHTML = `
                         <div class="alert alert-danger">
                             <i class="fas fa-exclamation-triangle mr-2"></i>
-                            Ukuran file terlalu besar! Maksimal 2MB.
+                            Ukuran file terlalu besar! Maksimal 10MB.
                         </div>
                     `;
                     this.value = '';
