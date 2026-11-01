@@ -1723,6 +1723,13 @@ class InternetCustomerShow extends Component
             return;
         }
 
+        $this->validate([
+            'admin_payment_proof' => ['required', 'image', 'max:5120'],
+        ], [
+            'admin_payment_proof.image' => 'Bukti pembayaran harus berupa gambar.',
+            'admin_payment_proof.max' => 'Ukuran bukti pembayaran maksimal 5MB.',
+        ]);
+
         // Validasi tanggal (field lain divalidasi client-side)
         if (!$transferDate || !strtotime($transferDate)) {
             $this->dispatchBrowserEvent('admin-payment-error', [

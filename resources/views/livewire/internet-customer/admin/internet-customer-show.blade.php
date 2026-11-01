@@ -1541,7 +1541,7 @@
                              style="cursor:pointer; border-color:#ddd;">
                             <i class="fas fa-cloud-upload-alt fa-3x text-muted mb-2"></i>
                             <p class="mb-1 font-weight-bold">Klik untuk upload atau drag & drop</p>
-                            <p class="text-muted small mb-0">PNG, JPG, GIF (Maksimal 2MB)</p>
+                            <p class="text-muted small mb-0">PNG, JPG, GIF (Maksimal 5MB)</p>
                             <input id="admin_payment_proof_input" type="file" class="d-none" accept="image/*">
                         </div>
                         <div id="admin-payment-preview" class="mt-3"></div>
@@ -1855,7 +1855,7 @@
                 },
                 function(err) {
                     setBtnState('<i class="fas fa-paper-plane mr-1"></i>Simpan Bukti Pembayaran', false);
-                    adminShowError('Gagal mengupload file. Pastikan ukuran ≤ 2MB dan format gambar.');
+                    adminShowError('Gagal mengupload file. Pastikan ukuran ≤ 5MB dan format gambar.');
                     console.error('Upload error:', err);
                 },
                 function(event) {
@@ -1941,8 +1941,8 @@
                         preview.innerHTML = '<div class="alert alert-warning"><i class="fas fa-exclamation-triangle mr-2"></i>File harus berupa gambar (JPG, PNG, GIF)</div>';
                         this.value = ''; return;
                     }
-                    if (file.size > 2 * 1024 * 1024) {
-                        preview.innerHTML = '<div class="alert alert-danger"><i class="fas fa-exclamation-triangle mr-2"></i>Ukuran file terlalu besar! Maksimal 2MB.</div>';
+                    if (file.size > 5 * 1024 * 1024) {
+                        preview.innerHTML = '<div class="alert alert-danger"><i class="fas fa-exclamation-triangle mr-2"></i>Ukuran file terlalu besar! Maksimal 5MB.</div>';
                         this.value = ''; return;
                     }
                     const reader = new FileReader();
