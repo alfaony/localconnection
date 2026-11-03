@@ -35,7 +35,7 @@ class CheckDisconnectedCustomersCommand extends Command
             ->where('status', ParamSchema::DISCONNECTED)
             ->whereNotNull('router_id')
             ->whereNotNull('username')
-            ->where('last_updated_router', '>=', $cutoff)
+            // ->where('last_updated_router', '>=', $cutoff)
             ->get()
             ->all();
 
